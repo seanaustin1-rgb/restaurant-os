@@ -1,0 +1,48 @@
+{
+  "name": "restaurant-os",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:push": "dotenv -e .env.local -- prisma db push",
+    "db:studio": "dotenv -e .env.local -- prisma studio"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
+    "@clerk/nextjs": "^6.12.0",
+    "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.45.4",
+    "clsx": "^2.1.1",
+    "inngest": "^3.22.12",
+    "lucide-react": "^0.453.0",
+    "next": "^14.2.35",
+    "plaid": "^29.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-plaid-link": "^3.6.1",
+    "recharts": "^2.13.0",
+    "resend": "^4.0.1",
+    "tailwind-merge": "^2.5.4",
+    "unpdf": "^1.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "dotenv-cli": "^11.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.25",
+    "postcss": "^8.4.38",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.4",
+    "tsx": "^4.22.4",
+    "typescript": "^5.5.0"
+  }
+}

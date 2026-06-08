@@ -7,6 +7,24 @@ import type { PrismaClient, TapBucket } from "@prisma/client";
 
 export const MISC_CATEGORY_NAME = "Misc";
 
+// TapBucket display labels (the fixed Profit First rollup targets a Category maps to).
+export const TAP_BUCKETS: { value: TapBucket; label: string }[] = [
+  { value: "REVENUE", label: "Revenue" },
+  { value: "COGS_FOOD", label: "COGS — Food" },
+  { value: "COGS_LIQUOR", label: "COGS — Liquor" },
+  { value: "COGS_BEVERAGE", label: "COGS — Beverage" },
+  { value: "LABOR", label: "Labor" },
+  { value: "OWNER_PAY", label: "Owner Pay" },
+  { value: "OPEX", label: "OpEx" },
+  { value: "TAX_SALES", label: "Tax — Sales" },
+  { value: "TAX_PAYROLL", label: "Tax — Payroll" },
+  { value: "EXCLUDED", label: "Excluded (not a TAP)" },
+];
+
+export const TAP_BUCKET_LABEL: Record<string, string> = Object.fromEntries(
+  TAP_BUCKETS.map((b) => [b.value, b.label]),
+);
+
 export interface DefaultCategory {
   name: string;
   tapBucket: TapBucket;

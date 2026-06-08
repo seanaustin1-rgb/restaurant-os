@@ -47,6 +47,22 @@ enum TransactionBucket {
   UNCATEGORIZED
 }
 
+// Profit First allocation target a Category rolls up into (the fixed TAP set +
+// taxes/revenue/excluded). Categories are operator-extensible data; this enum is
+// the small, code-owned rollup target. See docs/specs/transaction-categorization-v2.md.
+enum TapBucket {
+  COGS_FOOD
+  COGS_LIQUOR
+  COGS_BEVERAGE
+  LABOR
+  OWNER_PAY
+  OPEX
+  TAX_SALES
+  TAX_PAYROLL
+  REVENUE
+  EXCLUDED
+}
+
 enum AiActionStatus {
   PENDING
   COMPLETED
@@ -72,6 +88,7 @@ model Restaurant {
   dailySales      DailySales[]
   plaidConnections PlaidConnection[]
   transactions    Transaction[]
+  categories      Category[]
   tapSettings     TapSettings?
   virtualAccounts VirtualAccount[]
   targetSettings  TargetSettings?
@@ -168,6 +185,7 @@ model Transaction {
   merchantName      String?
   description       String?
   bucket            TransactionBucket @default(UNCATEGORIZED)
+  categoryId        String?
   isRecurring       Boolean           @default(false)
   confidence        Float?
   isManualOverride  Boolean           @default(false)
@@ -176,10 +194,32 @@ model Transaction {
 
   restaurant        Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   plaidConnection   PlaidConnection? @relation(fields: [plaidConnectionId], references: [id], onDelete: SetNull)
+  category          Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([restaurantId])
   @@index([restaurantId, date])
   @@index([bucket])
+  @@index([categoryId])
+}
+
+// Operator-extensible expense/income category (per restaurant). Rolls up into a
+// fixed TapBucket for the Profit First gauges. "Misc" is the system catch-all.
+model Category {
+  id           String    @id @default(cuid())
+  restaurantId String
+  name         String
+  tapBucket    TapBucket
+  isSystem     Boolean   @default(false)
+  sortOrder    Int       @default(0)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@unique([restaurantId, name])
+  @@index([restaurantId])
 }
 
 // ─────────────────────────────────────────────────────────────

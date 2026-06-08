@@ -87,26 +87,34 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   const checks = n(sales._sum.checkCount);
   const hoursOpen = n(sales._sum.hoursOpen);
 
-  // Costs/spend per bucket from categorized Transactions.
-  const byBucket = await prisma.transaction.groupBy({
-    by: ["bucket"],
+  // Costs/spend per TAP, rolled up from each transaction's Category -> tapBucket.
+  // (Two-level model: operator-extensible categories sum into the fixed TAP set.)
+  const cats = await prisma.category.findMany({
+    where: { restaurantId },
+    select: { id: true, tapBucket: true },
+  });
+  const tapByCatId = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
+
+  const byCat = await prisma.transaction.groupBy({
+    by: ["categoryId"],
     where: { restaurantId, date: { gte: start, lt: end } },
     _sum: { amount: true },
   });
-  const spendBy = (b: string) => n(byBucket.find((r) => r.bucket === b)?._sum.amount);
+  const tapSum: Record<string, number> = {};
+  for (const row of byCat) {
+    // Null category -> Misc -> OpEx (operator decision: nothing is dropped).
+    const tap = (row.categoryId && tapByCatId.get(row.categoryId)) || "OPEX";
+    tapSum[tap] = (tapSum[tap] ?? 0) + n(row._sum.amount);
+  }
+  const tap = (b: string) => tapSum[b] ?? 0;
 
-  const cogsFood = spendBy("COGS_FOOD");
-  const cogsLiquor = spendBy("COGS_LIQUOR");
-  const cogsBeverage = spendBy("COGS_BEVERAGE");
-  // Paper paychecks (PAYROLL_CHECK) are labor too — fold them into the Labor TAP.
-  const labor = spendBy("LABOR") + spendBy("PAYROLL_CHECK");
-  const opex =
-    spendBy("OPEX_RENT") +
-    spendBy("OPEX_UTILITIES") +
-    spendBy("OPEX_INSURANCE") +
-    spendBy("OPEX_SUPPLIES") +
-    spendBy("DEBT_SERVICE");
-  const ownerPay = spendBy("OWNER_PAY");
+  const cogsFood = tap("COGS_FOOD");
+  const cogsLiquor = tap("COGS_LIQUOR");
+  const cogsBeverage = tap("COGS_BEVERAGE");
+  const labor = tap("LABOR"); // Payroll — Paper Checks already maps to LABOR
+  const opex = tap("OPEX");
+  const ownerPay = tap("OWNER_PAY");
+  // TAX_SALES, TAX_PAYROLL, REVENUE, and EXCLUDED are intentionally not gauged.
 
   // Last 7 days of covers for the sparkline.
   const recent = await prisma.dailySales.findMany({
@@ -135,7 +143,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
     return { ...g, usagePct, health: getHealthStatus(usagePct) };
   });
 
-  const hasData = revenue > 0 || byBucket.length > 0;
+  const hasData = revenue > 0 || byCat.length > 0;
 
   return {
     restaurantId,

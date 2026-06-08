@@ -3,6 +3,11 @@ import { createHash } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { categorizeTransaction } from "@/lib/categorization/vendor-map";
+import {
+  ensureDefaultCategories,
+  categoryIdByName,
+  legacyBucketToCategoryName,
+} from "@/lib/categorization/categories";
 import type { CandidateTxn } from "@/lib/import/parse-statement";
 
 // Writes confirmed statement transactions. Deduped via a synthetic plaidTxnId
@@ -27,6 +32,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "no transactions to import" }, { status: 400 });
   }
 
+  // Ensure this restaurant has the default categories, then resolve names -> ids
+  // so we can dual-write the new categoryId alongside the legacy bucket.
+  await ensureDefaultCategories(prisma, role.restaurantId);
+  const catIdByName = await categoryIdByName(prisma, role.restaurantId);
+
   const data = txns.map((t) => {
     // /api/import maps credits/deposits to negative amounts. Treat any inflow as
     // REVENUE (sales deposits) rather than running it through expense vendor rules.
@@ -43,6 +53,7 @@ export async function POST(req: Request) {
       merchantName: null,
       description: t.description,
       bucket: cat.bucket,
+      categoryId: catIdByName.get(legacyBucketToCategoryName(cat.bucket)) ?? null,
       isRecurring: cat.isRecurring,
       confidence: cat.confidence,
       isManualOverride: false,

@@ -1,10 +1,10 @@
-# Restaurant OS — Session Handoff (2026-06-01)
+# Restaurant OS — Session Handoff
 
 > Safe to email — contains **no secrets**. Bring your `.env.local` separately.
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/transaction-categorization-v2.md`, and check your project memory for Restaurant OS. Then let's build Phase 1 of the categorization spec."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/transaction-categorization-v2.md`, and check your project memory for Restaurant OS. Then let's finish Phase 1 of the categorization spec."
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
@@ -12,11 +12,13 @@ Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 Multi-tenant restaurant-operator SaaS with a **Profit First** cash layer. Next.js 14 · Supabase/Prisma · Clerk · Plaid · Inngest · Vercel. Customer Zero = Stone Grille & Taphouse.
 
 ## Where we are (done & working)
-- **Tier-3 AI bank-statement import is LIVE**: scanned Orrstown PDF → Claude structured extraction (`src/lib/import/llm-extract.ts`, model `claude-sonnet-4-6`, ~$0.24/statement) → categorized transactions → Profit First dashboard.
-- **Categorization** tuned to real vendors (`src/lib/categorization/vendor-map.ts`); added **REVENUE** (deposits) and **PAYROLL_CHECK** (check # ≥ 10000) buckets + migrations (applied to Supabase).
-- **Real May data imported** to restaurant **"Stone Grille and Tap House"** (`cmpvtkou90000syl9ziir8nlj`): 282 txns categorized; 28 days of DailySales seeded from Toast deposits so the dashboard gauges compute.
-- **3 production bugs fixed**: structured-output `format.name` (removed); PDF ArrayBuffer detachment in `/api/import` (now copies buffer for the LLM); env loading.
-- **On GitHub** (private), with README. **v2 categorization spec written** (`docs/specs/transaction-categorization-v2.md`).
+- **Tier-3 AI bank-statement import is LIVE**: scanned PDF → Claude structured extraction → categorized transactions → Profit First dashboard. Real May data imported to restaurant **"Stone Grille and Tap House"** (`cmpvtkou90000syl9ziir8nlj`), 282 txns; 28 days of seeded sales so the gauges compute.
+- **Categorization v2 — Phase 1 mostly built & shipped:**
+  - **Two-level model live**: `Category` (per-restaurant, operator-extensible) → fixed `TapBucket` enum. `Transaction.categoryId` added; legacy `bucket` kept (dual-write).
+  - 26 default categories seeded per restaurant; all 282 txns backfilled (manual edits preserved); new imports dual-write `categoryId`.
+  - **Dashboard rollup** now computes TAP gauges from categories.
+  - **Categories settings screen** at `/settings/categories` — add / rename / remap-TAP / archive (CRUD, auth-guarded, archive blocked while a category has txns).
+- **On GitHub** (private), README + spec + this handoff committed.
 
 ## Run it locally
 ```
@@ -28,22 +30,20 @@ npm run dev          # http://localhost:3000
 ```
 DB is already migrated on Supabase (shared) — no migration needed to develop.
 
-## NEXT STEP — build Phase 1 of the categorization spec
-Spec: `docs/specs/transaction-categorization-v2.md`. Phase 1 (P0) =
-1. `Category` table (per-restaurant, operator-extensible) + `Transaction.categoryId` FK + "Misc" catch-all.
-2. Seed default categories per restaurant; map each → a fixed `tapBucket`.
-3. Dashboard rollup: categories → the 6 Profit First TAPs (+ tax/revenue/excluded).
-4. Per-restaurant categorization **rules** (replace the hardcoded vendor-map + `PAYROLL_CHECK_MIN`).
-5. Migration/backfill from the current flat `bucket` → categories (preserve manual edits).
-6. Categories settings screen (add/rename/remap/archive).
+## NEXT STEP — finish Phase 1 (2 pieces left)
+1. **Beer/Beverage as its own dashboard gauge line** (operator decision: keep it separate from Liquor). Small, visible. `cogsBeverage` is already computed in `src/lib/dashboard/data.ts`; just needs a gauge in the dashboard components.
+2. **Per-restaurant rules engine** — move keyword→category rules into the DB per restaurant (a `Rule` table), replacing the hardcoded `src/lib/categorization/vendor-map.ts` + `PAYROLL_CHECK_MIN`, so new imports self-categorize per tenant. Biggest remaining piece. Then Phase 2 (spend-by-category drill-down, bulk recategorize, rule-management UI).
 
-**Operator decisions already locked:** Misc → OpEx (until named); COGS_BEVERAGE shows as its own gauge line; Bank/Register Cash → EXCLUDED (register restocks); cash tip-outs → EXCLUDED, never Labor (they're pass-through to servers — also why some Toast deposits net low/negative).
-
-**Still open (decide when building):** rule precedence on multi-match; per-category OpEx sub-budgets; whether the beverage line gets its own target %.
+**Operator decisions locked:** Misc → OpEx (until named); COGS_BEVERAGE = its own gauge line; Bank/Register Cash → EXCLUDED (register restocks); cash tip-outs → EXCLUDED, never Labor (pass-through to servers — also why some Toast deposits net low/negative).
+**Still open:** rule precedence on multi-match; per-category OpEx sub-budgets; whether the beverage line gets its own target %.
 
 ## Loose ends / reminders
-- **Bring `.env.local`** — it's the only thing not in the repo (DB password + all keys).
+- **Bring `.env.local`** — the only thing not in the repo (DB password + all keys).
+- **Supabase free-tier pauses after inactivity.** If scripts/app error with `FATAL (ENOTFOUND) tenant/user … not found`, the project is asleep — open the Supabase dashboard (project ref `rweclputxgwutykinlbr`) and **Restore/Resume** it.
 - **Rotate secrets before production** — keys passed through chat during setup.
-- **Duplicate restaurant**: an empty twin "Stone Grille and Taphouse" (`cmpvtq12q000i…`) exists from onboarding twice — delete it when convenient.
-- **Before deploy**: remove `/api/dev/*` routes; run `next build` (passed once); set Vercel env WITHOUT `INNGEST_DEV`.
-- **Gotchas** (Windows): Node may be off-PATH; run Prisma via `npx dotenv -e .env.local -- prisma ...`; use batched `$transaction([...])` over the Supabase pooler (not interactive); Clerk test emails use code `424242`.
+- **Duplicate restaurant**: empty twin "Stone Grille and Taphouse" (`cmpvtq12q000i…`) from onboarding twice — delete when convenient.
+- **Before deploy**: remove `/api/dev/*` routes; run `next build` (passing); set Vercel env WITHOUT `INNGEST_DEV`.
+- **Gotchas** (Windows): Node may be off-PATH; run Prisma via `npx dotenv -e .env.local -- prisma ...`; use batched `$transaction([...])` over the Supabase pooler (not interactive); Clerk test emails use code `424242`; new route segments need a dev-server restart to register.
+
+## Recent commits (this session)
+`Initial commit` → README → handoff → Phase 1 categorization (`fe52a04`) → Categories settings screen (`c6113ea`). Helper scripts in `scripts/`: `backfill-categories.ts`, `verify-rollup.ts`, `inspect-txns.ts`, `seed-sales.ts`, `recategorize-checks.ts`, `commit-cached.ts`, `test-llm-extract.ts`.

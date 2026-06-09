@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
+import type { TransactionBucket } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { categorizeTransaction } from "@/lib/categorization/vendor-map";
 import {
   ensureDefaultCategories,
   categoryIdByName,
-  legacyBucketToCategoryName,
+  categoryTapById,
+  MISC_CATEGORY_NAME,
 } from "@/lib/categorization/categories";
+import { ensureDefaultRules, loadRules, applyRules, TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
 import type { CandidateTxn } from "@/lib/import/parse-statement";
 
 // Writes confirmed statement transactions. Deduped via a synthetic plaidTxnId
@@ -32,18 +34,42 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "no transactions to import" }, { status: 400 });
   }
 
-  // Ensure this restaurant has the default categories, then resolve names -> ids
-  // so we can dual-write the new categoryId alongside the legacy bucket.
+  // Ensure this restaurant's default categories + rules exist, then resolve the
+  // maps we need to assign categoryId (authoritative) and dual-write the legacy
+  // bucket. Per-restaurant rules replace the old global vendor map.
   await ensureDefaultCategories(prisma, role.restaurantId);
-  const catIdByName = await categoryIdByName(prisma, role.restaurantId);
+  await ensureDefaultRules(prisma, role.restaurantId);
+  const nameToId = await categoryIdByName(prisma, role.restaurantId);
+  const tapById = await categoryTapById(prisma, role.restaurantId);
+  const rules = await loadRules(prisma, role.restaurantId);
+  const miscId = nameToId.get(MISC_CATEGORY_NAME) ?? null;
+  const revenueId = nameToId.get("Sales Deposits") ?? null;
 
   const data = txns.map((t) => {
     // /api/import maps credits/deposits to negative amounts. Treat any inflow as
-    // REVENUE (sales deposits) rather than running it through expense vendor rules.
-    const cat =
-      t.amount < 0
-        ? { bucket: "REVENUE" as const, isRecurring: false, confidence: 0.9 }
-        : categorizeTransaction(null, t.description);
+    // REVENUE (sales deposits) rather than running it through expense rules.
+    let categoryId: string | null;
+    let bucket: TransactionBucket;
+    let confidence: number;
+    if (t.amount < 0) {
+      categoryId = revenueId;
+      bucket = "REVENUE";
+      confidence = 0.9;
+    } else {
+      const match = applyRules(rules, null, t.description);
+      if (match) {
+        categoryId = match.categoryId;
+        const tap = tapById.get(match.categoryId);
+        bucket = tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED";
+        confidence = match.confidence;
+      } else {
+        // No rule matched — give it the Misc category (rolls into OpEx) but keep
+        // the legacy bucket UNCATEGORIZED so the cleanup view still surfaces it.
+        categoryId = miscId;
+        bucket = "UNCATEGORIZED";
+        confidence = 0;
+      }
+    }
     const hash = createHash("sha1").update(`${t.date}|${t.amount}|${t.description}`).digest("hex").slice(0, 16);
     return {
       restaurantId: role.restaurantId,
@@ -52,10 +78,10 @@ export async function POST(req: Request) {
       amount: t.amount,
       merchantName: null,
       description: t.description,
-      bucket: cat.bucket,
-      categoryId: catIdByName.get(legacyBucketToCategoryName(cat.bucket)) ?? null,
-      isRecurring: cat.isRecurring,
-      confidence: cat.confidence,
+      bucket,
+      categoryId,
+      isRecurring: false,
+      confidence,
       isManualOverride: false,
     };
   });

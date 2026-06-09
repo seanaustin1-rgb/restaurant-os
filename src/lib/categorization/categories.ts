@@ -117,3 +117,12 @@ export async function categoryIdByName(prisma: PrismaClient, restaurantId: strin
   });
   return new Map(cats.map((c) => [c.name, c.id]));
 }
+
+/** categoryId -> tapBucket map for a restaurant (used for the legacy bucket dual-write). */
+export async function categoryTapById(prisma: PrismaClient, restaurantId: string): Promise<Map<string, TapBucket>> {
+  const cats = await prisma.category.findMany({
+    where: { restaurantId },
+    select: { id: true, tapBucket: true },
+  });
+  return new Map(cats.map((c) => [c.id, c.tapBucket]));
+}

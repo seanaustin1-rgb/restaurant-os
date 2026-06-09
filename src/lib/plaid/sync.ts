@@ -1,8 +1,10 @@
 import { Prisma } from "@prisma/client";
+import type { TransactionBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { plaidClient } from "@/lib/plaid";
 import { decrypt } from "@/lib/crypto";
-import { categorizeTransaction } from "@/lib/categorization/vendor-map";
+import { ensureDefaultCategories, categoryTapById, MISC_CATEGORY_NAME, categoryIdByName } from "@/lib/categorization/categories";
+import { ensureDefaultRules, loadRules, applyRules, TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
 
 // Minimal shape of the Plaid transaction fields we consume.
 interface PlaidTxn {
@@ -68,8 +70,15 @@ export async function runPlaidSync(plaidConnectionId: string): Promise<PlaidSync
       : [],
   );
 
+  // Per-restaurant categorization: ensure defaults exist, then resolve via rules.
+  await ensureDefaultCategories(prisma, connection.restaurantId);
+  await ensureDefaultRules(prisma, connection.restaurantId);
+  const nameToId = await categoryIdByName(prisma, connection.restaurantId);
+  const tapById = await categoryTapById(prisma, connection.restaurantId);
+  const rules = await loadRules(prisma, connection.restaurantId);
+  const miscId = nameToId.get(MISC_CATEGORY_NAME) ?? null;
+
   const ops: Prisma.PrismaPromise<unknown>[] = upserts.map((t) => {
-    const cat = categorizeTransaction(t.merchant_name, t.name);
     const common = {
       restaurantId: connection.restaurantId,
       plaidConnectionId: connection.id,
@@ -78,7 +87,18 @@ export async function runPlaidSync(plaidConnectionId: string): Promise<PlaidSync
       merchantName: t.merchant_name ?? null,
       description: t.name ?? null,
     };
-    const categorization = { bucket: cat.bucket, isRecurring: cat.isRecurring, confidence: cat.confidence };
+    const match = applyRules(rules, t.merchant_name, t.name);
+    let categorization: { categoryId: string | null; bucket: TransactionBucket; confidence: number };
+    if (match) {
+      const tap = tapById.get(match.categoryId);
+      categorization = {
+        categoryId: match.categoryId,
+        bucket: tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED",
+        confidence: match.confidence,
+      };
+    } else {
+      categorization = { categoryId: miscId, bucket: "UNCATEGORIZED", confidence: 0 };
+    }
 
     return prisma.transaction.upsert({
       where: { plaidTxnId: t.transaction_id },

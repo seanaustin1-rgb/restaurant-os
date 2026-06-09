@@ -69,6 +69,17 @@ enum AiActionStatus {
   FAILED
 }
 
+// How a categorization Rule matches a transaction's merchant/description.
+//   KEYWORD   — case-insensitive substring match (operator-friendly default)
+//   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
+//   CHECK_MIN — check number >= numeric threshold in `pattern` (replaces the
+//               hardcoded PAYROLL_CHECK_MIN; default OFF for new tenants)
+enum RuleMatchType {
+  KEYWORD
+  REGEX
+  CHECK_MIN
+}
+
 // ─────────────────────────────────────────────────────────────
 // Core tenancy
 // ─────────────────────────────────────────────────────────────
@@ -89,6 +100,7 @@ model Restaurant {
   plaidConnections PlaidConnection[]
   transactions    Transaction[]
   categories      Category[]
+  rules           Rule[]
   tapSettings     TapSettings?
   virtualAccounts VirtualAccount[]
   targetSettings  TargetSettings?
@@ -217,9 +229,35 @@ model Category {
 
   restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  rules        Rule[]
 
   @@unique([restaurantId, name])
   @@index([restaurantId])
+}
+
+// Per-restaurant categorization rule: matches a transaction's merchant/description
+// (or check number) and assigns a Category (which determines the Profit First TAP).
+// Replaces the hardcoded global VENDOR_PATTERNS + PAYROLL_CHECK_MIN — see
+// docs/specs/transaction-categorization-v2.md (P0 #4). Lower `priority` wins;
+// ties break toward the longer/more-specific pattern.
+model Rule {
+  id           String        @id @default(cuid())
+  restaurantId String
+  categoryId   String
+  matchType    RuleMatchType @default(KEYWORD)
+  pattern      String        // keyword | regex source | numeric threshold (CHECK_MIN)
+  priority     Int           @default(100)
+  isSystem     Boolean       @default(false) // seeded default vs operator-created
+  enabled      Boolean       @default(true)
+  confidence   Float         @default(0.9)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([categoryId])
 }
 
 // ─────────────────────────────────────────────────────────────

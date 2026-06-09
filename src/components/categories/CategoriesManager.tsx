@@ -86,6 +86,48 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
     });
   }
 
+  // ── Per-field renderers ──────────────────────────────────────
+  // Shared by the desktop table and the mobile card layout so the two never
+  // drift (same responsive table→cards pattern as the rules screen).
+  function nameField(row: CategoryRow) {
+    return (
+      <input
+        value={row.name}
+        onChange={(e) => setList((l) => l.map((r) => (r.id === row.id ? { ...r, name: e.target.value } : r)))}
+        onBlur={(e) => rename(row.id, e.target.value)}
+        className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
+      />
+    );
+  }
+
+  function tapSelect(row: CategoryRow) {
+    return (
+      <select
+        value={row.tapBucket}
+        disabled={pending}
+        onChange={(e) => remap(row.id, e.target.value as TapBucket)}
+        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50 sm:w-auto"
+      >
+        {TAP_BUCKETS.map((b) => (
+          <option key={b.value} value={b.value}>{b.label}</option>
+        ))}
+      </select>
+    );
+  }
+
+  function archiveBtn(row: CategoryRow) {
+    return (
+      <button
+        onClick={() => archive(row.id)}
+        disabled={pending || row.txnCount > 0 || row.name === "Misc"}
+        title={row.name === "Misc" ? "The catch-all can't be archived" : row.txnCount > 0 ? "Reassign its transactions first" : "Archive"}
+        className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        <Archive size={13} />
+      </button>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {error && (
@@ -125,9 +167,10 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
         </button>
       </div>
 
-      {/* Category list */}
+      {/* Category list — table on desktop, stacked cards on phone/tablet */}
       <div className="overflow-hidden rounded-lg border border-line">
-        <table className="w-full text-sm">
+        {/* Desktop: aligned table */}
+        <table className="hidden w-full text-sm sm:table">
           <thead>
             <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
               <th className="px-4 py-2 font-medium">Category</th>
@@ -139,41 +182,31 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
           <tbody>
             {list.map((row) => (
               <tr key={row.id} className="border-b border-line/60 last:border-0">
-                <td className="px-4 py-2">
-                  <input
-                    value={row.name}
-                    onChange={(e) => setList((l) => l.map((r) => (r.id === row.id ? { ...r, name: e.target.value } : r)))}
-                    onBlur={(e) => rename(row.id, e.target.value)}
-                    className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
-                  />
-                </td>
-                <td className="px-4 py-2">
-                  <select
-                    value={row.tapBucket}
-                    disabled={pending}
-                    onChange={(e) => remap(row.id, e.target.value as TapBucket)}
-                    className="rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50"
-                  >
-                    {TAP_BUCKETS.map((b) => (
-                      <option key={b.value} value={b.value}>{b.label}</option>
-                    ))}
-                  </select>
-                </td>
+                <td className="px-4 py-2">{nameField(row)}</td>
+                <td className="px-4 py-2">{tapSelect(row)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{row.txnCount}</td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    onClick={() => archive(row.id)}
-                    disabled={pending || row.txnCount > 0 || row.name === "Misc"}
-                    title={row.name === "Misc" ? "The catch-all can't be archived" : row.txnCount > 0 ? "Reassign its transactions first" : "Archive"}
-                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <Archive size={13} />
-                  </button>
-                </td>
+                <td className="px-4 py-2 text-right">{archiveBtn(row)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        {/* Phone/tablet: stacked cards */}
+        <div className="divide-y divide-line/60 sm:hidden">
+          {list.map((row) => (
+            <div key={row.id} className="p-3">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">{nameField(row)}</div>
+                <span className="tnum shrink-0 text-xs text-muted">{row.txnCount} txns</span>
+                {archiveBtn(row)}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="w-20 shrink-0 text-[11px] uppercase tracking-wider text-muted">Rolls into</span>
+                {tapSelect(row)}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
       <p className="text-xs text-muted">
         Rename inline (click the name). Change &ldquo;Rolls into&rdquo; to remap a category to a different Profit First

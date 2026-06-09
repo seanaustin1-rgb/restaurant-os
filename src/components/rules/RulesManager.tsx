@@ -255,6 +255,117 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
     });
   }
 
+  // ── Per-field renderers ──────────────────────────────────────
+  // One source of truth for each control, reused by the desktop table and the
+  // mobile card layout so the two never drift. (This table→cards split is the
+  // responsive pattern other dense screens follow.)
+  function rowHighlight(row: RuleRow): string {
+    return (
+      (row.enabled ? "" : "opacity-50 ") +
+      (dragId === row.id ? "opacity-40 " : "") +
+      (overId === row.id && dragId && dragId !== row.id ? "bg-copper/10 " : "")
+    );
+  }
+
+  function grip(row: RuleRow) {
+    return (
+      <button
+        onPointerDown={(e) => startDrag(e, row.id)}
+        onPointerMove={moveDrag}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        title="Drag to reorder — higher row runs first"
+        aria-label="Drag to reorder rule"
+        style={{ touchAction: "none" }}
+        className="cursor-grab touch-none select-none text-muted hover:text-copper-soft active:cursor-grabbing"
+      >
+        <GripVertical size={14} />
+      </button>
+    );
+  }
+
+  function patternField(row: RuleRow) {
+    return (
+      <>
+        {row.isSystem ? (
+          <span className="inline-flex items-center gap-1.5" title="Built-in rule — pattern locked">
+            <Lock size={11} className="text-muted" />
+            <span className="font-mono text-xs text-[#E6E8E4]">{matchLabel(row)}</span>
+          </span>
+        ) : (
+          <input
+            value={row.pattern}
+            onChange={(e) => patchRow(row.id, { pattern: e.target.value })}
+            onBlur={(e) => savePattern(row.id, e.target.value)}
+            className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 font-mono text-xs text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
+          />
+        )}
+        {row.matchType !== "KEYWORD" && (
+          <span className="ml-2 rounded bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+            {row.matchType === "CHECK_MIN" ? "check" : "regex"}
+          </span>
+        )}
+      </>
+    );
+  }
+
+  function categorySelect(row: RuleRow) {
+    return (
+      <select
+        value={row.categoryId}
+        disabled={pending}
+        onChange={(e) => changeCategory(row.id, e.target.value)}
+        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50 sm:max-w-[200px]"
+      >
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </select>
+    );
+  }
+
+  function priorityInput(row: RuleRow) {
+    return (
+      <input
+        type="number"
+        value={row.priority}
+        min={0}
+        onChange={(e) => patchRow(row.id, { priority: e.target.valueAsNumber })}
+        onBlur={(e) => changePriority(row.id, e.target.valueAsNumber)}
+        className="tnum w-14 rounded border border-transparent bg-transparent px-1 py-0.5 text-right text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
+      />
+    );
+  }
+
+  function enableToggle(row: RuleRow) {
+    return (
+      <button
+        onClick={() => toggleEnabled(row.id)}
+        disabled={pending}
+        title={row.enabled ? "Enabled — click to disable" : "Disabled — click to enable"}
+        className={
+          "inline-flex h-5 w-9 items-center rounded-full px-0.5 transition-colors " +
+          (row.enabled ? "bg-health-green/70 justify-end" : "bg-line justify-start")
+        }
+      >
+        <span className="h-4 w-4 rounded-full bg-ink" />
+      </button>
+    );
+  }
+
+  function deleteBtn(row: RuleRow) {
+    return (
+      <button
+        onClick={() => remove(row.id)}
+        disabled={pending || row.isSystem}
+        title={row.isSystem ? "Built-in rules can be disabled but not deleted" : "Delete rule"}
+        className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        <Trash2 size={13} />
+      </button>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {error && (
@@ -330,9 +441,10 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
         </button>
       </div>
 
-      {/* Rules table */}
+      {/* Rules list — table on desktop, stacked cards on phone/tablet */}
       <div className="overflow-hidden rounded-lg border border-line">
-        <table className="w-full text-sm">
+        {/* Desktop: aligned table */}
+        <table className="hidden w-full text-sm sm:table">
           <thead>
             <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
               <th className="w-8 px-1 py-2" />
@@ -345,95 +457,13 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
           </thead>
           <tbody>
             {visible.map((row) => (
-              <tr
-                key={row.id}
-                data-rule-id={row.id}
-                className={
-                  "border-b border-line/60 last:border-0 " +
-                  (row.enabled ? "" : "opacity-50 ") +
-                  (dragId === row.id ? "opacity-40 " : "") +
-                  (overId === row.id && dragId && dragId !== row.id ? "bg-copper/10" : "")
-                }
-              >
-                <td className="px-1 py-2 text-center">
-                  <button
-                    onPointerDown={(e) => startDrag(e, row.id)}
-                    onPointerMove={moveDrag}
-                    onPointerUp={endDrag}
-                    onPointerCancel={endDrag}
-                    title="Drag to reorder — higher row runs first"
-                    aria-label="Drag to reorder rule"
-                    style={{ touchAction: "none" }}
-                    className="cursor-grab touch-none select-none text-muted hover:text-copper-soft active:cursor-grabbing"
-                  >
-                    <GripVertical size={14} />
-                  </button>
-                </td>
-                <td className="px-4 py-2">
-                  {row.isSystem ? (
-                    <span className="inline-flex items-center gap-1.5" title="Built-in rule — pattern locked">
-                      <Lock size={11} className="text-muted" />
-                      <span className="font-mono text-xs text-[#E6E8E4]">{matchLabel(row)}</span>
-                    </span>
-                  ) : (
-                    <input
-                      value={row.pattern}
-                      onChange={(e) => patchRow(row.id, { pattern: e.target.value })}
-                      onBlur={(e) => savePattern(row.id, e.target.value)}
-                      className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 font-mono text-xs text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
-                    />
-                  )}
-                  {row.matchType !== "KEYWORD" && (
-                    <span className="ml-2 rounded bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
-                      {row.matchType === "CHECK_MIN" ? "check" : "regex"}
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-2">
-                  <select
-                    value={row.categoryId}
-                    disabled={pending}
-                    onChange={(e) => changeCategory(row.id, e.target.value)}
-                    className="max-w-[200px] rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50"
-                  >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <input
-                    type="number"
-                    value={row.priority}
-                    min={0}
-                    onChange={(e) => patchRow(row.id, { priority: e.target.valueAsNumber })}
-                    onBlur={(e) => changePriority(row.id, e.target.valueAsNumber)}
-                    className="tnum w-14 rounded border border-transparent bg-transparent px-1 py-0.5 text-right text-[#E6E8E4] outline-none hover:border-line focus:border-copper-dim"
-                  />
-                </td>
-                <td className="px-3 py-2 text-center">
-                  <button
-                    onClick={() => toggleEnabled(row.id)}
-                    disabled={pending}
-                    title={row.enabled ? "Enabled — click to disable" : "Disabled — click to enable"}
-                    className={
-                      "inline-flex h-5 w-9 items-center rounded-full px-0.5 transition-colors " +
-                      (row.enabled ? "bg-health-green/70 justify-end" : "bg-line justify-start")
-                    }
-                  >
-                    <span className="h-4 w-4 rounded-full bg-ink" />
-                  </button>
-                </td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    onClick={() => remove(row.id)}
-                    disabled={pending || row.isSystem}
-                    title={row.isSystem ? "Built-in rules can be disabled but not deleted" : "Delete rule"}
-                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-30"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </td>
+              <tr key={row.id} data-rule-id={row.id} className={"border-b border-line/60 last:border-0 " + rowHighlight(row)}>
+                <td className="px-1 py-2 text-center">{grip(row)}</td>
+                <td className="px-4 py-2">{patternField(row)}</td>
+                <td className="px-4 py-2">{categorySelect(row)}</td>
+                <td className="px-3 py-2 text-right">{priorityInput(row)}</td>
+                <td className="px-3 py-2 text-center">{enableToggle(row)}</td>
+                <td className="px-4 py-2 text-right">{deleteBtn(row)}</td>
               </tr>
             ))}
             {visible.length === 0 && (
@@ -445,6 +475,36 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
             )}
           </tbody>
         </table>
+
+        {/* Phone/tablet: stacked cards */}
+        <div className="divide-y divide-line/60 sm:hidden">
+          {visible.map((row) => (
+            <div key={row.id} data-rule-id={row.id} className={"p-3 " + rowHighlight(row)}>
+              <div className="flex items-center gap-2">
+                {grip(row)}
+                <div className="min-w-0 flex-1">{patternField(row)}</div>
+                {deleteBtn(row)}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="w-16 shrink-0 text-[11px] uppercase tracking-wider text-muted">Category</span>
+                {categorySelect(row)}
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
+                  Priority {priorityInput(row)}
+                </label>
+                <label className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
+                  On {enableToggle(row)}
+                </label>
+              </div>
+            </div>
+          ))}
+          {visible.length === 0 && (
+            <div className="p-6 text-center text-sm text-muted">
+              No custom rules yet. Add one above, or show the built-in rules.
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center justify-between text-xs text-muted">

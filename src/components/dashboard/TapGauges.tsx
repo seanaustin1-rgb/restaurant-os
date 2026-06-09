@@ -84,17 +84,26 @@ function GaugeCard({ g }: { g: TapGauge }) {
       </summary>
 
       {hasDrill && (
-        <ul className="mt-2 space-y-1 border-t border-line/60 pt-2">
-          {g.categories.map((c) => (
-            <li key={c.name} className="flex items-center justify-between gap-2 text-xs">
-              <span className="truncate text-[#E6E8E4]">{c.name}</span>
-              <span className="flex items-center gap-2 whitespace-nowrap">
-                <span className="tnum text-muted">{total > 0 ? pct((c.amount / total) * 100, 0) : "—"}</span>
-                <span className="tnum w-20 text-right text-[#E6E8E4]">{money(c.amount)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-2 border-t border-line/60 pt-2">
+          {/* Visibility only — each category's share of this gauge's spend + the
+              dollars. No per-category targets (operator decision: v1 is sightlines,
+              not sub-budgets). For OpEx this share reads as "% of OpEx". */}
+          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted">
+            <span>Category</span>
+            <span>Share · Spend</span>
+          </div>
+          <ul className="space-y-1">
+            {g.categories.map((c) => (
+              <li key={c.name} className="flex items-center justify-between gap-2 text-xs">
+                <span className="truncate text-[#E6E8E4]">{c.name}</span>
+                <span className="flex items-center gap-2 whitespace-nowrap">
+                  <span className="tnum text-muted">{total > 0 ? pct((c.amount / total) * 100, 0) : "—"}</span>
+                  <span className="tnum w-20 text-right text-[#E6E8E4]">{money(c.amount)}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </details>
   );

@@ -156,6 +156,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
       laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,
       foodPct: revenue > 0 ? (cogsFood / revenue) * 100 : 0,
       liquorPct: revenue > 0 ? (cogsLiquor / revenue) * 100 : 0,
+      beveragePct: revenue > 0 ? (cogsBeverage / revenue) * 100 : 0,
       coversMTD: covers,
       coversSparkline,
     },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import type { RuleMatchType } from "@prisma/client";
 import { Plus, Trash2, FlaskConical, Lock, GripVertical } from "lucide-react";
 import { createRule, updateRule, deleteRule, reorderRules, previewCategorization } from "@/app/settings/rules/actions";
@@ -46,7 +46,12 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
   const [showSystem, setShowSystem] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  // Drag-to-reorder state: the row being dragged and the row it's hovering over.
+  // Drag-to-reorder. Pointer Events (not HTML5 drag) so it works on touch —
+  // phone/tablet — as well as mouse. Refs hold the live drag/target ids for the
+  // pointerup handler (no stale closures); the state mirrors them for the visual
+  // highlight only.
+  const dragIdRef = useRef<string | null>(null);
+  const overIdRef = useRef<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
@@ -131,17 +136,47 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
     });
   }
 
-  // ── Drag-to-reorder ──────────────────────────────────────────
-  // Reordering permutes priorities within the currently-visible set only (the
-  // server does the same), so dragging operator rules never disturbs the hidden
-  // built-in list. We optimistically reorder, then reconcile to the priorities
-  // the server hands back.
-  function handleDrop(targetId: string) {
-    const sourceId = dragId;
+  // ── Drag-to-reorder (Pointer Events: mouse + touch + pen) ─────
+  function startDrag(e: React.PointerEvent, id: string) {
+    e.preventDefault();
+    dragIdRef.current = id;
+    overIdRef.current = id;
+    setDragId(id);
+    setOverId(id);
+    // Capture so we keep receiving move/up even if the finger drifts off the grip.
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function moveDrag(e: React.PointerEvent) {
+    if (!dragIdRef.current) return;
+    e.preventDefault();
+    // Pointer capture routes events to the grip, so hit-test the row under the
+    // finger directly. Works the same for mouse and touch.
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const row = el && (el as Element).closest?.("[data-rule-id]");
+    const id = (row as HTMLElement | null)?.dataset.ruleId ?? null;
+    if (id !== overIdRef.current) {
+      overIdRef.current = id;
+      setOverId(id);
+    }
+  }
+
+  function endDrag() {
+    const sourceId = dragIdRef.current;
+    const targetId = overIdRef.current;
+    dragIdRef.current = null;
+    overIdRef.current = null;
     setDragId(null);
     setOverId(null);
-    if (!sourceId || sourceId === targetId) return;
+    if (sourceId && targetId) reorderTo(sourceId, targetId);
+  }
 
+  // Move `sourceId` to `targetId`'s slot. Reordering permutes priorities within
+  // the currently-visible set only (the server does the same), so dragging
+  // operator rules never disturbs the hidden built-in list. We optimistically
+  // reorder, then reconcile to the priorities the server hands back.
+  function reorderTo(sourceId: string, targetId: string) {
+    if (sourceId === targetId) return;
     const visibleIds = visible.map((r) => r.id);
     const from = visibleIds.indexOf(sourceId);
     const to = visibleIds.indexOf(targetId);
@@ -312,12 +347,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
             {visible.map((row) => (
               <tr
                 key={row.id}
-                onDragOver={(e) => {
-                  if (!dragId) return;
-                  e.preventDefault();
-                  if (overId !== row.id) setOverId(row.id);
-                }}
-                onDrop={() => handleDrop(row.id)}
+                data-rule-id={row.id}
                 className={
                   "border-b border-line/60 last:border-0 " +
                   (row.enabled ? "" : "opacity-50 ") +
@@ -327,14 +357,14 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
               >
                 <td className="px-1 py-2 text-center">
                   <button
-                    draggable
-                    onDragStart={() => setDragId(row.id)}
-                    onDragEnd={() => {
-                      setDragId(null);
-                      setOverId(null);
-                    }}
+                    onPointerDown={(e) => startDrag(e, row.id)}
+                    onPointerMove={moveDrag}
+                    onPointerUp={endDrag}
+                    onPointerCancel={endDrag}
                     title="Drag to reorder — higher row runs first"
-                    className="cursor-grab text-muted hover:text-copper-soft active:cursor-grabbing"
+                    aria-label="Drag to reorder rule"
+                    style={{ touchAction: "none" }}
+                    className="cursor-grab touch-none select-none text-muted hover:text-copper-soft active:cursor-grabbing"
                   >
                     <GripVertical size={14} />
                   </button>

@@ -132,6 +132,41 @@ export async function updateRule(
   revalidatePath(PATH);
 }
 
+/**
+ * Persist an explicit precedence order from drag-to-reorder. `orderedIds` is the
+ * rows the operator just rearranged, top-first (= runs-first). We permute
+ * priorities **within this set only**, so reordering the visible (operator) rules
+ * never disturbs hidden/built-in rules:
+ *   - if the set's current priorities are all distinct, we reuse those exact
+ *     values (a pure permutation — zero impact on any other rule's band), or
+ *   - if they collide (e.g. every operator rule still defaults to 5), we hand out
+ *     a contiguous run from the set's minimum so the order is total and tie-free.
+ * Returns the new {id, priority} map so the client can update without a refetch.
+ */
+export async function reorderRules(orderedIds: string[]): Promise<{ id: string; priority: number }[]> {
+  const restaurantId = await requireRestaurant();
+  if (orderedIds.length === 0) return [];
+  // Every id must belong to this restaurant (and the set must be exactly these).
+  const rules = await prisma.rule.findMany({
+    where: { id: { in: orderedIds }, restaurantId },
+    select: { id: true, priority: true },
+  });
+  if (rules.length !== orderedIds.length) throw new Error("some rules not found for this restaurant");
+
+  const current = rules.map((r) => r.priority);
+  const allDistinct = new Set(current).size === current.length;
+  const min = Math.min(...current);
+  const slots = allDistinct
+    ? [...current].sort((a, b) => a - b) // reuse the same values, just reassigned in the new order
+    : orderedIds.map((_, i) => min + i); // contiguous from the set's min — unique + ordered
+
+  const mapping = orderedIds.map((id, i) => ({ id, priority: slots[i] }));
+  // Batched array transaction — never interactive — for the Supabase pooler.
+  await prisma.$transaction(mapping.map((m) => prisma.rule.update({ where: { id: m.id }, data: { priority: m.priority } })));
+  revalidatePath(PATH);
+  return mapping;
+}
+
 export async function deleteRule(ruleId: string): Promise<void> {
   const rule = await requireOwnedRule(ruleId);
   // System (seeded) rules can be disabled but not deleted, so the seed set stays

@@ -36,16 +36,21 @@ export default async function RulesPage() {
       ])
     : [[], []];
 
-  const rows: RuleRow[] = rules.map((r) => ({
-    id: r.id,
-    matchType: r.matchType,
-    pattern: r.pattern,
-    categoryId: r.categoryId,
-    categoryName: r.category?.name ?? "—",
-    priority: r.priority,
-    enabled: r.enabled,
-    isSystem: r.isSystem,
-  }));
+  const rows: RuleRow[] = rules
+    .map((r) => ({
+      id: r.id,
+      matchType: r.matchType,
+      pattern: r.pattern,
+      categoryId: r.categoryId,
+      categoryName: r.category?.name ?? "—",
+      priority: r.priority,
+      enabled: r.enabled,
+      isSystem: r.isSystem,
+    }))
+    // Show rules in the SAME order the engine evaluates them (priority asc, then
+    // longer/more-specific pattern, then id) so the top row is the one that runs
+    // first — what drag-to-reorder lets the operator control. Mirrors sortRules().
+    .sort((a, b) => a.priority - b.priority || b.pattern.length - a.pattern.length || (a.id < b.id ? -1 : 1));
   const categories: CategoryOption[] = cats.map((c) => ({ id: c.id, name: c.name }));
 
   return (

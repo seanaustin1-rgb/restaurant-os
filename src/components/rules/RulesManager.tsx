@@ -2,8 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { RuleMatchType } from "@prisma/client";
-import { Plus, Trash2, FlaskConical, Lock } from "lucide-react";
-import { createRule, updateRule, deleteRule, previewCategorization } from "@/app/settings/rules/actions";
+import { Plus, Trash2, FlaskConical, Lock, GripVertical } from "lucide-react";
+import { createRule, updateRule, deleteRule, reorderRules, previewCategorization } from "@/app/settings/rules/actions";
 
 export interface RuleRow {
   id: string;
@@ -30,6 +30,13 @@ function matchLabel(r: { matchType: RuleMatchType; pattern: string }): string {
   return r.pattern;
 }
 
+// The order the engine evaluates rules in (priority asc, then longer/more-specific
+// pattern, then id) — mirrors sortRules() in lib/categorization/rules.ts so the
+// list reads top-to-bottom as "what runs first." Re-applied after every change.
+function byEngineOrder(a: RuleRow, b: RuleRow): number {
+  return a.priority - b.priority || b.pattern.length - a.pattern.length || (a.id < b.id ? -1 : 1);
+}
+
 export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories: CategoryOption[] }) {
   const [list, setList] = useState<RuleRow[]>(rows);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +45,10 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
   const [newMatchType, setNewMatchType] = useState<RuleMatchType>("KEYWORD");
   const [showSystem, setShowSystem] = useState(false);
   const [pending, startTransition] = useTransition();
+
+  // Drag-to-reorder state: the row being dragged and the row it's hovering over.
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   // Live tester
   const [sample, setSample] = useState("");
@@ -55,10 +66,9 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
     startTransition(async () => {
       try {
         const created = await createRule({ pattern, categoryId: newCategoryId, matchType: newMatchType });
-        setList((l) => [
-          { ...created, categoryName: catName.get(created.categoryId) ?? "—" },
-          ...l,
-        ]);
+        setList((l) =>
+          [{ ...created, categoryName: catName.get(created.categoryId) ?? "—" }, ...l].sort(byEngineOrder),
+        );
         setNewPattern("");
       } catch (e) {
         setError(errMsg(e));
@@ -109,14 +119,57 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
       if (prev) patchRow(id, { priority: prev.priority });
       return;
     }
-    patchRow(id, { priority });
+    setList((l) => l.map((r) => (r.id === id ? { ...r, priority } : r)).sort(byEngineOrder));
     setError(null);
     startTransition(async () => {
       try {
         await updateRule(id, { priority });
       } catch (e) {
         setError(errMsg(e));
-        patchRow(id, { priority: prev.priority });
+        setList((l) => l.map((r) => (r.id === id ? { ...r, priority: prev.priority } : r)).sort(byEngineOrder));
+      }
+    });
+  }
+
+  // ── Drag-to-reorder ──────────────────────────────────────────
+  // Reordering permutes priorities within the currently-visible set only (the
+  // server does the same), so dragging operator rules never disturbs the hidden
+  // built-in list. We optimistically reorder, then reconcile to the priorities
+  // the server hands back.
+  function handleDrop(targetId: string) {
+    const sourceId = dragId;
+    setDragId(null);
+    setOverId(null);
+    if (!sourceId || sourceId === targetId) return;
+
+    const visibleIds = visible.map((r) => r.id);
+    const from = visibleIds.indexOf(sourceId);
+    const to = visibleIds.indexOf(targetId);
+    if (from < 0 || to < 0) return;
+    const newOrder = [...visibleIds];
+    newOrder.splice(from, 1);
+    newOrder.splice(to, 0, sourceId);
+
+    // Optimistic: drop the dragged row just before the target in the full list.
+    const before = list;
+    setList((l) => {
+      const moved = l.find((r) => r.id === sourceId);
+      if (!moved) return l;
+      const rest = l.filter((r) => r.id !== sourceId);
+      const targetIdx = rest.findIndex((r) => r.id === targetId);
+      rest.splice(targetIdx < 0 ? rest.length : targetIdx, 0, moved);
+      return rest;
+    });
+
+    setError(null);
+    startTransition(async () => {
+      try {
+        const mapping = await reorderRules(newOrder);
+        const pri = new Map(mapping.map((m) => [m.id, m.priority]));
+        setList((l) => l.map((r) => (pri.has(r.id) ? { ...r, priority: pri.get(r.id)! } : r)).sort(byEngineOrder));
+      } catch (e) {
+        setError(errMsg(e));
+        setList(before); // restore the pre-drag order
       }
     });
   }
@@ -247,6 +300,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
+              <th className="w-8 px-1 py-2" />
               <th className="px-4 py-2 font-medium">Match</th>
               <th className="px-4 py-2 font-medium">Category</th>
               <th className="px-3 py-2 text-right font-medium">Priority</th>
@@ -256,7 +310,35 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
           </thead>
           <tbody>
             {visible.map((row) => (
-              <tr key={row.id} className={"border-b border-line/60 last:border-0 " + (row.enabled ? "" : "opacity-50")}>
+              <tr
+                key={row.id}
+                onDragOver={(e) => {
+                  if (!dragId) return;
+                  e.preventDefault();
+                  if (overId !== row.id) setOverId(row.id);
+                }}
+                onDrop={() => handleDrop(row.id)}
+                className={
+                  "border-b border-line/60 last:border-0 " +
+                  (row.enabled ? "" : "opacity-50 ") +
+                  (dragId === row.id ? "opacity-40 " : "") +
+                  (overId === row.id && dragId && dragId !== row.id ? "bg-copper/10" : "")
+                }
+              >
+                <td className="px-1 py-2 text-center">
+                  <button
+                    draggable
+                    onDragStart={() => setDragId(row.id)}
+                    onDragEnd={() => {
+                      setDragId(null);
+                      setOverId(null);
+                    }}
+                    title="Drag to reorder — higher row runs first"
+                    className="cursor-grab text-muted hover:text-copper-soft active:cursor-grabbing"
+                  >
+                    <GripVertical size={14} />
+                  </button>
+                </td>
                 <td className="px-4 py-2">
                   {row.isSystem ? (
                     <span className="inline-flex items-center gap-1.5" title="Built-in rule — pattern locked">
@@ -326,7 +408,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
             ))}
             {visible.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-sm text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted">
                   No custom rules yet. Add one above, or show the built-in rules.
                 </td>
               </tr>
@@ -340,7 +422,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
           <input type="checkbox" checked={showSystem} onChange={(e) => setShowSystem(e.target.checked)} />
           Show built-in rules ({systemCount})
         </label>
-        <span>Lower priority wins. Built-in patterns are locked; disable one and add your own to override.</span>
+        <span>Drag the handle to reorder — higher rows run first. Built-in patterns are locked; disable one and add your own to override.</span>
       </div>
     </div>
   );

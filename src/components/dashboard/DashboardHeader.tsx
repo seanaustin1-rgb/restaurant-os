@@ -43,6 +43,7 @@ export function DashboardHeader({
             <Link href="/dashboard" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Dashboard</Link>
             <Link href="/transactions" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Transactions</Link>
             <Link href="/settings/categories" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Categories</Link>
+            <Link href="/settings/rules" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Rules</Link>
             <Link href="/connections" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Connections</Link>
           </nav>
         </div>

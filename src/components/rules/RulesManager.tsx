@@ -2,8 +2,16 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { RuleMatchType } from "@prisma/client";
-import { Plus, Trash2, FlaskConical, Lock } from "lucide-react";
+import { Plus, Trash2, FlaskConical, Lock, Sparkles, Check, X } from "lucide-react";
 import { createRule, updateRule, deleteRule, previewCategorization } from "@/app/settings/rules/actions";
+
+export interface RuleSuggestion {
+  pattern: string;
+  categoryId: string;
+  categoryName: string;
+  count: number;
+  samples: string[];
+}
 
 export interface RuleRow {
   id: string;
@@ -30,8 +38,17 @@ function matchLabel(r: { matchType: RuleMatchType; pattern: string }): string {
   return r.pattern;
 }
 
-export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories: CategoryOption[] }) {
+export function RulesManager({
+  rows,
+  categories,
+  suggestions = [],
+}: {
+  rows: RuleRow[];
+  categories: CategoryOption[];
+  suggestions?: RuleSuggestion[];
+}) {
   const [list, setList] = useState<RuleRow[]>(rows);
+  const [suggested, setSuggested] = useState<RuleSuggestion[]>(suggestions);
   const [error, setError] = useState<string | null>(null);
   const [newPattern, setNewPattern] = useState("");
   const [newCategoryId, setNewCategoryId] = useState(categories[0]?.id ?? "");
@@ -149,6 +166,25 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
     });
   }
 
+  // Turn a suggestion into a real KEYWORD rule (operator priority), then drop it
+  // from the panel and show it in the rules table immediately.
+  function acceptSuggestion(s: RuleSuggestion) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const created = await createRule({ pattern: s.pattern, categoryId: s.categoryId, matchType: "KEYWORD" });
+        setList((l) => [{ ...created, categoryName: catName.get(created.categoryId) ?? s.categoryName }, ...l]);
+        setSuggested((sg) => sg.filter((x) => x.pattern !== s.pattern));
+      } catch (e) {
+        setError(errMsg(e));
+      }
+    });
+  }
+
+  function dismissSuggestion(pattern: string) {
+    setSuggested((sg) => sg.filter((x) => x.pattern !== pattern));
+  }
+
   function runTest() {
     const text = sample.trim();
     if (!text) return;
@@ -171,6 +207,55 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
     <div className="space-y-4">
       {error && (
         <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</div>
+      )}
+
+      {/* Suggested rules — learned from the operator's repeated manual overrides. */}
+      {suggested.length > 0 && (
+        <div className="rounded-lg border border-copper-dim/60 bg-copper/5 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Sparkles size={15} className="text-copper-soft" />
+            <h2 className="text-sm font-medium text-copper-soft">Suggested rules</h2>
+            <span className="text-xs text-muted">
+              You&apos;ve repeatedly recategorized these vendors by hand — make it a rule so future imports do it for you.
+            </span>
+          </div>
+          <ul className="space-y-2">
+            {suggested.map((s) => (
+              <li
+                key={s.pattern}
+                className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-line bg-surface px-3 py-2"
+              >
+                <span className="font-mono text-xs text-[#E6E8E4]">{s.pattern}</span>
+                <span className="text-muted">→</span>
+                <span className="text-sm text-copper-soft">{s.categoryName}</span>
+                <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+                  {s.count}× tagged by hand
+                </span>
+                {s.samples.length > 0 && (
+                  <span className="truncate text-xs text-muted" title={s.samples.join(" · ")}>
+                    e.g. {s.samples[0]}
+                  </span>
+                )}
+                <span className="ml-auto flex items-center gap-1.5">
+                  <button
+                    onClick={() => acceptSuggestion(s)}
+                    disabled={pending}
+                    className="inline-flex items-center gap-1 rounded-md border border-copper-dim bg-copper/10 px-2.5 py-1 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+                  >
+                    <Check size={13} /> Make a rule
+                  </button>
+                  <button
+                    onClick={() => dismissSuggestion(s.pattern)}
+                    title="Dismiss"
+                    className="inline-flex items-center rounded-md px-1.5 py-1 text-xs text-muted hover:text-[#E6E8E4]"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {/* Live tester */}

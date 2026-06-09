@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { RuleMatchType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { loadRules, applyRules } from "@/lib/categorization/rules";
+import { getRuleSuggestionsForRestaurant, type RuleSuggestionWithName } from "@/lib/categorization/suggestions";
 
 const PATH = "/settings/rules";
 
@@ -145,6 +146,14 @@ export interface PreviewResult {
   categoryName: string | null; // null = no rule matched (would fall back to Misc)
   ruleId: string | null;
   confidence: number | null;
+}
+
+// Suggested rules from the operator's repeated manual overrides (Phase 3 / P2).
+// "You've tagged 3 VEVOR charges as Maintenance — make it a rule?" Read-only:
+// turning a suggestion into a rule goes through the normal createRule path.
+export async function getRuleSuggestions(): Promise<RuleSuggestionWithName[]> {
+  const restaurantId = await requireRestaurant();
+  return getRuleSuggestionsForRestaurant(prisma, restaurantId);
 }
 
 // Live "what would this categorize as?" tester — runs the real engine server-side.

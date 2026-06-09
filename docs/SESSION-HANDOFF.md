@@ -30,6 +30,24 @@ npm run dev          # http://localhost:3000
 ```
 DB is already migrated on Supabase (shared) — no migration needed to develop.
 
+## Phase 3 (P2) — started
+- **Suggested rules from repeated manual overrides — SHIPPED.** When an operator
+  hand-recategorizes the same vendor ≥3 times consistently, `/settings/rules` now
+  offers a one-click "Make a rule" card ("you've tagged 3 VEVOR charges as
+  Maintenance — make it a rule?"). No schema change: it reads existing
+  manual-override transactions + the live rules. Pure logic in
+  `src/lib/categorization/suggestions.ts` (`extractVendorToken` derives a
+  distinctive keyword; `buildSuggestions` groups + filters), surfaced by
+  `getRuleSuggestions` action and a panel in `RulesManager`. Skips keywords an
+  existing rule already maps to the same category; still suggests ones the rules
+  currently send to the *wrong* category (operator-priority keyword wins). Preview
+  with `npx dotenv -e .env.local -- tsx scripts/suggest-rules.ts <restaurantId>`.
+  - *Known limitation:* "Dismiss" is client-side only (no persistence without a
+    schema change) — a dismissed-but-not-accepted suggestion reappears on reload.
+- **Still open in Phase 3:** cross-tenant category templates / industry presets;
+  per-category budget targets (needs a `Category` schema field → migration);
+  category-level month-over-month trends.
+
 ## NEXT STEP — finish Phase 1 (2 pieces left)
 1. **Beer/Beverage as its own dashboard gauge line** (operator decision: keep it separate from Liquor). Small, visible. `cogsBeverage` is already computed in `src/lib/dashboard/data.ts`; just needs a gauge in the dashboard components.
 2. **Per-restaurant rules engine** — move keyword→category rules into the DB per restaurant (a `Rule` table), replacing the hardcoded `src/lib/categorization/vendor-map.ts` + `PAYROLL_CHECK_MIN`, so new imports self-categorize per tenant. Biggest remaining piece. Then Phase 2 (spend-by-category drill-down, bulk recategorize, rule-management UI).

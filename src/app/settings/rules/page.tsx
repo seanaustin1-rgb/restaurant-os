@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RulesManager, type RuleRow, type CategoryOption } from "@/components/rules/RulesManager";
+import { getRuleSuggestionsForRestaurant, type RuleSuggestionWithName } from "@/lib/categorization/suggestions";
 
 export default async function RulesPage() {
   const { userId } = await auth();
@@ -12,7 +13,7 @@ export default async function RulesPage() {
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
-  const [rules, cats] = role
+  const [rules, cats, suggestions] = role
     ? await Promise.all([
         prisma.rule.findMany({
           where: { restaurantId: role.restaurantId },
@@ -33,8 +34,9 @@ export default async function RulesPage() {
           orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
           select: { id: true, name: true },
         }),
+        getRuleSuggestionsForRestaurant(prisma, role.restaurantId),
       ])
-    : [[], []];
+    : [[], [], [] as RuleSuggestionWithName[]];
 
   const rows: RuleRow[] = rules.map((r) => ({
     id: r.id,
@@ -59,7 +61,7 @@ export default async function RulesPage() {
         </p>
       </div>
       {role ? (
-        <RulesManager rows={rows} categories={categories} />
+        <RulesManager rows={rows} categories={categories} suggestions={suggestions} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           You need an operator/manager role on a restaurant to manage rules.

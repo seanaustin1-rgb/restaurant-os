@@ -10,7 +10,7 @@ import {
 } from "@/lib/profit-first/calculator";
 import type { HeartbeatData } from "@/components/dashboard/HeartbeatStrip";
 import type { RevenueData } from "@/components/dashboard/RevenueRow";
-import type { TapGauge } from "@/components/dashboard/TapGauges";
+import type { TapGauge, CategorySpend } from "@/components/dashboard/TapGauges";
 
 export interface DashboardData {
   restaurantId: string;
@@ -91,9 +91,10 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   // (Two-level model: operator-extensible categories sum into the fixed TAP set.)
   const cats = await prisma.category.findMany({
     where: { restaurantId },
-    select: { id: true, tapBucket: true },
+    select: { id: true, name: true, tapBucket: true },
   });
   const tapByCatId = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
+  const nameByCatId = new Map(cats.map((c) => [c.id, c.name]));
 
   const byCat = await prisma.transaction.groupBy({
     by: ["categoryId"],
@@ -101,12 +102,25 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
     _sum: { amount: true },
   });
   const tapSum: Record<string, number> = {};
+  // Per-TAP category breakdown (for the dashboard drill-down). Keyed by TAP, then
+  // by category name so a real "Misc" row and null-category spend merge cleanly.
+  const breakdown: Record<string, Map<string, number>> = {};
   for (const row of byCat) {
     // Null category -> Misc -> OpEx (operator decision: nothing is dropped).
     const tap = (row.categoryId && tapByCatId.get(row.categoryId)) || "OPEX";
-    tapSum[tap] = (tapSum[tap] ?? 0) + n(row._sum.amount);
+    const amount = n(row._sum.amount);
+    tapSum[tap] = (tapSum[tap] ?? 0) + amount;
+    const name = (row.categoryId && nameByCatId.get(row.categoryId)) || "Misc";
+    const m = (breakdown[tap] ??= new Map());
+    m.set(name, (m.get(name) ?? 0) + amount);
   }
   const tap = (b: string) => tapSum[b] ?? 0;
+  // Sorted, positive-spend category rows for a TAP bucket (largest first).
+  const catsForTap = (b: string): CategorySpend[] =>
+    [...(breakdown[b]?.entries() ?? [])]
+      .map(([name, amount]) => ({ name, amount }))
+      .filter((c) => c.amount > 0)
+      .sort((a, b2) => b2.amount - a.amount);
 
   const cogsFood = tap("COGS_FOOD");
   const cogsLiquor = tap("COGS_LIQUOR");
@@ -131,16 +145,16 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   const targets = calculateTargets(revenue, taps);
 
   const gaugeDefs = [
-    { key: "profit", label: "Profit", tapPct: taps.profitPct, target: targets.profit, spent: 0 },
-    { key: "ownerPay", label: "Owner Pay", tapPct: taps.ownerPayPct, target: targets.ownerPay, spent: ownerPay },
-    { key: "cogsFood", label: "COGS — Food", tapPct: taps.cogsFoodPct, target: targets.cogsFood, spent: cogsFood },
-    { key: "cogsLiquor", label: "COGS — Liquor", tapPct: taps.cogsLiquorPct, target: targets.cogsLiquor, spent: cogsLiquor },
-    { key: "labor", label: "Labor", tapPct: taps.laborPct, target: targets.labor, spent: labor },
-    { key: "opex", label: "OpEx + Spill", tapPct: taps.opexPct, target: targets.opex, spent: opex },
+    { key: "profit", label: "Profit", tapPct: taps.profitPct, target: targets.profit, spent: 0, bucket: "" },
+    { key: "ownerPay", label: "Owner Pay", tapPct: taps.ownerPayPct, target: targets.ownerPay, spent: ownerPay, bucket: "OWNER_PAY" },
+    { key: "cogsFood", label: "COGS — Food", tapPct: taps.cogsFoodPct, target: targets.cogsFood, spent: cogsFood, bucket: "COGS_FOOD" },
+    { key: "cogsLiquor", label: "COGS — Liquor", tapPct: taps.cogsLiquorPct, target: targets.cogsLiquor, spent: cogsLiquor, bucket: "COGS_LIQUOR" },
+    { key: "labor", label: "Labor", tapPct: taps.laborPct, target: targets.labor, spent: labor, bucket: "LABOR" },
+    { key: "opex", label: "OpEx + Spill", tapPct: taps.opexPct, target: targets.opex, spent: opex, bucket: "OPEX" },
   ];
-  const gauges: TapGauge[] = gaugeDefs.map((g) => {
+  const gauges: TapGauge[] = gaugeDefs.map(({ bucket, ...g }) => {
     const usagePct = calculateUsagePct(g.spent, g.target);
-    return { ...g, usagePct, health: getHealthStatus(usagePct) };
+    return { ...g, usagePct, health: getHealthStatus(usagePct), categories: catsForTap(bucket) };
   });
 
   const hasData = revenue > 0 || byCat.length > 0;

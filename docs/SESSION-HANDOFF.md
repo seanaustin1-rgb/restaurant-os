@@ -37,6 +37,17 @@ DB is already migrated on Supabase (shared) — no migration needed to develop.
 **Operator decisions locked:** Misc → OpEx (until named); COGS_BEVERAGE = its own gauge line; Bank/Register Cash → EXCLUDED (register restocks); cash tip-outs → EXCLUDED, never Labor (pass-through to servers — also why some Toast deposits net low/negative).
 **Still open:** rule precedence on multi-match; per-category OpEx sub-budgets; whether the beverage line gets its own target %.
 
+## ⚠️ PENDING DB MIGRATION (apply before running)
+Milestone B added 4 nullable columns to `TargetSettings` (beverage cost targets +
+manual sales-mix). The Prisma client now selects them, so **the dashboard will error
+until the migration is applied** to the shared Supabase DB:
+```
+npx dotenv -e .env.local -- prisma migrate deploy
+```
+Migration: `prisma/migrations/20260609120000_add_beverage_cost_targets`. Additive &
+safe (all nullable). Existing Customer Zero gets the columns as NULL → beverage
+gauges show a "set your sales mix" prompt until configured at `/settings/beverage`.
+
 ## Loose ends / reminders
 - **Bring `.env.local`** — the only thing not in the repo (DB password + all keys).
 - **Supabase free-tier pauses after inactivity.** If scripts/app error with `FATAL (ENOTFOUND) tenant/user … not found`, the project is asleep — open the Supabase dashboard (project ref `rweclputxgwutykinlbr`) and **Restore/Resume** it.

@@ -35,7 +35,6 @@ export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
   }
 
   const isInvestor = role === "INVESTOR";
-  const canEdit = role === "OPERATOR";
 
   return (
     <div>
@@ -69,7 +68,7 @@ export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
         {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
-        {!isInvestor && <ModuleGrid editable={canEdit} />}
+        {!isInvestor && <ModuleGrid />}
       </main>
     </div>
   );

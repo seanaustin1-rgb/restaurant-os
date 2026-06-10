@@ -92,11 +92,11 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
           <span className="tnum text-[#E6E8E4]">{selected.size}</span> selected
           {selected.size > 0 && <span className="tnum"> · {money(selectedAmount)}</span>}
         </span>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <select
             value={targetCat}
             onChange={(e) => setTargetCat(e.target.value)}
-            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim"
+            className="min-w-0 flex-1 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim sm:flex-none"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -105,16 +105,17 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
           <button
             onClick={assign}
             disabled={pending || selected.size === 0 || !targetCat}
-            className="inline-flex items-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20 disabled:opacity-50"
           >
             <Check size={14} /> Assign {selected.size > 0 ? selected.size : ""}
           </button>
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table — rows on desktop, cards on phone/tablet */}
       <div className="overflow-hidden rounded-lg border border-line">
-        <table className="w-full text-sm">
+        {/* Desktop */}
+        <table className="hidden w-full text-sm sm:table">
           <thead>
             <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
               <th className="w-10 px-3 py-2">
@@ -145,6 +146,36 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
             })}
           </tbody>
         </table>
+
+        {/* Phone/tablet */}
+        <div className="divide-y divide-line/60 sm:hidden">
+          {list.map((r) => {
+            const isSel = selected.has(r.id);
+            return (
+              <div
+                key={r.id}
+                onClick={() => toggle(r.id)}
+                className={"flex cursor-pointer items-start gap-3 p-3 " + (isSel ? "bg-copper/10" : "")}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSel}
+                  onChange={() => toggle(r.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Select row"
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="min-w-0 flex-1 break-words text-[#E6E8E4]">{r.description || r.merchantName || "—"}</span>
+                    <span className="tnum shrink-0 text-[#E6E8E4]">{money(r.amount)}</span>
+                  </div>
+                  <span className="tnum mt-1 block text-xs text-muted">{r.date}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <p className="text-xs text-muted">

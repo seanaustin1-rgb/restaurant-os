@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { RuleMatchType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { loadRules, applyRules } from "@/lib/categorization/rules";
+import { getDismissedKeys, SUGGESTIONS_MODULE } from "@/lib/categorization/suggestions";
 
 const PATH = "/settings/rules";
 
@@ -180,6 +181,28 @@ export interface PreviewResult {
   categoryName: string | null; // null = no rule matched (would fall back to Misc)
   ruleId: string | null;
   confidence: number | null;
+}
+
+// ── Suggested rules ──────────────────────────────────────────
+// Accept a suggestion → create the keyword rule (reuses createRule's validation
+// + category-ownership check). Once it exists, the suggestion engine stops
+// offering it (an existing rule now covers that keyword).
+export async function acceptRuleSuggestion(signature: string, categoryId: string): Promise<void> {
+  await createRule({ pattern: signature, categoryId, matchType: "KEYWORD" });
+}
+
+// Dismiss a suggestion → remember it (in ModuleConfig settings, no extra table)
+// so it isn't offered again even if the operator keeps hand-tagging it.
+export async function dismissRuleSuggestion(key: string): Promise<void> {
+  const restaurantId = await requireRestaurant();
+  const dismissed = await getDismissedKeys(prisma, restaurantId);
+  if (!dismissed.includes(key)) dismissed.push(key);
+  await prisma.moduleConfig.upsert({
+    where: { restaurantId_moduleKey: { restaurantId, moduleKey: SUGGESTIONS_MODULE } },
+    update: { settings: { dismissed } },
+    create: { restaurantId, moduleKey: SUGGESTIONS_MODULE, settings: { dismissed } },
+  });
+  revalidatePath(PATH);
 }
 
 // Live "what would this categorize as?" tester — runs the real engine server-side.

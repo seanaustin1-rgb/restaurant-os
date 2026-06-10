@@ -5,6 +5,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
 import type { RoleKey } from "@/lib/mock/dashboard";
+import { NAV_LINKS } from "@/lib/nav";
 
 interface RestaurantOption {
   id: string;
@@ -12,16 +13,6 @@ interface RestaurantOption {
 }
 
 const ROLES: RoleKey[] = ["OPERATOR", "CONSULTANT", "INVESTOR", "MANAGER"];
-
-const NAV_LINKS = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/transactions/misc", label: "Review" },
-  { href: "/settings/categories", label: "Categories" },
-  { href: "/settings/rules", label: "Rules" },
-  { href: "/settings/beverage", label: "Beverage" },
-  { href: "/connections", label: "Connections" },
-];
 
 export function DashboardHeader({
   restaurants,

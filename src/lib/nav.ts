@@ -1,0 +1,11 @@
+// Shared primary navigation — used by both the global AppHeader (every page) and
+// the dashboard's own header, so the link set never drifts between them.
+export const NAV_LINKS: { href: string; label: string }[] = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/transactions", label: "Transactions" },
+  { href: "/transactions/misc", label: "Review" },
+  { href: "/settings/categories", label: "Categories" },
+  { href: "/settings/rules", label: "Rules" },
+  { href: "/settings/beverage", label: "Beverage" },
+  { href: "/connections", label: "Connections" },
+];

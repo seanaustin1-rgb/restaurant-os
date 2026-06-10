@@ -15,8 +15,8 @@ export interface ModuleDef {
 
 export const MODULES: ModuleDef[] = [
   { key: "cash-flow", name: "Cash Flow", description: "Daily inflows & outflows", status: "live", href: "/modules/cash-flow" },
-  // Data-ready, queued next (bank data already supports these).
-  { key: "vendors", name: "Vendor Spend", description: "Spend by supplier", status: "soon", blockedBy: "Next up" },
+  { key: "vendors", name: "Vendor Spend", description: "Spend by supplier", status: "live", href: "/modules/vendor-spend" },
+  // Data-ready, queued next.
   { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "soon", blockedBy: "Next up" },
   // Need Toast / POS item-level data.
   { key: "food-cost", name: "Food Cost Tracker", description: "COGS vs. theoretical", status: "soon", blockedBy: "Toast" },

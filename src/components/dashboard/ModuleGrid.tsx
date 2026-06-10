@@ -47,7 +47,7 @@ export function ModuleGrid({ editable }: { editable: boolean }) {
             {editable && (
               <button
                 onClick={() => setActive((a) => a.filter((x) => x.key !== m.key))}
-                className="absolute right-2 top-2 text-muted opacity-0 transition-opacity hover:text-health-red group-hover:opacity-100"
+                className="absolute right-2 top-2 text-muted opacity-100 transition-opacity hover:text-health-red sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label={`Remove ${m.name}`}
               >
                 <X size={14} />

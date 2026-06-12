@@ -17,7 +17,12 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isToastConfigured, getToastConfig } from "./config";
-import { getMetricsForDay, runMetricsReport, toBusinessDate } from "./analytics";
+import {
+  getMetricsForDay,
+  runMetricsReport,
+  runMenuReport,
+  toBusinessDate,
+} from "./analytics";
 
 /** One revenue center's slice of a day's sales (stored in DailySales.mixByRevenueCenter). */
 export interface RevenueCenterSlice {
@@ -201,5 +206,86 @@ export async function syncToastSalesMix(
     daysWritten: written,
     fromBusinessDate: firstWritten,
     toBusinessDate: lastWritten,
+  };
+}
+
+/**
+ * Sync per-item menu sales into MenuItemSales for the last `weeks` weeks
+ * (ending yesterday). One weekly era menu report per week (groupBy MENU_ITEM —
+ * the API allows exactly one groupBy, and only on day/week ranges); rows come
+ * back per business date × item and are upserted by (restaurantId, date, item).
+ * Batched $transaction([...]) per week — required over the Supabase pooler.
+ */
+export async function syncToastMenuItemSales(
+  restaurantId: string,
+  weeks = 4,
+  spacingMs = 1100,
+): Promise<ToastSyncResult & { rowsWritten: number }> {
+  if (!isToastConfigured()) {
+    throw new Error("Toast is not configured — cannot sync menu item sales.");
+  }
+
+  let rowsWritten = 0;
+  let daysSeen = new Set<string>();
+  let firstWritten: string | null = null;
+  let lastWritten: string | null = null;
+
+  for (let w = weeks; w >= 1; w--) {
+    const end = new Date();
+    end.setDate(end.getDate() - 1 - 7 * (w - 1));
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+
+    const rows = await runMenuReport({
+      startBusinessDate: toBusinessDate(start),
+      endBusinessDate: toBusinessDate(end),
+      timeRange: "week",
+      groupBy: "MENU_ITEM",
+    });
+
+    const writes = rows
+      .filter((r) => r.menuItemGuid && r.businessDate)
+      .map((r) => {
+        const date = businessDateToUtcDate(String(r.businessDate));
+        daysSeen.add(String(r.businessDate));
+        const values = {
+          menuItemName: String(r.menuItemName ?? "Unknown"),
+          quantitySold: Math.round(Number(r.quantitySold ?? 0)),
+          netSales: Number(r.netSalesAmount ?? 0),
+          avgPrice: r.averagePrice == null ? null : Number(r.averagePrice),
+          source: "toast",
+        };
+        return prisma.menuItemSales.upsert({
+          where: {
+            restaurantId_date_menuItemGuid: {
+              restaurantId,
+              date,
+              menuItemGuid: String(r.menuItemGuid),
+            },
+          },
+          update: values,
+          create: { restaurantId, date, menuItemGuid: String(r.menuItemGuid), ...values },
+        });
+      });
+
+    // Chunk the batched transaction to keep statements per txn reasonable.
+    for (let i = 0; i < writes.length; i += 200) {
+      await prisma.$transaction(writes.slice(i, i + 200));
+    }
+    rowsWritten += writes.length;
+
+    const dates = [...daysSeen].sort();
+    firstWritten = dates[0] ?? firstWritten;
+    lastWritten = dates[dates.length - 1] ?? lastWritten;
+    if (w > 1) await sleep(spacingMs);
+  }
+
+  return {
+    restaurantId,
+    daysRequested: weeks * 7,
+    daysWritten: daysSeen.size,
+    fromBusinessDate: firstWritten,
+    toBusinessDate: lastWritten,
+    rowsWritten,
   };
 }

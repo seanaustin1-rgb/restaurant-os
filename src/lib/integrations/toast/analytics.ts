@@ -180,6 +180,116 @@ export async function getMetricsForDay(
   );
 }
 
+// ——— Menu reporting (/era/v1/menu) ———
+
+export type MenuGroupBy = "MENU" | "MENU_GROUP" | "MENU_ITEM" | "MODIFIER";
+
+/** A row of the menu report. Dimension fields present per the groupBy used. */
+export interface MenuReportRow {
+  restaurantGuid: string;
+  businessDate: string; // "YYYYMMDD" — rows are per business date within the range
+  netSalesAmount: number;
+  grossSalesAmount: number;
+  discountAmount: number;
+  refundAmount: number;
+  voidAmount: number;
+  quantitySold: number;
+  averagePrice: number;
+  wasteCount: number;
+  wasteAmount: number;
+  menuGuid?: string;
+  menuName?: string;
+  menuGroupGuid?: string;
+  menuGroupName?: string;
+  menuItemGuid?: string;
+  menuItemName?: string;
+  modifierGuid?: string;
+  modifierName?: string;
+  [key: string]: unknown;
+}
+
+export interface MenuReportRequest {
+  startBusinessDate: number;
+  endBusinessDate: number;
+  restaurantIds?: string[];
+  excludedRestaurantIds?: string[];
+  /**
+   * EXACTLY ONE dimension (the API rejects multiple), and groupBy is only
+   * accepted for "day" or "week" time ranges (verified live 2026-06-12).
+   */
+  groupBy?: MenuGroupBy;
+  /** "day" (1 day) or "week" (≤7 days) when groupBy is set; month/year otherwise. */
+  timeRange?: EraTimeRange;
+}
+
+/**
+ * Run a menu report end to end (POST create → poll consolidated GET
+ * /era/v1/menu/{guid}). Rows come back per business date × dimension value —
+ * aggregate across dates in the caller.
+ */
+export async function runMenuReport(
+  req: MenuReportRequest,
+  poll: EraPollOptions = {},
+): Promise<MenuReportRow[]> {
+  const { hostname, restaurantGuid } = getToastConfig();
+  const timeRange = req.timeRange ?? "week";
+
+  if (req.groupBy && timeRange !== "day" && timeRange !== "week") {
+    throw new Error(
+      `runMenuReport: groupBy is only supported for "day" or "week" time ranges (got "${timeRange}").`,
+    );
+  }
+
+  const body = {
+    startBusinessDate: req.startBusinessDate,
+    endBusinessDate: req.endBusinessDate,
+    restaurantIds: req.restaurantIds ?? [restaurantGuid],
+    excludedRestaurantIds: req.excludedRestaurantIds ?? [],
+    ...(req.groupBy ? { groupBy: [req.groupBy] } : {}),
+  };
+
+  const headers = await eraAuthHeaders();
+  const postRes = await fetch(`${hostname}/era/v1/menu/${timeRange}`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: poll.signal,
+  });
+  if (!postRes.ok) {
+    throw new ToastApiError({
+      status: postRes.status,
+      statusText: postRes.statusText,
+      path: `/era/v1/menu/${timeRange}`,
+      body: (await postRes.text()).slice(0, 2000),
+    });
+  }
+  const reportGuid = (await postRes.text()).trim().replace(/^"|"$/g, "");
+
+  const attempts = poll.attempts ?? 10;
+  const intervalMs = poll.intervalMs ?? 2000;
+  for (let i = 0; i < attempts; i++) {
+    const getRes = await fetch(`${hostname}/era/v1/menu/${reportGuid}`, {
+      headers: await eraAuthHeaders(),
+      signal: poll.signal,
+    });
+    if (getRes.status === 200) {
+      const data = JSON.parse((await getRes.text()) || "[]");
+      return (Array.isArray(data) ? data : [data]) as MenuReportRow[];
+    }
+    if (getRes.status === 202 || getRes.status === 404) {
+      await sleep(intervalMs, poll.signal);
+      continue;
+    }
+    throw new ToastApiError({
+      status: getRes.status,
+      statusText: getRes.statusText,
+      path: `/era/v1/menu/${reportGuid}`,
+      body: (await getRes.text()).slice(0, 2000),
+    });
+  }
+  throw new Error(`runMenuReport: report ${reportGuid} not ready after ${attempts} polls.`);
+}
+
 /**
  * Convenience: a daily series across an inclusive Date range. Because timeRange
  * "day" only accepts a single date, this issues one report per day, spaced to

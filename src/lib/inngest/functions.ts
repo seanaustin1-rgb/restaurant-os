@@ -6,6 +6,7 @@ import {
   resolveToastRestaurantId,
   syncToastDailyMetrics,
   syncToastSalesMix,
+  syncToastMenuItemSales,
 } from "@/lib/integrations/toast/sync";
 
 /**
@@ -96,7 +97,11 @@ export const syncToastMetrics = inngest.createFunction(
     const salesMix = await step.run("sync-sales-mix", () =>
       syncToastSalesMix(restaurantId, days),
     );
-    return { metrics, salesMix };
+    // One weekly menu report refreshes the current week's per-item rows.
+    const menuItems = await step.run("sync-menu-items", () =>
+      syncToastMenuItemSales(restaurantId, 1),
+    );
+    return { metrics, salesMix, menuItems };
   },
 );
 

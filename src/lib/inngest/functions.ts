@@ -1,6 +1,8 @@
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { runPlaidSync } from "@/lib/plaid/sync";
+import { isToastConfigured } from "@/lib/integrations/toast/config";
+import { resolveToastRestaurantId, syncToastDailyMetrics } from "@/lib/integrations/toast/sync";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -47,4 +49,50 @@ export const syncPlaidConnection = inngest.createFunction(
   },
 );
 
-export const functions = [dailyPlaidSyncScheduler, syncPlaidConnection];
+/**
+ * Toast daily-metrics scheduler — runs each morning and, if Toast is configured,
+ * dispatches a metrics-sync event for the resolved restaurant. Single-tenant for
+ * now (one global Toast client); when per-restaurant Toast creds land on
+ * PosConnection this becomes a fan-out like the Plaid scheduler. Scheduled a bit
+ * before the Plaid sync so Toast EARNED data is fresh for the dashboard.
+ */
+export const dailyToastSyncScheduler = inngest.createFunction(
+  { id: "daily-toast-sync-scheduler" },
+  { cron: "TZ=America/New_York 30 5 * * *" }, // 5:30am ET daily
+  async ({ step }) => {
+    if (!isToastConfigured()) return { dispatched: 0, reason: "toast-not-configured" };
+
+    const restaurantId = await step.run("resolve-toast-restaurant", () =>
+      resolveToastRestaurantId(),
+    );
+    if (!restaurantId) return { dispatched: 0, reason: "no-restaurant" };
+
+    await step.sendEvent("dispatch-toast-sync", {
+      name: "toast/metrics.sync.requested",
+      data: { restaurantId },
+    });
+    return { dispatched: 1, restaurantId };
+  },
+);
+
+/**
+ * Toast metrics worker — pulls recent days from the Analytics (era) API into
+ * DailySales. Default 3-day lookback to self-heal late-posting business days;
+ * upserts are idempotent so retries are safe.
+ */
+export const syncToastMetrics = inngest.createFunction(
+  { id: "sync-toast-metrics", retries: 3 },
+  { event: "toast/metrics.sync.requested" },
+  async ({ event, step }) => {
+    const restaurantId = event.data.restaurantId as string;
+    const days = (event.data.days as number | undefined) ?? 3;
+    return step.run("sync", () => syncToastDailyMetrics(restaurantId, days));
+  },
+);
+
+export const functions = [
+  dailyPlaidSyncScheduler,
+  syncPlaidConnection,
+  dailyToastSyncScheduler,
+  syncToastMetrics,
+];

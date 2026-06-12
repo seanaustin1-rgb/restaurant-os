@@ -15,8 +15,34 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { isToastConfigured } from "./config";
+import { isToastConfigured, getToastConfig } from "./config";
 import { getMetricsForDay, toBusinessDate } from "./analytics";
+
+/**
+ * Resolve which DB restaurant the configured Toast GUID maps to.
+ *
+ * Single-tenant for now (one global TOAST_RESTAURANT_GUID in env). Prefers an
+ * explicit PosConnection (provider TOAST, externalId = the GUID); falls back to
+ * the lone Customer-Zero restaurant by name. Returns null if Toast isn't
+ * configured or no restaurant can be resolved. When per-restaurant Toast creds
+ * move onto PosConnection, the scheduler can fan out across all of them.
+ */
+export async function resolveToastRestaurantId(): Promise<string | null> {
+  if (!isToastConfigured()) return null;
+  const { restaurantGuid } = getToastConfig();
+
+  const conn = await prisma.posConnection.findFirst({
+    where: { provider: "TOAST", externalId: restaurantGuid, isActive: true },
+    select: { restaurantId: true },
+  });
+  if (conn) return conn.restaurantId;
+
+  const fallback = await prisma.restaurant.findFirst({
+    where: { name: { contains: "Stone Grille and Tap" } },
+    select: { id: true },
+  });
+  return fallback?.id ?? null;
+}
 
 export interface ToastSyncResult {
   restaurantId: string;

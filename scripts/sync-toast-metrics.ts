@@ -10,8 +10,8 @@
  */
 
 import { prisma } from "../src/lib/prisma";
-import { syncToastDailyMetrics } from "../src/lib/integrations/toast/sync";
-import { isToastConfigured, getToastConfig } from "../src/lib/integrations/toast/config";
+import { syncToastDailyMetrics, resolveToastRestaurantId } from "../src/lib/integrations/toast/sync";
+import { isToastConfigured } from "../src/lib/integrations/toast/config";
 
 async function main() {
   if (!isToastConfigured()) {
@@ -19,29 +19,14 @@ async function main() {
     process.exit(1);
   }
   const days = Number(process.argv[2] ?? "21");
-  const { restaurantGuid } = getToastConfig();
 
-  // Map the Toast GUID to a DB restaurant. Single-tenant for now: prefer an
-  // exact PosConnection match, else fall back to the configured Customer Zero.
-  const conn = await prisma.posConnection.findFirst({
-    where: { externalId: restaurantGuid },
-    select: { restaurantId: true },
-  });
-  let restaurantId = conn?.restaurantId;
-  if (!restaurantId) {
-    const sg = await prisma.restaurant.findFirst({
-      where: { name: { contains: "Stone Grille and Tap" } },
-      select: { id: true, name: true },
-    });
-    restaurantId = sg?.id;
-    console.log(`No PosConnection for GUID; using restaurant "${sg?.name}" (${restaurantId}).`);
-  }
+  const restaurantId = await resolveToastRestaurantId();
   if (!restaurantId) {
     console.error("Could not resolve a restaurant for the configured Toast GUID.");
     process.exit(1);
   }
 
-  console.log(`Syncing ${days} days of Toast metrics into DailySales…`);
+  console.log(`Syncing ${days} days of Toast metrics into DailySales (restaurant ${restaurantId})…`);
   const result = await syncToastDailyMetrics(restaurantId, days);
   console.log("Done:", JSON.stringify(result, null, 2));
 

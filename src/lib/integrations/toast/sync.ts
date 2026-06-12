@@ -96,6 +96,7 @@ export async function syncToastDailyMetrics(
         covers: row.guestCount,
         checkCount: row.ordersCount,
         laborCost: row.hourlyJobTotalPay,
+        laborHours: row.hourlyJobTotalHours,
         source: "toast",
       };
       await prisma.dailySales.upsert({

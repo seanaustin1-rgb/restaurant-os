@@ -26,7 +26,7 @@ export const MODULES: ModuleDef[] = [
   { key: "menu-eng", name: "Menu Engineering", description: "Stars, dogs, plowhorses", status: "soon", blockedBy: "Toast" },
   { key: "covers-flow", name: "Covers Flow", description: "Daily guests, orders & avg check", status: "live", href: "/modules/covers-flow" },
   // Need other inputs.
-  { key: "labor", name: "Labor Hours", description: "Scheduled vs. actual hours", status: "soon", blockedBy: "Sling (via Toast)" },
+  { key: "labor", name: "Labor Hours", description: "Actual hours, cost & sales/hour", status: "live", href: "/modules/labor" },
   { key: "reviews", name: "Reputation", description: "Reviews across platforms", status: "soon", blockedBy: "Reviews API" },
   { key: "inventory", name: "Inventory", description: "On-hand & variance", status: "soon", blockedBy: "Inventory feed" },
   { key: "forecast", name: "Forecast", description: "13-week cash projection", status: "soon", blockedBy: "More history" },

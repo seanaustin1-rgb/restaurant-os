@@ -76,14 +76,37 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > **403 on all 8** (`scripts/toast-scope-probe.ts`). The six-tile plan — especially Labor Hours
 > (scheduled-vs-actual *hours*, punch/shift level) — needs **operational** scopes (`labor:read`,
 > `labor.employees:read`, `orders:read`, `config:read`, `menus:read`, `cashmgmt:read`). **Decision pending
-> (operator):** (A) request **Standard API Access** from Toast with those operational read scopes, or
-> (B) build on the **enterprise-metrics** Analytics API we already have (probe its surface first — it may
-> cover sales/labor-cost *aggregates* but likely NOT scheduled-vs-actual hours).
+> (operator):** (A) request **Standard API Access** from Toast with those operational read scopes, and/or
+> (B) build on the **enterprise-metrics** Analytics (`era`) API we already have. **Operator chose BOTH
+> (2026-06-12): B now, A in parallel.**
 >
-> **Still TODO before the tiles:** (a) resolve the access fork above (operational scopes vs analytics API);
-> (b) add the four vars to **Vercel** (Prod+Preview) for deploy, and to the **web environment config** if
-> you want web sessions to reach Toast; (c) then build the six tiles' data layers on `toastFetch` — Labor
-> Hours first (`docs/specs/labor-hours-module.md`). Keep tile work out of the scaffold PR.
+> **✅ ANALYTICS API VERIFIED WORKING (2026-06-12).** `scripts/toast-analytics-probe.ts` ran the full
+> async flow against `https://ws-api.toasttab.com` and pulled REAL data for Customer Zero:
+> `POST /era/v1/metrics/day {startBusinessDate,endBusinessDate (same day, YYYYMMDD int), restaurantIds:[GUID],
+> excludedRestaurantIds:[], groupBy:[]}` → `reportRequestGuid` → `GET /era/v1/metrics/{guid}` (note: the
+> consolidated path; `/era/v1/metrics/{timeRange}/{guid}` is **410 deprecated**). timeRange `day` requires
+> start==end. **Per-day fields returned:** `guestCount, ordersCount, openOrdersCount, closedOrdersCount,
+> voidOrdersCount, discountOrderCount, netSalesAmount, grossSalesAmount, discountAmount, voidOrdersAmount,
+> refundAmount, avgOrderValue, hourlyJobTotalHours, hourlyJobTotalPay, hourlyJobSalesPerLaborHour`.
+> `groupBy` ∈ {REVENUE_CENTER, DINING_OPTION, ORDER_SOURCE}; `aggregateBy` DAY|HOUR (day only). Separate
+> `POST/GET /era/v1/menu` for menu-item reporting; `/era/v1/guest/payments/{guid}` for guest data.
+>
+> **Tiles buildable NOW on analytics (no new Toast access):** **Covers Flow** (guestCount/ordersCount),
+> **Sales Mix** (netSales + groupBy DINING_OPTION/ORDER_SOURCE/REVENUE_CENTER; menu-item via `/era/v1/menu`),
+> **Labor productivity / ACTUAL hours** (hourlyJobTotalHours, hourlyJobTotalPay, salesPerLaborHour — WoW/YoY
+> trend). **Still need other sources:** **scheduled** hours for true scheduled-vs-actual (Sling — analytics
+> has actual only), item-level **food cost %** (Stock/inventory or MarginEdge — no cost in metrics), and any
+> real-time **orders** detail. Connector note: analytics calls use `restaurantIds` in the body, NOT the
+> `Toast-Restaurant-External-ID` header — add an `era`/analytics client method alongside `toastFetch`.
+>
+> **A (in parallel):** request **Standard API Access** from Toast for operational read scopes
+> (`labor:read`, `labor.employees:read`, `orders:read`, `menus:read`, `config:read`, `stock:read`,
+> `cashmgmt:read`) — reference the existing client id; do NOT paste the secret. Separately evaluate the
+> **Sling** API for scheduled hours.
+>
+> **Still TODO:** (a) add the four vars to **Vercel** (Prod+Preview) for deploy + **web env config** if web
+> sessions need Toast; (b) build an `era` analytics client method (body-based restaurant id) next to
+> `toastFetch`; (c) build the now-unblocked tiles. Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

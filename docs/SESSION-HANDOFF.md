@@ -141,7 +141,12 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > request to Toast (operational scopes) + Sling for scheduled hours.
 
 **Other bank-data modules on deck (no Toast needed):**
-- **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).
+- ~~**Recurring & Subscriptions**~~ **SHIPPED (2026-06-12, PR #12)** — `/modules/recurring`. Groups outflows
+  by `signatureOf` across full history; recurring = ≥3 hits at a steady cadence OR vendor-map `isRecurring`.
+  Est/mo = cadence projection for fixed-price ("SUB", CV<0.10) vendors, **actuals pro-rated** for variable
+  ones (avoids inflating mixed groups like Toast payroll+fees). Price creep only on subs (≥3 hits, ≥2%).
+  Honest short-history banner (<60 days). Verified on Customer Zero: 24 recurring vendors, ~$149k/mo
+  (Toast payroll $65k, PFG $35k, PLCB $11.8k…). No migration needed.
 - **Cash Runway / low-balance warning** — days of cash at current burn, early-warning line.
 - **Duplicate / unusual payment catcher** — flags likely double-pays and off-norm charges.
 

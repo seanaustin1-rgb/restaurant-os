@@ -17,6 +17,7 @@ export const MODULES: ModuleDef[] = [
   { key: "cash-flow", name: "Cash Flow", description: "Daily inflows & outflows", status: "live", href: "/modules/cash-flow" },
   { key: "vendors", name: "Vendor Spend", description: "Spend by supplier", status: "live", href: "/modules/vendor-spend" },
   { key: "spending", name: "Spending by Category", description: "Where money goes vs. profit", status: "live", href: "/modules/spending" },
+  { key: "recurring", name: "Recurring & Subscriptions", description: "Repeating charges & price creep", status: "live", href: "/modules/recurring" },
   // Needs real reported figures, not estimates: collected sales tax from the
   // Toast sales report + payroll tax withheld per pay run from payroll/accounting.
   { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "soon", blockedBy: "Toast + payroll" },

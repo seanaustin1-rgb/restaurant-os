@@ -115,6 +115,17 @@ Secrets live in **three separate stores** — setting one does **not** populate 
 Toast vars to set in #1 and #2: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_API_HOSTNAME`,
 `TOAST_RESTAURANT_GUID`. **Rotate** any key that was ever pasted into chat before going live.
 
+**Dead ends that do NOT work (verified 2026-06-12 — don't retry):**
+- **Dropping a file in `~/.claude/`.** That folder is Claude Code's *own* internal config (its auth
+  token, session transcripts, hooks, skills) — not a secrets store. A file there never becomes a
+  `process.env.*` var the app reads, and the folder is rebuilt fresh each container (not carried over
+  from a prior session), so anything placed there is gone next session.
+- **Assuming a previous session's `.env.local` / uploaded file persists.** Containers are ephemeral and
+  cloned fresh from the repo; only committed files survive, and secrets must never be committed.
+- **The ONLY mechanism that makes a secret visible to the agent in a web session** is store #1 above
+  (env vars/secrets in the web environment's configuration), injected into the container as real env
+  vars. This is a platform UI action the operator must do — the agent cannot place or read it for them.
+
 ## Loose ends / reminders
 - **Bring `.env.local`** — the only thing not in the repo (DB password + all keys).
 - **Supabase free-tier pauses after inactivity.** If scripts/app error with `FATAL (ENOTFOUND) tenant/user … not found`, the project is asleep — open the Supabase dashboard (project ref `rweclputxgwutykinlbr`) and **Restore/Resume** it.

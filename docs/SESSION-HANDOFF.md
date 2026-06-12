@@ -48,18 +48,70 @@ and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-m
 actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First
 integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
 
-> **NEXT CONCRETE ACTION (agreed 2026-06-12): build the Toast connector SCAFFOLDING.**
-> A standalone `src/lib/integrations/toast/` module (OAuth2 client-credentials auth + token cache,
-> typed client, `Toast-Restaurant-External-ID` header) plus the env var contract added to
-> `.env.example`. **This builds WITHOUT the live secret** — it only defines the var names it consumes:
-> `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID`. The real
-> values get dropped into the environment config (see "Where secrets go" below); the connector lights up
-> when they're present. Scope this turn = scaffold only; no live API calls until secrets land + a tile
-> is wired. Keep it small and deliberate — do not build the six tiles' data layers in the same pass.
-
-> **⚠️ SECRETS NOT PRESENT IN WEB SESSIONS YET (2026-06-12):** verified this session has **zero** app
-> secrets injected — no Plaid/Clerk/DB/Toast env vars, no `.env.local`. Web sessions run in fresh
-> ephemeral containers; secrets must live in the *environment configuration* to be visible. See below.
+> **✅ DONE (2026-06-12): Toast connector scaffolding built AND verified live.**
+> Standalone `src/lib/integrations/toast/` module — OAuth2 client-credentials auth + process-local
+> token cache (`auth.ts`), typed `toastFetch` that injects the `Toast-Restaurant-External-ID` header
+> and retries once on 401 (`client.ts`), config guard `isToastConfigured()` (`config.ts`), barrel
+> `index.ts`. Env contract added to `.env.example`: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`,
+> `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID`. Shipped in **PR #3**. Smoke test
+> `scripts/test-toast-auth.ts` + discovery `scripts/toast-list-restaurants.ts`.
+>
+> **Verified against PRODUCTION** (`https://ws-api.toasttab.com`) from the **local Windows machine**
+> (`.env.local`, NOT a web session): ✓ config present → ✓ **OAuth2 login succeeds** (real bearer token)
+> → restaurant-scoped read returns **403** = GUID + header **accepted**, but this API client's granted
+> **scopes** don't yet cover `/restaurants`. So the connector plumbing is proven end-to-end; reading
+> actual data just needs the relevant scope enabled on the Toast API client.
+>
+> **Credential facts learned (2026-06-12):** these are **Standard (restaurant-scoped) API credentials**,
+> NOT a partner integration — the Partners API (`/partners/v1/restaurants`) returns
+> `401 "partnerGuid must be supplied in token"`, so there's no partner restaurant-list to query; the
+> restaurant GUID must be supplied directly (it's a UUID issued with the client id/secret).
+> `TOAST_RESTAURANT_GUID` is a UUID (8-4-4-4-12), **not** the access-type label `TOAST_MACHINE_CLIENT`.
+>
+> **⚠️ CRITICAL FINDING (2026-06-12): the current creds are ANALYTICS-only, not operational.**
+> Decoded the access-token claims: `iss=toast-pos.toasttab.auth0.com`, **`scope=enterprise-metrics:read`**
+> — the only granted scope. So this client is provisioned for the Toast **Analytics / Enterprise Metrics
+> API**, NOT Standard (operational) API Access. A scope probe of 8 operational endpoints (labor.employees,
+> labor.jobs, labor.timeEntries, orders, menus, config/diningOptions, restaurants, cashmgmt) returned
+> **403 on all 8** (`scripts/toast-scope-probe.ts`). The six-tile plan — especially Labor Hours
+> (scheduled-vs-actual *hours*, punch/shift level) — needs **operational** scopes (`labor:read`,
+> `labor.employees:read`, `orders:read`, `config:read`, `menus:read`, `cashmgmt:read`). **Decision pending
+> (operator):** (A) request **Standard API Access** from Toast with those operational read scopes, and/or
+> (B) build on the **enterprise-metrics** Analytics (`era`) API we already have. **Operator chose BOTH
+> (2026-06-12): B now, A in parallel.**
+>
+> **✅ ANALYTICS API VERIFIED WORKING (2026-06-12).** `scripts/toast-analytics-probe.ts` ran the full
+> async flow against `https://ws-api.toasttab.com` and pulled REAL data for Customer Zero:
+> `POST /era/v1/metrics/day {startBusinessDate,endBusinessDate (same day, YYYYMMDD int), restaurantIds:[GUID],
+> excludedRestaurantIds:[], groupBy:[]}` → `reportRequestGuid` → `GET /era/v1/metrics/{guid}` (note: the
+> consolidated path; `/era/v1/metrics/{timeRange}/{guid}` is **410 deprecated**). timeRange `day` requires
+> start==end. **Per-day fields returned:** `guestCount, ordersCount, openOrdersCount, closedOrdersCount,
+> voidOrdersCount, discountOrderCount, netSalesAmount, grossSalesAmount, discountAmount, voidOrdersAmount,
+> refundAmount, avgOrderValue, hourlyJobTotalHours, hourlyJobTotalPay, hourlyJobSalesPerLaborHour`.
+> `groupBy` ∈ {REVENUE_CENTER, DINING_OPTION, ORDER_SOURCE}; `aggregateBy` DAY|HOUR (day only). Separate
+> `POST/GET /era/v1/menu` for menu-item reporting; `/era/v1/guest/payments/{guid}` for guest data.
+>
+> **Tiles buildable NOW on analytics (no new Toast access):** **Covers Flow** (guestCount/ordersCount),
+> **Sales Mix** (netSales + groupBy DINING_OPTION/ORDER_SOURCE/REVENUE_CENTER; menu-item via `/era/v1/menu`),
+> **Labor productivity / ACTUAL hours** (hourlyJobTotalHours, hourlyJobTotalPay, salesPerLaborHour — WoW/YoY
+> trend). **Still need other sources:** **scheduled** hours for true scheduled-vs-actual (Sling — analytics
+> has actual only), item-level **food cost %** (Stock/inventory or MarginEdge — no cost in metrics), and any
+> real-time **orders** detail. Connector note: analytics calls use `restaurantIds` in the body, NOT the
+> `Toast-Restaurant-External-ID` header — add an `era`/analytics client method alongside `toastFetch`.
+>
+> **A (in parallel):** request **Standard API Access** from Toast for operational read scopes
+> (`labor:read`, `labor.employees:read`, `orders:read`, `menus:read`, `config:read`, `stock:read`,
+> `cashmgmt:read`) — reference the existing client id; do NOT paste the secret. Separately evaluate the
+> **Sling** API for scheduled hours.
+>
+> **era client BUILT (2026-06-12):** `src/lib/integrations/toast/analytics.ts` — `runMetricsReport()`,
+> `getMetricsForDay()`, `getMetricsForDays()` (per-day loop for trends; cache it), `toBusinessDate()`,
+> typed `MetricsRow`. Body-based restaurantIds + async POST→poll-GET handled. Exported from the barrel;
+> probe refactored to use it. In PR #3.
+>
+> **Still TODO:** (a) add the four vars to **Vercel** (Prod+Preview) for deploy + **web env config** if web
+> sessions need Toast; (b) build the now-unblocked tiles on the era client (Covers Flow / Sales Mix /
+> actual Labor Hours). Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

@@ -68,11 +68,22 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > restaurant GUID must be supplied directly (it's a UUID issued with the client id/secret).
 > `TOAST_RESTAURANT_GUID` is a UUID (8-4-4-4-12), **not** the access-type label `TOAST_MACHINE_CLIENT`.
 >
-> **Still TODO before the tiles:** (a) enable the needed read **scopes** on the Toast API client
-> (labor/orders/etc.) for a 200; (b) add the same four vars to **Vercel** (Prod+Preview) for deploy,
-> and to the **web environment config** if you want web sessions to reach Toast; (c) then build the six
-> tiles' data layers on top of `toastFetch` — Labor Hours first (`docs/specs/labor-hours-module.md`).
-> Keep tile work out of the scaffold PR.
+> **⚠️ CRITICAL FINDING (2026-06-12): the current creds are ANALYTICS-only, not operational.**
+> Decoded the access-token claims: `iss=toast-pos.toasttab.auth0.com`, **`scope=enterprise-metrics:read`**
+> — the only granted scope. So this client is provisioned for the Toast **Analytics / Enterprise Metrics
+> API**, NOT Standard (operational) API Access. A scope probe of 8 operational endpoints (labor.employees,
+> labor.jobs, labor.timeEntries, orders, menus, config/diningOptions, restaurants, cashmgmt) returned
+> **403 on all 8** (`scripts/toast-scope-probe.ts`). The six-tile plan — especially Labor Hours
+> (scheduled-vs-actual *hours*, punch/shift level) — needs **operational** scopes (`labor:read`,
+> `labor.employees:read`, `orders:read`, `config:read`, `menus:read`, `cashmgmt:read`). **Decision pending
+> (operator):** (A) request **Standard API Access** from Toast with those operational read scopes, or
+> (B) build on the **enterprise-metrics** Analytics API we already have (probe its surface first — it may
+> cover sales/labor-cost *aggregates* but likely NOT scheduled-vs-actual hours).
+>
+> **Still TODO before the tiles:** (a) resolve the access fork above (operational scopes vs analytics API);
+> (b) add the four vars to **Vercel** (Prod+Preview) for deploy, and to the **web environment config** if
+> you want web sessions to reach Toast; (c) then build the six tiles' data layers on `toastFetch` — Labor
+> Hours first (`docs/specs/labor-hours-module.md`). Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

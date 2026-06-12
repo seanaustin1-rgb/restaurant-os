@@ -94,7 +94,7 @@ export function StatementUploader() {
 
       {(status === "parsed" || status === "importing") && (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted">
               Found <span className="text-[#E6E8E4]">{candidates.length}</span> candidate transactions
               {candidates.length > 0 && ` · ${selectedCount} selected`}
@@ -115,7 +115,8 @@ export function StatementUploader() {
 
           {candidates.length > 0 ? (
             <div className="max-h-96 overflow-auto rounded-lg border border-line">
-              <table className="w-full text-sm">
+              {/* Desktop table */}
+              <table className="hidden w-full text-sm sm:table">
                 <thead className="sticky top-0 bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
                   <tr>
                     <th className="px-3 py-2"></th>
@@ -137,6 +138,28 @@ export function StatementUploader() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Phone/tablet: tappable cards */}
+              <div className="divide-y divide-line/60 sm:hidden">
+                {candidates.map((c, i) => (
+                  <div key={i} onClick={() => toggle(i)} className="flex cursor-pointer items-start gap-3 p-3">
+                    <input
+                      type="checkbox"
+                      checked={!excluded.has(i)}
+                      onChange={() => toggle(i)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-0.5 h-4 w-4 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="min-w-0 flex-1 break-words text-[#E6E8E4]">{c.description}</span>
+                        <span className="tnum shrink-0 text-[#E6E8E4]">{money2(c.amount)}</span>
+                      </div>
+                      <span className="tnum mt-1 block text-xs text-muted">{c.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="rounded-lg border border-line bg-surface p-4 text-sm text-muted">

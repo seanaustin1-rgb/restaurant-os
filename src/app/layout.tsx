@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Cormorant_Garamond, DM_Sans, Space_Mono } from "next/font/google";
+import { AppHeader } from "@/components/AppHeader";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -43,6 +44,7 @@ export default function RootLayout({
     >
       <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <body className="min-h-screen bg-ink text-[#E6E8E4] antialiased">
+          <AppHeader />
           {children}
         </body>
       </html>

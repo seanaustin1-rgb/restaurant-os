@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # Installs deps; the postinstall script runs `prisma generate`, which the
+      # typecheck needs for @prisma/client types. No DB connection is required to
+      # generate the client.
+      - run: npm ci
+
+      # Type safety is the gate. A full `next build` is intentionally not run here:
+      # it prerenders pages that need Clerk/Supabase secrets, which CI must not hold.
+      - run: npx tsc --noEmit

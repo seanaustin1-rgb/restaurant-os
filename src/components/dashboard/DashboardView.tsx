@@ -6,6 +6,7 @@ import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatStrip } from "./HeartbeatStrip";
 import { RevenueRow } from "./RevenueRow";
 import { TapGauges } from "./TapGauges";
+import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
 import type { RoleKey } from "@/lib/mock/dashboard";
 import type { DashboardData } from "@/lib/dashboard/data";
@@ -34,7 +35,6 @@ export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
   }
 
   const isInvestor = role === "INVESTOR";
-  const canEdit = role === "OPERATOR";
 
   return (
     <div>
@@ -67,7 +67,8 @@ export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
-        {!isInvestor && <ModuleGrid editable={canEdit} />}
+        {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
+        {!isInvestor && <ModuleGrid />}
       </main>
     </div>
   );

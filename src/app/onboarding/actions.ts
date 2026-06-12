@@ -49,7 +49,17 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
         create: {}, // schema defaults: 5/5/18/12/32/28, simulationMode = true
       },
       targetSettings: {
-        create: { targetPrimeCost: 60, targetFoodCost: 18, targetLiquorCost: 12, targetLaborCost: 32 },
+        // Pour-cost targets default to common industry benchmarks (liquor ≤20%,
+        // beer/bev ≤24% of their respective sales); sales-mix left null until the
+        // operator sets it or Toast supplies the per-day split.
+        create: {
+          targetPrimeCost: 60,
+          targetFoodCost: 18,
+          targetLiquorCost: 12,
+          targetLaborCost: 32,
+          targetLiquorPourPct: 20,
+          targetBeveragePourPct: 24,
+        },
       },
       moduleConfigs: {
         create: DEFAULT_MODULES.map((mod, i) => ({ moduleKey: mod.key, position: i })),

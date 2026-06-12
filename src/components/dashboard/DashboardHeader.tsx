@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import { ChevronDown, FlaskConical } from "lucide-react";
+import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
 import type { RoleKey } from "@/lib/mock/dashboard";
+import { NAV_LINKS } from "@/lib/nav";
 
 interface RestaurantOption {
   id: string;
@@ -27,31 +28,40 @@ export function DashboardHeader({
   onSelectRole: (r: RoleKey) => void;
 }) {
   const active = restaurants.find((r) => r.id === activeId) ?? restaurants[0];
+  const [navOpen, setNavOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-ink/90 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-        <div className="flex items-center gap-3">
-          <span className="font-display text-xl font-semibold text-copper">Restaurant OS</span>
-          <span className="text-line">/</span>
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {/* Mobile nav toggle (inline nav appears at lg+). */}
+          <button
+            onClick={() => setNavOpen((o) => !o)}
+            aria-label={navOpen ? "Close menu" : "Open menu"}
+            aria-expanded={navOpen}
+            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim lg:hidden"
+          >
+            {navOpen ? <X size={16} /> : <Menu size={16} />}
+          </button>
+          <span className="hidden font-display text-xl font-semibold text-copper sm:inline">Restaurant OS</span>
+          <span className="hidden text-line sm:inline">/</span>
           <Dropdown
             label={active.name}
             items={restaurants.map((r) => ({ key: r.id, label: r.name }))}
             onPick={onSelectRestaurant}
           />
-          <nav className="ml-2 hidden items-center gap-1 text-sm text-muted md:flex">
-            <Link href="/dashboard" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Dashboard</Link>
-            <Link href="/transactions" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Transactions</Link>
-            <Link href="/transactions/misc" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Review</Link>
-            <Link href="/settings/categories" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Categories</Link>
-            <Link href="/settings/rules" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Rules</Link>
-            <Link href="/connections" className="rounded px-2 py-1 hover:text-[#E6E8E4]">Connections</Link>
+          <nav className="ml-2 hidden items-center gap-1 text-sm text-muted lg:flex">
+            {NAV_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="rounded px-2 py-1 hover:text-[#E6E8E4]">
+                {l.label}
+              </Link>
+            ))}
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-copper-dim bg-copper/10 px-3 py-1 text-xs font-medium text-copper-soft">
-            <FlaskConical size={13} /> Simulation
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-copper-dim bg-copper/10 px-2 py-1 text-xs font-medium text-copper-soft sm:px-3">
+            <FlaskConical size={13} /> <span className="hidden sm:inline">Simulation</span>
           </span>
           <Dropdown
             label={titleCase(role)}
@@ -61,6 +71,22 @@ export function DashboardHeader({
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>
+
+      {/* Mobile nav panel */}
+      {navOpen && (
+        <nav className="border-t border-line bg-ink/95 px-4 py-2 lg:hidden">
+          {NAV_LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={() => setNavOpen(false)}
+              className="block rounded-md px-2 py-2.5 text-sm text-[#E6E8E4] hover:bg-copper/10"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }
@@ -76,13 +102,13 @@ function Dropdown({
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim"
+        className="inline-flex max-w-[40vw] items-center gap-1.5 truncate rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim sm:max-w-none"
       >
-        {label}
-        <ChevronDown size={14} className="text-muted" />
+        <span className="truncate">{label}</span>
+        <ChevronDown size={14} className="shrink-0 text-muted" />
       </button>
       {open && (
         <>

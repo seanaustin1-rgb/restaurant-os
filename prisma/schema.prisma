@@ -306,6 +306,15 @@ model TargetSettings {
   targetLiquorCost Decimal? @db.Decimal(5, 2)
   targetLaborCost Decimal? @db.Decimal(5, 2)
   targetRevPASH   Decimal? @db.Decimal(8, 2)
+  // Beverage cost ratios (Milestone B). Pour-cost targets are a % of the matching
+  // ALCOHOL sales (not total revenue): liquor COGS ÷ liquor sales, beer/bev COGS ÷
+  // beverage sales. The *MixPct fields are a manual fallback for the denominator —
+  // liquor/beer-wine as a % of net sales — used only until Toast supplies per-day
+  // DailySales.liquorSales / .beverageSales, at which point actuals take over.
+  targetLiquorPourPct   Decimal? @db.Decimal(5, 2)
+  targetBeveragePourPct Decimal? @db.Decimal(5, 2)
+  liquorSalesMixPct     Decimal? @db.Decimal(5, 2)
+  beverageSalesMixPct   Decimal? @db.Decimal(5, 2)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

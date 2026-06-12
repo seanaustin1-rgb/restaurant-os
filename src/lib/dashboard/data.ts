@@ -11,6 +11,7 @@ import {
 import type { HeartbeatData } from "@/components/dashboard/HeartbeatStrip";
 import type { RevenueData } from "@/components/dashboard/RevenueRow";
 import type { TapGauge, CategorySpend } from "@/components/dashboard/TapGauges";
+import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 
 export interface DashboardData {
   restaurantId: string;
@@ -21,6 +22,7 @@ export interface DashboardData {
   heartbeat: HeartbeatData;
   revenue: RevenueData;
   gauges: TapGauge[];
+  costRatios: CostRatioGauge[];
 }
 
 const DEFAULT_TAPS: Taps = {
@@ -50,7 +52,7 @@ const n = (v: unknown): number => (v == null ? 0 : Number(v));
 export async function loadDashboardData(restaurantId: string): Promise<DashboardData> {
   const restaurant = await prisma.restaurant.findUnique({
     where: { id: restaurantId },
-    include: { tapSettings: true },
+    include: { tapSettings: true, targetSettings: true },
   });
   const name = restaurant?.name ?? "Restaurant";
   const seatCount = restaurant?.seatCount ?? 0;
@@ -80,9 +82,11 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   // Sales/operational from DailySales.
   const sales = await prisma.dailySales.aggregate({
     where: { restaurantId, date: { gte: start, lt: end } },
-    _sum: { netSales: true, covers: true, checkCount: true, hoursOpen: true },
+    _sum: { netSales: true, liquorSales: true, beverageSales: true, covers: true, checkCount: true, hoursOpen: true },
   });
   const revenue = n(sales._sum.netSales);
+  const liquorSalesActual = n(sales._sum.liquorSales);
+  const beverageSalesActual = n(sales._sum.beverageSales);
   const covers = n(sales._sum.covers);
   const checks = n(sales._sum.checkCount);
   const hoursOpen = n(sales._sum.hoursOpen);
@@ -157,6 +161,40 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
     return { ...g, usagePct, health: getHealthStatus(usagePct), categories: catsForTap(bucket) };
   });
 
+  // Beverage cost ratios (Milestone B). Denominator = real per-day alcohol sales
+  // when present (future: Toast populates DailySales.liquorSales/.beverageSales),
+  // else estimated from the operator's manual sales-mix %. Targets are operator-set
+  // as a % of alcohol sales; lower is better.
+  const ts = restaurant?.targetSettings;
+  const targetLiquorPour = ts?.targetLiquorPourPct != null ? n(ts.targetLiquorPourPct) : null;
+  const targetBeveragePour = ts?.targetBeveragePourPct != null ? n(ts.targetBeveragePourPct) : null;
+  const costRatio = (
+    key: string,
+    label: string,
+    cogs: number,
+    actualSales: number,
+    mixPct: number,
+    target: number | null,
+  ): CostRatioGauge => {
+    let salesDenom = 0;
+    let basis: CostRatioGauge["basis"] = "none";
+    if (actualSales > 0) {
+      salesDenom = actualSales;
+      basis = "actual";
+    } else if (mixPct > 0 && revenue > 0) {
+      salesDenom = revenue * (mixPct / 100);
+      basis = "estimated";
+    }
+    const costPct = salesDenom > 0 ? (cogs / salesDenom) * 100 : null;
+    const health =
+      costPct != null && target != null && target > 0 ? getHealthStatus((costPct / target) * 100) : "green";
+    return { key, label, cogs, sales: salesDenom, costPct, target, health, basis };
+  };
+  const costRatios: CostRatioGauge[] = [
+    costRatio("liquor", "Liquor Pour Cost", cogsLiquor, liquorSalesActual, n(ts?.liquorSalesMixPct), targetLiquorPour),
+    costRatio("beverage", "Beer / Beverage Cost", cogsBeverage, beverageSalesActual, n(ts?.beverageSalesMixPct), targetBeveragePour),
+  ];
+
   const hasData = revenue > 0 || byCat.length > 0;
 
   return {
@@ -181,5 +219,6 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
       revPASH: calculateRevPASH(revenue, seatCount, hoursOpen),
     },
     gauges,
+    costRatios,
   };
 }

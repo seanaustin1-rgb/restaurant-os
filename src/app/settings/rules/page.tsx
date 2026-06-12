@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RulesManager, type RuleRow, type CategoryOption } from "@/components/rules/RulesManager";
+import { RuleSuggestions } from "@/components/rules/RuleSuggestions";
+import { computeRuleSuggestions, getDismissedKeys, type RuleSuggestion } from "@/lib/categorization/suggestions";
 
 export default async function RulesPage() {
   const { userId } = await auth();
@@ -36,17 +38,26 @@ export default async function RulesPage() {
       ])
     : [[], []];
 
-  const rows: RuleRow[] = rules.map((r) => ({
-    id: r.id,
-    matchType: r.matchType,
-    pattern: r.pattern,
-    categoryId: r.categoryId,
-    categoryName: r.category?.name ?? "—",
-    priority: r.priority,
-    enabled: r.enabled,
-    isSystem: r.isSystem,
-  }));
+  const rows: RuleRow[] = rules
+    .map((r) => ({
+      id: r.id,
+      matchType: r.matchType,
+      pattern: r.pattern,
+      categoryId: r.categoryId,
+      categoryName: r.category?.name ?? "—",
+      priority: r.priority,
+      enabled: r.enabled,
+      isSystem: r.isSystem,
+    }))
+    // Show rules in the SAME order the engine evaluates them (priority asc, then
+    // longer/more-specific pattern, then id) so the top row is the one that runs
+    // first — what drag-to-reorder lets the operator control. Mirrors sortRules().
+    .sort((a, b) => a.priority - b.priority || b.pattern.length - a.pattern.length || (a.id < b.id ? -1 : 1));
   const categories: CategoryOption[] = cats.map((c) => ({ id: c.id, name: c.name }));
+
+  const suggestions: RuleSuggestion[] = role
+    ? await computeRuleSuggestions(prisma, role.restaurantId, new Set(await getDismissedKeys(prisma, role.restaurantId)))
+    : [];
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
@@ -59,7 +70,10 @@ export default async function RulesPage() {
         </p>
       </div>
       {role ? (
-        <RulesManager rows={rows} categories={categories} />
+        <div className="space-y-4">
+          <RuleSuggestions suggestions={suggestions} />
+          <RulesManager rows={rows} categories={categories} />
+        </div>
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           You need an operator/manager role on a restaurant to manage rules.

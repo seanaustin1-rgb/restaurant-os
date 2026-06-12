@@ -39,8 +39,8 @@ DB is already migrated on Supabase (shared) — no migration needed to develop.
 
 ## NEXT STEP (current priorities)
 
-**1. Allocation Advisor — the LOCKED next pick (Profit First centerpiece).**
-The allocation *ritual*: twice a month (the **10th & 25th**) tell the operator exactly what to transfer between accounts — *"$X → Profit, $Y → Owner's Pay, $Z → Tax, remainder → OpEx"* — derived from the existing TAP target % (`src/lib/profit-first/calculator.ts` + `TapSettings`) applied to **real deposits**, plus a running history of what's been set aside. Turns the existing dashboard gauges from a *score* into the *play*. Build as a module (loader `src/lib/modules/allocation-advisor.ts`, page `/modules/allocation`, client component; flip a new tile live in `src/lib/modules.ts`). **Bank-data ready — no Toast needed.**
+**1. Allocation & Variance Engine — the LOCKED next pick (Profit First centerpiece).**
+Full spec: **`docs/specs/allocation-variance-engine.md`** (supersedes the earlier lightweight "Allocation Advisor" sketch). The engine: **pre-allocation tax skim** (Davo sales tax + Toast payroll tax off the top into a Tax Reserve), then **daily** allocation of Real Revenue into virtual buckets (5/5/30/27/20/13) on each settled deposit, **draw-down** as real payments clear Plaid, **rolling-7-day variance** (green/yellow/red dollar-gap) per operating bucket, and **binary OK/SHORT** on the Tax Reserve. Profit + Owner's Pay **swept on the 10th & 25th** (sim only). Builds on existing `TapSettings`, `VirtualAccount`, `calculator.ts`, `DailySales`, Plaid feed, categorization engine, and Inngest. **⚠️ Has open decisions that change locked TAP %s + the beer-line treatment — see the spec's section B; resolve before writing the migration.**
 
 **2. Toast integration wave** — credentials incoming (operator getting them **2026-06-12**). One connection lights up **six tiles**: Tax Vault, Food Cost, Sales Mix, Menu Engineering, Covers Flow, and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-module.md`** (scheduled vs. actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
 
@@ -74,7 +74,17 @@ gauges show a "set your sales mix" prompt until configured at `/settings/beverag
 > leaving it parked here.
 
 <!-- PASTE BLOCK BELOW -->
-
+**Integrated 2026-06-12** → full **Profit First Allocation & Variance Engine** spec saved to
+**`docs/specs/allocation-variance-engine.md`** (operator block verbatim + repo-grounding +
+open-decisions). It's the real version of NEXT STEP #1. Open decisions that **conflict with
+previously-locked state** (resolve before migration):
+- **TAP split changes:** Labor 32→**27**, OpEx 28→**20**, new **Spill 13%** bucket. Customer Zero's
+  `TapSettings` row needs a data-update (defaults only hit new rows).
+- **Beer line:** earlier lock = "COGS_BEVERAGE its own gauge line"; this spec folds beer/wine into
+  **COGS Liquor** (Food 18 / Liquor 12 only) for allocation. Confirm override.
+- **Ledger:** extend existing `VirtualAccount` rather than add a parallel `BucketBalance`.
+- **Tax source of truth:** Tax Reserve (sales) + the Tax Vault tile both use **Davo's actual pull**,
+  never a 6% estimate (PA: all alcohol sales-tax exempt; 6% food + non-alc only; York County).
 <!-- /PASTE BLOCK -->
 
 ## Loose ends / reminders

@@ -19,6 +19,7 @@ export const MODULES: ModuleDef[] = [
   { key: "spending", name: "Spending by Category", description: "Where money goes vs. profit", status: "live", href: "/modules/spending" },
   { key: "recurring", name: "Recurring & Subscriptions", description: "Repeating charges & price creep", status: "live", href: "/modules/recurring" },
   { key: "runway", name: "Cash Runway", description: "Days of cash at current burn", status: "live", href: "/modules/cash-runway" },
+  { key: "payment-watch", name: "Payment Watch", description: "Double-pays & off-norm charges", status: "live", href: "/modules/payment-watch" },
   // Needs real reported figures, not estimates: collected sales tax from the
   // Toast sales report + payroll tax withheld per pay run from payroll/accounting.
   { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "soon", blockedBy: "Toast + payroll" },

@@ -155,7 +155,12 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
   green/yellow/red at >90/30–90/<30 days, area chart with 8-week projection + staleness banner.
   Math verified to the penny with a temp anchor (then cleared — **operator still needs to enter the real
   balance** at `/modules/cash-runway`).
-- **Duplicate / unusual payment catcher** — flags likely double-pays and off-norm charges.
+- ~~**Duplicate / unusual payment catcher**~~ **SHIPPED (2026-06-12, PR #14) as "Payment Watch"** —
+  `/modules/payment-watch`. Duplicates: "likely" (same signature + exact amount ≤3 days) and "look"
+  (same amount ≥$500 ≤10 days — catches double-cashed checks, which have no vendor signature). Unusual:
+  ≥3× the vendor's median (≥4 occurrences, ≥$200). No migration. **First run flagged a real one:**
+  CHECK #10465 $1,177.69 posted 2026-05-18 AND 05-26 — operator should verify with the bank; plus 7
+  off-norm charges (York Water $1,000 vs usual $113, etc.).
 
 ### Categorization backlog (older — verify status before picking up)
 1. **Beer/Beverage as its own dashboard gauge line** — `cogsBeverage` is computed in `src/lib/dashboard/data.ts`; may still need a gauge in the dashboard components (verify, the beverage settings/gauges work landed since).

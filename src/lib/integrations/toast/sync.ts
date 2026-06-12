@@ -14,9 +14,18 @@
  * (Food/liquor/beverage splits + hoursOpen are not in the daily metrics report.)
  */
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { isToastConfigured, getToastConfig } from "./config";
-import { getMetricsForDay, toBusinessDate } from "./analytics";
+import { getMetricsForDay, runMetricsReport, toBusinessDate } from "./analytics";
+
+/** One revenue center's slice of a day's sales (stored in DailySales.mixByRevenueCenter). */
+export interface RevenueCenterSlice {
+  revenueCenter: string;
+  netSales: number;
+  orders: number;
+  guests: number;
+}
 
 /**
  * Resolve which DB restaurant the configured Toast GUID maps to.
@@ -107,6 +116,81 @@ export async function syncToastDailyMetrics(
       written++;
       firstWritten = firstWritten ?? row.businessDate;
       lastWritten = row.businessDate;
+    }
+    if (offset > 1) await sleep(spacingMs);
+  }
+
+  return {
+    restaurantId,
+    daysRequested: days,
+    daysWritten: written,
+    fromBusinessDate: firstWritten,
+    toBusinessDate: lastWritten,
+  };
+}
+
+/**
+ * Sync the revenue-center sales mix into DailySales.mixByRevenueCenter for the
+ * last `days` closed business days. One era report per day (groupBy
+ * REVENUE_CENTER); upserts the JSON slice array onto the existing daily row
+ * (creating it from the slice sums if it doesn't exist). Idempotent.
+ */
+export async function syncToastSalesMix(
+  restaurantId: string,
+  days = 21,
+  spacingMs = 1100,
+): Promise<ToastSyncResult> {
+  if (!isToastConfigured()) {
+    throw new Error("Toast is not configured — cannot sync sales mix.");
+  }
+
+  let written = 0;
+  let firstWritten: string | null = null;
+  let lastWritten: string | null = null;
+
+  for (let offset = days; offset >= 1; offset--) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    const businessDate = toBusinessDate(d);
+
+    const rows = await runMetricsReport({
+      startBusinessDate: businessDate,
+      endBusinessDate: businessDate,
+      timeRange: "day",
+      groupBy: ["REVENUE_CENTER"],
+    });
+
+    if (rows.length > 0) {
+      const slices: RevenueCenterSlice[] = rows.map((r) => ({
+        revenueCenter: String(r.revenueCenter ?? "Unknown"),
+        netSales: Number(r.netSalesAmount ?? 0),
+        orders: Number(r.ordersCount ?? 0),
+        guests: Number(r.guestCount ?? 0),
+      }));
+      const date = businessDateToUtcDate(String(rows[0].businessDate));
+      const grossSales = rows.reduce((s, r) => s + Number(r.grossSalesAmount ?? 0), 0);
+      const netSales = slices.reduce((s, r) => s + r.netSales, 0);
+      const covers = slices.reduce((s, r) => s + r.guests, 0);
+      const checkCount = slices.reduce((s, r) => s + r.orders, 0);
+      const mixJson = slices as unknown as Prisma.InputJsonValue;
+
+      await prisma.dailySales.upsert({
+        where: { restaurantId_date: { restaurantId, date } },
+        update: { mixByRevenueCenter: mixJson },
+        create: {
+          restaurantId,
+          date,
+          grossSales,
+          netSales,
+          covers,
+          checkCount,
+          source: "toast",
+          mixByRevenueCenter: mixJson,
+        },
+      });
+      written++;
+      firstWritten = firstWritten ?? String(rows[0].businessDate);
+      lastWritten = String(rows[0].businessDate);
     }
     if (offset > 1) await sleep(spacingMs);
   }

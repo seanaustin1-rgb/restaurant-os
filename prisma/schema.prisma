@@ -160,6 +160,7 @@ model DailySales {
   laborCost     Decimal? @db.Decimal(12, 2)
   laborHours    Decimal? @db.Decimal(7, 2)  // actual worked hours (Toast era hourlyJobTotalHours)
   hoursOpen     Decimal? @db.Decimal(5, 2)
+  mixByRevenueCenter Json? // [{revenueCenter,netSales,orders,guests}] — Toast era groupBy REVENUE_CENTER
   source        String?  // pos provider name or "manual"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

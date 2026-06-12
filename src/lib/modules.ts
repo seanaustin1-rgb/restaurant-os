@@ -22,7 +22,7 @@ export const MODULES: ModuleDef[] = [
   { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "soon", blockedBy: "Toast + payroll" },
   // Need Toast / POS item-level data.
   { key: "food-cost", name: "Food Cost Tracker", description: "COGS vs. theoretical", status: "soon", blockedBy: "Toast" },
-  { key: "sales-mix", name: "Sales Mix", description: "Category & item breakdown", status: "soon", blockedBy: "Toast" },
+  { key: "sales-mix", name: "Sales Mix", description: "Net sales by revenue center", status: "live", href: "/modules/sales-mix" },
   { key: "menu-eng", name: "Menu Engineering", description: "Stars, dogs, plowhorses", status: "soon", blockedBy: "Toast" },
   { key: "covers-flow", name: "Covers Flow", description: "Daily guests, orders & avg check", status: "live", href: "/modules/covers-flow" },
   // Need other inputs.

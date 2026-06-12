@@ -2,7 +2,11 @@ import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { runPlaidSync } from "@/lib/plaid/sync";
 import { isToastConfigured } from "@/lib/integrations/toast/config";
-import { resolveToastRestaurantId, syncToastDailyMetrics } from "@/lib/integrations/toast/sync";
+import {
+  resolveToastRestaurantId,
+  syncToastDailyMetrics,
+  syncToastSalesMix,
+} from "@/lib/integrations/toast/sync";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -86,7 +90,13 @@ export const syncToastMetrics = inngest.createFunction(
   async ({ event, step }) => {
     const restaurantId = event.data.restaurantId as string;
     const days = (event.data.days as number | undefined) ?? 3;
-    return step.run("sync", () => syncToastDailyMetrics(restaurantId, days));
+    const metrics = await step.run("sync-metrics", () =>
+      syncToastDailyMetrics(restaurantId, days),
+    );
+    const salesMix = await step.run("sync-sales-mix", () =>
+      syncToastSalesMix(restaurantId, days),
+    );
+    return { metrics, salesMix };
   },
 );
 

@@ -109,19 +109,29 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > typed `MetricsRow`. Body-based restaurantIds + async POST→poll-GET handled. Exported from the barrel;
 > probe refactored to use it. In PR #3.
 >
-> **✅ FIRST TILE SHIPPED — Covers Flow (2026-06-12, PR #5, branch `claude/covers-flow-tile`).**
-> Pattern: `src/lib/integrations/toast/sync.ts` (era → `DailySales` upsert, source="toast", off the
-> render path) + `scripts/sync-toast-metrics.ts` (manual backfill; an Inngest daily job can call
-> `syncToastDailyMetrics()` next) → loader `src/lib/modules/covers-flow.ts` reads `DailySales` (fast) →
-> page `/modules/covers-flow` → `CoversFlowModule.tsx` (avg covers/day, avg check, total+busiest, copper
-> covers-by-day chart + table). Tile flipped live in `modules.ts`. **Ran the sync against the shared DB:**
-> 21 real days (2026-05-22..06-11) written for Customer Zero — note this **overwrote the May seed rows**
-> (`seed:toast-deposits`) for overlapping dates with real Toast figures (source="toast"); avg 222.6
-> covers/day. labor HOURS are not in DailySales (only laborCost) — the Labor tile needs its own store.
+> **✅ THREE TOAST TILES LIVE + DAILY SYNC (2026-06-12; PRs #6, #7, #8, #9 — all on main).**
+> Shared pattern: era → `DailySales` upsert off the render path (`toast/sync.ts`), loader reads
+> `DailySales` (fast), server page + client component, tile flipped live in `modules.ts`.
+> - **Covers Flow** (`/modules/covers-flow`, PR #6) — daily guests/orders/avg check. 21 real days
+>   backfilled (avg 222.6 covers/day); **overwrote May seed rows** with real Toast figures.
+> - **Daily Inngest sync** (PR #7) — `dailyToastSyncScheduler` (5:30am ET) → `syncToastMetrics` worker,
+>   3-day lookback, idempotent; worker also refreshes the sales mix (added in #9). Single-tenant
+>   resolver `resolveToastRestaurantId()` (PosConnection TOAST match → Customer-Zero fallback).
+> - **Labor Hours (actual)** (`/modules/labor`, PR #8) — migration `20260612190000_add_labor_hours`
+>   added nullable `DailySales.laborHours` (**applied to shared DB**). Weekly actual hours, labor $,
+>   sales/labor-hour, labor %; **WoW compares the two latest FULL weeks** (partial weeks badged, never
+>   read as a drop); YoY gated on real prior-year data (hidden now). Scheduled-vs-actual still parked
+>   for Sling.
+> - **Sales Mix** (`/modules/sales-mix`, PR #9) — migration `20260612200000_add_sales_mix` added
+>   nullable JSONB `DailySales.mixByRevenueCenter` (**applied to shared DB**). Probed groupBy dims:
+>   dining-option & order-source are degenerate for this operator; **revenue center is the meaningful
+>   mix** (verified May 22–Jun 11, $121.8k: Dining Room 51.7 / Bar 21.1 / Patio 11.8 / Echo Reserve 8.0 /
+>   To-Go 5.3 / Online 2.1%). Item/category mix needs `/era/v1/menu` — future work.
 >
-> **Still TODO:** (a) add the four vars to **Vercel** (Prod+Preview) for deploy + **web env config** if web
-> sessions need Toast; (b) more era tiles — **Sales Mix** (groupBy) and **actual Labor Hours** next;
-> (c) an Inngest daily job to keep `DailySales` fresh from Toast. Keep tile work out of the scaffold PR.
+> **Still TODO:** (a) add the four `TOAST_*` vars to **Vercel** (Prod+Preview) + **web env config** if web
+> sessions need Toast — both pending migrations are in the repo and apply on deploy; (b) Menu Engineering
+> / Food Cost need `/era/v1/menu` + cost data; (c) Track A: Standard API Access request to Toast
+> (operational scopes) + Sling for scheduled hours.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

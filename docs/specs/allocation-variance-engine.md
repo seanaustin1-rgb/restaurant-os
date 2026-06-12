@@ -32,18 +32,25 @@
 
 ## B. OPEN DECISIONS — conflicts with previously-locked state (resolve before migration)
 
-1. **TAP split changes the live numbers.** Existing defaults are Labor **32** / OpEx **28** / no Spill.
-   This spec locks Labor **27** / OpEx **20** / **Spill 13** (Profit 5, Owner 5, COGS 30 unchanged).
-   → Add `spillPct` (default 13), change labor 32→27 and opex 28→20. **Customer Zero's existing
-   `TapSettings` row must be data-updated** (defaults only apply to new rows). Confirm 27/20/13 is the
-   new locked split.
+> **Status (operator-confirmed 2026-06-12):** items 1 and 3 are RESOLVED — see
+> **§C2** for the authoritative reading. Item 1 → **HOLD** (build against 32/28,
+> defer the 27/20/13 redistribution). Item 3 → **beer keeps its own line** (3-way
+> COGS), overriding this spec's 2-way fold. Items 2 and 4 are structure-only and
+> tracked in §C2's "Structural forks — RESOLVED." The 27/20/13 numbers below and
+> in the "TAP PERCENTAGES" table are the *target* split, **not yet applied**.
+
+1. ~~**TAP split changes the live numbers.**~~ **RESOLVED → HOLD (§C2.1).** Build against the
+   current defaults Labor **32** / OpEx **28** / no Spill; `spillPct` exists as *structure* only.
+   The 27/20/13 redistribution and Customer Zero's `TapSettings` data-update are **deferred** until
+   the operator confirms the new percentages. Original ask retained for context: this spec proposed
+   Labor 27 / OpEx 20 / Spill 13 (Profit 5, Owner 5, COGS 30 unchanged).
 2. **Spill is a brand-new bucket** — absent from `TapBucket` enum, `Taps` interface, `VirtualAccount`
    keys, and the calculator. Must be threaded through everywhere. Accrue-only.
-3. **Beer/beverage treatment conflicts with an earlier lock.** Prior locked decision:
-   "COGS_BEVERAGE = its own gauge line" (beer separate from liquor). This spec models COGS as
-   **Food 18 / Liquor 12 only**, folding beer/wine into **COGS Liquor**. → For the allocation engine,
-   does beer fold into Liquor (2-way, as written) or stay a 3rd line? Spec says fold; confirm it
-   overrides the earlier "beer its own line" for allocation (the dashboard gauge can stay 3-way).
+3. ~~**Beer/beverage treatment conflicts with an earlier lock.**~~ **RESOLVED → beer keeps its own
+   line (§C2.2).** The earlier lock wins: COGS is a **3-way** split (Food / Liquor / Beer), beer is a
+   COGS sub-bucket, not folded into Liquor. This spec's 2-way Food 18 / Liquor 12 model is **overridden**;
+   Beer gets its own % when the percentages are set (deferred with item 1). Original conflict retained
+   for context: the spec had modeled COGS as Food 18 / Liquor 12 only, folding beer/wine into Liquor.
 4. **Bucket ledger: extend `VirtualAccount` vs new `BucketBalance`.** Recommend **extend
    `VirtualAccount`** (add a `bucketType` enum, `lastAllocatedAt`, `lastSweptAt`) rather than a
    parallel table, per the spec's own "don't recreate scaffolded tables." Confirm.
@@ -129,19 +136,24 @@ The repo already has TAP percentages and a calculator that computes allocation *
 
 The buckets are fictitious (virtual accounting, simulation mode — no real money moves yet). The numbers feeding them are real (synced). The output is a variance read that drives operator action.
 
-### TAP PERCENTAGES (locked)
+### TAP PERCENTAGES (target — NOT yet applied; see §C2)
 
-| Bucket | TAP | Notes |
+> ⚠️ These are the *proposed* target percentages. Per §C2.1 the engine builds
+> against the **current** live split (Labor **32** / OpEx **28**, **no Spill**)
+> until the operator confirms the redistribution. Treat the table below as the
+> destination, not the current `TapSettings`.
+
+| Bucket | TAP (target) | Notes |
 |---|---|---|
 | Profit | 5% | accrue-only, swept twice monthly |
 | Owner's Pay | 5% | accrue-only, swept twice monthly |
-| COGS | 30% | tracked as Food 18% / Liquor 12% under the hood; rolls up to one 30% COGS line in the main view |
-| Labor | 27% | draws down as payroll clears |
-| OpEx | 20% | draws down as recurring expenses clear |
-| Spill | 13% | reserve for marketing + renovation; accrue-only |
+| COGS | 30% | **3-way** under the hood: Food / Liquor / **Beer** (§C2.2 — beer keeps its own line); rolls up to one 30% COGS line in the main view |
+| Labor | 27% *(currently 32)* | draws down as payroll clears |
+| OpEx | 20% *(currently 28)* | draws down as recurring expenses clear |
+| Spill | 13% *(currently 0)* | reserve for marketing + renovation; accrue-only |
 | **Total** | **100%** | |
 
-Store COGS as two sub-allocations (Food 0.18, Liquor 0.12) summing to the parent COGS bucket. Main view shows COGS as one line; the beverage-program drill-down shows Food and Liquor split.
+Store COGS as sub-allocations summing to the parent COGS bucket (Food / Liquor / **Beer** — 3-way per §C2.2). Main view shows COGS as one line; the beverage-program drill-down shows the Food / Liquor / Beer split. Beer's individual % is set with the other percentages (deferred per §C2.1).
 
 Sales tax and payroll tax are excluded from the TAP split — but NOT ignored. They are skimmed off the top BEFORE the TAP split runs (see Pre-Allocation Tax Skim). The TAPs allocate only what remains after tax is reserved.
 

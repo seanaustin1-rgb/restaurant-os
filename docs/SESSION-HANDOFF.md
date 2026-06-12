@@ -147,7 +147,14 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
   ones (avoids inflating mixed groups like Toast payroll+fees). Price creep only on subs (≥3 hits, ≥2%).
   Honest short-history banner (<60 days). Verified on Customer Zero: 24 recurring vendors, ~$149k/mo
   (Toast payroll $65k, PFG $35k, PLCB $11.8k…). No migration needed.
-- **Cash Runway / low-balance warning** — days of cash at current burn, early-warning line.
+- ~~**Cash Runway**~~ **SHIPPED (2026-06-12, PR #13)** — `/modules/cash-runway`. **No balance feed exists**
+  (statement import skips balance lines; no Plaid balance stored; Customer Zero has no live Plaid link) →
+  operator enters a one-time **balance anchor** (balance + statement date; columns
+  `Restaurant.cashBalanceAnchor/.cashBalanceAnchorDate`, migration `20260612220000`, **applied**).
+  Runway = anchor + net txns since (inflows stored NEGATIVE → net = −sum), burn = 28-day avg daily net,
+  green/yellow/red at >90/30–90/<30 days, area chart with 8-week projection + staleness banner.
+  Math verified to the penny with a temp anchor (then cleared — **operator still needs to enter the real
+  balance** at `/modules/cash-runway`).
 - **Duplicate / unusual payment catcher** — flags likely double-pays and off-norm charges.
 
 ### Categorization backlog (older — verify status before picking up)

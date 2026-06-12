@@ -104,9 +104,14 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > `cashmgmt:read`) — reference the existing client id; do NOT paste the secret. Separately evaluate the
 > **Sling** API for scheduled hours.
 >
+> **era client BUILT (2026-06-12):** `src/lib/integrations/toast/analytics.ts` — `runMetricsReport()`,
+> `getMetricsForDay()`, `getMetricsForDays()` (per-day loop for trends; cache it), `toBusinessDate()`,
+> typed `MetricsRow`. Body-based restaurantIds + async POST→poll-GET handled. Exported from the barrel;
+> probe refactored to use it. In PR #3.
+>
 > **Still TODO:** (a) add the four vars to **Vercel** (Prod+Preview) for deploy + **web env config** if web
-> sessions need Toast; (b) build an `era` analytics client method (body-based restaurant id) next to
-> `toastFetch`; (c) build the now-unblocked tiles. Keep tile work out of the scaffold PR.
+> sessions need Toast; (b) build the now-unblocked tiles on the era client (Covers Flow / Sales Mix /
+> actual Labor Hours). Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

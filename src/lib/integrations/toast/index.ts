@@ -1,16 +1,19 @@
 /**
  * Toast integration — public surface.
  *
- * Scaffolding only (handoff 2026-06-12): OAuth2 client-credentials auth with a
- * token cache, a typed fetch wrapper that injects the restaurant header, and a
- * config guard. No endpoint-specific data layers yet — those (Tax Vault, Food
- * Cost, Sales Mix, Menu Engineering, Covers Flow, Labor Hours) build on top of
- * `toastFetch` in a later pass.
+ * Two surfaces:
+ *   - Operational REST (`toastFetch`) — restaurant-header based; needs Standard
+ *     API Access scopes (labor/orders/menus/…). Not yet granted on the current
+ *     client (returns 403) — pending the Toast access request.
+ *   - Analytics `era` (`runMetricsReport` & friends) — body-based restaurantIds,
+ *     async report flow; works today on enterprise-metrics:read. Powers the
+ *     Covers Flow, Sales Mix, and actual-labor-hours tiles.
  *
- * Usage once secrets are present:
- *   import { isToastConfigured, toastFetch } from "@/lib/integrations/toast";
+ * Usage:
+ *   import { isToastConfigured, getMetricsForDay } from "@/lib/integrations/toast";
  *   if (isToastConfigured()) {
- *     const entries = await toastFetch("/labor/v1/timeEntries", { query: {...} });
+ *     const [row] = await getMetricsForDay(20260611);
+ *     // row.netSalesAmount, row.guestCount, row.hourlyJobTotalHours, …
  *   }
  */
 
@@ -29,3 +32,15 @@ export {
   ToastApiError,
   type ToastRequestOptions,
 } from "./client";
+
+export {
+  runMetricsReport,
+  getMetricsForDay,
+  getMetricsForDays,
+  toBusinessDate,
+  type MetricsRow,
+  type MetricsReportRequest,
+  type MetricsGroupBy,
+  type EraTimeRange,
+  type EraPollOptions,
+} from "./analytics";

@@ -98,15 +98,23 @@ This resolves §B's open items: beer = a COGS *sub-bucket* (its own line, no sep
 needed); Tax = one account, two sub-ledgers; and it gives `VirtualAccount` a clean redefinition
 (account-level Tier 1) instead of a parallel `BucketBalance`.
 
-### Structural forks still open (operator to confirm before migration)
-- **COGS:** one physical "Materials" account with Food/Liquor/Beer tracked virtually, **or** separate
-  real accounts per type? (Most operators: one account.)
-- **Tax:** one Tax account with Sales/Payroll sub-ledgers, **or** two accounts? (Note Davo auto-pulls from
-  a specific account — that may force the answer.)
-- **Income/Holding:** confirm a dedicated deposit-landing account (recommended — it's what the
-  skim-before-split flow draws from).
+### Structural forks — RESOLVED (2026-06-12)
+- **COGS:** ONE physical "Materials" account; Food / Liquor / Beer are virtual sub-buckets inside it.
+- **Tax:** ONE physical Tax Reserve account; both Davo (sales) and Toast Payroll auto-pull from it.
+  Sub-ledgers: **Sales** (pass-through), **Payroll** (pass-through), and — **when the operator goes
+  profit-forward** — **Income Tax** (owner's personal income tax on profit). Income Tax behaves
+  differently: it **accrues toward quarterly estimated payments** and does NOT net to zero (unlike the
+  pass-through pulls), so it's modeled like Profit/Owner's Pay (accrue + scheduled payout), tracked as
+  its own sub-ledger so a healthy income-tax balance can't mask a short sales/payroll pull. **Open
+  (with the held %s):** does Income Tax get its own TAP % (~15% of Real Revenue, classic PF) or come out
+  of the Profit slice at distribution? Not built until the operator is profit-forward + sets %s.
+- **Income/Holding:** ONE Income account for now — every deposit lands here; skim + allocations move out.
 
-**Gate:** migration is NOT written until the Tier-1 account list is locked.
+### LOCKED — Tier-1 real account list (8 accounts)
+`INCOME` (holding/landing) · `PROFIT` · `OWNER_PAY` · `TAX_RESERVE` (sub: sales/payroll[/income]) ·
+`COGS` (sub: food/liquor/beer) · `LABOR` · `OPEX` · `SPILL`.
+Migration gate is now CLEARED for the account *structure*. Allocation *math* for the Beer split and the
+Spill/Income-Tax %s stays deferred until the operator sets percentages (currently held at 32/28).
 
 ## D. Operator spec (verbatim)
 

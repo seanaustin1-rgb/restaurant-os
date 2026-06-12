@@ -109,9 +109,19 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > typed `MetricsRow`. Body-based restaurantIds + async POST→poll-GET handled. Exported from the barrel;
 > probe refactored to use it. In PR #3.
 >
+> **✅ FIRST TILE SHIPPED — Covers Flow (2026-06-12, PR #5, branch `claude/covers-flow-tile`).**
+> Pattern: `src/lib/integrations/toast/sync.ts` (era → `DailySales` upsert, source="toast", off the
+> render path) + `scripts/sync-toast-metrics.ts` (manual backfill; an Inngest daily job can call
+> `syncToastDailyMetrics()` next) → loader `src/lib/modules/covers-flow.ts` reads `DailySales` (fast) →
+> page `/modules/covers-flow` → `CoversFlowModule.tsx` (avg covers/day, avg check, total+busiest, copper
+> covers-by-day chart + table). Tile flipped live in `modules.ts`. **Ran the sync against the shared DB:**
+> 21 real days (2026-05-22..06-11) written for Customer Zero — note this **overwrote the May seed rows**
+> (`seed:toast-deposits`) for overlapping dates with real Toast figures (source="toast"); avg 222.6
+> covers/day. labor HOURS are not in DailySales (only laborCost) — the Labor tile needs its own store.
+>
 > **Still TODO:** (a) add the four vars to **Vercel** (Prod+Preview) for deploy + **web env config** if web
-> sessions need Toast; (b) build the now-unblocked tiles on the era client (Covers Flow / Sales Mix /
-> actual Labor Hours). Keep tile work out of the scaffold PR.
+> sessions need Toast; (b) more era tiles — **Sales Mix** (groupBy) and **actual Labor Hours** next;
+> (c) an Inngest daily job to keep `DailySales` fresh from Toast. Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

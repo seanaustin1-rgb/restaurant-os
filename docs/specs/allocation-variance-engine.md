@@ -64,6 +64,50 @@
 
 ---
 
+## C2. Bucket model — decisions in progress (2026-06-12)
+
+Operator answers to §B:
+1. **TAP % change: HOLD.** Build against current `TapSettings` (Labor **32** / OpEx **28**, **no Spill %**)
+   for now. Do **not** data-update Customer Zero yet. Spill exists as *structure* but its % is deferred
+   along with the 27/20/13 redistribution until the operator confirms.
+2. **Beer keeps its own bucket** (honors the earlier "COGS_BEVERAGE = its own line" lock) — so COGS is a
+   **3-way** split (Food / Liquor / Beer), not the spec's 2-way. Beer will need its own % when the %s are
+   set; held with item 1.
+3. **Buckets = future REAL bank accounts.** Operator: "the buckets (future accounts that will be used in
+   real life) are important." So model them deliberately, not as a casual `VirtualAccount` extension.
+
+### Proposed two-tier model (for operator sign-off — nothing built yet)
+Separate **what money physically moves between** (real accounts, at go-live) from **internal variance
+tracking** (virtual sub-buckets within an account):
+
+**Tier 1 — Real Accounts (a physical bank account each, at go-live):**
+- **Income / Holding** — every deposit lands here first; tax skim + allocations move *out* of it. (New — not a current `VirtualAccount` key.)
+- **Profit** — accrue-only; swept 10th & 25th.
+- **Owner's Pay** — accrue-only; swept 10th & 25th.
+- **Tax Reserve** — pass-through; binary OK/SHORT. Sub-ledgers: **Sales**, **Payroll**.
+- **COGS / Materials** — inventory purchases. Sub-buckets: **Food**, **Liquor**, **Beer**.
+- **Labor** — payroll.
+- **OpEx** — operating expenses.
+- **Spill / Vault** — marketing + renovation reserve; accrue-only, manual sweep.
+
+**Tier 2 — Virtual sub-buckets (tracking only, inside one account):**
+- COGS → Food / Liquor / Beer (beverage-program variance; honors decision 2).
+- Tax Reserve → Sales / Payroll (each its own OK/SHORT).
+
+This resolves §B's open items: beer = a COGS *sub-bucket* (its own line, no separate physical account
+needed); Tax = one account, two sub-ledgers; and it gives `VirtualAccount` a clean redefinition
+(account-level Tier 1) instead of a parallel `BucketBalance`.
+
+### Structural forks still open (operator to confirm before migration)
+- **COGS:** one physical "Materials" account with Food/Liquor/Beer tracked virtually, **or** separate
+  real accounts per type? (Most operators: one account.)
+- **Tax:** one Tax account with Sales/Payroll sub-ledgers, **or** two accounts? (Note Davo auto-pulls from
+  a specific account — that may force the answer.)
+- **Income/Holding:** confirm a dedicated deposit-landing account (recommended — it's what the
+  skim-before-split flow draws from).
+
+**Gate:** migration is NOT written until the Tier-1 account list is locked.
+
 ## D. Operator spec (verbatim)
 
 # HANDOFF: Profit First Allocation & Variance Engine

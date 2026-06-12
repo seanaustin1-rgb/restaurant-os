@@ -109,7 +109,7 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 > typed `MetricsRow`. Body-based restaurantIds + async POST→poll-GET handled. Exported from the barrel;
 > probe refactored to use it. In PR #3.
 >
-> **✅ THREE TOAST TILES LIVE + DAILY SYNC (2026-06-12; PRs #6, #7, #8, #9 — all on main).**
+> **✅ FOUR TOAST TILES LIVE + DAILY SYNC (2026-06-12; PRs #6, #7, #8, #9, #10 — all on main).**
 > Shared pattern: era → `DailySales` upsert off the render path (`toast/sync.ts`), loader reads
 > `DailySales` (fast), server page + client component, tile flipped live in `modules.ts`.
 > - **Covers Flow** (`/modules/covers-flow`, PR #6) — daily guests/orders/avg check. 21 real days
@@ -127,11 +127,18 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 >   dining-option & order-source are degenerate for this operator; **revenue center is the meaningful
 >   mix** (verified May 22–Jun 11, $121.8k: Dining Room 51.7 / Bar 21.1 / Patio 11.8 / Echo Reserve 8.0 /
 >   To-Go 5.3 / Online 2.1%). Item/category mix needs `/era/v1/menu` — future work.
+> - **Menu Engineering** (`/modules/menu-eng`, PR #10) — migration `20260612210000_add_menu_item_sales`
+>   created the `MenuItemSales` table (**applied to shared DB**). `runMenuReport()` in the era client;
+>   API constraints verified live: **one groupBy max, only day/week ranges**; rows per businessDate×item.
+>   Weekly sync (groupBy MENU_ITEM) → popularity×revenue quadrants on median splits (NOT margin — cost
+>   data unavailable; footnote says directional). Backfilled 4 weeks: 4,560 item-day rows, 445 items,
+>   $162k net; top star Cheeseburger. Daily worker refreshes the current week.
 >
 > **Still TODO:** (a) add the four `TOAST_*` vars to **Vercel** (Prod+Preview) + **web env config** if web
-> sessions need Toast — both pending migrations are in the repo and apply on deploy; (b) Menu Engineering
-> / Food Cost need `/era/v1/menu` + cost data; (c) Track A: Standard API Access request to Toast
-> (operational scopes) + Sling for scheduled hours.
+> sessions need Toast — all three migrations are in the repo and apply on deploy; (b) **Food Cost** needs
+> item/recipe COST data (MarginEdge has no recipe API; → Toast Stock API via Track A, or manual cost
+> entry); true margin-based menu engineering unlocks with the same data; (c) Track A: Standard API Access
+> request to Toast (operational scopes) + Sling for scheduled hours.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

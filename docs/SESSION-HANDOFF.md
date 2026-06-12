@@ -48,18 +48,31 @@ and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-m
 actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First
 integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
 
-> **NEXT CONCRETE ACTION (agreed 2026-06-12): build the Toast connector SCAFFOLDING.**
-> A standalone `src/lib/integrations/toast/` module (OAuth2 client-credentials auth + token cache,
-> typed client, `Toast-Restaurant-External-ID` header) plus the env var contract added to
-> `.env.example`. **This builds WITHOUT the live secret** — it only defines the var names it consumes:
-> `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID`. The real
-> values get dropped into the environment config (see "Where secrets go" below); the connector lights up
-> when they're present. Scope this turn = scaffold only; no live API calls until secrets land + a tile
-> is wired. Keep it small and deliberate — do not build the six tiles' data layers in the same pass.
-
-> **⚠️ SECRETS NOT PRESENT IN WEB SESSIONS YET (2026-06-12):** verified this session has **zero** app
-> secrets injected — no Plaid/Clerk/DB/Toast env vars, no `.env.local`. Web sessions run in fresh
-> ephemeral containers; secrets must live in the *environment configuration* to be visible. See below.
+> **✅ DONE (2026-06-12): Toast connector scaffolding built AND verified live.**
+> Standalone `src/lib/integrations/toast/` module — OAuth2 client-credentials auth + process-local
+> token cache (`auth.ts`), typed `toastFetch` that injects the `Toast-Restaurant-External-ID` header
+> and retries once on 401 (`client.ts`), config guard `isToastConfigured()` (`config.ts`), barrel
+> `index.ts`. Env contract added to `.env.example`: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`,
+> `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID`. Shipped in **PR #3**. Smoke test
+> `scripts/test-toast-auth.ts` + discovery `scripts/toast-list-restaurants.ts`.
+>
+> **Verified against PRODUCTION** (`https://ws-api.toasttab.com`) from the **local Windows machine**
+> (`.env.local`, NOT a web session): ✓ config present → ✓ **OAuth2 login succeeds** (real bearer token)
+> → restaurant-scoped read returns **403** = GUID + header **accepted**, but this API client's granted
+> **scopes** don't yet cover `/restaurants`. So the connector plumbing is proven end-to-end; reading
+> actual data just needs the relevant scope enabled on the Toast API client.
+>
+> **Credential facts learned (2026-06-12):** these are **Standard (restaurant-scoped) API credentials**,
+> NOT a partner integration — the Partners API (`/partners/v1/restaurants`) returns
+> `401 "partnerGuid must be supplied in token"`, so there's no partner restaurant-list to query; the
+> restaurant GUID must be supplied directly (it's a UUID issued with the client id/secret).
+> `TOAST_RESTAURANT_GUID` is a UUID (8-4-4-4-12), **not** the access-type label `TOAST_MACHINE_CLIENT`.
+>
+> **Still TODO before the tiles:** (a) enable the needed read **scopes** on the Toast API client
+> (labor/orders/etc.) for a 200; (b) add the same four vars to **Vercel** (Prod+Preview) for deploy,
+> and to the **web environment config** if you want web sessions to reach Toast; (c) then build the six
+> tiles' data layers on top of `toastFetch` — Labor Hours first (`docs/specs/labor-hours-module.md`).
+> Keep tile work out of the scaffold PR.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).

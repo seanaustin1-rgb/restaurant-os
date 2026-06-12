@@ -42,7 +42,24 @@ DB is already migrated on Supabase (shared) — no migration needed to develop.
 **1. Allocation & Variance Engine — the LOCKED next pick (Profit First centerpiece).**
 Full spec: **`docs/specs/allocation-variance-engine.md`** (supersedes the earlier lightweight "Allocation Advisor" sketch). The engine: **pre-allocation tax skim** (Davo sales tax + Toast payroll tax off the top into a Tax Reserve), then **daily** allocation of Real Revenue into virtual buckets (5/5/30/27/20/13) on each settled deposit, **draw-down** as real payments clear Plaid, **rolling-7-day variance** (green/yellow/red dollar-gap) per operating bucket, and **binary OK/SHORT** on the Tax Reserve. Profit + Owner's Pay **swept on the 10th & 25th** (sim only). Builds on existing `TapSettings`, `VirtualAccount`, `calculator.ts`, `DailySales`, Plaid feed, categorization engine, and Inngest. **⚠️ Has open decisions that change locked TAP %s + the beer-line treatment — see the spec's section B; resolve before writing the migration.**
 
-**2. Toast integration wave** — credentials incoming (operator getting them **2026-06-12**). One connection lights up **six tiles**: Tax Vault, Food Cost, Sales Mix, Menu Engineering, Covers Flow, and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-module.md`** (scheduled vs. actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
+**2. Toast integration wave** — operator is using the **Toast Developer API** (confirmed 2026-06-12).
+One connection lights up **six tiles**: Tax Vault, Food Cost, Sales Mix, Menu Engineering, Covers Flow,
+and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-module.md`** (scheduled vs.
+actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First
+integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
+
+> **NEXT CONCRETE ACTION (agreed 2026-06-12): build the Toast connector SCAFFOLDING.**
+> A standalone `src/lib/integrations/toast/` module (OAuth2 client-credentials auth + token cache,
+> typed client, `Toast-Restaurant-External-ID` header) plus the env var contract added to
+> `.env.example`. **This builds WITHOUT the live secret** — it only defines the var names it consumes:
+> `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID`. The real
+> values get dropped into the environment config (see "Where secrets go" below); the connector lights up
+> when they're present. Scope this turn = scaffold only; no live API calls until secrets land + a tile
+> is wired. Keep it small and deliberate — do not build the six tiles' data layers in the same pass.
+
+> **⚠️ SECRETS NOT PRESENT IN WEB SESSIONS YET (2026-06-12):** verified this session has **zero** app
+> secrets injected — no Plaid/Clerk/DB/Toast env vars, no `.env.local`. Web sessions run in fresh
+> ephemeral containers; secrets must live in the *environment configuration* to be visible. See below.
 
 **Other bank-data modules on deck (no Toast needed):**
 - **Recurring & Subscriptions** — uses `Transaction.isRecurring`; flag recurring spend + price creep (zombie-subscription killer).
@@ -86,6 +103,17 @@ previously-locked state** (resolve before migration):
 - **Tax source of truth:** Tax Reserve (sales) + the Tax Vault tile both use **Davo's actual pull**,
   never a 6% estimate (PA: all alcohol sales-tax exempt; 6% food + non-alc only; York County).
 <!-- /PASTE BLOCK -->
+
+## Where secrets go (so they're visible in web sessions AND in prod)
+Secrets live in **three separate stores** — setting one does **not** populate the others:
+1. **Claude Code web environment config** → so the agent can see them *in a web session right now*.
+   Set them as environment variables/secrets on the environment this session launches from
+   (docs: https://code.claude.com/docs/en/claude-code-on-the-web). They're injected into the container
+   as env vars. **Currently EMPTY — this is the gap.** Whatever was added before isn't reaching this env.
+2. **Vercel project env vars** → so they work *once live* (Production + Preview scopes).
+3. **`.env.local`** → local dev only (never committed).
+Toast vars to set in #1 and #2: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_API_HOSTNAME`,
+`TOAST_RESTAURANT_GUID`. **Rotate** any key that was ever pasted into chat before going live.
 
 ## Loose ends / reminders
 - **Bring `.env.local`** — the only thing not in the repo (DB password + all keys).

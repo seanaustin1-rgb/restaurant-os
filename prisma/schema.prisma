@@ -91,6 +91,11 @@ model Restaurant {
   slug        String   @unique
   seatCount   Int?
   timezone    String   @default("America/New_York")
+  // Cash Runway anchor: operator-entered bank balance on a known date (from any
+  // statement). Runway = anchor + net transactions since. No live balance feed
+  // exists (statement import skips balance lines; no Plaid balance stored).
+  cashBalanceAnchor     Decimal?  @db.Decimal(12, 2)
+  cashBalanceAnchorDate DateTime? @db.Date
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

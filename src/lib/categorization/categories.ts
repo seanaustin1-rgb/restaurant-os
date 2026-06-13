@@ -11,8 +11,10 @@ export const MISC_CATEGORY_NAME = "Misc";
 export const TAP_BUCKETS: { value: TapBucket; label: string }[] = [
   { value: "REVENUE", label: "Revenue" },
   { value: "COGS_FOOD", label: "COGS — Food" },
-  { value: "COGS_LIQUOR", label: "COGS — Liquor" },
-  { value: "COGS_BEVERAGE", label: "COGS — Beverage" },
+  // PA: wine + spirits share one vendor (PLCB state store) → COGS_LIQUOR; beer has
+  // its own distributors → COGS_BEVERAGE. Labels reflect the operator's mental model.
+  { value: "COGS_LIQUOR", label: "COGS — Wine & Spirits" },
+  { value: "COGS_BEVERAGE", label: "COGS — Beer" },
   { value: "LABOR", label: "Labor" },
   { value: "OWNER_PAY", label: "Owner Pay" },
   { value: "OPEX", label: "OpEx" },

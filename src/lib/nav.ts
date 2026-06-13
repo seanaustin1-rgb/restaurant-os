@@ -4,6 +4,7 @@ export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/transactions", label: "Transactions" },
   { href: "/transactions/misc", label: "Review" },
+  { href: "/onboarding/vendors", label: "Vendor Setup" },
   { href: "/settings/categories", label: "Categories" },
   { href: "/settings/rules", label: "Rules" },
   { href: "/settings/allocation", label: "Allocation" },

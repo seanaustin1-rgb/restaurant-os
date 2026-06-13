@@ -6,6 +6,7 @@ import {
   resolveToastRestaurantId,
   syncToastDailyMetrics,
   syncToastSalesMix,
+  syncToastSalesTax,
   syncToastMenuItemSales,
 } from "@/lib/integrations/toast/sync";
 
@@ -97,11 +98,15 @@ export const syncToastMetrics = inngest.createFunction(
     const salesMix = await step.run("sync-sales-mix", () =>
       syncToastSalesMix(restaurantId, days),
     );
+    // Collected sales tax (Orders API) — the pre-allocation skim source.
+    const salesTax = await step.run("sync-sales-tax", () =>
+      syncToastSalesTax(restaurantId, days),
+    );
     // One weekly menu report refreshes the current week's per-item rows.
     const menuItems = await step.run("sync-menu-items", () =>
       syncToastMenuItemSales(restaurantId, 1),
     );
-    return { metrics, salesMix, menuItems };
+    return { metrics, salesMix, salesTax, menuItems };
   },
 );
 

@@ -21,9 +21,9 @@ export const MODULES: ModuleDef[] = [
   { key: "recurring", name: "Recurring & Subscriptions", description: "Repeating charges & price creep", status: "live", href: "/modules/recurring" },
   { key: "runway", name: "Cash Runway", description: "Days of cash at current burn", status: "live", href: "/modules/cash-runway" },
   { key: "payment-watch", name: "Payment Watch", description: "Double-pays & off-norm charges", status: "live", href: "/modules/payment-watch" },
-  // Needs real reported figures, not estimates: collected sales tax from the
-  // Toast sales report + payroll tax withheld per pay run from payroll/accounting.
-  { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "soon", blockedBy: "Toast + payroll" },
+  // Sales tax collected = Toast Orders API (per-check tax), synced daily. Payroll
+  // tax shows pulls that cleared; forward accrual still needs a payroll feed.
+  { key: "tax-vault", name: "Tax Vault", description: "Sales & payroll tax set-aside", status: "live", href: "/modules/tax-vault" },
   // Need Toast / POS item-level data.
   { key: "food-cost", name: "Food Cost Tracker", description: "COGS vs. theoretical", status: "soon", blockedBy: "Toast" },
   { key: "sales-mix", name: "Sales Mix", description: "Net sales by revenue center", status: "live", href: "/modules/sales-mix" },

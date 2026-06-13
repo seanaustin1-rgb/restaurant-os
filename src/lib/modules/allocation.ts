@@ -3,9 +3,11 @@ import {
   rollingVariance,
   nextSweepDate,
   daysUntilNextSweep,
+  taxReserveStatus,
   VARIANCE_WINDOW_DAYS,
   type LedgerEntry,
   type HealthStatus,
+  type TaxReserveStatus,
 } from "@/lib/profit-first/allocation";
 
 // Allocation & Variance module — the Profit First flagship view.
@@ -76,7 +78,21 @@ export interface AllocationData {
   accrue: AccrueLine[];
   nextSweep: string;
   daysToSweep: number;
-  tax: { salesCleared: number; payrollCleared: number; note: string };
+  tax: {
+    /** Collected sales tax for the period (Toast Orders API) — the set-aside target. */
+    salesCollected: number;
+    /** Sales tax that actually cleared the bank (Davo pulls). */
+    salesCleared: number;
+    /** salesCollected − salesCleared (reserve still held for upcoming pulls). */
+    salesReserve: number;
+    /** Binary reserve health: OK when collected ≥ pulled, else SHORT. */
+    salesStatus: TaxReserveStatus;
+    /** Payroll tax that cleared the bank this period. */
+    payrollCleared: number;
+    note: string;
+    /** True when Toast collected-tax is wired (orders:read); false → honest fallback note. */
+    salesSourced: boolean;
+  };
   hasData: boolean;
 }
 
@@ -113,10 +129,14 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
   // Earned basis: net sales per day.
   const sales = await prisma.dailySales.findMany({
     where: { restaurantId, date: { gte: start, lt: end } },
-    select: { date: true, netSales: true },
+    select: { date: true, netSales: true, salesTaxCollected: true },
   });
   const salesByDay = new Map<string, number>();
-  for (const s of sales) salesByDay.set(iso(s.date), n(s.netSales));
+  let salesTaxCollectedTotal = 0;
+  for (const s of sales) {
+    salesByDay.set(iso(s.date), n(s.netSales));
+    salesTaxCollectedTotal += n(s.salesTaxCollected);
+  }
 
   // Obligations: categorized spend (outflows = positive amounts) by tapBucket.
   const cats = await prisma.category.findMany({
@@ -213,9 +233,16 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
     nextSweep: `${MONTHS[sweep.getUTCMonth()]} ${sweep.getUTCDate()}`,
     daysToSweep: daysUntilNextSweep(asOf),
     tax: {
+      salesCollected: Math.round(salesTaxCollectedTotal * 100) / 100,
       salesCleared: Math.round(salesTaxCleared * 100) / 100,
+      salesReserve: Math.round((salesTaxCollectedTotal - salesTaxCleared) * 100) / 100,
+      salesStatus: taxReserveStatus(salesTaxCollectedTotal, salesTaxCleared),
       payrollCleared: Math.round(payrollTaxCleared * 100) / 100,
-      note: "Pre-allocation skim (setting tax aside before Davo/payroll pulls) needs Toast's reported tax-collected — orders:read pending. Shown here: tax pulls that actually cleared this period.",
+      salesSourced: salesTaxCollectedTotal > 0,
+      note:
+        salesTaxCollectedTotal > 0
+          ? "Sales tax COLLECTED is read from Toast (Orders API, per-check tax) and skimmed off the top before the TAP split. Davo's actual pulls draw it back down. OK = collected ≥ pulled. Payroll tax shows pulls that cleared (forward accrual needs a payroll feed)."
+          : "Pre-allocation skim needs Toast collected-tax — run the sales-tax sync (orders:read). Shown here: tax pulls that actually cleared this period.",
     },
     hasData: sales.length > 0,
   };

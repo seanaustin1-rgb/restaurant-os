@@ -23,6 +23,7 @@ import {
   runMenuReport,
   toBusinessDate,
 } from "./analytics";
+import { getSalesTaxCollectedForDay } from "./orders";
 
 /** One revenue center's slice of a day's sales (stored in DailySales.mixByRevenueCenter). */
 export interface RevenueCenterSlice {
@@ -121,6 +122,56 @@ export async function syncToastDailyMetrics(
       written++;
       firstWritten = firstWritten ?? row.businessDate;
       lastWritten = row.businessDate;
+    }
+    if (offset > 1) await sleep(spacingMs);
+  }
+
+  return {
+    restaurantId,
+    daysRequested: days,
+    daysWritten: written,
+    fromBusinessDate: firstWritten,
+    toBusinessDate: lastWritten,
+  };
+}
+
+/**
+ * Sync collected sales tax into DailySales.salesTaxCollected for the last `days`
+ * closed business days. Reads the Toast Orders API (per-check taxAmount sum) —
+ * the source for the pre-allocation Sales-Tax skim (spec §C3.3). Upserts onto the
+ * existing daily row (the metrics sync creates it); a day with no checks is
+ * skipped. Idempotent. Needs the `orders:read` scope.
+ */
+export async function syncToastSalesTax(
+  restaurantId: string,
+  days = 21,
+  spacingMs = 1100,
+): Promise<ToastSyncResult> {
+  if (!isToastConfigured()) {
+    throw new Error("Toast is not configured — cannot sync sales tax.");
+  }
+
+  let written = 0;
+  let firstWritten: string | null = null;
+  let lastWritten: string | null = null;
+
+  for (let offset = days; offset >= 1; offset--) {
+    const d = new Date();
+    d.setDate(d.getDate() - offset);
+    const bd = String(toBusinessDate(d));
+
+    const { salesTaxCollected, checkCount } = await getSalesTaxCollectedForDay(bd);
+    if (checkCount > 0) {
+      const date = businessDateToUtcDate(bd);
+      await prisma.dailySales.upsert({
+        where: { restaurantId_date: { restaurantId, date } },
+        update: { salesTaxCollected },
+        // Fallback create (0 sales) only if the metrics sync hasn't run for this day.
+        create: { restaurantId, date, grossSales: 0, netSales: 0, salesTaxCollected, source: "toast" },
+      });
+      written++;
+      firstWritten = firstWritten ?? bd;
+      lastWritten = bd;
     }
     if (offset > 1) await sleep(spacingMs);
   }

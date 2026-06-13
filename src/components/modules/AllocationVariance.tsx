@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
 import type { AllocationData, VarianceLine } from "@/lib/modules/allocation";
 import { money, pct } from "@/lib/format";
 
@@ -63,25 +63,75 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
         </p>
       </section>
 
-      {/* Tax Reserve — honest about the missing source. */}
+      {/* Tax Reserve — binary OK / SHORT (top-priority alert). */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Tax Reserve</h2>
-        <div className="rounded-lg border border-health-yellow/30 bg-health-yellow/5 px-4 py-3">
-          <div className="flex items-start gap-2">
-            <AlertTriangle size={15} className="mt-0.5 shrink-0 text-health-yellow" />
-            <div className="text-xs text-muted">{data.tax.note}</div>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted">Sales tax pulled</div>
-              <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCleared)}</div>
-            </div>
-            <div>
-              <div className="text-[11px] uppercase tracking-wider text-muted">Payroll tax pulled</div>
-              <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.payrollCleared)}</div>
-            </div>
-          </div>
+        <div className="mb-2 flex items-baseline justify-between">
+          <h2 className="font-display text-lg text-copper-soft">Tax Reserve</h2>
+          <a href="/modules/tax-vault" className="text-xs text-copper-soft underline-offset-2 hover:underline">
+            full Tax Vault →
+          </a>
         </div>
+        {(() => {
+          const sourced = data.tax.salesSourced;
+          const short = sourced && data.tax.salesStatus === "SHORT";
+          const frame = !sourced
+            ? "border-health-yellow/30 bg-health-yellow/5"
+            : short
+              ? "border-health-red/40 bg-health-red/5"
+              : "border-health-green/30 bg-health-green/5";
+          return (
+            <div className={clsx("rounded-lg border px-4 py-3", frame)}>
+              <div className="flex items-start gap-2">
+                {sourced ? (
+                  short ? (
+                    <AlertTriangle size={15} className="mt-0.5 shrink-0 text-health-red" />
+                  ) : (
+                    <ShieldCheck size={15} className="mt-0.5 shrink-0 text-health-green" />
+                  )
+                ) : (
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0 text-health-yellow" />
+                )}
+                <div className="text-xs text-muted">{data.tax.note}</div>
+              </div>
+              {sourced && (
+                <div className="mt-3 grid grid-cols-3 gap-3">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted">Collected</div>
+                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCollected)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted">Pulled (Davo)</div>
+                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCleared)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted">Reserve</div>
+                    <div
+                      className={clsx(
+                        "tnum text-base",
+                        short ? "text-health-red" : "text-health-green",
+                      )}
+                    >
+                      {money(data.tax.salesReserve)}{" "}
+                      <span className="text-xs">({data.tax.salesStatus})</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {!sourced && (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted">Sales tax pulled</div>
+                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCleared)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-muted">Payroll tax pulled</div>
+                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.payrollCleared)}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </section>
     </div>
   );

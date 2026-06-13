@@ -44,3 +44,10 @@ export {
   type EraTimeRange,
   type EraPollOptions,
 } from "./analytics";
+
+export {
+  getSalesTaxCollectedForDay,
+  type SalesTaxForDay,
+} from "./orders";
+
+export { getToastAnalyticsCredentials } from "./config";

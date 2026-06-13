@@ -28,7 +28,23 @@ email is in the Clerk dashboard → Users (a `+clerk_test@…` address); OTP `42
 live `/modules/allocation` view, PR #17), TAP editor `/settings/allocation` + 3-way
 COGS drill-down (PR #16), software-vendors→Technology categorization fix (`c664d5a`),
 `DEPLOY.md` (Vercel + Bluehost-domain steps), **PR #18 Debt Service → Profit (`8212ce3`)**.
-All build clean (35 routes).
+All build clean.
+
+**Backlog cleared 2026-06-13 (all on `main` except the wizard):**
+- **Tax Vault + Sales-Tax skim** (`/modules/tax-vault`) — collected sales tax from the Toast
+  Orders API (per-check taxAmount), reserve OK/SHORT; allocation view Tax Reserve uses it.
+- **Allocation production phase** — persisted bucket ledger (`BucketAllocation` + recomputed
+  `VirtualAccount` balances + `BucketSweep` 10th/25th sweeps), daily Inngest run; allocation view
+  shows balances + sweeps. `src/lib/profit-first/ledger.ts`. Obligation/reconciliation sub-tables
+  deferred (no integration feeds).
+- **Health-status vocabulary unified** (defined once; usage thresholds named).
+- **Category Trends & Budgets** (`/modules/category-trends`) — MoM 6-month bars + per-category
+  monthly budgets (`Category.monthlyBudget`) + budget-vs-actual.
+- **Setup wizard** (`/onboarding/vendors`) — top vendors by spend → confirm category → seeds
+  per-tenant KEYWORD rule + recategorizes. **LOCAL commit `ec2efea`, push pending operator OK.**
+- Migrations applied this session: `add_daily_sales_tax`, `allocation_ledger`, `category_budget`
+  (**15 total now**). **Operator-run backfills still pending**: `scripts/sync-toast-sales-tax.ts 21`
+  + `scripts/run-allocation-ledger.ts` (prod-DB writes — run in your own terminal).
 
 **✅ TOAST OPERATIONAL ACCESS GRANTED 2026-06-13 — dual-credential connector shipped (`04a1be8`).**
 The operator created a **Standard API** credential set in the Toast portal (the existing "Deep dive"
@@ -68,10 +84,12 @@ clients — one client can't hold both). Scope probe now **200 on all 8 operatio
      "Loose ends"). Migrations via `prisma migrate deploy` and merges-to-main DO go through
      after an explicit in-conversation "go".
 
-**Backlog (deferred):** persisted bucket-ledger + Inngest sweeps (Allocation engine
-"production phase", migration-gated); **setup wizard** for new-tenant vendor→bucket
-mapping (operator-requested — categorization quality IS the product; do LAST per
-operator); unify dashboard-gauge vs allocation-view health thresholds.
+**Backlog — CLEARED 2026-06-13** (persisted bucket-ledger + sweeps, setup wizard, health-status
+unify, category trends/budgets, Tax Vault — all built; see "Backlog cleared" list above). Remaining
+deferred: the obligation/reconciliation sub-tables + MarginEdge/Davo pull-clear event handlers (need
+integration feeds that don't exist yet); **scheduled-vs-actual labor** (Toast `/labor/v1/shifts` works
+but the schedule is sparse until Sling fully publishes into Toast — operator-side fix). Operator gates
+still open: 6 Toast vars → Vercel, the two backfills, close PR #1.
 
 ### To continue dev work on another machine / Claude Code web
 1. Clone the repo (everything's on GitHub, incl. the in-flight branch).

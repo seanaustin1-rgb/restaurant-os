@@ -4,11 +4,12 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative); the two live gates are the Toast `orders:read` scope grant and the in-flight PR #18 (Debt Service → Profit bucket)."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative); the one remaining live gate is the Toast `orders:read` scope grant. PR #18 (Debt Service → Profit) is now MERGED."
 
 > **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
 > latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
-> and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. PR #18 is still **open**.
+> and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. **PR #18 is now MERGED**
+> (Debt Service → Profit), so the only open operator gate is the Toast `orders:read` scope.
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
@@ -25,25 +26,32 @@ email is in the Clerk dashboard → Users (a `+clerk_test@…` address); OTP `42
 **Shipped to `main` since the engine work:** Allocation & Variance engine (core +
 live `/modules/allocation` view, PR #17), TAP editor `/settings/allocation` + 3-way
 COGS drill-down (PR #16), software-vendors→Technology categorization fix (`c664d5a`),
-`DEPLOY.md` (Vercel + Bluehost-domain steps). All build clean (35 routes).
+`DEPLOY.md` (Vercel + Bluehost-domain steps), **PR #18 Debt Service → Profit (`8212ce3`)**.
+All build clean (35 routes).
 
-**IN FLIGHT — two gates, both need the operator:**
-1. **Toast `orders:read` scope** — re-probed 2026-06-13, still **403 on all 8
+**ONE gate left, needs the operator:**
+1. **Toast `orders:read` scope** — re-probed 2026-06-13 (again), still **403 on all 8
    operational endpoints**. The live tax skim + Labor/operational wave can't be built
    until the operator adds `orders:read` (+ `cashmgmt:read`, `labor.*:read`) to the
    API client (`TOAST_CLIENT_ID` in `.env.local`) in the **Toast developer portal**.
    Current creds are analytics-only (`enterprise-metrics:read`). This is "wiring Toast"
    — the operator's chosen NEXT build, blocked on this grant.
-2. **Live Supabase writes keep getting auto-blocked** by the safety classifier
-   (won't honor a standing "go" for prod-DB mutations). Operator chose **"Add a
-   permission rule"** to unblock — NOT yet executed (session paused). Two pending DB writes:
-   - **Tech fix (operator said "go"):** move 4 Stone Grille txns + Sandbox/Demo rules
-     Smallwares→Technology. Script ready: `scripts/fix-tech-categorization.ts --commit`.
-   - **Debt Service → Profit (Profit First):** branch **`claude/debt-service-profit-bucket`**
-     (pushed) adds `PROFIT` to `TapBucket`, rolls Debt Service there, shows it on the
-     Profit gauge. NOT deployable until: (a) `npx dotenv -e .env.local -- prisma migrate
-     deploy` (migration `20260613120000_add_profit_tap_bucket`), (b) merge branch→main,
-     (c) update each restaurant's "Debt Service" Category `tapBucket`→`PROFIT`.
+
+**✅ DONE 2026-06-13 (the former gate 2 — all landed):**
+   - **PR #18 Debt Service → Profit — MERGED** (`8212ce3`, squash, branch deleted).
+     Migration `20260613120000_add_profit_tap_bucket` **applied to live Supabase**
+     (12 migrations now); `scripts/fix-debt-service-bucket.ts` flipped the existing
+     "Debt Service" Category `tapBucket` OPEX→PROFIT on all 3 restaurants (committed to
+     `main`, `8f591a0`). Debt Service now draws against the Profit gauge.
+   - **Tech fix — applied:** `fix-tech-categorization.ts --commit` moved 4 Stone Grille
+     txns ($1,671.60) + Sandbox/Demo rules Smallwares→Technology. OPEX total unchanged
+     ($61,170.12) — drill-down only.
+   - **Classifier note for next session:** prod-DB script writes (`tsx scripts/*.ts --commit`)
+     are HARD-blocked from inside Claude Code and a broad `Bash(npx dotenv:*)` allow rule
+     is itself rejected (arbitrary `--` passthrough). The reliable path is the **operator
+     runs the script in their own PowerShell** (see the npx execution-policy gotcha in
+     "Loose ends"). Migrations via `prisma migrate deploy` and merges-to-main DO go through
+     after an explicit in-conversation "go".
 
 **Backlog (deferred):** persisted bucket-ledger + Inngest sweeps (Allocation engine
 "production phase", migration-gated); **setup wizard** for new-tenant vendor→bucket
@@ -56,7 +64,7 @@ operator); unify dashboard-gauge vs allocation-view health thresholds.
    + all keys). Without it, local scripts/builds won't run, but editing + pushing
    (which auto-deploys via Vercel) works fine.
 3. `npm install` → `npx prisma generate` → `npm run dev`. DB is shared (Supabase), no
-   migration needed to develop (except the pending debt-service one above).
+   migration needed to develop (all 12 migrations applied, incl. the debt-service one).
 4. Project memory lives in the local `~/.claude` config and may NOT travel to a new
    machine — **this doc is the source of truth.**
 
@@ -237,14 +245,13 @@ below). The remaining tiles (Tax Vault live skim, Food Cost, real-time orders) n
 **Still open:** rule precedence on multi-match; per-category OpEx sub-budgets; whether the beverage line gets its own target %.
 
 ## DB migrations — status (2026-06-13)
-**All 11 migrations on `main` are APPLIED to the shared Supabase DB** (`prisma migrate status` =
-"Database schema is up to date"), through `20260612220000_add_cash_balance_anchor`. This session added
-`add_labor_hours`, `add_sales_mix`, `add_menu_item_sales`, `add_cash_balance_anchor` (all additive/nullable,
-applied forward-only via `prisma migrate deploy` — no `migrate dev`, no reset).
+**All 12 migrations on `main` are APPLIED to the shared Supabase DB** (`prisma migrate status` =
+"Database schema is up to date"), through `20260613120000_add_profit_tap_bucket`. Earlier additions:
+`add_labor_hours`, `add_sales_mix`, `add_menu_item_sales`, `add_cash_balance_anchor`. The 12th
+(`add_profit_tap_bucket`, PR #18) was applied via `prisma migrate deploy` when PR #18 merged — all
+additive/nullable, forward-only, no `migrate dev`, no reset.
 
-**The ONLY unapplied migration** is on the open **PR #18** branch
-(`20260613120000_add_profit_tap_bucket`, Debt Service → Profit) — apply it only when merging that PR (see
-the RESUME-HERE block). New machines: `npx prisma generate` is enough to develop; the schema is current.
+**No unapplied migrations.** New machines: `npx prisma generate` is enough to develop; the schema is current.
 
 ## ⬇️ FROM AN EARLIER (EXTERNAL) CHAT — TO INTEGRATE
 > The operator has a block of notes/decisions/requests from a separate conversation
@@ -295,6 +302,8 @@ Toast vars to set in #1 and #2: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST
 - **Duplicate restaurant**: empty twin "Stone Grille and Taphouse" (`cmpvtq12q000i…`) from onboarding twice — delete with `npx dotenv -e .env.local -- tsx scripts/cleanup-restaurants.ts` (lists all; add `--delete <id> --commit` to remove the empty one — refuses non-empty without `--force`).
 - **Before deploy**: apply the pending migration (above); `/api/dev/*` routes are already hardened (middleware 404s them in prod **and** each handler self-guards on `NODE_ENV`, so they can stay); run `next build` with real env present; set Vercel env WITHOUT `INNGEST_DEV`. **Rotate any secrets** shared via chat during setup. Note: `middleware.ts` is correct for the pinned Next 14 — the `proxy` rename only applies if you upgrade to Next 16.
 - **Gotchas** (Windows): Node may be off-PATH; run Prisma via `npx dotenv -e .env.local -- prisma ...`; use batched `$transaction([...])` over the Supabase pooler (not interactive); Clerk test emails use code `424242`; new route segments need a dev-server restart to register.
+- **PowerShell execution policy** (Windows): `npx`/`npm`/`prisma` resolve to `.ps1` shims that fail with `running scripts is disabled on this system` under the default Restricted/RemoteSigned-machine policy. Two fixes: one-off, call the `.cmd` shim (`npx.cmd dotenv …`); durable, run once `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned` (done on Customer-Zero machine 2026-06-13). NOTE: the Claude Code **Bash tool** runs `npx` fine (Git-Bash, no `.ps1` shim) even when the operator's PowerShell can't.
+- **Prod-DB script writes must be operator-run** (2026-06-13): `tsx scripts/*.ts --commit` against shared Supabase is HARD-blocked from inside Claude Code's auto-mode, and a broad `Bash(npx dotenv:*)` allow rule is rejected too (it'd authorize arbitrary `--` passthrough). Have the **operator run the script in their own terminal**. `prisma migrate deploy` and merges-to-`main` DO proceed after an explicit in-chat "go".
 
 ## Recent commits / PRs
 Earliest: init → README → categorization Phase 1/3 → Cash Flow / Vendor Spend / Spending by Category tiles
@@ -306,10 +315,13 @@ Watch (+ both-reference fix).
 **Allocation + deploy wave (2026-06-13, merged — other session):** #16 allocation settings + 3-way COGS →
 #17 Allocation & Variance engine core + view → `DEPLOY.md` → software-vendors→Technology fix (`c664d5a`) →
 live-on-Vercel resume block (`6fb573b`).
-**OPEN:** #18 Debt Service → Profit bucket (`claude/debt-service-profit-bucket`, migration pending) · #1
-old rule-suggestions PR (superseded — categorization rules already shipped; can close).
+**Debt-service + cleanup (2026-06-13, merged):** #18 Debt Service → Profit bucket (`8212ce3`, migration
+applied) → `fix-debt-service-bucket.ts` data-update script (`8f591a0`) → tech-categorization fix run
+(operator-run, 4 Stone Grille txns + Sandbox/Demo rules → Technology).
+**OPEN:** #1 old rule-suggestions PR (superseded — categorization rules already shipped; can close).
 
 Toast/era scripts in `scripts/`: `test-toast-auth.ts`, `toast-list-restaurants.ts`, `toast-scope-probe.ts`,
 `toast-analytics-probe.ts`, `sync-toast-metrics.ts`, `sync-toast-sales-mix.ts`, `sync-toast-menu-items.ts`,
-`fix-tech-categorization.ts`. Plus earlier: `backfill-categories.ts`, `verify-rollup.ts`, `inspect-txns.ts`,
-`seed-sales.ts`, `recategorize-checks.ts`, `cleanup-restaurants.ts`, `test-llm-extract.ts`.
+`fix-tech-categorization.ts`, `fix-debt-service-bucket.ts`. Plus earlier: `backfill-categories.ts`,
+`verify-rollup.ts`, `inspect-txns.ts`, `seed-sales.ts`, `recategorize-checks.ts`, `cleanup-restaurants.ts`,
+`test-llm-extract.ts`.

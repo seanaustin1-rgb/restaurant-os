@@ -38,6 +38,7 @@ The database schema is already migrated on Supabase — you do **not** need to r
 
 ## Working notes / gotchas
 - **Never commit `.env.local`** (or any real keys). It's git-ignored; keep it that way.
+- **PowerShell execution policy** (Windows): if `npx`/`npm`/`prisma` fail with *"running scripts is disabled on this system"*, the `.ps1` shims are blocked. One-off fix: call the `.cmd` shim (`npx.cmd dotenv …`). Durable fix (run once): `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`.
 - **Prisma CLI ignores `.env.local`** — run Prisma commands through dotenv: `npx dotenv -e .env.local -- prisma <cmd>`. Convenience scripts: `npm run db:migrate`, `db:push`, `db:studio`.
 - **Pooled writes:** Supabase uses PgBouncer (transaction pooler). Use **batched** `prisma.$transaction([...])`, never interactive `$transaction(async tx => ...)` — the latter times out on the pooler.
 - **Migrations:** `migrate dev` is interactive; prefer `--create-only` then hand-edit + `npx dotenv -e .env.local -- prisma migrate deploy`. Enum-value additions are `ALTER TYPE ... ADD VALUE`.

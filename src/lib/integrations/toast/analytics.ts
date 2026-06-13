@@ -17,7 +17,7 @@
  */
 
 import { getAccessToken } from "./auth";
-import { getToastConfig } from "./config";
+import { getToastConfig, getToastAnalyticsCredentials } from "./config";
 import { ToastApiError } from "./client";
 
 export type EraTimeRange = "day" | "week" | "month" | "year";
@@ -87,7 +87,9 @@ const sleep = (ms: number, signal?: AbortSignal) =>
   });
 
 async function eraAuthHeaders(): Promise<Record<string, string>> {
-  const token = await getAccessToken();
+  // Analytics (era) runs on the enterprise-metrics credential set, which is
+  // separate from the operational (Standard) creds used by toastFetch.
+  const token = await getAccessToken(false, getToastAnalyticsCredentials());
   return { Authorization: `Bearer ${token}`, Accept: "application/json" };
 }
 

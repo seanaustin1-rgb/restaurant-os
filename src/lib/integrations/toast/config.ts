@@ -66,3 +66,25 @@ export function getToastConfig(): ToastConfig {
     restaurantGuid: process.env.TOAST_RESTAURANT_GUID!.trim(),
   };
 }
+
+/**
+ * Credentials for the Analytics (era / enterprise-metrics) API.
+ *
+ * Toast issues scopes per API client, and Analytics vs Standard (operational)
+ * access live on SEPARATE credential sets — one client can't hold both. So the
+ * base `TOAST_CLIENT_ID/SECRET` carry the **operational** (Standard) creds used
+ * by `client.ts`/`toastFetch`, and these optional vars carry the **Analytics**
+ * creds used by `analytics.ts`:
+ *   TOAST_ANALYTICS_CLIENT_ID, TOAST_ANALYTICS_CLIENT_SECRET
+ *
+ * When the analytics-specific vars are absent we fall back to the base creds, so
+ * a single-credential-set deployment (whichever API it covers) keeps working
+ * unchanged. hostname + restaurant GUID are shared across both.
+ */
+export function getToastAnalyticsCredentials(): { clientId: string; clientSecret: string } {
+  const base = getToastConfig();
+  return {
+    clientId: process.env.TOAST_ANALYTICS_CLIENT_ID?.trim() || base.clientId,
+    clientSecret: process.env.TOAST_ANALYTICS_CLIENT_SECRET?.trim() || base.clientSecret,
+  };
+}

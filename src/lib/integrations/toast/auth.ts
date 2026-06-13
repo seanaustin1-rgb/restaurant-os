@@ -35,47 +35,60 @@ interface ToastLoginResponse {
   };
 }
 
-// Module-scoped cache. Keyed by clientId so swapping creds invalidates cleanly.
-let cache: (CachedToken & { clientId: string }) | null = null;
+/** A Toast OAuth2 credential pair. Operational and Analytics use different ones. */
+export interface ToastCredentials {
+  clientId: string;
+  clientSecret: string;
+}
 
-/** In-flight login promise, so concurrent callers share one network request. */
-let inFlight: Promise<string> | null = null;
+// Module-scoped caches keyed by clientId, so multiple credential sets
+// (operational + analytics) coexist without evicting each other.
+const cache = new Map<string, CachedToken>();
+/** In-flight logins keyed by clientId, so concurrent callers share one request. */
+const inFlight = new Map<string, Promise<string>>();
 
-function isFresh(entry: CachedToken | null): entry is CachedToken {
+function isFresh(entry: CachedToken | undefined): entry is CachedToken {
   return !!entry && entry.expiresAt > Date.now();
 }
 
 /**
  * Return a valid Toast bearer access token, logging in (and caching) as needed.
- * Concurrent callers during a cold cache share a single login request.
+ * Concurrent callers for the same credential set share a single login request.
  *
  * @param forceRefresh bypass the cache (e.g. after a 401) and re-authenticate.
+ * @param creds which credential set to authenticate. Defaults to the base
+ *   operational creds (`TOAST_CLIENT_ID/SECRET`); analytics callers pass
+ *   `getToastAnalyticsCredentials()`.
  */
-export async function getAccessToken(forceRefresh = false): Promise<string> {
-  const { clientId } = getToastConfig();
+export async function getAccessToken(
+  forceRefresh = false,
+  creds?: ToastCredentials,
+): Promise<string> {
+  const { clientId, clientSecret } = creds ?? getToastConfig();
 
-  if (!forceRefresh && cache?.clientId === clientId && isFresh(cache)) {
-    return cache.accessToken;
+  if (!forceRefresh && isFresh(cache.get(clientId))) {
+    return cache.get(clientId)!.accessToken;
   }
 
-  // Coalesce concurrent logins into one request.
-  if (!inFlight) {
-    inFlight = login()
-      .then((token) => token)
-      .finally(() => {
-        inFlight = null;
-      });
+  // Coalesce concurrent logins for this clientId into one request.
+  let pending = inFlight.get(clientId);
+  if (!pending) {
+    pending = login({ clientId, clientSecret }).finally(() => {
+      inFlight.delete(clientId);
+    });
+    inFlight.set(clientId, pending);
   }
-  return inFlight;
+  return pending;
 }
 
-/** Drop the cached token. Useful in tests or after credential rotation. */
+/** Drop all cached tokens. Useful in tests or after credential rotation. */
 export function clearTokenCache(): void {
-  cache = null;
+  cache.clear();
 }
 
-async function login(): Promise<string> {
-  const { clientId, clientSecret, hostname } = getToastConfig();
+async function login(creds: ToastCredentials): Promise<string> {
+  const { hostname } = getToastConfig();
+  const { clientId, clientSecret } = creds;
 
   const res = await fetch(
     `${hostname}/authentication/v1/authentication/login`,
@@ -108,11 +121,10 @@ async function login(): Promise<string> {
 
   // Default to a conservative 5-minute life if Toast omits expiresIn.
   const lifetimeMs = (typeof expiresIn === "number" ? expiresIn : 300) * 1000;
-  cache = {
-    clientId,
+  cache.set(clientId, {
     accessToken,
     expiresAt: Date.now() + Math.max(lifetimeMs - EXPIRY_SKEW_MS, 0),
-  };
+  });
 
   return accessToken;
 }

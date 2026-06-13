@@ -77,7 +77,15 @@ export function PaymentWatchModule({ data }: { data: PaymentWatchData }) {
                         >
                           {d.tier === "likely" ? "likely" : "look"}
                         </span>
-                        {d.vendor ? <div className="text-[11px] text-muted">{d.description}</div> : null}
+                        {/* Show both references; distinct check #s mean it's two payments, not one cashed twice. */}
+                        {d.distinctRefs ? (
+                          <div className="text-[11px] text-muted">
+                            {d.firstDescription} <span className="text-muted/70">→</span> {d.description}
+                            <span className="ml-1 text-muted/70">(different references)</span>
+                          </div>
+                        ) : d.vendor ? (
+                          <div className="text-[11px] text-muted">{d.description}</div>
+                        ) : null}
                       </td>
                       <td className="tnum px-4 py-2 text-right text-copper-soft">{money2(d.amount)}</td>
                       <td className="tnum px-4 py-2 text-right text-muted">{d.firstDate}</td>

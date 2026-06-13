@@ -15,11 +15,14 @@ import { signatureOf } from "@/lib/categorization/suggestions";
 export interface DuplicatePair {
   tier: "likely" | "review";
   vendor: string | null; // null = signature-less (checks etc.)
-  description: string;
+  description: string; // second transaction's label
+  firstDescription: string; // first transaction's label — for checks, distinct #s reveal it's NOT one cashed twice
   amount: number;
   firstDate: string;
   secondDate: string;
   gapDays: number;
+  /** Both descriptions differ (e.g. CHECK #10451 vs #10465) — softens the duplicate signal. */
+  distinctRefs: boolean;
 }
 
 export interface UnusualCharge {
@@ -91,25 +94,30 @@ export async function loadPaymentWatch(restaurantId: string): Promise<PaymentWat
       const b = arr[i];
       const gapDays = Math.round((b.date.getTime() - a.date.getTime()) / DAY_MS);
       const sameVendor = a.sig != null; // cluster key already guarantees equal sigs
+      const distinctRefs = a.desc !== b.desc;
       if (sameVendor && gapDays <= LIKELY_MAX_GAP_DAYS) {
         duplicates.push({
           tier: "likely",
           vendor: a.sig,
           description: b.desc,
+          firstDescription: a.desc,
           amount: b.amount,
           firstDate: iso(a.date),
           secondDate: iso(b.date),
           gapDays,
+          distinctRefs,
         });
       } else if (b.amount >= REVIEW_MIN_AMOUNT && gapDays <= REVIEW_MAX_GAP_DAYS) {
         duplicates.push({
           tier: "review",
           vendor: a.sig,
           description: b.desc,
+          firstDescription: a.desc,
           amount: b.amount,
           firstDate: iso(a.date),
           secondDate: iso(b.date),
           gapDays,
+          distinctRefs,
         });
       }
     }

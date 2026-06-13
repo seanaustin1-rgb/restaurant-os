@@ -4,7 +4,7 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative). PR #18 (Debt Service → Profit) is MERGED and the Toast `orders:read` scope is now GRANTED — operational Toast access is live. The next build is the live sales-tax skim (now unblocked); the remaining operator action is adding the 6 Toast env vars to Vercel."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative). PR #18 (Debt Service → Profit) is MERGED and the Toast `orders:read` scope is now GRANTED — operational Toast access is live. The live Sales-Tax skim + Tax Vault tile are now BUILT (`41f6b7e`) and PR #1 is CLOSED; the remaining work is all operator-side: add the 6 Toast env vars to Vercel and run the two prod-DB backfills."
 
 > **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
 > latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
@@ -41,7 +41,7 @@ All build clean.
 - **Category Trends & Budgets** (`/modules/category-trends`) — MoM 6-month bars + per-category
   monthly budgets (`Category.monthlyBudget`) + budget-vs-actual.
 - **Setup wizard** (`/onboarding/vendors`) — top vendors by spend → confirm category → seeds
-  per-tenant KEYWORD rule + recategorizes. **LOCAL commit `ec2efea`, push pending operator OK.**
+  per-tenant KEYWORD rule + recategorizes. **On `main` (`ec2efea`).**
 - Migrations applied this session: `add_daily_sales_tax`, `allocation_ledger`, `category_budget`
   (**15 total now**). **Operator-run backfills still pending**: `scripts/sync-toast-sales-tax.ts 21`
   + `scripts/run-allocation-ledger.ts` (prod-DB writes — run in your own terminal).
@@ -59,14 +59,22 @@ clients — one client can't hold both). Scope probe now **200 on all 8 operatio
   set. Verified live: operational 200s + era metrics returning real Stone Grille data. tsc + build clean.
 - **`.env.local` now has all 6 Toast vars** (4 base + 2 analytics). `.env.example` documents the 2 new ones.
 
-**OPERATOR ACTIONS NOW (next):**
+**OPERATOR ACTIONS NOW (next) — all operator-side; everything buildable is built:**
 1. **Add the 6 Toast vars to Vercel** (Project → Settings → Environment Variables, **Production +
    Preview**) so the live daily Inngest sync + any live Toast reads work in prod:
    `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_ANALYTICS_CLIENT_ID`, `TOAST_ANALYTICS_CLIENT_SECRET`,
    `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID` (same values as `.env.local`). Vercel-dashboard action.
-2. **Build the live Sales-Tax skim** (now UNBLOCKED) — read Toast's collected sales tax via the
-   Orders/cashmgmt API (`orders:read`/`cashmgmt:read` now granted) for the pre-allocation skim + Tax Vault
-   tile (spec §C3.3 / allocation engine). This was THE thing gated on the scope grant.
+2. **Run the two prod-DB backfills** in your own terminal (prod-DB writes are hard-blocked from inside
+   Claude Code): `npx dotenv -e .env.local -- tsx scripts/sync-toast-sales-tax.ts 21` (backfills 21 days of
+   collected sales tax for the Tax Vault tile) + `npx dotenv -e .env.local -- tsx scripts/run-allocation-ledger.ts`
+   (seeds the persisted bucket ledger + sweeps).
+
+**✅ DONE 2026-06-13 (was operator-action #2 — the live Sales-Tax skim):** BUILT & shipped (`41f6b7e`).
+Reads Toast's collected sales tax via the Orders API (`/orders/v2/ordersBulk`, per-check `taxAmount`,
+voids/deletes excluded) for the pre-allocation skim + **Tax Vault tile** (`/modules/tax-vault`, spec §C3.3).
+`src/lib/integrations/toast/orders.ts` + `sync.ts`, daily Inngest wired, migration `add_daily_sales_tax`.
+Typecheck clean. This was THE thing gated on the scope grant — gate cleared. **PR #1 (old rule-suggestions)
+CLOSED 2026-06-13 as superseded** (feature shipped via `4af86f3` Phase 3).
 
 **✅ DONE 2026-06-13 (the former gate 2 — all landed):**
    - **PR #18 Debt Service → Profit — MERGED** (`8212ce3`, squash, branch deleted).
@@ -89,7 +97,7 @@ unify, category trends/budgets, Tax Vault — all built; see "Backlog cleared" l
 deferred: the obligation/reconciliation sub-tables + MarginEdge/Davo pull-clear event handlers (need
 integration feeds that don't exist yet); **scheduled-vs-actual labor** (Toast `/labor/v1/shifts` works
 but the schedule is sparse until Sling fully publishes into Toast — operator-side fix). Operator gates
-still open: 6 Toast vars → Vercel, the two backfills, close PR #1.
+still open: 6 Toast vars → Vercel, the two backfills. (PR #1 closed 2026-06-13.)
 
 ### To continue dev work on another machine / Claude Code web
 1. Clone the repo (everything's on GitHub, incl. the in-flight branch).
@@ -351,7 +359,8 @@ live-on-Vercel resume block (`6fb573b`).
 **Debt-service + cleanup (2026-06-13, merged):** #18 Debt Service → Profit bucket (`8212ce3`, migration
 applied) → `fix-debt-service-bucket.ts` data-update script (`8f591a0`) → tech-categorization fix run
 (operator-run, 4 Stone Grille txns + Sandbox/Demo rules → Technology).
-**OPEN:** #1 old rule-suggestions PR (superseded — categorization rules already shipped; can close).
+**CLOSED 2026-06-13:** #1 old rule-suggestions PR — superseded by the Phase-3 `RuleSuggestions.tsx` +
+`suggestions.ts` already on `main` (`4af86f3`). No open PRs remain.
 
 Toast/era scripts in `scripts/`: `test-toast-auth.ts`, `toast-list-restaurants.ts`, `toast-scope-probe.ts`,
 `toast-analytics-probe.ts`, `sync-toast-metrics.ts`, `sync-toast-sales-mix.ts`, `sync-toast-menu-items.ts`,

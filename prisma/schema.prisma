@@ -61,6 +61,9 @@ enum TapBucket {
   TAX_PAYROLL
   REVENUE
   EXCLUDED
+  // Profit First: debt service is paid from Profit distributions, not OpEx, so
+  // Debt Service rolls up here. Appended last to match the additive enum migration.
+  PROFIT
 }
 
 enum AiActionStatus {

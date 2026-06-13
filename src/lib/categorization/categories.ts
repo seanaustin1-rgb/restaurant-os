@@ -16,6 +16,7 @@ export const TAP_BUCKETS: { value: TapBucket; label: string }[] = [
   { value: "COGS_LIQUOR", label: "COGS — Wine & Spirits" },
   { value: "COGS_BEVERAGE", label: "COGS — Beer" },
   { value: "LABOR", label: "Labor" },
+  { value: "PROFIT", label: "Profit (debt service)" },
   { value: "OWNER_PAY", label: "Owner Pay" },
   { value: "OPEX", label: "OpEx" },
   { value: "TAX_SALES", label: "Tax — Sales" },
@@ -58,7 +59,8 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   { name: "Professional Services", tapBucket: "OPEX", sortOrder: 69 },
   { name: "Technology / Software", tapBucket: "OPEX", sortOrder: 70 },
   { name: "Merchant / Bank Fees", tapBucket: "OPEX", sortOrder: 71 },
-  { name: "Debt Service", tapBucket: "OPEX", sortOrder: 72 },
+  // Profit First: debt is serviced from Profit distributions, not OpEx.
+  { name: "Debt Service", tapBucket: "PROFIT", sortOrder: 72 },
 
   { name: "Sales Tax", tapBucket: "TAX_SALES", sortOrder: 80 },
   { name: "Payroll Tax", tapBucket: "TAX_PAYROLL", sortOrder: 81 },

@@ -22,6 +22,7 @@ export const TAP_BUCKET_TO_LEGACY: Record<TapBucket, TransactionBucket> = {
   LABOR: "LABOR",
   OWNER_PAY: "OWNER_PAY",
   OPEX: "OPEX_SUPPLIES",
+  PROFIT: "DEBT_SERVICE", // debt service is the only PROFIT-bucket spend today
   TAX_SALES: "TAX_SALES",
   TAX_PAYROLL: "TAX_PAYROLL",
   REVENUE: "REVENUE",

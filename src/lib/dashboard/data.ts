@@ -132,6 +132,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   const labor = tap("LABOR"); // Payroll — Paper Checks already maps to LABOR
   const opex = tap("OPEX");
   const ownerPay = tap("OWNER_PAY");
+  const profitSpend = tap("PROFIT"); // Debt Service — serviced from Profit (PF), not OpEx
   // TAX_SALES, TAX_PAYROLL, REVENUE, and EXCLUDED are intentionally not gauged.
 
   // Last 7 days of covers for the sparkline.
@@ -174,7 +175,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   ].filter((sg) => sg.amount > 0 || sg.categories.length > 0);
 
   const gauges: TapGauge[] = [
-    mkGauge("profit", "Profit", taps.profitPct, targets.profit, 0, []),
+    mkGauge("profit", "Profit", taps.profitPct, targets.profit, profitSpend, catsForTap("PROFIT")),
     mkGauge("ownerPay", "Owner Pay", taps.ownerPayPct, targets.ownerPay, ownerPay, catsForTap("OWNER_PAY")),
     mkGauge(
       "cogs",

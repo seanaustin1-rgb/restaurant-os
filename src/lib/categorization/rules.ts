@@ -59,7 +59,9 @@ const PAYROLL_CHECK_SEED: RuleSeed = {
 const VENDOR_SEEDS: RuleSeed[] = VENDOR_PATTERNS.map((vp, i) => ({
   matchType: "REGEX" as const,
   pattern: vp.pattern.source,
-  categoryName: legacyBucketToCategoryName(vp.bucket),
+  // A vendor can name a specific default category (e.g. software → Technology);
+  // otherwise fall back to the coarse legacy-bucket default.
+  categoryName: vp.category ?? legacyBucketToCategoryName(vp.bucket),
   priority: 10 + i, // after CHECK_MIN(0); preserves array order
   confidence: vp.confidence,
   scope: vp.scope,

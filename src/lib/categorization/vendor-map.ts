@@ -19,6 +19,11 @@ export interface VendorPattern {
   isRecurring: boolean;
   confidence: number; // 0..1
   scope: VendorScope;
+  // Optional override: seed the per-restaurant Rule against THIS specific default
+  // category (by name) instead of the coarse legacy-bucket default. Lets software
+  // vendors land in "Technology / Software" even though their legacy bucket is the
+  // catch-all OPEX_SUPPLIES. Must be a name in DEFAULT_CATEGORIES.
+  category?: string;
 }
 
 export interface CategorizationResult {
@@ -84,9 +89,9 @@ export const VENDOR_PATTERNS: VendorPattern[] = [
   { pattern: /webstaurant/i, label: "Webstaurant", bucket: "OPEX_SUPPLIES", isRecurring: false, confidence: 0.92, scope: "default" },
   { pattern: /\bgrainger\b/i, label: "Grainger", bucket: "OPEX_SUPPLIES", isRecurring: false, confidence: 0.9, scope: "default" },
   { pattern: /restaurant\s*store/i, label: "The Restaurant Store", bucket: "OPEX_SUPPLIES", isRecurring: false, confidence: 0.85, scope: "default" },
-  { pattern: /marginedge/i, label: "MarginEdge", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.9, scope: "default" },
-  { pattern: /toast,?\s*inc|toast\s*\/\s*eom/i, label: "Toast (POS fees)", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.85, scope: "default" },
-  { pattern: /intuit|quickbooks/i, label: "Intuit QuickBooks", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.9, scope: "default" },
+  { pattern: /marginedge/i, label: "MarginEdge", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.9, scope: "default", category: "Technology / Software" },
+  { pattern: /toast,?\s*inc|toast\s*\/\s*eom/i, label: "Toast (POS fees)", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.85, scope: "default", category: "Technology / Software" },
+  { pattern: /intuit|quickbooks/i, label: "Intuit QuickBooks", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.9, scope: "default", category: "Technology / Software" },
   { pattern: /mailchimp/i, label: "Mailchimp", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.88, scope: "default" },
   { pattern: /\bcanva\b/i, label: "Canva", bucket: "OPEX_SUPPLIES", isRecurring: true, confidence: 0.85, scope: "default" },
   { pattern: /\blowes?\b|lowe'?s/i, label: "Lowe's", bucket: "OPEX_SUPPLIES", isRecurring: false, confidence: 0.8, scope: "default" },

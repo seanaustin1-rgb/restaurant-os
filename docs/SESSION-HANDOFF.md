@@ -4,14 +4,73 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, `docs/specs/transaction-categorization-v2.md`, and `docs/specs/labor-hours-module.md`, and check your project memory for Restaurant OS. Then let's build the **Allocation Advisor** module (the locked next pick) — or, if Toast/Sling credentials are in, start the Toast integration wave."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative); the two live gates are the Toast `orders:read` scope grant and the in-flight PR #18 (Debt Service → Profit bucket)."
+
+> **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
+> latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
+> and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. PR #18 is still **open**.
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
+
+---
+
+## ⏱️ RESUME HERE — 2026-06-13 (LIVE ON VERCEL)
+
+**The app is deployed and working in production:** **https://restaurant-os-hazel.vercel.app**
+(Vercel project `restaurant-os`, Hobby plan, auto-deploys on every push to `main`.)
+To just USE/demo it: open that URL in any browser, **Sign in** (not Sign up) as the
+OPERATOR who owns Stone Grille — `clerkUserId user_3EYUw6yNiDgTiBoorH0c9GuLPR2`; its
+email is in the Clerk dashboard → Users (a `+clerk_test@…` address); OTP `424242`.
+
+**Shipped to `main` since the engine work:** Allocation & Variance engine (core +
+live `/modules/allocation` view, PR #17), TAP editor `/settings/allocation` + 3-way
+COGS drill-down (PR #16), software-vendors→Technology categorization fix (`c664d5a`),
+`DEPLOY.md` (Vercel + Bluehost-domain steps). All build clean (35 routes).
+
+**IN FLIGHT — two gates, both need the operator:**
+1. **Toast `orders:read` scope** — re-probed 2026-06-13, still **403 on all 8
+   operational endpoints**. The live tax skim + Labor/operational wave can't be built
+   until the operator adds `orders:read` (+ `cashmgmt:read`, `labor.*:read`) to the
+   API client (`TOAST_CLIENT_ID` in `.env.local`) in the **Toast developer portal**.
+   Current creds are analytics-only (`enterprise-metrics:read`). This is "wiring Toast"
+   — the operator's chosen NEXT build, blocked on this grant.
+2. **Live Supabase writes keep getting auto-blocked** by the safety classifier
+   (won't honor a standing "go" for prod-DB mutations). Operator chose **"Add a
+   permission rule"** to unblock — NOT yet executed (session paused). Two pending DB writes:
+   - **Tech fix (operator said "go"):** move 4 Stone Grille txns + Sandbox/Demo rules
+     Smallwares→Technology. Script ready: `scripts/fix-tech-categorization.ts --commit`.
+   - **Debt Service → Profit (Profit First):** branch **`claude/debt-service-profit-bucket`**
+     (pushed) adds `PROFIT` to `TapBucket`, rolls Debt Service there, shows it on the
+     Profit gauge. NOT deployable until: (a) `npx dotenv -e .env.local -- prisma migrate
+     deploy` (migration `20260613120000_add_profit_tap_bucket`), (b) merge branch→main,
+     (c) update each restaurant's "Debt Service" Category `tapBucket`→`PROFIT`.
+
+**Backlog (deferred):** persisted bucket-ledger + Inngest sweeps (Allocation engine
+"production phase", migration-gated); **setup wizard** for new-tenant vendor→bucket
+mapping (operator-requested — categorization quality IS the product; do LAST per
+operator); unify dashboard-gauge vs allocation-view health thresholds.
+
+### To continue dev work on another machine / Claude Code web
+1. Clone the repo (everything's on GitHub, incl. the in-flight branch).
+2. **Bring `.env.local` securely** — it's the ONLY thing not in the repo (DB password
+   + all keys). Without it, local scripts/builds won't run, but editing + pushing
+   (which auto-deploys via Vercel) works fine.
+3. `npm install` → `npx prisma generate` → `npm run dev`. DB is shared (Supabase), no
+   migration needed to develop (except the pending debt-service one above).
+4. Project memory lives in the local `~/.claude` config and may NOT travel to a new
+   machine — **this doc is the source of truth.**
+
+---
 
 ## What this is
 Multi-tenant restaurant-operator SaaS with a **Profit First** cash layer. Next.js 14 · Supabase/Prisma · Clerk · Plaid · Inngest · Vercel. Customer Zero = Stone Grille & Taphouse.
 
 ## Where we are (done & working)
+- **✅ 10 DASHBOARD TILES LIVE + the Allocation engine + deployed to Vercel (as of 2026-06-13).** Live tiles:
+  Cash Flow · Vendor Spend · Spending by Category · **Recurring & Subscriptions** · **Cash Runway** ·
+  **Payment Watch** (bank-data) + **Covers Flow** · **Labor Hours** · **Sales Mix** · **Menu Engineering**
+  (Toast `era` analytics). Allocation & Variance engine at `/modules/allocation` (+ `/settings/allocation`).
+  Daily 5:30am ET Inngest sync refreshes Toast metrics/mix/menu-items. Details for each are below.
 - **Tier-3 AI bank-statement import is LIVE**: scanned PDF → Claude structured extraction → categorized transactions → Profit First dashboard. Real May data imported to restaurant **"Stone Grille and Tap House"** (`cmpvtkou90000syl9ziir8nlj`), 282 txns; 28 days of seeded sales so the gauges compute.
 - **Categorization v2 — Phase 1 mostly built & shipped:**
   - **Two-level model live**: `Category` (per-restaurant, operator-extensible) → fixed `TapBucket` enum. `Transaction.categoryId` added; legacy `bucket` kept (dual-write).
@@ -21,7 +80,7 @@ Multi-tenant restaurant-operator SaaS with a **Profit First** cash layer. Next.j
 - **Per-restaurant rules engine — shipped** (`Rule` table; new imports self-categorize per tenant). Phase 3 added **suggested rules** from repeated manual categorizations.
 - **Global app header** — nav appears on every page.
 - **Dashboard Modules framework (`src/lib/modules.ts`)** — the honest registry that replaced the mock tile list. `"live"` tiles link to a real page; `"soon"` tiles render disabled with the `blockedBy` dependency that unblocks them, so **nothing on the dashboard is a fake/dead control**. The grid renders from this list.
-- **Three LIVE bank-data modules** (pattern for each: loader in `src/lib/modules/*.ts`, server page at `/modules/*`, client component in `src/components/modules/*`):
+- **Original three bank-data modules** (the established pattern every later tile follows: loader in `src/lib/modules/*.ts`, server page at `/modules/*`, client component in `src/components/modules/*`):
   - **Cash Flow** (`/modules/cash-flow`) — daily in/out, net-by-day bar chart, running balance. Sign convention: inflows stored **negative**, outflows **positive**.
   - **Vendor Spend** (`/modules/vendor-spend`) — spend by supplier, largest first, share bars; groups vendors by the same signature logic as the rules engine.
   - **Spending by Category** (`/modules/spending`) — outflows grouped into COGS / Labor / OpEx / Owner's Pay / Taxes / Other as a **profit donut** (spend groups + a profit slice = money in), plus a detailed per-category table. **Cash basis**, consistent with Cash Flow.
@@ -37,16 +96,21 @@ npm run dev          # http://localhost:3000
 ```
 DB is already migrated on Supabase (shared) — no migration needed to develop.
 
-## NEXT STEP (current priorities)
+## NEXT STEP — see the ⏱️ RESUME HERE block at the top (authoritative)
 
-**1. Allocation & Variance Engine — the LOCKED next pick (Profit First centerpiece).**
-Full spec: **`docs/specs/allocation-variance-engine.md`** (supersedes the earlier lightweight "Allocation Advisor" sketch). The engine: **pre-allocation tax skim** (Davo sales tax + Toast payroll tax off the top into a Tax Reserve), then **daily** allocation of Real Revenue into virtual buckets (5/5/30/27/20/13) on each settled deposit, **draw-down** as real payments clear Plaid, **rolling-7-day variance** (green/yellow/red dollar-gap) per operating bucket, and **binary OK/SHORT** on the Tax Reserve. Profit + Owner's Pay **swept on the 10th & 25th** (sim only). Builds on existing `TapSettings`, `VirtualAccount`, `calculator.ts`, `DailySales`, Plaid feed, categorization engine, and Inngest. **⚠️ Has open decisions that change locked TAP %s + the beer-line treatment — see the spec's section B; resolve before writing the migration.**
+The two big tracks below are now **SHIPPED** (kept as a record; the RESUME-HERE block has the real
+current gates):
 
-**2. Toast integration wave** — operator is using the **Toast Developer API** (confirmed 2026-06-12).
-One connection lights up **six tiles**: Tax Vault, Food Cost, Sales Mix, Menu Engineering, Covers Flow,
-and **Labor Hours**. Labor scope is fully specced in **`docs/specs/labor-hours-module.md`** (scheduled vs.
-actual hours via **Sling-through-Toast**, 4-week change, YoY when prior-year data exists). First
-integration decision: **Sling API vs. Toast Labor API** as the authoritative source for hours.
+**1. ✅ Allocation & Variance Engine — SHIPPED (PRs #16, #17).** Core + live `/modules/allocation` view +
+`/settings/allocation` TAP editor + 3-way COGS drill-down. Spec: `docs/specs/allocation-variance-engine.md`.
+The persisted bucket-ledger + Inngest sweeps ("production phase") remain deferred (see RESUME block backlog),
+and PR #18 (Debt Service → Profit bucket) is **in flight**.
+
+**2. ◑ Toast integration — analytics wave SHIPPED, operational wave BLOCKED.** Four `era`-analytics tiles
+(Covers Flow, Labor Hours actual, Sales Mix, Menu Engineering) + daily sync are live (PRs #6–#10, detail
+below). The remaining tiles (Tax Vault live skim, Food Cost, real-time orders) need the operator to grant
+**operational scopes** (`orders:read`, `cashmgmt:read`, `labor.*:read`) on the Toast API client — re-probed
+2026-06-13, still 403 (analytics-only creds). Scheduled-vs-actual labor still needs **Sling**.
 
 > **✅ DONE (2026-06-12): Toast connector scaffolding built AND verified live.**
 > Standalone `src/lib/integrations/toast/` module — OAuth2 client-credentials auth + process-local
@@ -172,16 +236,15 @@ integration decision: **Sling API vs. Toast Labor API** as the authoritative sou
 **Operator decisions locked:** Misc → OpEx (until named); COGS_BEVERAGE = its own gauge line; Bank/Register Cash → EXCLUDED (register restocks); cash tip-outs → EXCLUDED, never Labor (pass-through to servers — also why some Toast deposits net low/negative).
 **Still open:** rule precedence on multi-match; per-category OpEx sub-budgets; whether the beverage line gets its own target %.
 
-## ⚠️ PENDING DB MIGRATION (apply before running)
-Milestone B added 4 nullable columns to `TargetSettings` (beverage cost targets +
-manual sales-mix). The Prisma client now selects them, so **the dashboard will error
-until the migration is applied** to the shared Supabase DB:
-```
-npx dotenv -e .env.local -- prisma migrate deploy
-```
-Migration: `prisma/migrations/20260609120000_add_beverage_cost_targets`. Additive &
-safe (all nullable). Existing Customer Zero gets the columns as NULL → beverage
-gauges show a "set your sales mix" prompt until configured at `/settings/beverage`.
+## DB migrations — status (2026-06-13)
+**All 11 migrations on `main` are APPLIED to the shared Supabase DB** (`prisma migrate status` =
+"Database schema is up to date"), through `20260612220000_add_cash_balance_anchor`. This session added
+`add_labor_hours`, `add_sales_mix`, `add_menu_item_sales`, `add_cash_balance_anchor` (all additive/nullable,
+applied forward-only via `prisma migrate deploy` — no `migrate dev`, no reset).
+
+**The ONLY unapplied migration** is on the open **PR #18** branch
+(`20260613120000_add_profit_tap_bucket`, Debt Service → Profit) — apply it only when merging that PR (see
+the RESUME-HERE block). New machines: `npx prisma generate` is enough to develop; the schema is current.
 
 ## ⬇️ FROM AN EARLIER (EXTERNAL) CHAT — TO INTEGRATE
 > The operator has a block of notes/decisions/requests from a separate conversation
@@ -233,7 +296,20 @@ Toast vars to set in #1 and #2: `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST
 - **Before deploy**: apply the pending migration (above); `/api/dev/*` routes are already hardened (middleware 404s them in prod **and** each handler self-guards on `NODE_ENV`, so they can stay); run `next build` with real env present; set Vercel env WITHOUT `INNGEST_DEV`. **Rotate any secrets** shared via chat during setup. Note: `middleware.ts` is correct for the pinned Next 14 — the `proxy` rename only applies if you upgrade to Next 16.
 - **Gotchas** (Windows): Node may be off-PATH; run Prisma via `npx dotenv -e .env.local -- prisma ...`; use batched `$transaction([...])` over the Supabase pooler (not interactive); Clerk test emails use code `424242`; new route segments need a dev-server restart to register.
 
-## Recent commits
-Earlier: `Initial commit` → README → handoff → Phase 1 categorization (`fe52a04`) → Categories settings screen (`c6113ea`).
-This session (modules work): suggested rules / Phase 3 (`4af86f3`) → deploy-hardening + cleanup script (`d7eb433`) → global app header (`57c0aef`) → **Cash Flow module** (`782ed8a`) → **Vendor Spend module** (`b542fbf`) → **Tax Vault re-tag** to real-figures dependency (`88767bb`) → **Spending by Category + profit donut** (`629186d`) → **Labor Hours tile + spec** (`279f0a5`).
-Helper scripts in `scripts/`: `backfill-categories.ts`, `verify-rollup.ts`, `inspect-txns.ts`, `seed-sales.ts`, `recategorize-checks.ts`, `commit-cached.ts`, `test-llm-extract.ts`, `cleanup-restaurants.ts`.
+## Recent commits / PRs
+Earliest: init → README → categorization Phase 1/3 → Cash Flow / Vendor Spend / Spending by Category tiles
+→ Labor Hours spec (`279f0a5`).
+**Toast wave (2026-06-12, merged):** #3 connector + `era` analytics client → #4 allocation-spec reconcile →
+#6 Covers Flow → #7 daily Inngest sync → #8 Labor Hours → #9 Sales Mix → #10 Menu Engineering.
+**Bank-data wave (2026-06-12, merged):** #12 Recurring & Subscriptions → #13 Cash Runway → #14/#15 Payment
+Watch (+ both-reference fix).
+**Allocation + deploy wave (2026-06-13, merged — other session):** #16 allocation settings + 3-way COGS →
+#17 Allocation & Variance engine core + view → `DEPLOY.md` → software-vendors→Technology fix (`c664d5a`) →
+live-on-Vercel resume block (`6fb573b`).
+**OPEN:** #18 Debt Service → Profit bucket (`claude/debt-service-profit-bucket`, migration pending) · #1
+old rule-suggestions PR (superseded — categorization rules already shipped; can close).
+
+Toast/era scripts in `scripts/`: `test-toast-auth.ts`, `toast-list-restaurants.ts`, `toast-scope-probe.ts`,
+`toast-analytics-probe.ts`, `sync-toast-metrics.ts`, `sync-toast-sales-mix.ts`, `sync-toast-menu-items.ts`,
+`fix-tech-categorization.ts`. Plus earlier: `backfill-categories.ts`, `verify-rollup.ts`, `inspect-txns.ts`,
+`seed-sales.ts`, `recategorize-checks.ts`, `cleanup-restaurants.ts`, `test-llm-extract.ts`.

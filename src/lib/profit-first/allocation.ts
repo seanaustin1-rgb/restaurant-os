@@ -9,9 +9,13 @@
 //
 // Simulation mode only — no real money moves (Dwolla "Go Live" is out of scope).
 
-import type { Taps } from "./calculator";
+import type { Taps, HealthStatus } from "./calculator";
 
-export type HealthStatus = "green" | "yellow" | "red";
+// One shared health vocabulary (defined in calculator.ts). Re-exported so existing
+// importers of HealthStatus from this module keep working. The variance thresholds
+// below are this module's LENS on that vocabulary — see calculator.ts for the
+// budget-usage lens; the two are intentionally distinct.
+export type { HealthStatus };
 
 // ─────────────────────────────────────────────────────────────
 // Buckets

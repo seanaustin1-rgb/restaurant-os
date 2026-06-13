@@ -2,7 +2,18 @@
 // All money values are plain numbers (dollars). Percentages are whole numbers (5 = 5%).
 // "Real Revenue" is the Profit First basis for every allocation: Total Sales − COGS.
 
+// The shared health vocabulary used across the app. There are two intentional
+// LENSES that both emit this status (they measure different things — don't merge):
+//   1. Budget-usage lens (gauges, getHealthStatus below): how much of a TAP target
+//      a bucket's spend has consumed — green ≤90% used, yellow ≤100%, red over.
+//   2. Variance lens (allocation.ts computeVariance): the set-aside-vs-owed gap on
+//      the rolling window — green ≥+5%, yellow −5..+5%, red <−5%.
+// Defined here (the foundational module); allocation.ts re-exports it.
 export type HealthStatus = "green" | "yellow" | "red";
+
+// Budget-usage thresholds (whole-number percents) — named, not magic numbers.
+export const USAGE_GREEN_MAX_PCT = 90; // ≤ this → green (comfortably within budget)
+export const USAGE_YELLOW_MAX_PCT = 100; // ≤ this → yellow (approaching limit); over → red
 
 // TAP (Target Allocation Percentage) set. Mirrors TapSettings in the Prisma schema.
 // `spillPct` is optional/structure-only for now: held at 0 until the operator
@@ -74,8 +85,8 @@ export function calculateUsagePct(spent: number, target: number): number {
  * red    > 100% — over budget
  */
 export function getHealthStatus(usagePct: number): HealthStatus {
-  if (usagePct <= 90) return "green";
-  if (usagePct <= 100) return "yellow";
+  if (usagePct <= USAGE_GREEN_MAX_PCT) return "green";
+  if (usagePct <= USAGE_YELLOW_MAX_PCT) return "yellow";
   return "red";
 }
 

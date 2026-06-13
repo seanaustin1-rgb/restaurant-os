@@ -8,6 +8,56 @@ Open the repo and tell Claude:
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
+---
+
+## ⏱️ RESUME HERE — 2026-06-13 (LIVE ON VERCEL)
+
+**The app is deployed and working in production:** **https://restaurant-os-hazel.vercel.app**
+(Vercel project `restaurant-os`, Hobby plan, auto-deploys on every push to `main`.)
+To just USE/demo it: open that URL in any browser, **Sign in** (not Sign up) as the
+OPERATOR who owns Stone Grille — `clerkUserId user_3EYUw6yNiDgTiBoorH0c9GuLPR2`; its
+email is in the Clerk dashboard → Users (a `+clerk_test@…` address); OTP `424242`.
+
+**Shipped to `main` since the engine work:** Allocation & Variance engine (core +
+live `/modules/allocation` view, PR #17), TAP editor `/settings/allocation` + 3-way
+COGS drill-down (PR #16), software-vendors→Technology categorization fix (`c664d5a`),
+`DEPLOY.md` (Vercel + Bluehost-domain steps). All build clean (35 routes).
+
+**IN FLIGHT — two gates, both need the operator:**
+1. **Toast `orders:read` scope** — re-probed 2026-06-13, still **403 on all 8
+   operational endpoints**. The live tax skim + Labor/operational wave can't be built
+   until the operator adds `orders:read` (+ `cashmgmt:read`, `labor.*:read`) to the
+   API client (`TOAST_CLIENT_ID` in `.env.local`) in the **Toast developer portal**.
+   Current creds are analytics-only (`enterprise-metrics:read`). This is "wiring Toast"
+   — the operator's chosen NEXT build, blocked on this grant.
+2. **Live Supabase writes keep getting auto-blocked** by the safety classifier
+   (won't honor a standing "go" for prod-DB mutations). Operator chose **"Add a
+   permission rule"** to unblock — NOT yet executed (session paused). Two pending DB writes:
+   - **Tech fix (operator said "go"):** move 4 Stone Grille txns + Sandbox/Demo rules
+     Smallwares→Technology. Script ready: `scripts/fix-tech-categorization.ts --commit`.
+   - **Debt Service → Profit (Profit First):** branch **`claude/debt-service-profit-bucket`**
+     (pushed) adds `PROFIT` to `TapBucket`, rolls Debt Service there, shows it on the
+     Profit gauge. NOT deployable until: (a) `npx dotenv -e .env.local -- prisma migrate
+     deploy` (migration `20260613120000_add_profit_tap_bucket`), (b) merge branch→main,
+     (c) update each restaurant's "Debt Service" Category `tapBucket`→`PROFIT`.
+
+**Backlog (deferred):** persisted bucket-ledger + Inngest sweeps (Allocation engine
+"production phase", migration-gated); **setup wizard** for new-tenant vendor→bucket
+mapping (operator-requested — categorization quality IS the product; do LAST per
+operator); unify dashboard-gauge vs allocation-view health thresholds.
+
+### To continue dev work on another machine / Claude Code web
+1. Clone the repo (everything's on GitHub, incl. the in-flight branch).
+2. **Bring `.env.local` securely** — it's the ONLY thing not in the repo (DB password
+   + all keys). Without it, local scripts/builds won't run, but editing + pushing
+   (which auto-deploys via Vercel) works fine.
+3. `npm install` → `npx prisma generate` → `npm run dev`. DB is shared (Supabase), no
+   migration needed to develop (except the pending debt-service one above).
+4. Project memory lives in the local `~/.claude` config and may NOT travel to a new
+   machine — **this doc is the source of truth.**
+
+---
+
 ## What this is
 Multi-tenant restaurant-operator SaaS with a **Profit First** cash layer. Next.js 14 · Supabase/Prisma · Clerk · Plaid · Inngest · Vercel. Customer Zero = Stone Grille & Taphouse.
 

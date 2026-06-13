@@ -93,3 +93,15 @@ export async function archiveCategory(categoryId: string): Promise<void> {
   await prisma.category.update({ where: { id: categoryId }, data: { archivedAt: new Date() } });
   revalidatePath(PATH);
 }
+
+// Set (null/0 clears) a category's monthly spend budget. OPERATOR/MANAGER only.
+export async function setCategoryBudget(categoryId: string, monthlyBudget: number | null): Promise<void> {
+  await requireOwnedCategory(categoryId);
+  const value =
+    monthlyBudget == null || !Number.isFinite(monthlyBudget) || monthlyBudget <= 0
+      ? null
+      : Math.round(monthlyBudget * 100) / 100;
+  await prisma.category.update({ where: { id: categoryId }, data: { monthlyBudget: value } });
+  revalidatePath(PATH);
+  revalidatePath("/modules/category-trends");
+}

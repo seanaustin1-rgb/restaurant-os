@@ -256,6 +256,7 @@ model Category {
   restaurantId String
   name         String
   tapBucket    TapBucket
+  monthlyBudget Decimal? @db.Decimal(12, 2) // optional per-category monthly spend budget (OpEx sub-budgets etc.)
   isSystem     Boolean   @default(false)
   sortOrder    Int       @default(0)
   archivedAt   DateTime?

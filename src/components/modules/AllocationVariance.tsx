@@ -88,8 +88,10 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
 }
 
 function VarianceRow({ v }: { v: VarianceLine }) {
-  // Gap as a share of the bar: clamp to ±100% for the visual.
-  const gapPct = v.pctDiff ?? 0;
+  // Gap as a share of the bar: clamp to ±100% for the visual. With no
+  // obligations in the window (pctDiff null) but money set aside, show a full
+  // "ahead" bar rather than an empty one that reads as no progress.
+  const gapPct = v.pctDiff ?? (v.dollarGap > 0 ? 100 : 0);
   const width = Math.min(Math.abs(gapPct), 100);
   const ahead = v.dollarGap >= 0;
 

@@ -22,7 +22,9 @@ export type HealthStatus = "green" | "yellow" | "red";
 // decision; beer has no TAP % of its own yet (held with the 27/20/13 split), so
 // it accrues $0 from allocation but still draws down against beer invoices —
 // surfacing the unbudgeted beer spend as a red variance until a % is set.
-export type DrawDownBucket = "COGS_FOOD" | "COGS_LIQUOR" | "COGS_BEER" | "LABOR" | "OPEX";
+// NOTE: beer's bucket key is "COGS_BEVERAGE" — the canonical Prisma TapBucket
+// enum value used everywhere (categorizer, DB, dashboard); keep this in sync.
+export type DrawDownBucket = "COGS_FOOD" | "COGS_LIQUOR" | "COGS_BEVERAGE" | "LABOR" | "OPEX";
 
 // Accrue-only buckets: no obligations, just a running balance toward a sweep.
 export type AccrueBucket = "PROFIT" | "OWNER_PAY" | "SPILL";
@@ -223,20 +225,24 @@ export function taxReserveStatus(reserveBalance: number, upcomingPull: number): 
 
 /**
  * The next sweep date on or after `from` (10th or 25th of the month; rolls to
- * the 10th of next month after the 25th). Pure date math — no clock read.
+ * the 10th of next month after the 25th). Pure date math, computed in UTC — the
+ * allocation basis dates are Prisma `@db.Date` values (midnight UTC), so UTC
+ * getters keep this consistent with the rest of the engine regardless of the
+ * server/host timezone.
  */
 export function nextSweepDate(from: Date): Date {
-  const y = from.getFullYear();
-  const m = from.getMonth();
-  const d = from.getDate();
-  if (d <= 10) return new Date(y, m, 10);
-  if (d <= 25) return new Date(y, m, 25);
-  return new Date(y, m + 1, 10);
+  const y = from.getUTCFullYear();
+  const m = from.getUTCMonth();
+  const d = from.getUTCDate();
+  if (d <= 10) return new Date(Date.UTC(y, m, 10));
+  if (d <= 25) return new Date(Date.UTC(y, m, 25));
+  return new Date(Date.UTC(y, m + 1, 10));
 }
 
-/** Days remaining until the next sweep (>= 0). */
+/** Days remaining until the next sweep (>= 0). UTC, to match nextSweepDate. */
 export function daysUntilNextSweep(from: Date): number {
   const next = nextSweepDate(from);
-  const ms = next.getTime() - new Date(from.getFullYear(), from.getMonth(), from.getDate()).getTime();
+  const floor = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate());
+  const ms = next.getTime() - floor;
   return Math.round(ms / (24 * 60 * 60 * 1000));
 }

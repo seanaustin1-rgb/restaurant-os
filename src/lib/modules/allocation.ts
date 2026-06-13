@@ -109,7 +109,6 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
   const start = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), 1));
   const end = new Date(Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth() + 1, 1));
   const periodLabel = `${MONTHS[ref.getUTCMonth()]} ${ref.getUTCFullYear()}`;
-  const asOf = ref;
 
   // Earned basis: net sales per day.
   const sales = await prisma.dailySales.findMany({
@@ -154,13 +153,31 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
   // Build each draw-down bucket's daily ledger (allocated vs obligation) across
   // the period, then take the rolling-7d variance as of the latest day.
   const allDays = [...new Set([...salesByDay.keys(), ...Object.values(obligations).flatMap((m) => [...m.keys()])])];
+
+  // Window ends at the latest ACTIVITY day (sales OR a cleared obligation), not
+  // just the latest sales day — otherwise an invoice that posts after the last
+  // synced sales day falls outside the window and the bucket reads falsely
+  // funded. Midnight-UTC, matching the per-day ledger entries.
+  const asOfKey = allDays.length ? allDays.reduce((a, b) => (a > b ? a : b)) : iso(ref);
+  const asOf = new Date(asOfKey + "T00:00:00.000Z");
+
+  // Precompute each day's Date + (floored) net sales once, then per bucket only
+  // attach allocated/obligation — avoids rebuilding the date set per bucket.
+  // Negative net-sales days (voids/corrections) floor to 0 so a data anomaly
+  // can't inject negative "set-aside" and flip a funded bucket red.
+  const dayRows = allDays.map((dayKey) => ({
+    dayKey,
+    date: new Date(dayKey + "T00:00:00.000Z"),
+    netSales: Math.max(0, salesByDay.get(dayKey) ?? 0),
+  }));
+
   const variance: VarianceLine[] = DRAWDOWN.map(({ key, label, tap, bucket }) => {
     const pct = taps[tap];
     const oblMap = obligations[bucket] ?? new Map<string, number>();
-    const entries: LedgerEntry[] = allDays.map((dayKey) => ({
-      date: new Date(dayKey + "T00:00:00.000Z"),
-      allocated: (salesByDay.get(dayKey) ?? 0) * (pct / 100),
-      obligation: oblMap.get(dayKey) ?? 0,
+    const entries: LedgerEntry[] = dayRows.map((d) => ({
+      date: d.date,
+      allocated: d.netSales * (pct / 100),
+      obligation: oblMap.get(d.dayKey) ?? 0,
     }));
     const v = rollingVariance(entries, asOf, VARIANCE_WINDOW_DAYS);
     return {
@@ -177,7 +194,7 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
   });
 
   // Accrue-only buckets: period-to-date set-aside (net sales × TAP%).
-  const totalNetSales = [...salesByDay.values()].reduce((s, v) => s + v, 0);
+  const totalNetSales = [...salesByDay.values()].reduce((s, v) => s + Math.max(0, v), 0);
   const accrue: AccrueLine[] = [
     { key: "profit", label: "Profit", tapPct: taps.profitPct },
     { key: "ownerPay", label: "Owner's Pay", tapPct: taps.ownerPayPct },
@@ -193,7 +210,7 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
     windowDays: VARIANCE_WINDOW_DAYS,
     variance,
     accrue,
-    nextSweep: `${MONTHS[sweep.getMonth()]} ${sweep.getDate()}`,
+    nextSweep: `${MONTHS[sweep.getUTCMonth()]} ${sweep.getUTCDate()}`,
     daysToSweep: daysUntilNextSweep(asOf),
     tax: {
       salesCleared: Math.round(salesTaxCleared * 100) / 100,

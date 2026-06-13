@@ -189,10 +189,13 @@ check("gap +6% → green", computeVariance(106, 100).signal === "green");
 check("gap +2% → yellow", computeVariance(102, 100).signal === "yellow");
 check("gap −10% → red", computeVariance(90, 100).signal === "red");
 check("no obligations → green", computeVariance(50, 0).signal === "green");
-check("sweep after the 5th → the 10th", nextSweepDate(new Date(2026, 5, 5)).getDate() === 10);
-check("sweep after the 12th → the 25th", nextSweepDate(new Date(2026, 5, 12)).getDate() === 25);
-check("sweep after the 26th → next month's 10th", nextSweepDate(new Date(2026, 5, 26)).getMonth() === 6);
-check("days-until-sweep from the 8th = 2", daysUntilNextSweep(new Date(2026, 5, 8)) === 2);
+// Use UTC-constructed dates + UTC getters — the engine works in UTC (the
+// allocation basis is Prisma @db.Date = midnight UTC), so these assertions are
+// timezone-independent.
+check("sweep after the 5th → the 10th", nextSweepDate(new Date(Date.UTC(2026, 5, 5))).getUTCDate() === 10);
+check("sweep after the 12th → the 25th", nextSweepDate(new Date(Date.UTC(2026, 5, 12))).getUTCDate() === 25);
+check("sweep after the 26th → next month's 10th", nextSweepDate(new Date(Date.UTC(2026, 5, 26))).getUTCMonth() === 6);
+check("days-until-sweep from the 8th = 2", daysUntilNextSweep(new Date(Date.UTC(2026, 5, 8))) === 2);
 
 console.log(`\n══════ ${failures === 0 ? "ALL CHECKS PASSED ✓" : `${failures} CHECK(S) FAILED ✗`} ══════\n`);
 process.exit(failures === 0 ? 0 : 1);

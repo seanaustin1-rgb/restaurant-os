@@ -5,6 +5,9 @@
 export type HealthStatus = "green" | "yellow" | "red";
 
 // TAP (Target Allocation Percentage) set. Mirrors TapSettings in the Prisma schema.
+// `spillPct` is optional/structure-only for now: held at 0 until the operator
+// confirms the 27/20/13 redistribution (see docs/specs/allocation-variance-engine.md
+// §C2.1). When absent it contributes 0, so the six live TAPs still sum to 100%.
 export interface Taps {
   profitPct: number;
   ownerPayPct: number;
@@ -12,6 +15,7 @@ export interface Taps {
   cogsLiquorPct: number;
   laborPct: number;
   opexPct: number;
+  spillPct?: number;
 }
 
 export interface Targets {
@@ -21,6 +25,7 @@ export interface Targets {
   cogsLiquor: number;
   labor: number;
   opex: number;
+  spill: number;
 }
 
 /**
@@ -49,6 +54,7 @@ export function calculateTargets(base: number, taps: Taps): Targets {
     cogsLiquor: alloc(taps.cogsLiquorPct),
     labor: alloc(taps.laborPct),
     opex: alloc(taps.opexPct),
+    spill: alloc(taps.spillPct ?? 0),
   };
 }
 

@@ -246,3 +246,27 @@ export function daysUntilNextSweep(from: Date): number {
   const ms = next.getTime() - floor;
   return Math.round(ms / (24 * 60 * 60 * 1000));
 }
+
+/**
+ * The most recent sweep date (10th or 25th) on or before `asOf`. Rolls back to
+ * the 25th of the previous month before the 10th. UTC, matching nextSweepDate.
+ */
+export function prevSweepDate(asOf: Date): Date {
+  const y = asOf.getUTCFullYear();
+  const m = asOf.getUTCMonth();
+  const d = asOf.getUTCDate();
+  if (d >= 25) return new Date(Date.UTC(y, m, 25));
+  if (d >= 10) return new Date(Date.UTC(y, m, 10));
+  return new Date(Date.UTC(y, m - 1, 25));
+}
+
+/**
+ * Is a Profit/Owner's-Pay sweep due as of `asOf`? True when the most recent
+ * scheduled sweep date hasn't been swept yet (lastSweptAt is null or predates
+ * it). Drives the persisted-ledger sweep job — idempotent: once lastSweptAt is
+ * set to/after the sweep date, it won't fire again that period.
+ */
+export function isSweepDue(asOf: Date, lastSweptAt: Date | null): boolean {
+  const prev = prevSweepDate(asOf);
+  return !lastSweptAt || lastSweptAt.getTime() < prev.getTime();
+}

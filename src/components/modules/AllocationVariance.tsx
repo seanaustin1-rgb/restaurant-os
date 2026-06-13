@@ -63,6 +63,49 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
         </p>
       </section>
 
+      {/* Persisted bucket ledger (production phase) — running balances + sweeps. */}
+      {data.ledger?.hasLedger && (
+        <section>
+          <div className="mb-2 flex items-baseline justify-between">
+            <h2 className="font-display text-lg text-copper-soft">Bucket balances</h2>
+            <span className="text-xs text-muted">
+              {data.ledger.allocationDays} day{data.ledger.allocationDays === 1 ? "" : "s"} allocated
+              {data.ledger.lastAllocatedAt ? ` · through ${data.ledger.lastAllocatedAt}` : ""}
+            </span>
+          </div>
+          <p className="mb-2 text-[11px] text-muted">
+            Persisted running balances — each day&rsquo;s net sales is split across the TAPs and accrued; draw-down
+            buckets net the spend that&rsquo;s cleared. Profit &amp; Owner&rsquo;s Pay zero out when swept (10th &amp; 25th).
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {data.ledger.balances.map((b) => (
+              <div key={b.key} className="rounded-lg border border-line bg-surface px-3 py-2">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-xs text-[#E6E8E4]">{b.name}</span>
+                  <span className="tnum text-sm text-[#E6E8E4]">{money(b.balance)}</span>
+                </div>
+                <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted">
+                  {b.kind}
+                  {b.lastSweptAt ? ` · swept ${b.lastSweptAt}` : ""}
+                </div>
+              </div>
+            ))}
+          </div>
+          {data.ledger.recentSweeps.length > 0 && (
+            <p className="mt-2 text-[11px] text-muted">
+              Recent sweeps:{" "}
+              {data.ledger.recentSweeps.map((s, i) => (
+                <span key={i}>
+                  {i > 0 ? " · " : ""}
+                  <span className="text-[#E6E8E4]">{s.key === "owner_pay" ? "Owner's Pay" : "Profit"}</span>{" "}
+                  {money(s.amount)} ({s.sweptAt})
+                </span>
+              ))}
+            </p>
+          )}
+        </section>
+      )}
+
       {/* Tax Reserve — binary OK / SHORT (top-priority alert). */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">

@@ -112,6 +112,8 @@ model Restaurant {
   rules           Rule[]
   tapSettings     TapSettings?
   virtualAccounts VirtualAccount[]
+  bucketAllocations BucketAllocation[]
+  bucketSweeps    BucketSweep[]
   targetSettings  TargetSettings?
   moduleConfigs   ModuleConfig[]
   reviewCaches    ReviewCache[]
@@ -317,17 +319,64 @@ model TapSettings {
 model VirtualAccount {
   id            String   @id @default(cuid())
   restaurantId  String
-  // Profit First account identity: profit | owner_pay | cogs_food | cogs_liquor | labor | opex
+  // Profit First account identity: profit | owner_pay | cogs_food | cogs_liquor | cogs_beverage | labor | opex | spill | tax_reserve
   key           String
   name          String
   balance       Decimal  @default(0) @db.Decimal(12, 2)
   targetPct     Decimal? @db.Decimal(5, 2)
+  // Persisted-ledger bookkeeping (production phase): when the bucket last accrued
+  // an allocation, and (for accrue-only buckets) when it was last swept to zero.
+  lastAllocatedAt DateTime?
+  lastSweptAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, key])
+  @@index([restaurantId])
+}
+
+// One auditable allocation event per business day (the daily-cadence waterfall:
+// earned net-sales basis → tax reserved → TAP split). Idempotent by (restaurant,
+// date) so a re-run/backfill never double-allocates. The per-bucket columns store
+// the dollars set aside that day; running balances live on VirtualAccount.
+model BucketAllocation {
+  id              String   @id @default(cuid())
+  restaurantId    String
+  date            DateTime @db.Date
+  netSalesBasis   Decimal  @db.Decimal(12, 2)
+  salesTaxReserved Decimal @default(0) @db.Decimal(12, 2)
+  allocable       Decimal  @db.Decimal(12, 2)
+  profit          Decimal  @default(0) @db.Decimal(12, 2)
+  ownerPay        Decimal  @default(0) @db.Decimal(12, 2)
+  cogsFood        Decimal  @default(0) @db.Decimal(12, 2)
+  cogsLiquor      Decimal  @default(0) @db.Decimal(12, 2)
+  cogsBeverage    Decimal  @default(0) @db.Decimal(12, 2)
+  labor           Decimal  @default(0) @db.Decimal(12, 2)
+  opex            Decimal  @default(0) @db.Decimal(12, 2)
+  spill           Decimal  @default(0) @db.Decimal(12, 2)
+  source          String   @default("toast") // earned-basis source: toast | manual
+  createdAt       DateTime @default(now())
+
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, date])
+  @@index([restaurantId])
+}
+
+// A sweep event — Profit & Owner's Pay zeroed on the 10th & 25th (simulation: no
+// real money moves, just a logged distribution). One row per bucket per sweep.
+model BucketSweep {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  key           String   // virtual-account key swept (profit | owner_pay)
+  amount        Decimal  @db.Decimal(12, 2)
+  sweptAt       DateTime @db.Date // the sweep date (10th/25th) this settled
+  createdAt     DateTime @default(now())
+
+  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
   @@index([restaurantId])
 }
 

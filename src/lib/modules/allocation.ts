@@ -9,6 +9,7 @@ import {
   type HealthStatus,
   type TaxReserveStatus,
 } from "@/lib/profit-first/allocation";
+import { getLedgerSnapshot, type LedgerSnapshot } from "@/lib/profit-first/ledger";
 
 // Allocation & Variance module — the Profit First flagship view.
 //
@@ -93,6 +94,8 @@ export interface AllocationData {
     /** True when Toast collected-tax is wired (orders:read); false → honest fallback note. */
     salesSourced: boolean;
   };
+  /** Persisted bucket ledger (production phase). Null if the migration/backfill hasn't run. */
+  ledger: LedgerSnapshot | null;
   hasData: boolean;
 }
 
@@ -223,6 +226,16 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
 
   const sweep = nextSweepDate(asOf);
 
+  // Persisted ledger snapshot (balances + sweeps). Degrade gracefully if the
+  // production-phase migration hasn't been applied yet — the computed view above
+  // stands on its own.
+  let ledger: LedgerSnapshot | null = null;
+  try {
+    ledger = await getLedgerSnapshot(restaurantId);
+  } catch {
+    ledger = null;
+  }
+
   return {
     periodLabel,
     windowLabel: `rolling ${VARIANCE_WINDOW_DAYS} days ending ${fmtDay(asOf)}`,
@@ -244,6 +257,7 @@ export async function loadAllocation(restaurantId: string): Promise<AllocationDa
           ? "Sales tax COLLECTED is read from Toast (Orders API, per-check tax) and skimmed off the top before the TAP split. Davo's actual pulls draw it back down. OK = collected ≥ pulled. Payroll tax shows pulls that cleared (forward accrual needs a payroll feed)."
           : "Pre-allocation skim needs Toast collected-tax — run the sales-tax sync (orders:read). Shown here: tax pulls that actually cleared this period.",
     },
+    ledger,
     hasData: sales.length > 0,
   };
 }

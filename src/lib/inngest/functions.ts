@@ -9,6 +9,7 @@ import {
   syncToastSalesTax,
   syncToastMenuItemSales,
 } from "@/lib/integrations/toast/sync";
+import { runLedger } from "@/lib/profit-first/ledger";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -106,7 +107,10 @@ export const syncToastMetrics = inngest.createFunction(
     const menuItems = await step.run("sync-menu-items", () =>
       syncToastMenuItemSales(restaurantId, 1),
     );
-    return { metrics, salesMix, salesTax, menuItems };
+    // Persisted Profit First ledger: allocate the freshly-synced days, recompute
+    // balances, sweep Profit/Owner's Pay if the 10th/25th has passed. Idempotent.
+    const ledger = await step.run("run-allocation-ledger", () => runLedger(restaurantId));
+    return { metrics, salesMix, salesTax, menuItems, ledger };
   },
 );
 

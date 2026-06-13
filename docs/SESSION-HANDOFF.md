@@ -4,12 +4,13 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative); the one remaining live gate is the Toast `orders:read` scope grant. PR #18 (Debt Service → Profit) is now MERGED."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative). PR #18 (Debt Service → Profit) is MERGED and the Toast `orders:read` scope is now GRANTED — operational Toast access is live. The next build is the live sales-tax skim (now unblocked); the remaining operator action is adding the 6 Toast env vars to Vercel."
 
 > **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
 > latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
-> and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. **PR #18 is now MERGED**
-> (Debt Service → Profit), so the only open operator gate is the Toast `orders:read` scope.
+> and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. **PR #18 is MERGED** and
+> **Toast operational scopes are now GRANTED** (orders/cashmgmt/labor) — the era + operational APIs run on
+> TWO separate credential sets (see below).
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
@@ -29,13 +30,27 @@ COGS drill-down (PR #16), software-vendors→Technology categorization fix (`c66
 `DEPLOY.md` (Vercel + Bluehost-domain steps), **PR #18 Debt Service → Profit (`8212ce3`)**.
 All build clean (35 routes).
 
-**ONE gate left, needs the operator:**
-1. **Toast `orders:read` scope** — re-probed 2026-06-13 (again), still **403 on all 8
-   operational endpoints**. The live tax skim + Labor/operational wave can't be built
-   until the operator adds `orders:read` (+ `cashmgmt:read`, `labor.*:read`) to the
-   API client (`TOAST_CLIENT_ID` in `.env.local`) in the **Toast developer portal**.
-   Current creds are analytics-only (`enterprise-metrics:read`). This is "wiring Toast"
-   — the operator's chosen NEXT build, blocked on this grant.
+**✅ TOAST OPERATIONAL ACCESS GRANTED 2026-06-13 — dual-credential connector shipped (`04a1be8`).**
+The operator created a **Standard API** credential set in the Toast portal (the existing "Deep dive"
+set is Analytics-only / `reporting-api-onboarding`; Analytics vs Standard scopes live on SEPARATE API
+clients — one client can't hold both). Scope probe now **200 on all 8 operational endpoints**
+(orders, cashmgmt, labor.employees/jobs/timeEntries, config menus/diningOptions, restaurants).
+- **Connector now reads TWO credential sets** (`src/lib/integrations/toast/{config,auth,analytics}.ts`):
+  base `TOAST_CLIENT_ID/SECRET` = **Standard/operational**; new optional
+  `TOAST_ANALYTICS_CLIENT_ID/SECRET` = **Analytics (era)**. `config.getToastAnalyticsCredentials()`
+  falls back to the base creds when the analytics vars are unset (single-set deployments unaffected);
+  `auth.ts` caches tokens per-clientId so both sets coexist; `analytics.ts` era auth uses the analytics
+  set. Verified live: operational 200s + era metrics returning real Stone Grille data. tsc + build clean.
+- **`.env.local` now has all 6 Toast vars** (4 base + 2 analytics). `.env.example` documents the 2 new ones.
+
+**OPERATOR ACTIONS NOW (next):**
+1. **Add the 6 Toast vars to Vercel** (Project → Settings → Environment Variables, **Production +
+   Preview**) so the live daily Inngest sync + any live Toast reads work in prod:
+   `TOAST_CLIENT_ID`, `TOAST_CLIENT_SECRET`, `TOAST_ANALYTICS_CLIENT_ID`, `TOAST_ANALYTICS_CLIENT_SECRET`,
+   `TOAST_API_HOSTNAME`, `TOAST_RESTAURANT_GUID` (same values as `.env.local`). Vercel-dashboard action.
+2. **Build the live Sales-Tax skim** (now UNBLOCKED) — read Toast's collected sales tax via the
+   Orders/cashmgmt API (`orders:read`/`cashmgmt:read` now granted) for the pre-allocation skim + Tax Vault
+   tile (spec §C3.3 / allocation engine). This was THE thing gated on the scope grant.
 
 **✅ DONE 2026-06-13 (the former gate 2 — all landed):**
    - **PR #18 Debt Service → Profit — MERGED** (`8212ce3`, squash, branch deleted).

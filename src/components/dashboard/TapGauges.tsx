@@ -8,6 +8,15 @@ export interface CategorySpend {
   amount: number;
 }
 
+// A second drill-down level: a named sub-bucket within a gauge (e.g. COGS →
+// Food / Wine & Spirits / Beer) that itself expands to its vendor categories.
+export interface SubGroup {
+  key: string;
+  label: string;
+  amount: number;
+  categories: CategorySpend[];
+}
+
 export interface TapGauge {
   key: string;
   label: string;
@@ -17,6 +26,9 @@ export interface TapGauge {
   usagePct: number;
   health: HealthStatus;
   categories: CategorySpend[];
+  // When present, the card drills into these sub-buckets first (each expands to
+  // its own categories) instead of the flat `categories` list. Used by COGS.
+  subGroups?: SubGroup[];
 }
 
 const barColor: Record<HealthStatus, string> = {
@@ -44,9 +56,14 @@ export function TapGauges({ gauges, base }: { gauges: TapGauge[]; base: number }
 }
 
 function GaugeCard({ g }: { g: TapGauge }) {
-  const hasDrill = g.categories.length > 0;
-  // Share of the gauge's actual spend each category represents.
-  const total = g.categories.reduce((s, c) => s + c.amount, 0);
+  const subGroups = g.subGroups ?? [];
+  const hasSubs = subGroups.length > 0;
+  const hasDrill = hasSubs || g.categories.length > 0;
+  // Share of the gauge's actual spend each row represents (sub-buckets when
+  // present, else flat categories).
+  const total = hasSubs
+    ? subGroups.reduce((s, sg) => s + sg.amount, 0)
+    : g.categories.reduce((s, c) => s + c.amount, 0);
 
   return (
     <details
@@ -78,12 +95,36 @@ function GaugeCard({ g }: { g: TapGauge }) {
           />
         </div>
         <div className="mt-1 flex items-center justify-between text-[11px] text-muted">
-          <span>{hasDrill ? `${g.categories.length} categor${g.categories.length === 1 ? "y" : "ies"}` : ""}</span>
+          <span>
+            {hasSubs
+              ? subGroups.map((s) => s.label).join(" · ")
+              : hasDrill
+                ? `${g.categories.length} categor${g.categories.length === 1 ? "y" : "ies"}`
+                : ""}
+          </span>
           <span>{pct(g.usagePct, 0)} of target</span>
         </div>
       </summary>
 
-      {hasDrill && (
+      {hasSubs && (
+        <div className="mt-2 border-t border-line/60 pt-2">
+          {/* Two-level deep-dive: COGS → Food / Wine & Spirits / Beer, each
+              expanding to its vendor categories. Beer (COGS_BEVERAGE) has no TAP %
+              of its own yet — it's included in the COGS total but the target stays
+              the Food+Liquor TAP until percentages are set at /settings/allocation. */}
+          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-muted">
+            <span>Breakdown</span>
+            <span>Share · Spend</span>
+          </div>
+          <div className="space-y-1">
+            {subGroups.map((sg) => (
+              <SubGroupRow key={sg.key} sg={sg} total={total} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!hasSubs && hasDrill && (
         <div className="mt-2 border-t border-line/60 pt-2">
           {/* Visibility only — each category's share of this gauge's spend + the
               dollars. No per-category targets (operator decision: v1 is sightlines,
@@ -104,6 +145,51 @@ function GaugeCard({ g }: { g: TapGauge }) {
             ))}
           </ul>
         </div>
+      )}
+    </details>
+  );
+}
+
+// One sub-bucket inside a gauge's deep-dive (e.g. "Wine & Spirits" within COGS).
+// Its own <details> so expanding it doesn't toggle the parent card; named group
+// (`sub`) keeps its chevron independent of the card's chevron.
+function SubGroupRow({ sg, total }: { sg: SubGroup; total: number }) {
+  const hasCats = sg.categories.length > 0;
+  const catTotal = sg.categories.reduce((s, c) => s + c.amount, 0);
+  return (
+    <details className="group/sub">
+      <summary
+        className={clsx(
+          "flex list-none items-center justify-between gap-2 text-xs [&::-webkit-details-marker]:hidden",
+          hasCats && "cursor-pointer",
+        )}
+      >
+        <span className="flex items-center gap-1 text-[#E6E8E4]">
+          {hasCats && (
+            <ChevronRight
+              size={11}
+              className="text-muted transition-transform group-open/sub:rotate-90"
+            />
+          )}
+          {sg.label}
+        </span>
+        <span className="flex items-center gap-2 whitespace-nowrap">
+          <span className="tnum text-muted">{total > 0 ? pct((sg.amount / total) * 100, 0) : "—"}</span>
+          <span className="tnum w-20 text-right text-[#E6E8E4]">{money(sg.amount)}</span>
+        </span>
+      </summary>
+      {hasCats && (
+        <ul className="ml-4 mt-1 space-y-1 border-l border-line/40 pl-2">
+          {sg.categories.map((c) => (
+            <li key={c.name} className="flex items-center justify-between gap-2 text-[11px]">
+              <span className="truncate text-muted">{c.name}</span>
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                <span className="tnum text-muted/70">{catTotal > 0 ? pct((c.amount / catTotal) * 100, 0) : "—"}</span>
+                <span className="tnum w-20 text-right text-[#E6E8E4]">{money(c.amount)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </details>
   );

@@ -38,6 +38,11 @@
 > COGS), overriding this spec's 2-way fold. Items 2 and 4 are structure-only and
 > tracked in §C2's "Structural forks — RESOLVED." The 27/20/13 numbers below and
 > in the "TAP PERCENTAGES" table are the *target* split, **not yet applied**.
+>
+> **Update (2026-06-13):** items 1, 2, 3 further resolved + partially shipped ahead
+> of the engine — see **§C3**. TAPs are now editable at `/settings/allocation`
+> (held at 32/28); COGS drills into Food / Wine & Spirits / Beer on the dashboard;
+> tax-skim source switched to Toast (item 6, pending one analytics probe).
 
 1. ~~**TAP split changes the live numbers.**~~ **RESOLVED → HOLD (§C2.1).** Build against the
    current defaults Labor **32** / OpEx **28** / no Spill; `spillPct` exists as *structure* only.
@@ -57,9 +62,12 @@
 5. **Bucket-type enum naming.** Spec lists `OWNERS_PAY`; existing code uses `OWNER_PAY` (and
    VirtualAccount key `owner_pay`). Align on **`OWNER_PAY`**. New enum is a superset adding
    `PROFIT`, `SPILL`, `TAX_RESERVE_SALES`, `TAX_RESERVE_PAYROLL`.
-6. **Cross-ref Tax Vault.** This spec's "skim Davo's *actual* pull, never estimate 6%" is exactly the
-   correct-source fix logged for the Tax Vault tile. The Tax Reserve sales sub-ledger and Tax Vault
-   should share one source of truth (Davo actuals via the Plaid feed).
+6. ~~**Cross-ref Tax Vault — source = Davo actuals via Plaid.**~~ **RESOLVED → source = Toast
+   (§C3.3).** Operator clarified Davo derives "sales tax collected" *from Toast reporting*, so the engine
+   reads the **same Toast number** — available **same-day, before the deposit lands** (what the
+   pre-allocation skim needs), rather than waiting for Davo's after-the-fact Plaid pull. Tax Reserve
+   (sales) and the Tax Vault tile share this one Toast-sourced figure. Original reading retained for
+   context: "skim Davo's actual Plaid pull, never estimate 6%."
 
 ## C. Proposed schema diff (for sign-off — migration NOT yet written)
 
@@ -122,6 +130,45 @@ needed); Tax = one account, two sub-ledgers; and it gives `VirtualAccount` a cle
 `COGS` (sub: food/liquor/beer) · `LABOR` · `OPEX` · `SPILL`.
 Migration gate is now CLEARED for the account *structure*. Allocation *math* for the Beer split and the
 Spill/Income-Tax %s stays deferred until the operator sets percentages (currently held at 32/28).
+
+## C3. Operator resolutions + pre-engine build (2026-06-13)
+
+Three §B/§C2 open items resolved by the operator and **partially shipped ahead of the engine** — the
+display and settings layers the engine will plug into are now live, none require the deferred migration.
+
+**1. TAP %s — keep 32/28, make them editable. ✅ SETTINGS UI SHIPPED.**
+New **`/settings/allocation`** screen (`src/app/settings/allocation/{page,actions}.tsx` +
+`src/components/allocation/AllocationSettingsForm.tsx`) edits the per-restaurant `TapSettings` row live —
+six percentages with a running **"must total 100%"** validator (Save disabled until balanced) + a
+simulation-mode toggle. Nav link added. So the eventual 27/20/13 redistribution becomes a 30-second
+screen edit, not a code change. **Spill stays out of the editable set** (no `spillPct` column yet — that
+arrives with the engine migration, per §C); the form notes Spill currently sits inside OpEx. Defaults
+held at Profit 5 / Owner 5 / Food 18 / Wine&Spirits 12 / Labor 32 / OpEx 28.
+
+**2. Beer vs. Wine & Spirits — 3-way COGS with drill-down. ✅ DASHBOARD SHIPPED.**
+The 3 COGS sub-buckets already existed and the categorization tuning already routed the vendors, so this
+was display-only (no migration):
+- `categories.ts` relabeled: `COGS_LIQUOR` → **"COGS — Wine & Spirits"** (PA: wine+spirits share the
+  PLCB state store), `COGS_BEVERAGE` → **"COGS — Beer"** (beer distributors: Wilsbach/Ace/Stockertown/
+  Ever Grain/Kirchner).
+- Dashboard now shows **one "COGS" gauge** (was two: Food + Liquor) that drills into **Food / Wine &
+  Spirits / Beer**, each expanding again to its vendor categories — a two-level native `<details>`
+  disclosure in `TapGauges.tsx` (`SubGroup` type), fed by `dashboard/data.ts`.
+- **COGS total includes Beer**; the **target stays the existing Food + Liquor TAP (30%)** because Beer
+  has no TAP % of its own yet. Beer's own % is set with the held percentages at `/settings/allocation`
+  once the engine adds it (deferred with item 1). So Beer is *visible and separate* now without changing
+  the locked 30%.
+
+**3. Sales-tax skim source = Toast (not the Davo Plaid pull). ✅ DECIDED, ⏳ VERIFICATION PENDING.**
+See §B item 6. The pre-allocation **Sales-Tax skim** and the **Tax Vault** tile both read Toast's
+reported "sales tax collected" (the same figure Davo uses), giving a same-day, pre-deposit number.
+**⚠️ GATE before building the skim:** the Toast **era/analytics** per-day fields pulled so far
+(`netSalesAmount`, `grossSalesAmount`, `guestCount`, …) **do not obviously include a tax-collected
+field**. Step 1 = probe era for a per-day tax metric (`scripts/toast-analytics-probe.ts` pattern); if
+absent, tax-collected lives in the **Orders API** → needs operational scopes (**Track A**, currently
+analytics-only). Probe requires Toast creds → run from the local machine (`.env.local`) or after
+`TOAST_*` is set in the web env config. Until verified, fall back to the spec's original
+Davo-actual-via-Plaid skim.
 
 ## D. Operator spec (verbatim)
 

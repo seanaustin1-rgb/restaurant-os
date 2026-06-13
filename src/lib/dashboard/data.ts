@@ -10,7 +10,7 @@ import {
 } from "@/lib/profit-first/calculator";
 import type { HeartbeatData } from "@/components/dashboard/HeartbeatStrip";
 import type { RevenueData } from "@/components/dashboard/RevenueRow";
-import type { TapGauge, CategorySpend } from "@/components/dashboard/TapGauges";
+import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/TapGauges";
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 
 export interface DashboardData {
@@ -148,18 +148,46 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   // TAP targets are a % of Total Sales (COGS is itself a TAP bucket).
   const targets = calculateTargets(revenue, taps);
 
-  const gaugeDefs = [
-    { key: "profit", label: "Profit", tapPct: taps.profitPct, target: targets.profit, spent: 0, bucket: "" },
-    { key: "ownerPay", label: "Owner Pay", tapPct: taps.ownerPayPct, target: targets.ownerPay, spent: ownerPay, bucket: "OWNER_PAY" },
-    { key: "cogsFood", label: "COGS — Food", tapPct: taps.cogsFoodPct, target: targets.cogsFood, spent: cogsFood, bucket: "COGS_FOOD" },
-    { key: "cogsLiquor", label: "COGS — Liquor", tapPct: taps.cogsLiquorPct, target: targets.cogsLiquor, spent: cogsLiquor, bucket: "COGS_LIQUOR" },
-    { key: "labor", label: "Labor", tapPct: taps.laborPct, target: targets.labor, spent: labor, bucket: "LABOR" },
-    { key: "opex", label: "OpEx + Spill", tapPct: taps.opexPct, target: targets.opex, spent: opex, bucket: "OPEX" },
+  const mkGauge = (
+    key: string,
+    label: string,
+    tapPct: number,
+    target: number,
+    spent: number,
+    categories: CategorySpend[],
+    subGroups?: SubGroup[],
+  ): TapGauge => {
+    const usagePct = calculateUsagePct(spent, target);
+    return { key, label, tapPct, target, spent, usagePct, health: getHealthStatus(usagePct), categories, subGroups };
+  };
+
+  // COGS is one headline line that drills into Food / Wine & Spirits / Beer.
+  // In PA wine + spirits share one vendor (PLCB state store) → COGS_LIQUOR; beer
+  // has its own distributors → COGS_BEVERAGE. Overall COGS spend includes all
+  // three; the target stays the existing Food + Liquor TAP (30%) because beer has
+  // no TAP % of its own yet — that's set with the allocation %s at
+  // /settings/allocation (deferred until the operator confirms the redistribution).
+  const cogsSubGroups: SubGroup[] = [
+    { key: "food", label: "Food", amount: cogsFood, categories: catsForTap("COGS_FOOD") },
+    { key: "wineSpirits", label: "Wine & Spirits", amount: cogsLiquor, categories: catsForTap("COGS_LIQUOR") },
+    { key: "beer", label: "Beer", amount: cogsBeverage, categories: catsForTap("COGS_BEVERAGE") },
+  ].filter((sg) => sg.amount > 0 || sg.categories.length > 0);
+
+  const gauges: TapGauge[] = [
+    mkGauge("profit", "Profit", taps.profitPct, targets.profit, 0, []),
+    mkGauge("ownerPay", "Owner Pay", taps.ownerPayPct, targets.ownerPay, ownerPay, catsForTap("OWNER_PAY")),
+    mkGauge(
+      "cogs",
+      "COGS",
+      taps.cogsFoodPct + taps.cogsLiquorPct,
+      targets.cogsFood + targets.cogsLiquor,
+      cogsFood + cogsLiquor + cogsBeverage,
+      [],
+      cogsSubGroups,
+    ),
+    mkGauge("labor", "Labor", taps.laborPct, targets.labor, labor, catsForTap("LABOR")),
+    mkGauge("opex", "OpEx + Spill", taps.opexPct, targets.opex, opex, catsForTap("OPEX")),
   ];
-  const gauges: TapGauge[] = gaugeDefs.map(({ bucket, ...g }) => {
-    const usagePct = calculateUsagePct(g.spent, g.target);
-    return { ...g, usagePct, health: getHealthStatus(usagePct), categories: catsForTap(bucket) };
-  });
 
   // Beverage cost ratios (Milestone B). Denominator = real per-day alcohol sales
   // when present (future: Toast populates DailySales.liquorSales/.beverageSales),

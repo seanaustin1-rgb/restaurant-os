@@ -11,7 +11,13 @@ import { ModuleGrid } from "./ModuleGrid";
 import type { RoleKey } from "@/lib/mock/dashboard";
 import type { DashboardData } from "@/lib/dashboard/data";
 
-export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
+export function DashboardView({
+  dashboards,
+  moduleOrder,
+}: {
+  dashboards: DashboardData[];
+  moduleOrder: string[] | null;
+}) {
   const [activeId, setActiveId] = useState(dashboards[0]?.restaurantId ?? "");
   const [role, setRole] = useState<RoleKey>("OPERATOR");
 
@@ -68,7 +74,7 @@ export function DashboardView({ dashboards }: { dashboards: DashboardData[] }) {
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
         {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
-        {!isInvestor && <ModuleGrid />}
+        {!isInvestor && <ModuleGrid initialOrder={moduleOrder} />}
       </main>
     </div>
   );

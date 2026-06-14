@@ -1,6 +1,11 @@
 import type { TransactionBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { categorizeTransaction } from "@/lib/categorization/vendor-map";
+import {
+  ensureDefaultCategories,
+  categoryIdByName,
+  legacyBucketToCategoryName,
+} from "@/lib/categorization/categories";
 
 // Seeds a full month of realistic DailySales + categorized Transactions for one
 // restaurant, so the live dashboard renders with data — including the Heartbeat
@@ -78,6 +83,13 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
   const start = dateOf(1);
   const end = new Date(Date.UTC(YEAR, MONTH0 + 1, 1));
 
+  // The dashboard rolls costs up by Category.tapBucket via each transaction's
+  // categoryId — so seeded transactions MUST be linked to a Category, or they
+  // all fall into OpEx and the Heartbeat cost ratios stay 0. Ensure the default
+  // categories exist, then map each legacy bucket → category → id.
+  await ensureDefaultCategories(prisma, restaurantId);
+  const catIdByName = await categoryIdByName(prisma, restaurantId);
+
   // Clear prior seed for idempotency.
   await prisma.dailySales.deleteMany({ where: { restaurantId, date: { gte: start, lt: end } } });
   await prisma.transaction.deleteMany({ where: { restaurantId, plaidTxnId: { startsWith: `seed-${restaurantId}-` } } });
@@ -120,6 +132,8 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
       merchantName: t.vendor,
       description: t.vendor,
       bucket: cat.bucket,
+      // Link to the matching Category so the dashboard/modules roll it up.
+      categoryId: catIdByName.get(legacyBucketToCategoryName(cat.bucket)) ?? null,
       isRecurring: cat.isRecurring,
       confidence: cat.confidence,
       isManualOverride: false,

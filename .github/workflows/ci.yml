@@ -25,6 +25,25 @@ jobs:
       # Type safety is the first gate.
       - run: npx tsc --noEmit
 
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Unit tests for the financial core (prime cost, TAP targets/usage bands,
+      # break-even, processing-fee detection/banding, peer-benchmark bands).
+      # Pure functions only — the dummy DATABASE_URL the suite needs is set in
+      # vitest.config.ts, so no DB or secrets are required.
+      - run: npm test
+
   build:
     name: Build
     runs-on: ubuntu-latest

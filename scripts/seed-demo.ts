@@ -1,6 +1,6 @@
 /**
  * Seed a populated demo tenant so the LIVE dashboard renders with data —
- * without needing Plaid/Toast connected. Writes a month (May 2026) of realistic
+ * without needing Plaid/Toast connected. Writes the current month of realistic
  * DailySales + categorized Transactions via the same seedDemoData() the dev
  * route uses, but as a CLI so it works against any database (incl. the deployed
  * one, where the dev HTTP route is disabled).
@@ -69,7 +69,7 @@ async function main() {
   }
 
   const result = await seedDemoData(restaurantId);
-  console.log(`Seeded ${result.dailySales} days of sales + ${result.transactions} categorized transactions (May 2026).`);
+  console.log(`Seeded ${result.dailySales} days of sales + ${result.transactions} categorized transactions (current month).`);
   console.log("Open /dashboard to see the populated tiles.");
 }
 

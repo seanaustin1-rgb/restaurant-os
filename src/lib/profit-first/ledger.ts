@@ -105,12 +105,12 @@ export async function runDailyAllocations(restaurantId: string): Promise<number>
 
   const already = await prisma.bucketAllocation.findMany({
     where: { restaurantId },
-    select: { date: true },
+    select: { date: true, salesTaxReserved: true },
   });
-  const have = new Set(already.map((a) => iso(a.date)));
+  const reservedByDate = new Map(already.map((a) => [iso(a.date), num(a.salesTaxReserved)]));
 
   const rows = sales
-    .filter((s) => !have.has(iso(s.date)))
+    .filter((s) => !reservedByDate.has(iso(s.date)))
     .map((s) => {
       const netSales = num(s.netSales);
       // Earned basis is tax-exclusive → no skim here; split net sales across TAPs.
@@ -138,8 +138,28 @@ export async function runDailyAllocations(restaurantId: string): Promise<number>
       };
     });
 
-  if (rows.length === 0) return 0;
-  await prisma.bucketAllocation.createMany({ data: rows, skipDuplicates: true });
+  if (rows.length > 0) {
+    await prisma.bucketAllocation.createMany({ data: rows, skipDuplicates: true });
+  }
+
+  // Re-sync salesTaxReserved on EXISTING rows whose DailySales tax changed since
+  // they were first allocated (e.g. the sales-tax backfill ran after the day was
+  // allocated). The reserve balance recomputes off these rows, so without this a
+  // post-hoc tax load stays invisible — this keeps the "re-run/backfill is always
+  // safe and self-correcting" promise true for the tax reserve too.
+  const resyncs = sales
+    .filter((s) => reservedByDate.has(iso(s.date)))
+    .filter((s) => reservedByDate.get(iso(s.date)) !== r2(num(s.salesTaxCollected)))
+    .map((s) =>
+      prisma.bucketAllocation.update({
+        where: { restaurantId_date: { restaurantId, date: s.date } },
+        data: { salesTaxReserved: r2(num(s.salesTaxCollected)) },
+      }),
+    );
+  for (let i = 0; i < resyncs.length; i += 50) {
+    await prisma.$transaction(resyncs.slice(i, i + 50));
+  }
+
   return rows.length;
 }
 

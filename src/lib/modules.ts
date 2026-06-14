@@ -15,6 +15,9 @@ export interface ModuleDef {
 
 export const MODULES: ModuleDef[] = [
   { key: "allocation", name: "Allocation & Variance", description: "Profit First set-aside vs. actual", status: "live", href: "/modules/allocation" },
+  { key: "prime-cost", name: "Prime Cost", description: "COGS + labor vs. target, by week", status: "live", href: "/modules/prime-cost" },
+  { key: "break-even", name: "Break-even", description: "Sales needed to cover fixed costs", status: "live", href: "/modules/break-even" },
+  { key: "processing-fees", name: "Processing Fee Leak", description: "Card fees vs. benchmark & creep", status: "live", href: "/modules/processing-fees" },
   { key: "cash-flow", name: "Cash Flow", description: "Daily inflows & outflows", status: "live", href: "/modules/cash-flow" },
   { key: "vendors", name: "Vendor Spend", description: "Spend by supplier", status: "live", href: "/modules/vendor-spend" },
   { key: "spending", name: "Spending by Category", description: "Where money goes vs. profit", status: "live", href: "/modules/spending" },
@@ -32,8 +35,12 @@ export const MODULES: ModuleDef[] = [
   { key: "covers-flow", name: "Covers Flow", description: "Daily guests, orders & avg check", status: "live", href: "/modules/covers-flow" },
   // Need other inputs.
   { key: "labor", name: "Labor Hours", description: "Actual hours, cost & sales/hour", status: "live", href: "/modules/labor" },
-  { key: "reviews", name: "Reputation", description: "Reviews across platforms", status: "soon", blockedBy: "Reviews API" },
+  // Aura — multi-source reputation. Live tile; each source (Google/Yelp/Facebook)
+  // lights up the moment its API keys are set, otherwise shows a connect card.
+  { key: "aura", name: "Aura — Reputation", description: "Reviews across Google, Yelp & Facebook", status: "live", href: "/modules/aura" },
   { key: "inventory", name: "Inventory", description: "On-hand & variance", status: "soon", blockedBy: "Inventory feed" },
   { key: "forecast", name: "Forecast", description: "13-week cash projection", status: "soon", blockedBy: "More history" },
-  { key: "benchmarks", name: "Benchmarks", description: "Vs. peer concepts", status: "soon", blockedBy: "Peer data" },
+  // Peer Benchmarks — operator ratios vs. industry reference ranges (static norms
+  // today; swappable for live cohort percentiles when a peer dataset lands).
+  { key: "benchmarks", name: "Peer Benchmarks", description: "Core ratios vs. industry ranges", status: "live", href: "/modules/benchmarks" },
 ];

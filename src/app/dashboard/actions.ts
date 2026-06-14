@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import { saveDashboardLayoutForUser } from "@/lib/dashboard/layout-store";
 
 // Persist the signed-in user's dashboard layout (module-grid order + pinned
@@ -10,4 +11,7 @@ export async function saveDashboardLayout(order: string[], pinned: string[]): Pr
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   await saveDashboardLayoutForUser(userId, order, pinned);
+  // Bust the cached /dashboard render so navigating away and back reflects the
+  // new layout (otherwise the Router Cache serves the pre-change page).
+  revalidatePath("/dashboard");
 }

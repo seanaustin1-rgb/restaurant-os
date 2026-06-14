@@ -72,7 +72,7 @@ export const FEE_CREEP_PCT = 0.5; // target..+creep = yellow; above = red
 // Below this, detected fees almost certainly understate reality (net settlement).
 export const MIN_PLAUSIBLE_RATE_PCT = 1.0;
 
-function bandFeeRate(ratePct: number): HealthStatus {
+export function bandFeeRate(ratePct: number): HealthStatus {
   if (ratePct <= TARGET_FEE_RATE_PCT) return "green";
   if (ratePct <= TARGET_FEE_RATE_PCT + FEE_CREEP_PCT) return "yellow";
   return "red";
@@ -103,7 +103,7 @@ const PROCESSOR_PATTERNS: { re: RegExp; label: string }[] = [
   },
 ];
 
-function detectProcessor(merchant: string | null, description: string | null): string | null {
+export function detectProcessor(merchant: string | null, description: string | null): string | null {
   const hay = `${merchant ?? ""} ${description ?? ""}`.trim();
   if (!hay) return null;
   for (const p of PROCESSOR_PATTERNS) if (p.re.test(hay)) return p.label;

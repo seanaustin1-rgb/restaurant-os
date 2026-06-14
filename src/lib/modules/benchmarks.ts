@@ -57,12 +57,12 @@ function weekStartUTC(d: Date): Date {
   return x;
 }
 
-function bandLower(value: number, greenMax: number, yellowMax: number): HealthStatus {
+export function bandLower(value: number, greenMax: number, yellowMax: number): HealthStatus {
   if (value <= greenMax) return "green";
   if (value <= yellowMax) return "yellow";
   return "red";
 }
-function bandHigher(value: number, greenMin: number, yellowMin: number): HealthStatus {
+export function bandHigher(value: number, greenMin: number, yellowMin: number): HealthStatus {
   if (value >= greenMin) return "green";
   if (value >= yellowMin) return "yellow";
   return "red";

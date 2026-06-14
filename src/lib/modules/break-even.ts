@@ -83,18 +83,80 @@ export interface BreakEvenData {
 // not magic: comfortable cushion ≥20%, thin 10–20%, fragile/under <10%.
 export const MOS_HEALTHY_PCT = 20;
 export const MOS_CAUTION_PCT = 10;
-function bandMarginOfSafety(mosPct: number): HealthStatus {
+export function bandMarginOfSafety(mosPct: number): HealthStatus {
   if (mosPct >= MOS_HEALTHY_PCT) return "green";
   if (mosPct >= MOS_CAUTION_PCT) return "yellow";
   return "red";
+}
+
+const DAYS_PER_MONTH = 30.44; // mean Gregorian month, for run-rate projection
+
+// Pure break-even derivation, factored out of the loader so the formula is
+// testable in isolation (the loader just feeds it window totals). Given the
+// variable/fixed split and the contribution-margin identity
+//   CM = 1 − variable/sales ;  break-even sales = fixed ÷ CM
+// it returns every normalized figure the tile shows. When CM ≤ 0 (variable
+// costs swallow all sales) no break-even exists and the dollar/percent reads
+// fall back to honest "fully underwater" values.
+export interface BreakEvenParts {
+  netSales: number;
+  variableCost: number; // cogs + labor
+  fixedCost: number; // opex + debt service
+  days: number; // operating days in the window
+  targetCmRatio: number; // CM if TAP cost targets were hit
+}
+
+export interface BreakEvenDerived {
+  cmRatio: number;
+  cmPositive: boolean;
+  primeCostPct: number;
+  breakEvenSales: number | null;
+  breakEvenPerDay: number | null;
+  breakEvenPerWeek: number | null;
+  monthlyBreakEven: number | null;
+  monthlyNetSales: number;
+  marginOfSafety: number;
+  dollarsAboveBreakEven: number;
+  targetBreakEvenSales: number | null;
+  health: HealthStatus;
+}
+
+export function computeBreakEven({ netSales, variableCost, fixedCost, days, targetCmRatio }: BreakEvenParts): BreakEvenDerived {
+  const cmRatio = netSales > 0 ? (netSales - variableCost) / netSales : 0;
+  const cmPositive = cmRatio > 0;
+
+  const breakEvenSales = cmPositive ? fixedCost / cmRatio : null;
+  const breakEvenPerDay = breakEvenSales != null && days > 0 ? breakEvenSales / days : null;
+  const breakEvenPerWeek = breakEvenPerDay != null ? breakEvenPerDay * 7 : null;
+  const monthlyBreakEven = breakEvenPerDay != null ? breakEvenPerDay * DAYS_PER_MONTH : null;
+  const monthlyNetSales = days > 0 ? (netSales / days) * DAYS_PER_MONTH : 0;
+
+  const dollarsAboveBreakEven = breakEvenSales != null ? netSales - breakEvenSales : -fixedCost;
+  const marginOfSafety = breakEvenSales != null && netSales > 0 ? ((netSales - breakEvenSales) / netSales) * 100 : -100;
+
+  const targetBreakEvenSales = targetCmRatio > 0 ? fixedCost / targetCmRatio : null;
+
+  return {
+    cmRatio,
+    cmPositive,
+    primeCostPct: netSales > 0 ? (variableCost / netSales) * 100 : 0,
+    breakEvenSales,
+    breakEvenPerDay,
+    breakEvenPerWeek,
+    monthlyBreakEven,
+    monthlyNetSales,
+    marginOfSafety,
+    dollarsAboveBreakEven,
+    targetBreakEvenSales,
+    // Health on the cushion between actual sales and break-even.
+    health: cmPositive ? bandMarginOfSafety(marginOfSafety) : "red",
+  };
 }
 
 // Defaults mirror DEFAULT_TAPS / TapSettings defaults.
 const DEFAULT_COGS_FOOD_PCT = 18;
 const DEFAULT_COGS_LIQUOR_PCT = 12;
 const DEFAULT_LABOR_PCT = 32;
-
-const DAYS_PER_MONTH = 30.44; // mean Gregorian month, for run-rate projection
 
 const COGS_BUCKETS = new Set(["COGS_FOOD", "COGS_LIQUOR", "COGS_BEVERAGE"]);
 
@@ -260,19 +322,8 @@ export async function loadBreakEven(restaurantId: string, weeks = 8): Promise<Br
   const netSales = totals.netSales;
   const variableCost = totals.cogs + totals.laborCost;
   const fixedCost = fixedOpex + debtService;
-  const cmRatio = netSales > 0 ? (netSales - variableCost) / netSales : 0;
-  const cmPositive = cmRatio > 0;
 
-  const breakEvenSales = cmPositive ? fixedCost / cmRatio : null;
-  const breakEvenPerDay = breakEvenSales != null && days > 0 ? breakEvenSales / days : null;
-  const breakEvenPerWeek = breakEvenPerDay != null ? breakEvenPerDay * 7 : null;
-  const monthlyBreakEven = breakEvenPerDay != null ? breakEvenPerDay * DAYS_PER_MONTH : null;
-  const monthlyNetSales = days > 0 ? (netSales / days) * DAYS_PER_MONTH : 0;
-
-  const dollarsAboveBreakEven = breakEvenSales != null ? netSales - breakEvenSales : -fixedCost;
-  const marginOfSafety = breakEvenSales != null && netSales > 0 ? ((netSales - breakEvenSales) / netSales) * 100 : -100;
-
-  const targetBreakEvenSales = targetCmRatio > 0 ? fixedCost / targetCmRatio : null;
+  const derived = computeBreakEven({ netSales, variableCost, fixedCost, days, targetCmRatio });
 
   const fixedCostLines = [...fixedAgg.entries()]
     .map(([name, v]) => ({ name, amount: v.amount, kind: v.kind }))
@@ -289,21 +340,20 @@ export async function loadBreakEven(restaurantId: string, weeks = 8): Promise<Br
     fixedOpex,
     debtService,
     fixedCost,
-    cmRatio,
-    primeCostPct: netSales > 0 ? (variableCost / netSales) * 100 : 0,
-    cmPositive,
-    breakEvenSales,
-    breakEvenPerDay,
-    breakEvenPerWeek,
-    monthlyBreakEven,
-    monthlyNetSales,
-    marginOfSafety,
-    dollarsAboveBreakEven,
+    cmRatio: derived.cmRatio,
+    primeCostPct: derived.primeCostPct,
+    cmPositive: derived.cmPositive,
+    breakEvenSales: derived.breakEvenSales,
+    breakEvenPerDay: derived.breakEvenPerDay,
+    breakEvenPerWeek: derived.breakEvenPerWeek,
+    monthlyBreakEven: derived.monthlyBreakEven,
+    monthlyNetSales: derived.monthlyNetSales,
+    marginOfSafety: derived.marginOfSafety,
+    dollarsAboveBreakEven: derived.dollarsAboveBreakEven,
     fixedCostLines,
     targetCmRatio,
-    targetBreakEvenSales,
-    // Health on the cushion between actual sales and break-even.
-    health: cmPositive ? bandMarginOfSafety(marginOfSafety) : "red",
+    targetBreakEvenSales: derived.targetBreakEvenSales,
+    health: derived.health,
     hasData: netSales > 0,
   };
 }

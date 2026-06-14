@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatStrip } from "./HeartbeatStrip";
@@ -8,20 +8,59 @@ import { RevenueRow } from "./RevenueRow";
 import { TapGauges } from "./TapGauges";
 import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
+import { QuickAccessStrip } from "./QuickAccessStrip";
 import type { RoleKey } from "@/lib/mock/dashboard";
 import type { DashboardData } from "@/lib/dashboard/data";
+import { type ModuleDef } from "@/lib/modules";
+import { orderModules, modulesByKeys, sanitizeModuleOrder } from "@/lib/dashboard/module-order";
+import { saveDashboardLayout } from "@/app/dashboard/actions";
 
 export function DashboardView({
   dashboards,
   moduleOrder,
+  pinnedModules,
 }: {
   dashboards: DashboardData[];
   moduleOrder: string[] | null;
+  pinnedModules: string[];
 }) {
   const [activeId, setActiveId] = useState(dashboards[0]?.restaurantId ?? "");
   const [role, setRole] = useState<RoleKey>("OPERATOR");
 
+  // Per-user module layout (persisted to the account). Order is the grid order;
+  // pinned is the Quick Access strip. Both update optimistically and persist.
+  const [order, setOrder] = useState<ModuleDef[]>(() => orderModules(moduleOrder));
+  const [pinned, setPinned] = useState<string[]>(() => sanitizeModuleOrder(pinnedModules));
+
   const active = dashboards.find((d) => d.restaurantId === activeId) ?? dashboards[0];
+
+  // Only live modules can be pinned (a "soon" tile has nowhere to go).
+  const liveKeys = useMemo(() => new Set(order.filter((m) => m.status === "live" && m.href).map((m) => m.key)), [order]);
+  const pinnedKeys = useMemo(() => new Set(pinned), [pinned]);
+  const pinnedList = useMemo(() => modulesByKeys(pinned).filter((m) => liveKeys.has(m.key)), [pinned, liveKeys]);
+
+  function persist(nextOrder: ModuleDef[], nextPinned: string[]) {
+    void saveDashboardLayout(nextOrder.map((m) => m.key), nextPinned).catch(() => {});
+  }
+  function handleReorder(next: ModuleDef[]) {
+    setOrder(next);
+    persist(next, pinned);
+  }
+  function handleTogglePin(key: string) {
+    if (!liveKeys.has(key)) return;
+    const next = pinned.includes(key) ? pinned.filter((k) => k !== key) : [...pinned, key];
+    setPinned(next);
+    persist(order, next);
+  }
+  function handleReorderPinned(nextKeys: string[]) {
+    setPinned(nextKeys);
+    persist(order, nextKeys);
+  }
+  function handleUnpin(key: string) {
+    const next = pinned.filter((k) => k !== key);
+    setPinned(next);
+    persist(order, next);
+  }
 
   if (!active) {
     return (
@@ -58,6 +97,11 @@ export function DashboardView({
           <span className="text-sm text-muted">{active.periodLabel}</span>
         </div>
 
+        {/* Quick Access — pinned modules, one click away at the top. */}
+        {!isInvestor && (
+          <QuickAccessStrip items={pinnedList} onReorder={handleReorderPinned} onUnpin={handleUnpin} />
+        )}
+
         {!active.hasData && (
           <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
             No data for this period yet.{" "}
@@ -74,7 +118,9 @@ export function DashboardView({
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
         {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
-        {!isInvestor && <ModuleGrid initialOrder={moduleOrder} />}
+        {!isInvestor && (
+          <ModuleGrid items={order} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} />
+        )}
       </main>
     </div>
   );

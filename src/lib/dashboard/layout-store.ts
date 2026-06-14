@@ -1,34 +1,49 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeModuleOrder } from "./module-order";
 
-// Server-only persistence for the per-user dashboard module order.
+// Server-only persistence for the per-user dashboard layout: module grid order
+// plus the modules pinned to the top Quick Access strip.
+
+export interface DashboardLayoutData {
+  order: string[] | null; // module-grid order, null when never reordered
+  pinned: string[]; // pinned module keys (Quick Access), empty when none
+}
+
+const asArray = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 
 /**
- * The user's saved module-key order, or null when they've never reordered.
- * Fail-safe: if the query errors (e.g. the migration hasn't been applied to this
- * database yet), fall back to null so the dashboard still renders the default
- * order instead of breaking.
+ * The user's saved layout. Fail-safe: if the query errors (e.g. the migration
+ * hasn't been applied to this database yet), fall back to defaults so the
+ * dashboard still renders instead of breaking.
  */
-export async function loadModuleOrder(clerkUserId: string): Promise<string[] | null> {
+export async function loadDashboardLayout(clerkUserId: string): Promise<DashboardLayoutData> {
   try {
     const row = await prisma.dashboardLayout.findUnique({
       where: { clerkUserId },
-      select: { moduleOrder: true },
+      select: { moduleOrder: true, pinnedModules: true },
     });
-    if (!row || !Array.isArray(row.moduleOrder)) return null;
-    return sanitizeModuleOrder(row.moduleOrder as unknown[]);
+    if (!row) return { order: null, pinned: [] };
+    return {
+      order: Array.isArray(row.moduleOrder) ? sanitizeModuleOrder(row.moduleOrder as unknown[]) : null,
+      pinned: sanitizeModuleOrder(asArray(row.pinnedModules)),
+    };
   } catch (err) {
-    console.warn("loadModuleOrder failed; using default order:", err instanceof Error ? err.message : err);
-    return null;
+    console.warn("loadDashboardLayout failed; using defaults:", err instanceof Error ? err.message : err);
+    return { order: null, pinned: [] };
   }
 }
 
-/** Upsert the user's module order (sanitized to known keys). */
-export async function saveModuleOrderForUser(clerkUserId: string, order: unknown[]): Promise<void> {
-  const clean = sanitizeModuleOrder(order);
+/** Upsert the user's grid order + pinned modules (both sanitized to known keys). */
+export async function saveDashboardLayoutForUser(
+  clerkUserId: string,
+  order: unknown[],
+  pinned: unknown[],
+): Promise<void> {
+  const cleanOrder = sanitizeModuleOrder(order);
+  const cleanPinned = sanitizeModuleOrder(pinned);
   await prisma.dashboardLayout.upsert({
     where: { clerkUserId },
-    create: { clerkUserId, moduleOrder: clean },
-    update: { moduleOrder: clean },
+    create: { clerkUserId, moduleOrder: cleanOrder, pinnedModules: cleanPinned },
+    update: { moduleOrder: cleanOrder, pinnedModules: cleanPinned },
   });
 }

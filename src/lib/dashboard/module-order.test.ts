@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { orderModules, sanitizeModuleOrder } from "./module-order";
+import { orderModules, sanitizeModuleOrder, modulesByKeys } from "./module-order";
 import { MODULES } from "@/lib/modules";
 
 const KEYS = MODULES.map((m) => m.key);
@@ -39,5 +39,17 @@ describe("sanitizeModuleOrder", () => {
   });
   it("returns empty for fully invalid input", () => {
     expect(sanitizeModuleOrder(["x", "y", 3])).toEqual([]);
+  });
+});
+
+describe("modulesByKeys", () => {
+  it("returns the modules for the given keys, in order", () => {
+    expect(modulesByKeys(["aura", "break-even"]).map((m) => m.key)).toEqual(["aura", "break-even"]);
+  });
+  it("skips unknown keys and de-duplicates", () => {
+    expect(modulesByKeys(["aura", "nope", "aura"]).map((m) => m.key)).toEqual(["aura"]);
+  });
+  it("returns empty for no keys", () => {
+    expect(modulesByKeys([])).toEqual([]);
   });
 });

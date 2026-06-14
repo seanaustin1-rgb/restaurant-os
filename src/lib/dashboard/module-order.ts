@@ -40,3 +40,18 @@ export function orderModules(savedOrder: readonly unknown[] | null | undefined):
   for (const m of MODULES) if (!seen.has(m.key)) ordered.push(m);
   return ordered;
 }
+
+/** The ModuleDefs for the given keys, in that order; unknown keys are skipped. */
+export function modulesByKeys(keys: readonly string[]): ModuleDef[] {
+  const byKey = new Map(MODULES.map((m) => [m.key, m]));
+  const out: ModuleDef[] = [];
+  const seen = new Set<string>();
+  for (const k of keys) {
+    const m = byKey.get(k);
+    if (m && !seen.has(k)) {
+      out.push(m);
+      seen.add(k);
+    }
+  }
+  return out;
+}

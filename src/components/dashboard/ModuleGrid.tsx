@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Lock, GripVertical } from "lucide-react";
+import { Lock, GripVertical, Star } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -21,15 +20,22 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MODULES, type ModuleDef } from "@/lib/modules";
-import { orderModules } from "@/lib/dashboard/module-order";
-import { saveModuleOrder } from "@/app/dashboard/actions";
 
-// Module launcher — a drag-to-reorder grid. The chosen order is saved to the
-// user's account (persists across devices). Live modules open their page; ones
-// that aren't built yet are honest disabled tiles tagged with what unblocks them.
-export function ModuleGrid({ initialOrder }: { initialOrder: string[] | null }) {
-  const [modules, setModules] = useState<ModuleDef[]>(() => orderModules(initialOrder));
-
+// Module launcher — a drag-to-reorder grid. Live modules open their page and can
+// be pinned (★) to the top Quick Access strip; modules that aren't built yet are
+// honest disabled tiles tagged with what unblocks them. Controlled by
+// DashboardView, which owns the order + pinned state and its persistence.
+export function ModuleGrid({
+  items,
+  pinnedKeys,
+  onReorder,
+  onTogglePin,
+}: {
+  items: ModuleDef[];
+  pinnedKeys: Set<string>;
+  onReorder: (next: ModuleDef[]) => void;
+  onTogglePin: (key: string) => void;
+}) {
   const sensors = useSensors(
     // A small drag threshold so a click still navigates; only a deliberate drag reorders.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -39,15 +45,10 @@ export function ModuleGrid({ initialOrder }: { initialOrder: string[] | null }) 
   function onDragEnd(e: DragEndEvent) {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    setModules((items) => {
-      const from = items.findIndex((m) => m.key === active.id);
-      const to = items.findIndex((m) => m.key === over.id);
-      if (from < 0 || to < 0) return items;
-      const next = arrayMove(items, from, to);
-      // Optimistic: UI already shows `next`; persist in the background.
-      void saveModuleOrder(next.map((m) => m.key)).catch(() => {});
-      return next;
-    });
+    const from = items.findIndex((m) => m.key === active.id);
+    const to = items.findIndex((m) => m.key === over.id);
+    if (from < 0 || to < 0) return;
+    onReorder(arrayMove(items, from, to));
   }
 
   return (
@@ -55,14 +56,14 @@ export function ModuleGrid({ initialOrder }: { initialOrder: string[] | null }) 
       <div className="mb-2 flex items-baseline justify-between">
         <h2 className="font-display text-lg text-copper-soft">Modules</h2>
         <span className="text-xs text-muted">
-          drag to reorder · {MODULES.filter((m) => m.status === "live").length} live
+          drag to reorder · ★ to pin · {MODULES.filter((m) => m.status === "live").length} live
         </span>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={modules.map((m) => m.key)} strategy={rectSortingStrategy}>
+        <SortableContext items={items.map((m) => m.key)} strategy={rectSortingStrategy}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {modules.map((m) => (
-              <SortableTile key={m.key} m={m} />
+            {items.map((m) => (
+              <SortableTile key={m.key} m={m} pinned={pinnedKeys.has(m.key)} onTogglePin={onTogglePin} />
             ))}
           </div>
         </SortableContext>
@@ -71,7 +72,15 @@ export function ModuleGrid({ initialOrder }: { initialOrder: string[] | null }) 
   );
 }
 
-function SortableTile({ m }: { m: ModuleDef }) {
+function SortableTile({
+  m,
+  pinned,
+  onTogglePin,
+}: {
+  m: ModuleDef;
+  pinned: boolean;
+  onTogglePin: (key: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: m.key });
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -101,12 +110,24 @@ function SortableTile({ m }: { m: ModuleDef }) {
         <GripVertical size={13} />
       </button>
 
+      {/* Pin toggle (live modules only) — adds/removes from the Quick Access strip. */}
+      {live && (
+        <button
+          type="button"
+          onClick={() => onTogglePin(m.key)}
+          aria-label={pinned ? `Unpin ${m.name}` : `Pin ${m.name} to Quick Access`}
+          aria-pressed={pinned}
+          className={
+            "absolute right-2 top-2 rounded p-0.5 " +
+            (pinned ? "text-copper-soft" : "text-muted/40 hover:text-copper-soft")
+          }
+        >
+          <Star size={14} className={pinned ? "fill-copper-soft" : ""} />
+        </button>
+      )}
+
       {live ? (
-        <Link href={m.href!} className="block pl-5">
-          <ArrowUpRight
-            size={14}
-            className="absolute right-3 top-3 text-muted transition-colors group-hover:text-copper-soft"
-          />
+        <Link href={m.href!} className="block px-5">
           <div className="font-display text-base text-[#E6E8E4]">{m.name}</div>
           <div className="mt-1 text-xs text-muted">{m.description}</div>
         </Link>

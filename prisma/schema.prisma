@@ -427,11 +427,12 @@ model ModuleConfig {
 // Per-USER dashboard module ordering (drag-and-drop layout that follows the
 // login across devices). Distinct from ModuleConfig, which is per-restaurant.
 model DashboardLayout {
-  id          String   @id @default(cuid())
-  clerkUserId String   @unique
-  moduleOrder Json // string[] of module keys in display order
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  clerkUserId   String   @unique
+  moduleOrder   Json // string[] of module keys in display order
+  pinnedModules Json? // string[] of module keys pinned to the top Quick Access strip
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model ReviewCache {

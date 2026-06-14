@@ -5,6 +5,7 @@ CREATE TABLE "DashboardLayout" (
     "id" TEXT NOT NULL,
     "clerkUserId" TEXT NOT NULL,
     "moduleOrder" JSONB NOT NULL,
+    "pinnedModules" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

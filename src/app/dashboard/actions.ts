@@ -1,12 +1,13 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { saveModuleOrderForUser } from "@/lib/dashboard/layout-store";
+import { saveDashboardLayoutForUser } from "@/lib/dashboard/layout-store";
 
-// Persist the signed-in user's dashboard module order. Called from the grid on
-// drag-end; the client already reflects the new order optimistically.
-export async function saveModuleOrder(order: string[]): Promise<void> {
+// Persist the signed-in user's dashboard layout (module-grid order + pinned
+// Quick Access modules). Called from the client on drag-end / pin-toggle; the UI
+// already reflects the change optimistically.
+export async function saveDashboardLayout(order: string[], pinned: string[]): Promise<void> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
-  await saveModuleOrderForUser(userId, order);
+  await saveDashboardLayoutForUser(userId, order, pinned);
 }

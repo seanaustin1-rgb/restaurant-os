@@ -40,5 +40,7 @@ export const MODULES: ModuleDef[] = [
   { key: "aura", name: "Aura — Reputation", description: "Reviews across Google, Yelp & Facebook", status: "live", href: "/modules/aura" },
   { key: "inventory", name: "Inventory", description: "On-hand & variance", status: "soon", blockedBy: "Inventory feed" },
   { key: "forecast", name: "Forecast", description: "13-week cash projection", status: "soon", blockedBy: "More history" },
-  { key: "benchmarks", name: "Benchmarks", description: "Vs. peer concepts", status: "soon", blockedBy: "Peer data" },
+  // Peer Benchmarks — operator ratios vs. industry reference ranges (static norms
+  // today; swappable for live cohort percentiles when a peer dataset lands).
+  { key: "benchmarks", name: "Peer Benchmarks", description: "Core ratios vs. industry ranges", status: "live", href: "/modules/benchmarks" },
 ];

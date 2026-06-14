@@ -31,24 +31,13 @@ export function AppHeader() {
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim lg:hidden"
+            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
           >
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
-          <Link href="/dashboard" className="font-display text-xl font-semibold text-copper">
+          <Link href="/dashboard" className="shrink-0 whitespace-nowrap font-display text-xl font-semibold text-copper">
             Restaurant OS
           </Link>
-          <nav className="ml-2 hidden items-center gap-1 text-sm text-muted lg:flex">
-            {NAV_LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={"rounded px-2 py-1 hover:text-[#E6E8E4] " + (isActive(l.href) ? "text-[#E6E8E4]" : "")}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
@@ -56,22 +45,24 @@ export function AppHeader() {
         </div>
       </div>
 
-      {/* Mobile nav panel */}
+      {/* Nav menu panel */}
       {open && (
-        <nav className="border-t border-line bg-ink/95 px-4 py-2 lg:hidden">
-          {NAV_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className={
-                "block rounded-md px-2 py-2.5 text-sm hover:bg-copper/10 " +
-                (isActive(l.href) ? "text-copper-soft" : "text-[#E6E8E4]")
-              }
-            >
-              {l.label}
-            </Link>
-          ))}
+        <nav className="border-t border-line bg-ink/95 px-4 py-2 sm:px-6">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={
+                  "block rounded-md px-2 py-2.5 text-sm hover:bg-copper/10 " +
+                  (isActive(l.href) ? "text-copper-soft" : "text-[#E6E8E4]")
+                }
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </nav>
       )}
     </header>

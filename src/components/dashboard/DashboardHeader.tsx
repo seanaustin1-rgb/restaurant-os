@@ -34,29 +34,23 @@ export function DashboardHeader({
     <header className="sticky top-0 z-20 border-b border-line bg-ink/90 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          {/* Mobile nav toggle (inline nav appears at lg+). */}
+          {/* Nav lives in a single dropdown menu at every size, so the top line
+              stays uncluttered (logo · restaurant · …). */}
           <button
             onClick={() => setNavOpen((o) => !o)}
             aria-label={navOpen ? "Close menu" : "Open menu"}
             aria-expanded={navOpen}
-            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim lg:hidden"
+            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
           >
             {navOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
-          <span className="hidden font-display text-xl font-semibold text-copper sm:inline">Restaurant OS</span>
+          <span className="hidden shrink-0 whitespace-nowrap font-display text-xl font-semibold text-copper sm:inline">Restaurant OS</span>
           <span className="hidden text-line sm:inline">/</span>
           <Dropdown
             label={active.name}
             items={restaurants.map((r) => ({ key: r.id, label: r.name }))}
             onPick={onSelectRestaurant}
           />
-          <nav className="ml-2 hidden items-center gap-1 text-sm text-muted lg:flex">
-            {NAV_LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className="rounded px-2 py-1 hover:text-[#E6E8E4]">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
         <div className="flex shrink-0 items-center gap-2 sm:gap-3">
@@ -72,19 +66,21 @@ export function DashboardHeader({
         </div>
       </div>
 
-      {/* Mobile nav panel */}
+      {/* Nav menu panel */}
       {navOpen && (
-        <nav className="border-t border-line bg-ink/95 px-4 py-2 lg:hidden">
-          {NAV_LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setNavOpen(false)}
-              className="block rounded-md px-2 py-2.5 text-sm text-[#E6E8E4] hover:bg-copper/10"
-            >
-              {l.label}
-            </Link>
-          ))}
+        <nav className="border-t border-line bg-ink/95 px-4 py-2 sm:px-6">
+          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setNavOpen(false)}
+                className="block rounded-md px-2 py-2.5 text-sm text-[#E6E8E4] hover:bg-copper/10"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
         </nav>
       )}
     </header>

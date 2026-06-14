@@ -22,6 +22,36 @@ jobs:
       # generate the client.
       - run: npm ci
 
-      # Type safety is the gate. A full `next build` is intentionally not run here:
-      # it prerenders pages that need Clerk/Supabase secrets, which CI must not hold.
+      # Type safety is the first gate.
       - run: npx tsc --noEmit
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # A full production `next build` — catches what tsc can't: server/client
+      # boundary violations, bad imports, and prerender errors. It runs with
+      # PLACEHOLDER env only — never real secrets. Clerk validates the publishable
+      # key's *format* (base64-decode) at build time but makes no network call, so
+      # a well-formed fake key is enough; pages that read auth() are dynamic and
+      # never hit the DB during build, so a dummy DATABASE_URL suffices.
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/db
+          DIRECT_URL: postgresql://user:pass@localhost:5432/db
+          # pk_test_ + base64("fake.clerk.accounts.dev$") — format-valid, not a real key.
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZmFrZS5jbGVyay5hY2NvdW50cy5kZXYk
+          CLERK_SECRET_KEY: sk_test_placeholderplaceholderplaceholder00
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder
+          ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+          NEXT_PUBLIC_APP_URL: http://localhost:3000

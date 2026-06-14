@@ -1,29 +1,7 @@
-import { Star, Plug, AlertTriangle, ExternalLink, MessageSquare } from "lucide-react";
+import { Plug, AlertTriangle, ExternalLink, MessageSquare } from "lucide-react";
 import type { AuraData, AuraSourceCard } from "@/lib/modules/aura";
-import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { count } from "@/lib/format";
-
-const HEALTH_TEXT: Record<HealthStatus, string> = {
-  green: "text-health-green",
-  yellow: "text-health-yellow",
-  red: "text-health-red",
-};
-
-function Stars({ rating }: { rating: number | null }) {
-  if (rating == null) return <span className="text-muted">—</span>;
-  const full = Math.round(rating);
-  return (
-    <span className="inline-flex items-center gap-0.5" title={`${rating.toFixed(2)} of 5`}>
-      {[1, 2, 3, 4, 5].map((i) => (
-        <Star
-          key={i}
-          size={13}
-          className={i <= full ? "fill-copper-soft text-copper-soft" : "text-line"}
-        />
-      ))}
-    </span>
-  );
-}
+import { AuraMeter, FractionalStars } from "./AuraMeter";
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "";
@@ -45,7 +23,7 @@ function SourceCard({ card }: { card: AuraSourceCard }) {
         </div>
         <div className="mt-1 flex items-baseline gap-2">
           <span className="tnum text-2xl text-[#E6E8E4]">{card.rating != null ? card.rating.toFixed(1) : "—"}</span>
-          <Stars rating={card.rating} />
+          <FractionalStars rating={card.rating} size={13} />
         </div>
         <div className="mt-0.5 text-[11px] text-muted">{count(card.reviewCount)} reviews</div>
       </div>
@@ -80,27 +58,21 @@ export function AuraModule({ data }: { data: AuraData }) {
 
   return (
     <div className="space-y-6">
-      {/* Overall reputation */}
-      <div className="rounded-lg border border-line bg-surface px-4 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span className="text-[11px] uppercase tracking-wider text-muted">Overall reputation</span>
-            {data.overallRating != null ? (
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className={"tnum text-4xl " + HEALTH_TEXT[data.health]}>{data.overallRating.toFixed(2)}</span>
-                <Stars rating={data.overallRating} />
-              </div>
-            ) : (
-              <div className="mt-1 text-2xl text-muted">No ratings yet</div>
-            )}
-            <div className="mt-0.5 text-[11px] text-muted">
-              {count(data.totalReviews)} reviews across {liveCount} connected source{liveCount === 1 ? "" : "s"}
-              {data.overallRating != null ? " · count-weighted" : ""}
-            </div>
-          </div>
+      {/* Aura Meter — the headline reputation gauge */}
+      <div className="relative rounded-lg border border-line bg-surface px-4 py-5">
+        <div className="flex items-start justify-between">
+          <span className="text-[11px] uppercase tracking-wider text-muted">Overall reputation</span>
           <span className="text-[11px] text-muted">
             {data.configuredCount}/{data.totalSources} sources connected
           </span>
+        </div>
+        <div className="mt-2">
+          <AuraMeter
+            rating={data.overallRating}
+            health={data.health}
+            totalReviews={data.totalReviews}
+            liveCount={liveCount}
+          />
         </div>
       </div>
 
@@ -137,7 +109,7 @@ export function AuraModule({ data }: { data: AuraData }) {
                     <span className="rounded-full border border-line px-1.5 py-px text-[10px] capitalize">{r.source}</span>
                   </span>
                   <span className="flex items-center gap-2 text-[11px] text-muted">
-                    <Stars rating={r.rating} />
+                    <FractionalStars rating={r.rating} size={12} />
                     {fmtDate(r.createdAt)}
                   </span>
                 </div>

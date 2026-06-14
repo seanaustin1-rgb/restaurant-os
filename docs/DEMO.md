@@ -26,7 +26,7 @@ production on purpose).
    ```
 
    It creates a **"Demo Bistro"** (or reuses your existing restaurant) with an
-   `OPERATOR` role for you, then seeds **31 days of May 2026** sales + ~30
+   `OPERATOR` role for you, then seeds **a full current month** of sales + ~30
    categorized transactions.
 
 3. **Open `/dashboard`.** Heartbeat, Revenue, TAP gauges, Break-even, Prime

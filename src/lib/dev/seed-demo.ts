@@ -1,14 +1,24 @@
 import type { TransactionBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { categorizeTransaction } from "@/lib/categorization/vendor-map";
+import {
+  ensureDefaultCategories,
+  categoryIdByName,
+  legacyBucketToCategoryName,
+} from "@/lib/categorization/categories";
 
-// Seeds a full month (May 2026) of realistic DailySales + categorized
-// Transactions for one restaurant, so the live dashboard has data to render.
-// Idempotent: clears its own prior seed for that restaurant/month first.
+// Seeds a full month of realistic DailySales + categorized Transactions for one
+// restaurant, so the live dashboard renders with data — including the Heartbeat
+// cost ratios, which come from the categorized COGS/payroll transactions.
+//
+// Seeds the CURRENT calendar month, because the dashboard period follows the
+// latest DailySales row: seeding the current month guarantees the period shown
+// lines up with the seeded data (rather than a stale hardcoded month).
 
-const YEAR = 2026;
-const MONTH0 = 4; // May (0-indexed)
-const DAYS = 31;
+const NOW = new Date();
+const YEAR = NOW.getUTCFullYear();
+const MONTH0 = NOW.getUTCMonth(); // current month (0-indexed)
+const DAYS = new Date(Date.UTC(YEAR, MONTH0 + 1, 0)).getUTCDate(); // days in this month
 
 interface TxnSeed {
   vendor: string;
@@ -73,6 +83,13 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
   const start = dateOf(1);
   const end = new Date(Date.UTC(YEAR, MONTH0 + 1, 1));
 
+  // The dashboard rolls costs up by Category.tapBucket via each transaction's
+  // categoryId — so seeded transactions MUST be linked to a Category, or they
+  // all fall into OpEx and the Heartbeat cost ratios stay 0. Ensure the default
+  // categories exist, then map each legacy bucket → category → id.
+  await ensureDefaultCategories(prisma, restaurantId);
+  const catIdByName = await categoryIdByName(prisma, restaurantId);
+
   // Clear prior seed for idempotency.
   await prisma.dailySales.deleteMany({ where: { restaurantId, date: { gte: start, lt: end } } });
   await prisma.transaction.deleteMany({ where: { restaurantId, plaidTxnId: { startsWith: `seed-${restaurantId}-` } } });
@@ -110,11 +127,13 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
     return {
       restaurantId,
       plaidTxnId: `seed-${restaurantId}-${i}`,
-      date: dateOf(t.day),
+      date: dateOf(Math.min(t.day, DAYS)), // clamp into the month (short months)
       amount: t.amount,
       merchantName: t.vendor,
       description: t.vendor,
       bucket: cat.bucket,
+      // Link to the matching Category so the dashboard/modules roll it up.
+      categoryId: catIdByName.get(legacyBucketToCategoryName(cat.bucket)) ?? null,
       isRecurring: cat.isRecurring,
       confidence: cat.confidence,
       isManualOverride: false,

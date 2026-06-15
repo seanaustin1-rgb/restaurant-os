@@ -35,10 +35,12 @@ export async function POST() {
   // Run each connection's sync in turn. One bad connection (e.g. an expired
   // login that needs re-auth) shouldn't block the others, so capture per-
   // connection errors instead of failing the whole request.
-  // Hobby serverless functions cap at 60s. Give the sync a budget comfortably
-  // under that; if a connection still has more pages, we report hasMore so the
-  // client calls back and resumes from the committed cursor.
-  const TIME_BUDGET_MS = 45_000;
+  // Hobby serverless functions cap at 60s. The budget is checked *between*
+  // pages, and a single page (Plaid fetch + ~100-row write over the pooler) can
+  // take ~15s, so keep the budget low enough that one more page after the check
+  // still lands well under 60s. If a connection has more pages left we report
+  // hasMore and the client calls back, resuming from the committed cursor.
+  const TIME_BUDGET_MS = 30_000;
 
   let added = 0;
   let modified = 0;

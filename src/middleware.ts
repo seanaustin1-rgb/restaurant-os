@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 // Public routes don't require authentication.
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/privacy(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   // Inngest authenticates via its signing key, not Clerk.

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 // Signed-in users never need the marketing landing — send them straight to the
 // dashboard. Doing it here (server-side) makes the post-login destination
@@ -26,6 +27,12 @@ export default async function Home() {
           </button>
         </SignUpButton>
       </div>
+
+      <footer className="mt-4">
+        <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600">
+          Privacy Policy
+        </Link>
+      </footer>
     </main>
   );
 }

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import type { TransactionBucket } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import {
@@ -9,7 +8,7 @@ import {
   categoryTapById,
   MISC_CATEGORY_NAME,
 } from "@/lib/categorization/categories";
-import { ensureDefaultRules, loadRules, applyRules, TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
+import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
 import type { CandidateTxn } from "@/lib/import/parse-statement";
 
 // Writes confirmed statement transactions. Deduped via a synthetic plaidTxnId
@@ -40,36 +39,17 @@ export async function POST(req: Request) {
   await ensureDefaultCategories(prisma, role.restaurantId);
   await ensureDefaultRules(prisma, role.restaurantId);
   const nameToId = await categoryIdByName(prisma, role.restaurantId);
-  const tapById = await categoryTapById(prisma, role.restaurantId);
-  const rules = await loadRules(prisma, role.restaurantId);
-  const miscId = nameToId.get(MISC_CATEGORY_NAME) ?? null;
-  const revenueId = nameToId.get("Sales Deposits") ?? null;
+  const catCtx: CategorizationContext = {
+    rules: await loadRules(prisma, role.restaurantId),
+    tapById: await categoryTapById(prisma, role.restaurantId),
+    revenueId: nameToId.get("Sales Deposits") ?? null,
+    miscId: nameToId.get(MISC_CATEGORY_NAME) ?? null,
+  };
 
   const data = txns.map((t) => {
-    // /api/import maps credits/deposits to negative amounts. Treat any inflow as
-    // REVENUE (sales deposits) rather than running it through expense rules.
-    let categoryId: string | null;
-    let bucket: TransactionBucket;
-    let confidence: number;
-    if (t.amount < 0) {
-      categoryId = revenueId;
-      bucket = "REVENUE";
-      confidence = 0.9;
-    } else {
-      const match = applyRules(rules, null, t.description);
-      if (match) {
-        categoryId = match.categoryId;
-        const tap = tapById.get(match.categoryId);
-        bucket = tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED";
-        confidence = match.confidence;
-      } else {
-        // No rule matched — give it the Misc category (rolls into OpEx) but keep
-        // the legacy bucket UNCATEGORIZED so the cleanup view still surfaces it.
-        categoryId = miscId;
-        bucket = "UNCATEGORIZED";
-        confidence = 0;
-      }
-    }
+    // /api/import maps credits/deposits to negative amounts; categorize() treats
+    // any inflow as REVENUE by sign and runs outflows through the vendor rules.
+    const { categoryId, bucket, confidence } = categorize(catCtx, null, t.description, t.amount);
     const hash = createHash("sha1").update(`${t.date}|${t.amount}|${t.description}`).digest("hex").slice(0, 16);
     return {
       restaurantId: role.restaurantId,

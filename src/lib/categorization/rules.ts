@@ -167,6 +167,54 @@ export function applyRules(
 }
 
 // ─────────────────────────────────────────────────────────────
+// Unified categorization decision (shared by every ingest path)
+// ─────────────────────────────────────────────────────────────
+export interface CategorizationContext {
+  rules: CompiledRule[];
+  tapById: Map<string, TapBucket>;
+  revenueId: string | null; // "Sales Deposits" category id → REVENUE
+  miscId: string | null; // "Misc" category id → OpEx
+}
+
+export interface Categorization {
+  categoryId: string | null;
+  bucket: TransactionBucket;
+  confidence: number;
+}
+
+/**
+ * The single categorization decision used by the Plaid sync, the statement
+ * import, AND the recategorize script — so the paths can never drift.
+ *
+ * Inflows (amount < 0 — the credit/deposit convention both Plaid and the
+ * statement parser use) are Sales Deposits → REVENUE *by sign*, and are NOT run
+ * through the expense vendor rules. This is the fix for a "TOAST/DEP" deposit
+ * matching a Toast expense rule: a deposit is revenue regardless of vendor.
+ * Outflows go through the per-restaurant rules; an unmatched outflow falls to
+ * Misc (legacy bucket UNCATEGORIZED so the cleanup view still surfaces it).
+ */
+export function categorize(
+  ctx: CategorizationContext,
+  merchantName: string | null | undefined,
+  description: string | null | undefined,
+  amount: number,
+): Categorization {
+  if (amount < 0) {
+    return { categoryId: ctx.revenueId, bucket: "REVENUE", confidence: 0.9 };
+  }
+  const match = applyRules(ctx.rules, merchantName, description);
+  if (match) {
+    const tap = ctx.tapById.get(match.categoryId);
+    return {
+      categoryId: match.categoryId,
+      bucket: tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED",
+      confidence: match.confidence,
+    };
+  }
+  return { categoryId: ctx.miscId, bucket: "UNCATEGORIZED", confidence: 0 };
+}
+
+// ─────────────────────────────────────────────────────────────
 // DB I/O
 // ─────────────────────────────────────────────────────────────
 /** Load + compile a restaurant's enabled rules, sorted into evaluation order. */

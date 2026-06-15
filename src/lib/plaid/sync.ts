@@ -1,10 +1,9 @@
 import { Prisma } from "@prisma/client";
-import type { TransactionBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { plaidClient } from "@/lib/plaid";
 import { decrypt } from "@/lib/crypto";
 import { ensureDefaultCategories, categoryTapById, MISC_CATEGORY_NAME, categoryIdByName } from "@/lib/categorization/categories";
-import { ensureDefaultRules, loadRules, applyRules, TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
+import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
 
 // Minimal shape of the Plaid transaction fields we consume.
 interface PlaidTxn {
@@ -54,7 +53,12 @@ export async function runPlaidSync(
   const nameToId = await categoryIdByName(prisma, connection.restaurantId);
   const tapById = await categoryTapById(prisma, connection.restaurantId);
   const rules = await loadRules(prisma, connection.restaurantId);
-  const miscId = nameToId.get(MISC_CATEGORY_NAME) ?? null;
+  const catCtx: CategorizationContext = {
+    rules,
+    tapById,
+    revenueId: nameToId.get("Sales Deposits") ?? null,
+    miscId: nameToId.get(MISC_CATEGORY_NAME) ?? null,
+  };
 
   const started = Date.now();
   const budget = opts.timeBudgetMs ?? Infinity;
@@ -100,18 +104,8 @@ export async function runPlaidSync(
         merchantName: t.merchant_name ?? null,
         description: t.name ?? null,
       };
-      const match = applyRules(rules, t.merchant_name, t.name);
-      let categorization: { categoryId: string | null; bucket: TransactionBucket; confidence: number };
-      if (match) {
-        const tap = tapById.get(match.categoryId);
-        categorization = {
-          categoryId: match.categoryId,
-          bucket: tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED",
-          confidence: match.confidence,
-        };
-      } else {
-        categorization = { categoryId: miscId, bucket: "UNCATEGORIZED", confidence: 0 };
-      }
+      // Inflows (amount < 0) are REVENUE by sign; outflows go through the rules.
+      const categorization = categorize(catCtx, t.merchant_name, t.name, t.amount);
 
       return prisma.transaction.upsert({
         where: { plaidTxnId: t.transaction_id },

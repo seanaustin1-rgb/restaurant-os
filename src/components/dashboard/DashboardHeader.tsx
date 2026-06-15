@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
 import type { RoleKey } from "@/lib/mock/dashboard";
@@ -45,7 +44,8 @@ export function DashboardHeader({
           >
             {navOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
-          <Image src="/logo.png" alt="OutFront Data" width={1142} height={304} className="hidden h-7 w-auto shrink-0 sm:block" priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="OutFront Data" className="hidden h-7 w-auto shrink-0 sm:block" />
           <span className="hidden text-line sm:inline">/</span>
           <Dropdown
             label={active.name}

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — OutFront Data",
@@ -27,7 +26,8 @@ export default function PrivacyPolicyPage() {
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
         ← Back
       </Link>
-      <Image src="/logo.png" alt="OutFront Data" width={1142} height={304} className="mt-6 h-10 w-auto" priority />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="OutFront Data" className="mt-6 h-10 w-auto" />
 
       <h1 className="mt-4 text-3xl font-bold tracking-tight text-gray-900">Privacy Policy</h1>
       <p className="mt-2 text-sm text-gray-500">

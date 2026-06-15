@@ -22,7 +22,7 @@ function H2({ children }: { children: React.ReactNode }) {
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12 text-gray-800">
+    <main className="mx-auto my-8 max-w-3xl rounded-xl bg-white px-8 py-10 text-gray-800 shadow-lg">
       <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
         ← Back
       </Link>

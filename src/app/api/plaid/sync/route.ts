@@ -35,19 +35,26 @@ export async function POST() {
   // Run each connection's sync in turn. One bad connection (e.g. an expired
   // login that needs re-auth) shouldn't block the others, so capture per-
   // connection errors instead of failing the whole request.
+  // Hobby serverless functions cap at 60s. Give the sync a budget comfortably
+  // under that; if a connection still has more pages, we report hasMore so the
+  // client calls back and resumes from the committed cursor.
+  const TIME_BUDGET_MS = 45_000;
+
   let added = 0;
   let modified = 0;
   let removed = 0;
+  let hasMore = false;
   const errors: string[] = [];
 
   for (const c of connections) {
     try {
-      const result = await runPlaidSync(c.id);
+      const result = await runPlaidSync(c.id, { timeBudgetMs: TIME_BUDGET_MS });
       if ("added" in result) {
         added += result.added;
         modified += result.modified;
         removed += result.removed;
       }
+      if (result.hasMore) hasMore = true;
     } catch (err) {
       errors.push(err instanceof Error ? err.message : "sync failed");
     }
@@ -58,6 +65,7 @@ export async function POST() {
     added,
     modified,
     removed,
+    hasMore,
     ...(errors.length > 0 && { warning: errors.join("; ") }),
   });
 }

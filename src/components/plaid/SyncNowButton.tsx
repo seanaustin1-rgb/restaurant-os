@@ -7,22 +7,35 @@ export function SyncNowButton() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
-  function sync() {
+  async function sync() {
     setBusy(true);
-    setMsg(null);
-    fetch("/api/plaid/sync", { method: "POST" })
-      .then((r) => r.json())
-      .then((d) => {
-        const added = d.added ?? 0;
-        const summary = `Synced ${d.triggered ?? 0} connection(s) — ${added} new transaction(s).`;
-        setMsg(d.warning ? `${summary} ${d.warning}` : summary);
-        // The sync ran synchronously, so reload to show the new data.
-        setTimeout(() => window.location.reload(), 1200);
-      })
-      .catch(() => {
-        setBusy(false);
-        setMsg("Couldn't run sync.");
-      });
+    setMsg("Syncing…");
+
+    let totalAdded = 0;
+    // The first sync of a real account can span many pages of history. Each call
+    // processes as much as it can within its time budget and tells us whether
+    // more remains; keep calling until it's done. A page cap guards against loops.
+    try {
+      for (let i = 0; i < 50; i++) {
+        const res = await fetch("/api/plaid/sync", { method: "POST" });
+        const d = await res.json();
+        if (!res.ok && !d.added && !d.hasMore) {
+          throw new Error(d.error || "sync failed");
+        }
+        totalAdded += d.added ?? 0;
+        if (d.warning) {
+          setMsg(`Synced ${totalAdded} new transaction(s). ${d.warning}`);
+        } else if (d.hasMore) {
+          setMsg(`Syncing… ${totalAdded} transactions so far`);
+        }
+        if (!d.hasMore) break;
+      }
+      setMsg(`Done — imported ${totalAdded} new transaction(s).`);
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      setBusy(false);
+      setMsg(e instanceof Error ? `Couldn't run sync: ${e.message}` : "Couldn't run sync.");
+    }
   }
 
   return (

@@ -16,61 +16,39 @@ interface PlaidTxn {
 }
 
 export type PlaidSyncResult =
-  | { skipped: string }
-  | { added: number; modified: number; removed: number };
+  | { skipped: string; hasMore: false }
+  | { added: number; modified: number; removed: number; hasMore: boolean };
+
+interface SyncOptions {
+  // Stop starting new Plaid pages once this much wall-clock has elapsed, so the
+  // call finishes within a serverless time limit. The cursor is committed after
+  // every page, so a follow-up call resumes exactly where this one stopped.
+  // Defaults to no limit (used by the background cron, which has no tight cap).
+  timeBudgetMs?: number;
+}
 
 /**
  * Sync one Plaid connection's transactions into Postgres.
  *
- * Idempotent + atomic: fetches all pages from the saved cursor, then persists
- * everything and advances the cursor in a single DB transaction. The cursor
- * only moves after commit, so a failure safely re-fetches from the prior point.
- * Manual category overrides are preserved on update.
+ * Incremental + resumable: each `transactionsSync` page is persisted in its own
+ * DB transaction together with the advanced cursor, so progress is never lost
+ * and the cursor only moves after that page commits. When `timeBudgetMs` is set
+ * the loop stops between pages once the budget is spent and reports `hasMore:
+ * true` — the caller (or the user clicking "Sync now" again) resumes from the
+ * saved cursor. Manual category overrides are preserved on update.
  */
-export async function runPlaidSync(plaidConnectionId: string): Promise<PlaidSyncResult> {
+export async function runPlaidSync(
+  plaidConnectionId: string,
+  opts: SyncOptions = {},
+): Promise<PlaidSyncResult> {
   const connection = await prisma.plaidConnection.findUnique({ where: { id: plaidConnectionId } });
-  if (!connection) return { skipped: "connection not found" };
-  if (!connection.isActive) return { skipped: "connection inactive" };
+  if (!connection) return { skipped: "connection not found", hasMore: false };
+  if (!connection.isActive) return { skipped: "connection inactive", hasMore: false };
 
   const accessToken = decrypt(connection.accessToken);
 
-  // 1. Pull all pages from the saved cursor.
-  const added: PlaidTxn[] = [];
-  const modified: PlaidTxn[] = [];
-  const removedIds: string[] = [];
-  let cursor = connection.cursor ?? undefined;
-  let hasMore = true;
-
-  while (hasMore) {
-    const resp = await plaidClient.transactionsSync({ access_token: accessToken, cursor });
-    const data = resp.data;
-    added.push(...(data.added as PlaidTxn[]));
-    modified.push(...(data.modified as PlaidTxn[]));
-    removedIds.push(...data.removed.map((r) => r.transaction_id).filter((id): id is string => !!id));
-    cursor = data.next_cursor;
-    hasMore = data.has_more;
-  }
-
-  // 2. Persist everything + advance the cursor.
-  // Bulk-fetch which existing rows are manual overrides (one query, not one per
-  // transaction), then run all writes as a *batched* array transaction. This is
-  // safe over the PgBouncer transaction pooler and avoids the interactive-
-  // transaction timeout that per-row round-trips would hit.
-  const upserts = [...added, ...modified];
-  const ids = upserts.map((t) => t.transaction_id);
-
-  const overridden = new Set(
-    ids.length > 0
-      ? (
-          await prisma.transaction.findMany({
-            where: { plaidTxnId: { in: ids }, isManualOverride: true },
-            select: { plaidTxnId: true },
-          })
-        ).map((t) => t.plaidTxnId)
-      : [],
-  );
-
-  // Per-restaurant categorization: ensure defaults exist, then resolve via rules.
+  // Load the per-restaurant categorization context once up front — it doesn't
+  // change mid-sync, so there's no need to re-fetch it per page.
   await ensureDefaultCategories(prisma, connection.restaurantId);
   await ensureDefaultRules(prisma, connection.restaurantId);
   const nameToId = await categoryIdByName(prisma, connection.restaurantId);
@@ -78,48 +56,98 @@ export async function runPlaidSync(plaidConnectionId: string): Promise<PlaidSync
   const rules = await loadRules(prisma, connection.restaurantId);
   const miscId = nameToId.get(MISC_CATEGORY_NAME) ?? null;
 
-  const ops: Prisma.PrismaPromise<unknown>[] = upserts.map((t) => {
-    const common = {
-      restaurantId: connection.restaurantId,
-      plaidConnectionId: connection.id,
-      date: new Date(t.date),
-      amount: t.amount,
-      merchantName: t.merchant_name ?? null,
-      description: t.name ?? null,
-    };
-    const match = applyRules(rules, t.merchant_name, t.name);
-    let categorization: { categoryId: string | null; bucket: TransactionBucket; confidence: number };
-    if (match) {
-      const tap = tapById.get(match.categoryId);
-      categorization = {
-        categoryId: match.categoryId,
-        bucket: tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED",
-        confidence: match.confidence,
+  const started = Date.now();
+  const budget = opts.timeBudgetMs ?? Infinity;
+
+  let cursor = connection.cursor ?? undefined;
+  let hasMore = true;
+  let totalAdded = 0;
+  let totalModified = 0;
+  let totalRemoved = 0;
+
+  // Process one Plaid page per iteration, committing it before moving on.
+  while (hasMore) {
+    const resp = await plaidClient.transactionsSync({ access_token: accessToken, cursor });
+    const data = resp.data;
+
+    const added = data.added as PlaidTxn[];
+    const modified = data.modified as PlaidTxn[];
+    const removedIds = data.removed
+      .map((r) => r.transaction_id)
+      .filter((id): id is string => !!id);
+
+    const upserts = [...added, ...modified];
+    const ids = upserts.map((t) => t.transaction_id);
+
+    // Which of this page's rows are manual overrides we must not clobber.
+    const overridden = new Set(
+      ids.length > 0
+        ? (
+            await prisma.transaction.findMany({
+              where: { plaidTxnId: { in: ids }, isManualOverride: true },
+              select: { plaidTxnId: true },
+            })
+          ).map((t) => t.plaidTxnId)
+        : [],
+    );
+
+    const ops: Prisma.PrismaPromise<unknown>[] = upserts.map((t) => {
+      const common = {
+        restaurantId: connection.restaurantId,
+        plaidConnectionId: connection.id,
+        date: new Date(t.date),
+        amount: t.amount,
+        merchantName: t.merchant_name ?? null,
+        description: t.name ?? null,
       };
-    } else {
-      categorization = { categoryId: miscId, bucket: "UNCATEGORIZED", confidence: 0 };
+      const match = applyRules(rules, t.merchant_name, t.name);
+      let categorization: { categoryId: string | null; bucket: TransactionBucket; confidence: number };
+      if (match) {
+        const tap = tapById.get(match.categoryId);
+        categorization = {
+          categoryId: match.categoryId,
+          bucket: tap ? TAP_BUCKET_TO_LEGACY[tap] : "UNCATEGORIZED",
+          confidence: match.confidence,
+        };
+      } else {
+        categorization = { categoryId: miscId, bucket: "UNCATEGORIZED", confidence: 0 };
+      }
+
+      return prisma.transaction.upsert({
+        where: { plaidTxnId: t.transaction_id },
+        create: { ...common, plaidTxnId: t.transaction_id, ...categorization },
+        // Don't clobber a human's manual recategorization.
+        update: overridden.has(t.transaction_id) ? common : { ...common, ...categorization },
+      });
+    });
+
+    if (removedIds.length > 0) {
+      ops.push(prisma.transaction.deleteMany({ where: { plaidTxnId: { in: removedIds } } }));
     }
 
-    return prisma.transaction.upsert({
-      where: { plaidTxnId: t.transaction_id },
-      create: { ...common, plaidTxnId: t.transaction_id, ...categorization },
-      // Don't clobber a human's manual recategorization.
-      update: overridden.has(t.transaction_id) ? common : { ...common, ...categorization },
-    });
-  });
+    // Advance the cursor in the SAME transaction as this page's writes, so the
+    // cursor never gets ahead of the data that's actually persisted.
+    ops.push(
+      prisma.plaidConnection.update({
+        where: { id: connection.id },
+        data: { cursor: data.next_cursor, lastSyncedAt: new Date() },
+      }),
+    );
 
-  if (removedIds.length > 0) {
-    ops.push(prisma.transaction.deleteMany({ where: { plaidTxnId: { in: removedIds } } }));
+    await prisma.$transaction(ops);
+
+    totalAdded += added.length;
+    totalModified += modified.length;
+    totalRemoved += removedIds.length;
+    cursor = data.next_cursor;
+    hasMore = data.has_more;
+
+    // Stop between pages if we're out of time; the next call resumes from the
+    // cursor we just committed.
+    if (hasMore && Date.now() - started > budget) {
+      return { added: totalAdded, modified: totalModified, removed: totalRemoved, hasMore: true };
+    }
   }
 
-  ops.push(
-    prisma.plaidConnection.update({
-      where: { id: connection.id },
-      data: { cursor: cursor ?? null, lastSyncedAt: new Date() },
-    }),
-  );
-
-  await prisma.$transaction(ops);
-
-  return { added: added.length, modified: modified.length, removed: removedIds.length };
+  return { added: totalAdded, modified: totalModified, removed: totalRemoved, hasMore: false };
 }

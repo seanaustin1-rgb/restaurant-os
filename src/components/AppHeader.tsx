@@ -36,7 +36,7 @@ export function AppHeader() {
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
           <Link href="/dashboard" className="shrink-0 whitespace-nowrap font-display text-xl font-semibold text-copper">
-            Restaurant OS
+            OutFront Data
           </Link>
         </div>
 

@@ -1,4 +1,4 @@
-// Profit First calculation core for Restaurant OS.
+// Profit First calculation core for OutFront Data.
 // All money values are plain numbers (dollars). Percentages are whole numbers (5 = 5%).
 // "Real Revenue" is the Profit First basis for every allocation: Total Sales − COGS.
 

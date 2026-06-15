@@ -12,8 +12,8 @@ export default async function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <h1 className="font-display text-5xl font-semibold text-copper-soft">Restaurant OS</h1>
-      <p className="text-muted">Multi-tenant restaurant operator intelligence platform.</p>
+      <h1 className="font-display text-5xl font-semibold text-copper-soft">OutFront Data</h1>
+      <p className="text-muted">Know your numbers. Decide now.</p>
 
       <div className="flex items-center gap-4">
         <SignInButton forceRedirectUrl="/dashboard">

@@ -44,7 +44,7 @@ export function DashboardHeader({
           >
             {navOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
-          <span className="hidden shrink-0 whitespace-nowrap font-display text-xl font-semibold text-copper sm:inline">Restaurant OS</span>
+          <span className="hidden shrink-0 whitespace-nowrap font-display text-xl font-semibold text-copper sm:inline">OutFront Data</span>
           <span className="hidden text-line sm:inline">/</span>
           <Dropdown
             label={active.name}

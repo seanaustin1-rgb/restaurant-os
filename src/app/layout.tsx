@@ -24,8 +24,8 @@ const mono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Restaurant OS",
-  description: "Multi-tenant restaurant operator intelligence platform",
+  title: "OutFront Data",
+  description: "Financial insights for operators — know your numbers, decide now.",
 };
 
 export default function RootLayout({

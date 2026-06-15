@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image";
 
 // Signed-in users never need the marketing landing — send them straight to the
 // dashboard. Doing it here (server-side) makes the post-login destination
@@ -12,7 +13,7 @@ export default async function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <h1 className="font-display text-5xl font-semibold text-copper-soft">OutFront Data</h1>
+      <Image src="/logo.png" alt="OutFront Data" width={1142} height={304} className="h-16 w-auto" priority />
       <p className="text-muted">Know your numbers. Decide now.</p>
 
       <div className="flex items-center gap-4">

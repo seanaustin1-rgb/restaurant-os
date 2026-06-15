@@ -4,6 +4,7 @@ import { Landmark } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { ConnectBankButton } from "@/components/plaid/ConnectBankButton";
 import { SyncNowButton } from "@/components/plaid/SyncNowButton";
+import { RemoveConnectionButton } from "@/components/plaid/RemoveConnectionButton";
 
 export default async function ConnectionsPage() {
   const { userId } = await auth();
@@ -69,14 +70,20 @@ export default async function ConnectionsPage() {
                     </div>
                   </div>
                 </div>
-                <span
-                  className={
-                    "rounded-full px-2 py-0.5 text-[11px] " +
-                    (c.isActive ? "bg-health-green/15 text-health-green" : "bg-line text-muted")
-                  }
-                >
-                  {c.isActive ? "active" : "inactive"}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={
+                      "rounded-full px-2 py-0.5 text-[11px] " +
+                      (c.isActive ? "bg-health-green/15 text-health-green" : "bg-line text-muted")
+                    }
+                  >
+                    {c.isActive ? "active" : "inactive"}
+                  </span>
+                  <RemoveConnectionButton
+                    connectionId={c.id}
+                    institution={c.institution ?? "this bank"}
+                  />
+                </div>
               </div>
             ))}
           </div>

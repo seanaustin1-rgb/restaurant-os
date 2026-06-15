@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
-import { inngest } from "@/lib/inngest/client";
+import { runPlaidSync } from "@/lib/plaid/sync";
 
-// Triggers a sync for all of the signed-in user's restaurant's active connections.
+// Manual "Sync now": pulls fresh transactions for the signed-in user's
+// restaurant *synchronously* (directly via Plaid), so it works whether or not
+// the Inngest background worker is running. The daily Inngest cron handles
+// unattended syncing; this endpoint is the user-initiated path.
+export const maxDuration = 60;
+
 export async function POST() {
   const { userId } = await auth();
   if (!userId) {
@@ -23,21 +28,36 @@ export async function POST() {
     select: { id: true },
   });
 
-  try {
-    await Promise.all(
-      connections.map((c) =>
-        inngest.send({
-          name: "plaid/connection.sync.requested",
-          data: { plaidConnectionId: c.id, restaurantId: role.restaurantId },
-        }),
-      ),
-    );
-    return NextResponse.json({ triggered: connections.length });
-  } catch {
-    // Inngest dev server may be offline locally; surface gracefully.
-    return NextResponse.json(
-      { triggered: 0, warning: "could not reach Inngest; the daily sync will catch up" },
-      { status: 202 },
-    );
+  if (connections.length === 0) {
+    return NextResponse.json({ triggered: 0, added: 0, warning: "No active bank connections to sync." });
   }
+
+  // Run each connection's sync in turn. One bad connection (e.g. an expired
+  // login that needs re-auth) shouldn't block the others, so capture per-
+  // connection errors instead of failing the whole request.
+  let added = 0;
+  let modified = 0;
+  let removed = 0;
+  const errors: string[] = [];
+
+  for (const c of connections) {
+    try {
+      const result = await runPlaidSync(c.id);
+      if ("added" in result) {
+        added += result.added;
+        modified += result.modified;
+        removed += result.removed;
+      }
+    } catch (err) {
+      errors.push(err instanceof Error ? err.message : "sync failed");
+    }
+  }
+
+  return NextResponse.json({
+    triggered: connections.length,
+    added,
+    modified,
+    removed,
+    ...(errors.length > 0 && { warning: errors.join("; ") }),
+  });
 }

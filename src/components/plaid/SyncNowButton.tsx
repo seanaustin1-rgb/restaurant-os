@@ -13,13 +13,15 @@ export function SyncNowButton() {
     fetch("/api/plaid/sync", { method: "POST" })
       .then((r) => r.json())
       .then((d) => {
-        setMsg(d.warning ? d.warning : `Sync triggered for ${d.triggered ?? 0} connection(s).`);
-        // Give the background job a moment, then refresh to show new data.
-        setTimeout(() => window.location.reload(), 1500);
+        const added = d.added ?? 0;
+        const summary = `Synced ${d.triggered ?? 0} connection(s) — ${added} new transaction(s).`;
+        setMsg(d.warning ? `${summary} ${d.warning}` : summary);
+        // The sync ran synchronously, so reload to show the new data.
+        setTimeout(() => window.location.reload(), 1200);
       })
       .catch(() => {
         setBusy(false);
-        setMsg("Couldn't trigger sync.");
+        setMsg("Couldn't run sync.");
       });
   }
 

@@ -4,7 +4,7 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-13** block below (it's authoritative). PR #18 (Debt Service → Profit) is MERGED and the Toast `orders:read` scope is now GRANTED — operational Toast access is live. The live Sales-Tax skim + Tax Vault tile are now BUILT (`41f6b7e`) and PR #1 is CLOSED; the remaining work is all operator-side: add the 6 Toast env vars to Vercel and run the two prod-DB backfills."
+> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-15** block below (it's authoritative). The app is live on the branded domain **www.outfrontdata.com**, Inngest production auto-sync is registered and running, the Toast env vars + both prod-DB backfills are done, and a Plaid bank is attached. A Labor categorization bug was fixed and shipped. The one open task is the **logo swap** — drop a true-transparent PNG at `public/logo.png` and push."
 
 > **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
 > latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
@@ -13,6 +13,58 @@ Open the repo and tell Claude:
 > TWO separate credential sets (see below).
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
+
+---
+
+## ⏱️ RESUME HERE — 2026-06-15 (LIVE ON BRANDED DOMAIN + AUTO-SYNC RUNNING)
+
+**Live on the brand domain: https://www.outfrontdata.com** (apex 308→www, SSL/HSTS issued; Bluehost DNS:
+apex A→`216.198.79.1`, `www` CNAME→Vercel; same Vercel project `restaurant-os` — the
+`restaurant-os-hazel.vercel.app` URL still works too). Sign in as the OPERATOR (OTP `424242`) as before.
+
+**✅ Inngest PRODUCTION auto-sync — DONE.** Registered the prod app with Inngest Cloud by `PUT`-ing the serve
+endpoint (`PUT https://www.outfrontdata.com/api/inngest` → `{"Successfully registered"}`); verified at the
+source via the Inngest API audit log. Event + signing keys are in Vercel (confirmed: prod serves in cloud
+mode). **4 functions + 2 crons live:** `dailyPlaidSyncScheduler` (6:00am ET) + `syncPlaidConnection`,
+`dailyToastSyncScheduler` (5:30am ET) + `syncToastMetrics` (which also runs sales-mix, sales-tax, menu-items,
+and the Profit First ledger). Inngest serve URL is pointed at the branded domain. To re-sync after a deploy
+that changes functions: `curl -X PUT https://www.outfrontdata.com/api/inngest`.
+
+**✅ Operator gates from the 06-13 block — ALL CLEARED:** the 6 `TOAST_*` vars ARE in Vercel; a Plaid bank
+is attached and pulling in prod; **both backfills ran** (`sync-toast-sales-tax.ts 21` → 21 days of sales tax;
+`run-allocation-ledger.ts` → seeded ledger/balances).
+
+**✅ LABOR TILE BUG — ROOT-CAUSED + FIXED + SHIPPED (`416c8e3`, pushed → deployed).** Symptom: Labor read
+0%/$0 for June MTD while COGS/OpEx had spend. **Two causes:** (1) over-broad operator KEYWORD rules
+(`/TOAST/`→Payroll Tax, then `/payroll/`→Sales Deposits) at priority 5 outran the system rules and dumped the
+Toast payroll **wages** (~$17.7k that should be LABOR) into excluded buckets; (2) `plaid/sync.ts` had no
+sign-based REVENUE handling (only ran vendor rules), unlike the import route — so bank **deposits** matched
+expense rules. **Fix:** extracted one shared `categorize()` into `src/lib/categorization/rules.ts`
+(amount<0 → REVENUE by sign, else vendor rules → Misc) and wired BOTH the Plaid sync and the statement-import
+commit route through it. Operator then disabled the bad rules in `/settings/rules` and ran the recategorize.
+**Verified: June Labor now $17,702.99 (~31%, under the 32% target), payroll tax split to TAX_PAYROLL,
+deposits in REVENUE.** New script: `scripts/recategorize-transactions.ts` (dry-run default, `--commit`;
+scopes to bank-fed `plaidConnectionId!=null` + non-override; batched `$transaction`).
+
+**⚠️ OPEN — broad keyword-rule hazard.** The rules UI / setup wizard generated **single-word KEYWORD rules
+that substring-match anything**: `THE`→Smallwares, `ACE`→Beer (sp**ace**/pl**ace**), `EVER`→Beer
+(n**ever**/how**ever**), `OVER`→Revenue (disc**over**y); `TOAST` and `payroll` are now disabled. These will
+silently miscategorize. **Recommend:** audit what each broad rule currently catches and disable the dangerous
+ones (specific vendor patterns like WILSBACH/PLCB/PERFORMANCEMD are fine). Likely a **setup-wizard quality
+bug** (it should emit specific patterns, never single tokens, and never map `payroll`→Revenue) — worth fixing
+at the source. **Remember: editing a rule does NOT move existing rows — re-run `recategorize-transactions.ts
+--commit` after any rule change** (the next nightly Plaid sync also re-applies, but the script fixes data now).
+
+**⏭️ NEXT (the one open task) — LOGO swap.** Operator will drop a new site logo. Requirements:
+- Save as **`public/logo.png`**, and it MUST be a **true-transparent RGBA PNG**. The file the operator first
+  added (`public/Logo_trans.png`, still there, 902KB, **unused — safe to delete**) was opaque 24-bit RGB with
+  a near-white/checkerboard background baked in → would render as a pale box on the dark header. Trimming
+  alone doesn't fix that; it needs real alpha transparency. (If a flattened file comes in again, it can be
+  background-keyed with .NET/`System.Drawing` — near-white > min-channel ~230 → transparent — but a proper
+  transparent export is better.)
+- All four references already point at `/logo.png` (`AppHeader.tsx`, `dashboard/DashboardHeader.tsx`,
+  `app/page.tsx`, `app/privacy/page.tsx`, each `<img … h-N w-auto>`), so **no code change** — just replace the
+  file, then `git add public/logo.png && git commit -m "Update site logo" && git push` to deploy site-wide.
 
 ---
 

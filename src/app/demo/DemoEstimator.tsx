@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   ArrowLeft,
   Gauge,
@@ -93,6 +93,31 @@ export function DemoEstimator() {
     () => (view === "results" ? computeEstimate(inputs) : null),
     [view, inputs],
   );
+
+  // Prefill from query params, e.g. a shareable link a rep sends a prospect:
+  //   /demo?name=...&city=...&sales=250000&food=30&labor=30&overhead=70000
+  // When name + sales are present, jump straight to the populated results.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (![...sp.keys()].length) return;
+    const map: [string, keyof FormState][] = [
+      ["name", "name"], ["city", "city"], ["sales", "monthlySales"], ["food", "foodPct"],
+      ["labor", "laborPct"], ["overhead", "fixedCosts"], ["bev", "bevSharePct"],
+      ["check", "avgCheck"], ["days", "daysOpenPerWeek"], ["seats", "seats"],
+    ];
+    const next: Partial<FormState> = {};
+    for (const [q, k] of map) { const v = sp.get(q); if (v != null) next[k] = v; }
+    if (!Object.keys(next).length) return;
+    const seeded = { ...INITIAL, ...next } as FormState;
+    setF(seeded);
+    const inp = buildInputs(seeded);
+    if (inp.name && inp.monthlySales > 0) {
+      setView("results");
+      startTransition(async () => setAura(await lookupReputation(inp.name, inp.city)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();

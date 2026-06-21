@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { AdvisorBrief } from "./AdvisorBrief";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatSummary } from "./HeartbeatSummary";
 import { HeartbeatStrip } from "./HeartbeatStrip";
@@ -86,6 +87,7 @@ export function DashboardView({
   }
 
   const isInvestor = role === "INVESTOR";
+  const isAdvisor = role === "CONSULTANT" || role === "MANAGER";
 
   return (
     <div>
@@ -120,6 +122,7 @@ export function DashboardView({
         )}
 
         <HeartbeatSummary data={active} />
+        {isAdvisor && <AdvisorBrief data={active} />}
         <HeartbeatStrip data={active.heartbeat} />
         <RevenueRow data={active.revenue} />
         <GoLiveCoachCard data={active.goLiveCoach} />

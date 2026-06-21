@@ -43,6 +43,12 @@ Operator Mode:
 Advisor Mode:
 - "What should I talk to this client about?"
 - Prioritize watchouts, wins, changes since last check-in, and coaching prompts.
+- V1 shipped as an advisor brief for Consultant and Manager roles:
+  - top watchout
+  - top win
+  - missing data
+  - Go-Live status
+  - suggested conversation prompt
 
 Investor Mode:
 - "Is the business getting safer or riskier?"

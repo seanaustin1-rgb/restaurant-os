@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardHeader } from "./DashboardHeader";
+import { HeartbeatSummary } from "./HeartbeatSummary";
 import { HeartbeatStrip } from "./HeartbeatStrip";
 import { RevenueRow } from "./RevenueRow";
 import { GoLiveCoachCard } from "./GoLiveCoachCard";
@@ -118,6 +119,7 @@ export function DashboardView({
           </div>
         )}
 
+        <HeartbeatSummary data={active} />
         <HeartbeatStrip data={active.heartbeat} />
         <RevenueRow data={active.revenue} />
         <GoLiveCoachCard data={active.goLiveCoach} />

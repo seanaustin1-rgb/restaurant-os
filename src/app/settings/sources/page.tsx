@@ -4,6 +4,7 @@ import { PlugZap } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
+import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
 
@@ -13,13 +14,17 @@ export default async function SourceMapPage() {
 
   const role = await prisma.userRestaurantRole.findFirst({
     where: { clerkUserId: userId, role: { in: [...ACCESS_ROLES] } },
-    select: { role: true, restaurant: { select: { name: true, businessType: true } } },
+    select: { role: true, restaurantId: true, restaurant: { select: { name: true, businessType: true } } },
   });
 
   if (!role) redirect("/dashboard");
 
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
+  const configs = await prisma.dataSourceConfig.findMany({
+    where: { restaurantId: role.restaurantId },
+    select: { category: true, providerName: true, status: true, notes: true },
+  });
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
@@ -47,34 +52,7 @@ export default async function SourceMapPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {sourceMap.groups.map((group) => (
-          <section key={group.category + group.label} className="rounded-lg border border-line bg-surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-medium text-[#E6E8E4]">{group.label}</h2>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{group.purpose}</p>
-              </div>
-              <span className="rounded-full border border-line px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted">
-                {group.category}
-              </span>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              {group.options.map((option) => (
-                <div key={option.name} className="rounded-md border border-line bg-ink/40 px-3 py-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm text-[#E6E8E4]">{option.name}</span>
-                    {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted">{option.role}</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted">Unlocks: {option.unlocks.join(", ")}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} />
     </main>
   );
 }

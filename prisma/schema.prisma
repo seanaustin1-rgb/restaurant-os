@@ -81,6 +81,13 @@ enum AiActionStatus {
   FAILED
 }
 
+enum DataSourceStatus {
+  PLANNED
+  CONNECTED
+  NOT_NEEDED
+  BLOCKED
+}
+
 // How a categorization Rule matches a transaction's merchant/description.
 //   KEYWORD   — case-insensitive substring match (operator-friendly default)
 //   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
@@ -126,6 +133,7 @@ model Restaurant {
   bucketSweeps    BucketSweep[]
   targetSettings  TargetSettings?
   moduleConfigs   ModuleConfig[]
+  dataSourceConfigs DataSourceConfig[]
   reviewCaches    ReviewCache[]
   socialCaches    SocialCache[]
   aiActionLogs    AiActionLog[]
@@ -443,6 +451,24 @@ model DashboardLayout {
   pinnedModules Json? // string[] of module keys pinned to the top Quick Access strip
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model DataSourceConfig {
+  id            String           @id @default(cuid())
+  restaurantId  String
+  category      String
+  providerName  String
+  status        DataSourceStatus @default(PLANNED)
+  notes         String?
+  updatedBy     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  restaurant    Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, category, providerName])
+  @@index([restaurantId])
+  @@index([status])
 }
 
 model ReviewCache {

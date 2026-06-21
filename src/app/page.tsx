@@ -29,6 +29,13 @@ export default async function Home() {
         </SignUpButton>
       </div>
 
+      <p className="text-sm text-muted">
+        Curious first?{" "}
+        <Link href="/demo" className="text-copper-soft hover:text-copper">See your numbers</Link>
+        <span className="text-line"> · </span>
+        <Link href="/demo/tour" className="text-copper-soft hover:text-copper">Tour a live demo</Link>
+      </p>
+
       <footer className="mt-4">
         <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600">
           Privacy Policy

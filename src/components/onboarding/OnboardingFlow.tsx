@@ -7,6 +7,9 @@ import { INDUSTRY_TEMPLATES } from "@/lib/industry-templates";
 const BUSINESS_TYPES = [
   INDUSTRY_TEMPLATES.RESTAURANT,
   INDUSTRY_TEMPLATES.SERVICE,
+  INDUSTRY_TEMPLATES.CONTRACTOR,
+  INDUSTRY_TEMPLATES.REAL_ESTATE_BROKERAGE,
+  INDUSTRY_TEMPLATES.VACATION_RENTAL,
   INDUSTRY_TEMPLATES.RETAIL,
 ];
 
@@ -45,8 +48,8 @@ export function OnboardingFlow() {
 
       {step === 1 && (
         <div className="space-y-5">
-          <h1 className="font-display text-2xl text-copper-soft">Add your restaurant</h1>
-          <Field label="Restaurant name">
+          <h1 className="font-display text-2xl text-copper-soft">Add your business</h1>
+          <Field label="Business name">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -54,7 +57,7 @@ export function OnboardingFlow() {
               className="w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-dim"
             />
           </Field>
-          <Field label="Seat count (optional)">
+          <Field label="Seat count / team size (optional)">
             <input
               value={seatCount}
               onChange={(e) => setSeatCount(e.target.value.replace(/[^0-9]/g, ""))}
@@ -139,7 +142,7 @@ export function OnboardingFlow() {
               disabled={pending}
               className="flex-1 rounded-md bg-copper px-4 py-2.5 font-medium text-ink hover:bg-copper-soft disabled:opacity-40"
             >
-              {pending ? "Creating…" : "Create restaurant"}
+              {pending ? "Creating…" : "Create business"}
             </button>
           </div>
         </div>

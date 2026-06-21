@@ -33,6 +33,9 @@ enum BusinessType {
   RESTAURANT
   SERVICE
   RETAIL
+  CONTRACTOR
+  REAL_ESTATE_BROKERAGE
+  VACATION_RENTAL
 }
 
 enum TransactionBucket {

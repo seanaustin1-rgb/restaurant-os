@@ -8,6 +8,7 @@ import { HeartbeatSummary } from "./HeartbeatSummary";
 import { HeartbeatStrip } from "./HeartbeatStrip";
 import { RevenueRow } from "./RevenueRow";
 import { GoLiveCoachCard } from "./GoLiveCoachCard";
+import { SetupOverviewCard } from "./SetupOverviewCard";
 import { TapGauges } from "./TapGauges";
 import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
@@ -111,6 +112,8 @@ export function DashboardView({
         </div>
 
         {/* Quick Access — pinned modules, one click away at the top. */}
+        <SetupOverviewCard data={active} />
+
         {!isInvestor && (
           <QuickAccessStrip items={pinnedList} onReorder={handleReorderPinned} onUnpin={handleUnpin} />
         )}

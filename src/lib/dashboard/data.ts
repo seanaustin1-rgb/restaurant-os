@@ -1,6 +1,7 @@
-import type { PrismaClient } from "@prisma/client";
+import type { DataSourceStatus, PrismaClient } from "@prisma/client";
 import type { BusinessType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { sourceMapFor } from "@/lib/source-map";
 import {
   calculatePrimeCost,
   calculateRealRevenue,
@@ -26,8 +27,19 @@ export interface DashboardData {
   heartbeat: HeartbeatData;
   revenue: RevenueData;
   goLiveCoach: GoLiveCoachData;
+  sourceSetup: SourceSetupSummary;
   gauges: TapGauge[];
   costRatios: CostRatioGauge[];
+}
+
+export interface SourceSetupSummary {
+  minimumAutoInput: string;
+  requiredCount: number;
+  connectedCount: number;
+  plannedCount: number;
+  blockedCount: number;
+  notNeededCount: number;
+  missingRequired: string[];
 }
 
 const DEFAULT_TAPS: Taps = {
@@ -64,6 +76,7 @@ export async function loadDashboardData(
   });
   const name = restaurant?.name ?? "Restaurant";
   const seatCount = restaurant?.seatCount ?? 0;
+  const businessType = restaurant?.businessType ?? "RESTAURANT";
 
   const taps: Taps = restaurant?.tapSettings
     ? {
@@ -237,11 +250,12 @@ export async function loadDashboardData(
   return {
     restaurantId,
     name,
-    businessType: restaurant?.businessType ?? "RESTAURANT",
+    businessType,
     periodLabel,
     hasData,
     realRevenue,
     goLiveCoach: await loadGoLiveCoach(restaurantId, db),
+    sourceSetup: await loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     heartbeat: {
       primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
       laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,
@@ -259,5 +273,42 @@ export async function loadDashboardData(
     },
     gauges,
     costRatios,
+  };
+}
+
+async function loadSourceSetupSummary(
+  restaurantId: string,
+  sourceMap: ReturnType<typeof sourceMapFor>,
+  db: PrismaClient,
+): Promise<SourceSetupSummary> {
+  const minimumOptions = sourceMap.groups.flatMap((group) =>
+    group.options.filter((option) => option.minimum).map((option) => ({ category: group.category, providerName: option.name })),
+  );
+  let configs: { category: string; providerName: string; status: DataSourceStatus }[] = [];
+
+  try {
+    configs = await db.dataSourceConfig.findMany({
+      where: { restaurantId },
+      select: { category: true, providerName: true, status: true },
+    });
+  } catch {
+    // Older/demo DBs may not have the source-planning table until migrations run.
+    configs = [];
+  }
+
+  const statusByKey = new Map(configs.map((config) => [`${config.category}::${config.providerName}`, config.status]));
+  const count = (status: DataSourceStatus) => configs.filter((config) => config.status === status).length;
+  const missingRequired = minimumOptions
+    .filter((option) => statusByKey.get(`${option.category}::${option.providerName}`) !== "CONNECTED")
+    .map((option) => option.providerName);
+
+  return {
+    minimumAutoInput: sourceMap.minimumAutoInput,
+    requiredCount: minimumOptions.length,
+    connectedCount: count("CONNECTED"),
+    plannedCount: count("PLANNED"),
+    blockedCount: count("BLOCKED"),
+    notNeededCount: count("NOT_NEEDED"),
+    missingRequired,
   };
 }

@@ -52,4 +52,6 @@ The database schema is already migrated on Supabase — you do **not** need to r
 - `docs/specs/` — product specs (see `transaction-categorization-v2.md`)
 
 ## Status & roadmap
+Longer-term product direction is captured in `docs/specs/heartbeat-go-live-readiness.md`: the Observe -> Simulate -> Coach -> Pilot -> Enforce path, including Go-Live Coach and Aura market-energy enrichments.
+
 Tier-3 AI bank-statement import is live (Claude structured extraction of scanned PDFs → categorized transactions → Profit First dashboard). Next up: the **configurable two-level categorization** system — see `docs/specs/transaction-categorization-v2.md`.

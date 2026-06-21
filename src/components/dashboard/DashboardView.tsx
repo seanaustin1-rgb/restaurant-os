@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatStrip } from "./HeartbeatStrip";
 import { RevenueRow } from "./RevenueRow";
+import { GoLiveCoachCard } from "./GoLiveCoachCard";
 import { TapGauges } from "./TapGauges";
 import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
@@ -119,6 +120,7 @@ export function DashboardView({
 
         <HeartbeatStrip data={active.heartbeat} />
         <RevenueRow data={active.revenue} />
+        <GoLiveCoachCard data={active.goLiveCoach} />
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}

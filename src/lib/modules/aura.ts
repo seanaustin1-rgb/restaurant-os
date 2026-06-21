@@ -36,8 +36,19 @@ export interface AuraData {
   totalReviews: number;
   health: HealthStatus;
   sources: AuraSourceCard[]; // every source, in canonical order
+  intentMetrics: AuraIntentMetric[]; // customer-intent placeholders (calls, directions, clicks)
   recent: AuraReview[]; // merged, newest first, capped
   hasAnyData: boolean; // at least one live source returned a rating/reviews
+}
+
+export type AuraIntentState = "live" | "not_configured" | "waiting_history";
+
+export interface AuraIntentMetric {
+  key: string;
+  label: string;
+  state: AuraIntentState;
+  value: number | null;
+  detail: string;
 }
 
 // Reputation bands (stars). Hospitality lives and dies above ~4.5; below 4.0 is a
@@ -52,6 +63,28 @@ function bandRating(rating: number | null): HealthStatus {
 }
 
 const RECENT_CAP = 8;
+
+const GOOGLE_BUSINESS_PROFILE_ENV = [
+  "GOOGLE_BUSINESS_PROFILE_ACCOUNT_ID",
+  "GOOGLE_BUSINESS_PROFILE_LOCATION_ID",
+  "GOOGLE_BUSINESS_PROFILE_ACCESS_TOKEN",
+];
+
+function loadIntentMetrics(): AuraIntentMetric[] {
+  const missing = GOOGLE_BUSINESS_PROFILE_ENV.filter((name) => !process.env[name]?.trim());
+  const configured = missing.length === 0;
+  const state: AuraIntentState = configured ? "waiting_history" : "not_configured";
+  const detail = configured
+    ? "Google Business Profile access is configured; performance sync is the next Aura step."
+    : `Connect Google Business Profile performance data: ${missing.join(", ")}`;
+
+  return [
+    { key: "calls", label: "Phone calls", state, value: null, detail },
+    { key: "directions", label: "Direction requests", state, value: null, detail },
+    { key: "website", label: "Website clicks", state, value: null, detail },
+    { key: "views", label: "Profile views", state, value: null, detail },
+  ];
+}
 
 export async function loadAura(): Promise<AuraData> {
   const configured = configuredAuraSources();
@@ -124,6 +157,7 @@ export async function loadAura(): Promise<AuraData> {
     totalReviews,
     health: bandRating(overallRating),
     sources,
+    intentMetrics: loadIntentMetrics(),
     recent,
     hasAnyData: weight > 0 || recent.length > 0,
   };

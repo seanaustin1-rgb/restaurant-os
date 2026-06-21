@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "check:launch": "tsx scripts/check-launch.ts",
+    "smoke:demo": "tsx scripts/smoke-demo.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",

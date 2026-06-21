@@ -24,6 +24,19 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const FLAT_THRESHOLD = 0.05; // star change within ±0.05 reads as flat
 const MIN_SPAN_WEEKS = 2; // need at least ~2 weeks before showing a trend
 
+function isMissingSnapshotTableError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const maybePrisma = error as { code?: string; meta?: { table?: string }; message?: string };
+  const table = maybePrisma.meta?.table ?? "";
+  const message = maybePrisma.message ?? "";
+  return (
+    maybePrisma.code === "P2021" &&
+    (table.includes("ReputationSnapshot") ||
+      message.includes("ReputationSnapshot") ||
+      message.includes("reputationSnapshot"))
+  );
+}
+
 /**
  * Persist a reputation snapshot for every live source plus a count-weighted
  * "overall" row. Returns the number of rows written. Called by the weekly cron.
@@ -38,19 +51,30 @@ export async function snapshotReputation(): Promise<number> {
     rows.push({ source: "overall", rating: data.overallRating, reviewCount: data.totalReviews });
   }
   if (rows.length === 0) return 0;
-  await prisma.reputationSnapshot.createMany({ data: rows });
+  try {
+    await prisma.reputationSnapshot.createMany({ data: rows });
+  } catch (error) {
+    if (isMissingSnapshotTableError(error)) return 0;
+    throw error;
+  }
   return rows.length;
 }
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export async function loadReputationTrend(windowWeeks = 6): Promise<ReputationTrend> {
-  const snaps = await prisma.reputationSnapshot.findMany({
-    where: { source: "overall" },
-    orderBy: { capturedAt: "desc" },
-    take: 60,
-    select: { rating: true, reviewCount: true, capturedAt: true },
-  });
+  let snaps: { rating: number | null; reviewCount: number; capturedAt: Date }[];
+  try {
+    snaps = await prisma.reputationSnapshot.findMany({
+      where: { source: "overall" },
+      orderBy: { capturedAt: "desc" },
+      take: 60,
+      select: { rating: true, reviewCount: true, capturedAt: true },
+    });
+  } catch (error) {
+    if (isMissingSnapshotTableError(error)) snaps = [];
+    else throw error;
+  }
 
   const base: ReputationTrend = {
     state: "gathering",

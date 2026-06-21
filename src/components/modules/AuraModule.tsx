@@ -1,5 +1,5 @@
-import { Plug, AlertTriangle, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import type { AuraData, AuraSourceCard } from "@/lib/modules/aura";
+import { Plug, AlertTriangle, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Minus, Phone, Navigation, MousePointerClick, Eye } from "lucide-react";
+import type { AuraData, AuraIntentMetric, AuraSourceCard } from "@/lib/modules/aura";
 import type { ReputationTrend } from "@/lib/modules/reputation-trend";
 import { count } from "@/lib/format";
 import { AuraMeter, FractionalStars } from "./AuraMeter";
@@ -43,6 +43,70 @@ function fmtDate(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: ReputationTrend }) {
+  const readyTrend = trend?.state === "ready";
+  const intentReady = data.intentMetrics.some((m) => m.state === "live");
+  const direction =
+    readyTrend && trend.direction !== "flat" ? trend.direction : intentReady ? "flat" : "gathering";
+  const headline =
+    direction === "up"
+      ? "Market energy is improving"
+      : direction === "down"
+        ? "Market energy is weakening"
+        : direction === "flat"
+          ? "Market energy is holding steady"
+          : "Market energy is waiting on intent data";
+  const detail =
+    direction === "gathering"
+      ? "Aura has reputation signals now. Connect Google Business Profile performance data to add calls, directions, website clicks, and profile views."
+      : "Aura combines reputation trend with customer-intent signals so the outside-world heartbeat is visible before sales fully move.";
+
+  return (
+    <section className="rounded-lg border border-line bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg text-copper-soft">Market energy</h2>
+          <p className="mt-1 text-sm text-[#E6E8E4]">{headline}</p>
+          <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">{detail}</p>
+        </div>
+        {readyTrend && (
+          <span className="rounded-full border border-line px-2 py-1 text-xs text-muted">
+            reviews {trend.direction === "flat" ? "flat" : trend.direction}
+          </span>
+        )}
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
+        {data.intentMetrics.map((metric) => (
+          <IntentCard key={metric.key} metric={metric} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function IntentCard({ metric }: { metric: AuraIntentMetric }) {
+  const Icon =
+    metric.key === "calls"
+      ? Phone
+      : metric.key === "directions"
+        ? Navigation
+        : metric.key === "website"
+          ? MousePointerClick
+          : Eye;
+  const live = metric.state === "live";
+  return (
+    <div className="rounded-lg border border-dashed border-line bg-ink/30 px-3 py-3">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+        <Icon size={12} /> {metric.label}
+      </div>
+      <div className="tnum mt-1 text-xl text-[#E6E8E4]">{live && metric.value != null ? count(metric.value) : "Not connected"}</div>
+      <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted" title={metric.detail}>
+        {metric.state === "waiting_history" ? "Waiting for performance sync" : metric.detail}
+      </p>
+    </div>
+  );
 }
 
 function SourceCard({ card }: { card: AuraSourceCard }) {
@@ -112,6 +176,8 @@ export function AuraModule({ data, trend }: { data: AuraData; trend?: Reputation
         </div>
         {trend && liveCount > 0 && <TrendBadge trend={trend} />}
       </div>
+
+      <MarketEnergyPanel data={data} trend={trend} />
 
       {/* Connect prompt when nothing is wired */}
       {data.configuredCount === 0 && (

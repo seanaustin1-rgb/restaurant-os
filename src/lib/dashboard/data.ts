@@ -13,6 +13,7 @@ import type { HeartbeatData } from "@/components/dashboard/HeartbeatStrip";
 import type { RevenueData } from "@/components/dashboard/RevenueRow";
 import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/TapGauges";
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
+import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
 
 export interface DashboardData {
   restaurantId: string;
@@ -22,6 +23,7 @@ export interface DashboardData {
   realRevenue: number;
   heartbeat: HeartbeatData;
   revenue: RevenueData;
+  goLiveCoach: GoLiveCoachData;
   gauges: TapGauge[];
   costRatios: CostRatioGauge[];
 }
@@ -236,6 +238,7 @@ export async function loadDashboardData(
     periodLabel,
     hasData,
     realRevenue,
+    goLiveCoach: await loadGoLiveCoach(restaurantId, db),
     heartbeat: {
       primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
       laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,

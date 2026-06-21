@@ -1,7 +1,43 @@
-import { Plug, AlertTriangle, ExternalLink, MessageSquare } from "lucide-react";
+import { Plug, AlertTriangle, ExternalLink, MessageSquare, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { AuraData, AuraSourceCard } from "@/lib/modules/aura";
+import type { ReputationTrend } from "@/lib/modules/reputation-trend";
 import { count } from "@/lib/format";
 import { AuraMeter, FractionalStars } from "./AuraMeter";
+
+// Recent-weeks trend chip. "gathering" until ~2 weeks of weekly snapshots exist,
+// so it never implies a trend the data can't support.
+function TrendBadge({ trend }: { trend: ReputationTrend }) {
+  if (trend.state === "gathering") {
+    return (
+      <div className="mt-3 flex items-center gap-1.5 text-[11px] text-muted">
+        <TrendingUp size={12} className="text-copper-soft" />
+        <span>
+          Recent-trend tracking is on — Aura snapshots your rating weekly and the trend appears as history builds
+          {trend.weeksTracked > 0
+            ? ` (${trend.weeksTracked} of ${trend.windowWeeks} wks so far)`
+            : " (first read in ~2 weeks)"}
+        </span>
+      </div>
+    );
+  }
+  const Icon = trend.direction === "up" ? TrendingUp : trend.direction === "down" ? TrendingDown : Minus;
+  const color =
+    trend.direction === "up" ? "text-health-green" : trend.direction === "down" ? "text-health-red" : "text-muted";
+  const deltaStr = trend.delta != null ? (trend.delta >= 0 ? `+${trend.delta.toFixed(2)}` : trend.delta.toFixed(2)) : "";
+  const vel =
+    trend.reviewsPerWeek != null && Math.abs(trend.reviewsPerWeek) >= 0.5
+      ? ` · ${trend.reviewsPerWeek >= 0 ? "+" : ""}${Math.round(trend.reviewsPerWeek)}/wk reviews`
+      : "";
+  return (
+    <div className={"mt-3 flex items-center gap-1.5 text-[12px] " + color}>
+      <Icon size={13} />
+      <span>
+        {trend.direction === "flat" ? "Flat" : `${deltaStr}★`} over ~{trend.weeksTracked} wks
+        <span className="text-muted">{vel}</span>
+      </span>
+    </div>
+  );
+}
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "";
@@ -53,7 +89,7 @@ function SourceCard({ card }: { card: AuraSourceCard }) {
   );
 }
 
-export function AuraModule({ data }: { data: AuraData }) {
+export function AuraModule({ data, trend }: { data: AuraData; trend?: ReputationTrend }) {
   const liveCount = data.sources.filter((s) => s.state === "live").length;
 
   return (
@@ -74,6 +110,7 @@ export function AuraModule({ data }: { data: AuraData }) {
             liveCount={liveCount}
           />
         </div>
+        {trend && liveCount > 0 && <TrendBadge trend={trend} />}
       </div>
 
       {/* Connect prompt when nothing is wired */}
@@ -135,7 +172,8 @@ export function AuraModule({ data }: { data: AuraData }) {
         Overall rating is weighted by each source&apos;s review count, so a 4.6 on 800 Google reviews outweighs a
         4.0 on 30 Yelp reviews. Sources cache hourly. Instagram is engagement, not ratings, so the social signal
         here is Facebook recommendations (a positive/negative recommendation maps to 5/1 stars); IG engagement is
-        a later add.
+        a later add. Aura also keeps learning: it records your rating every week, so the recent-weeks trend
+        sharpens the longer it runs — and longer-range signals open up as that history grows.
       </p>
     </div>
   );

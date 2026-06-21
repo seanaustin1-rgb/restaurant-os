@@ -478,3 +478,18 @@ model AiActionLog {
   @@index([restaurantId])
   @@index([status])
 }
+
+// Weekly reputation snapshots — the time series behind Aura's "trending" read.
+// Google/Yelp only return the CURRENT aggregate, so a 4–8-week trend must be
+// computed from points we persist over time. Single-tenant today (Aura uses one
+// env-configured place per source); `source` includes a synthetic "overall" row
+// (count-weighted) so the headline trend is a single series.
+model ReputationSnapshot {
+  id          String   @id @default(cuid())
+  source      String // "google" | "yelp" | "facebook" | "overall"
+  rating      Float?
+  reviewCount Int
+  capturedAt  DateTime @default(now())
+
+  @@index([source, capturedAt])
+}

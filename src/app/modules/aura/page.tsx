@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadAura } from "@/lib/modules/aura";
+import { loadReputationTrend } from "@/lib/modules/reputation-trend";
 import { AuraModule } from "@/components/modules/AuraModule";
 
 // Reputation aggregates from external review APIs; cache the page hourly (the
@@ -17,7 +18,7 @@ export default async function AuraPage() {
     select: { restaurant: { select: { name: true } } },
   });
 
-  const data = await loadAura();
+  const [data, trend] = await Promise.all([loadAura(), loadReputationTrend()]);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -28,7 +29,7 @@ export default async function AuraPage() {
           one place. Connect a source and it lights up here.
         </p>
       </div>
-      <AuraModule data={data} />
+      <AuraModule data={data} trend={trend} />
     </main>
   );
 }

@@ -12,6 +12,7 @@ import {
 import { runLedger } from "@/lib/profit-first/ledger";
 import { seedDemoBistro } from "@/lib/demo/demo-tenant";
 import { demoPrisma } from "@/lib/demo/demo-prisma";
+import { snapshotReputation } from "@/lib/modules/reputation-trend";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -133,10 +134,27 @@ export const monthlyDemoReseed = inngest.createFunction(
   },
 );
 
+/**
+ * Weekly reputation snapshot — records the current rating + review count for each
+ * live Aura source (plus a count-weighted "overall" row) so the Aura tile can show
+ * a 4–8-week trend. Google/Yelp expose only the current aggregate, so this stored
+ * series is the only way to know whether reputation is moving. No-ops when no
+ * source is configured.
+ */
+export const weeklyReputationSnapshot = inngest.createFunction(
+  { id: "weekly-reputation-snapshot", retries: 2 },
+  { cron: "TZ=America/New_York 0 7 * * 1" }, // Mondays 7:00am ET
+  async ({ step }) => {
+    const snapshotted = await step.run("snapshot-reputation", () => snapshotReputation());
+    return { snapshotted };
+  },
+);
+
 export const functions = [
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
   dailyToastSyncScheduler,
   syncToastMetrics,
   monthlyDemoReseed,
+  weeklyReputationSnapshot,
 ];

@@ -182,7 +182,7 @@ export function computeEstimate(input: EstimateInputs): EstimateResult {
     },
     {
       key: "margin", label: "Net Margin", value: netMarginPct,
-      typicalLow: 6, typicalHigh: 12, status: bandHigher(netMarginPct, 6, 3),
+      typicalLow: 3, typicalHigh: 9, status: bandHigher(netMarginPct, 6, 3),
       scaleMax: 20, lowerIsBetter: false, greenEdge: 6, yellowEdge: 3,
       note: marginNote(netMarginPct, bandHigher(netMarginPct, 6, 3)),
     },

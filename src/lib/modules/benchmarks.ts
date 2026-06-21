@@ -177,7 +177,7 @@ export async function loadBenchmarks(restaurantId: string, weeks = 8): Promise<B
     rows.push({
       key: "margin", label: "Net Margin", value: netMarginPct, unit: "%", lowerIsBetter: false,
       scaleMax: 20, greenMax: null, yellowMax: null, greenMin: 6, yellowMin: 3,
-      typicalLow: 6, typicalHigh: 12, status, note: profitNote(netMarginPct, 6, status),
+      typicalLow: 3, typicalHigh: 9, status, note: profitNote(netMarginPct, 6, status),
     });
   }
 

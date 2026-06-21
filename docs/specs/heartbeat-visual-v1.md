@@ -62,6 +62,7 @@ Foundation shipped:
 - Onboarding asks for Restaurant / Service / Retail.
 - New tenants get template-specific default module configuration.
 - The dashboard names the active template and filters the module grid to that template's default modules.
+- Owners, consultants, and managers can edit the template later at `/settings/business` and optionally apply the recommended module setup.
 
 Restaurant template:
 - Prime cost, labor, COGS, sales mix, covers, menu engineering, Aura, tax reserve, Profit First.

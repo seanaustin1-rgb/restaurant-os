@@ -1,4 +1,4 @@
-import type { TransactionBucket } from "@prisma/client";
+import type { PrismaClient, TransactionBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { categorizeTransaction } from "@/lib/categorization/vendor-map";
 import {
@@ -79,7 +79,7 @@ export interface SeedResult {
   transactions: number;
 }
 
-export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
+export async function seedDemoData(restaurantId: string, db: PrismaClient = prisma): Promise<SeedResult> {
   const start = dateOf(1);
   const end = new Date(Date.UTC(YEAR, MONTH0 + 1, 1));
 
@@ -87,12 +87,12 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
   // categoryId — so seeded transactions MUST be linked to a Category, or they
   // all fall into OpEx and the Heartbeat cost ratios stay 0. Ensure the default
   // categories exist, then map each legacy bucket → category → id.
-  await ensureDefaultCategories(prisma, restaurantId);
-  const catIdByName = await categoryIdByName(prisma, restaurantId);
+  await ensureDefaultCategories(db, restaurantId);
+  const catIdByName = await categoryIdByName(db, restaurantId);
 
   // Clear prior seed for idempotency.
-  await prisma.dailySales.deleteMany({ where: { restaurantId, date: { gte: start, lt: end } } });
-  await prisma.transaction.deleteMany({ where: { restaurantId, plaidTxnId: { startsWith: `seed-${restaurantId}-` } } });
+  await db.dailySales.deleteMany({ where: { restaurantId, date: { gte: start, lt: end } } });
+  await db.transaction.deleteMany({ where: { restaurantId, plaidTxnId: { startsWith: `seed-${restaurantId}-` } } });
 
   // Daily sales.
   const sales = [];
@@ -117,7 +117,7 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
       source: "seed",
     });
   }
-  await prisma.dailySales.createMany({ data: sales });
+  await db.dailySales.createMany({ data: sales });
 
   // Categorized transactions.
   const txns = TXNS.map((t, i) => {
@@ -139,7 +139,7 @@ export async function seedDemoData(restaurantId: string): Promise<SeedResult> {
       isManualOverride: false,
     };
   });
-  await prisma.transaction.createMany({ data: txns });
+  await db.transaction.createMany({ data: txns });
 
   return { restaurantId, dailySales: sales.length, transactions: txns.length };
 }

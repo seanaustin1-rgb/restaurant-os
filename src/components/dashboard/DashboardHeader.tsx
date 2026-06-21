@@ -20,12 +20,14 @@ export function DashboardHeader({
   onSelectRestaurant,
   role,
   onSelectRole,
+  demoMode = false,
 }: {
   restaurants: RestaurantOption[];
   activeId: string;
   onSelectRestaurant: (id: string) => void;
   role: RoleKey;
   onSelectRole: (r: RoleKey) => void;
+  demoMode?: boolean;
 }) {
   const active = restaurants.find((r) => r.id === activeId) ?? restaurants[0];
   const [navOpen, setNavOpen] = useState(false);
@@ -35,15 +37,18 @@ export function DashboardHeader({
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {/* Nav lives in a single dropdown menu at every size, so the top line
-              stays uncluttered (logo · restaurant · …). */}
-          <button
-            onClick={() => setNavOpen((o) => !o)}
-            aria-label={navOpen ? "Close menu" : "Open menu"}
-            aria-expanded={navOpen}
-            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
-          >
-            {navOpen ? <X size={16} /> : <Menu size={16} />}
-          </button>
+              stays uncluttered (logo · restaurant · …). Hidden in the public demo,
+              where its links point to account-gated pages. */}
+          {!demoMode && (
+            <button
+              onClick={() => setNavOpen((o) => !o)}
+              aria-label={navOpen ? "Close menu" : "Open menu"}
+              aria-expanded={navOpen}
+              className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
+            >
+              {navOpen ? <X size={16} /> : <Menu size={16} />}
+            </button>
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="OutFront Data" className="hidden h-7 w-auto shrink-0 sm:block" />
           <span className="hidden text-line sm:inline">/</span>
@@ -63,7 +68,7 @@ export function DashboardHeader({
             items={ROLES.map((r) => ({ key: r, label: titleCase(r) }))}
             onPick={(k) => onSelectRole(k as RoleKey)}
           />
-          <UserButton afterSignOutUrl="/" />
+          {!demoMode && <UserButton afterSignOutUrl="/" />}
         </div>
       </div>
 

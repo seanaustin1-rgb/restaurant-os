@@ -17,15 +17,21 @@ database** — the app's production database is never used for demo data.
    - the **pooled** connection string (port `6543`) → used as `DEMO_DATABASE_URL`
    - the **direct** connection string (port `5432`) → used for migrations
 
-2. **Create the schema on the demo database:**
+   > **Password gotcha:** Supabase shows the password as `[YOUR-PASSWORD]` — replace it
+   > with the real password and do **not** keep the `[ ]` brackets. Use a password with
+   > only letters and numbers (or URL-encode any symbols), or auth fails with `P1000`.
+
+2. **Create the schema on the demo database** (uses the direct 5432 connection):
    ```sh
    DATABASE_URL="<demo-direct-5432>" DIRECT_URL="<demo-direct-5432>" npx prisma migrate deploy
    # (or, for a quick sync:  ... npx prisma db push)
    ```
 
-3. **Add the runtime env var** to Vercel (Production) **and** local `.env.local`:
+3. **Add the runtime env var** to Vercel (Production) **and** local `.env.local`. The
+   pooled (6543) URL **must** carry `?pgbouncer=true` or Prisma errors with
+   `42P05 prepared statement "s0" already exists`:
    ```
-   DEMO_DATABASE_URL="<demo-pooled-6543>"
+   DEMO_DATABASE_URL="<demo-pooled-6543>?pgbouncer=true&connection_limit=1"
    ```
 
 4. **Seed the Demo Bistro** (writes only to `DEMO_DATABASE_URL`):

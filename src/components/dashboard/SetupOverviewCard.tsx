@@ -1,9 +1,31 @@
+"use client";
+
 import Link from "next/link";
 import { Building2, PlugZap, Settings2 } from "lucide-react";
+import type { BusinessType } from "@prisma/client";
 import type { DashboardData } from "@/lib/dashboard/data";
-import { industryTemplateFor } from "@/lib/industry-templates";
+import { INDUSTRY_TEMPLATES, industryTemplateFor } from "@/lib/industry-templates";
 
-export function SetupOverviewCard({ data }: { data: DashboardData }) {
+const TEMPLATE_OPTIONS = [
+  INDUSTRY_TEMPLATES.RESTAURANT,
+  INDUSTRY_TEMPLATES.SERVICE,
+  INDUSTRY_TEMPLATES.CONTRACTOR,
+  INDUSTRY_TEMPLATES.REAL_ESTATE_BROKERAGE,
+  INDUSTRY_TEMPLATES.VACATION_RENTAL,
+  INDUSTRY_TEMPLATES.RETAIL,
+];
+
+export function SetupOverviewCard({
+  data,
+  previewType,
+  onPreviewTypeChange,
+  isPreview,
+}: {
+  data: DashboardData;
+  previewType: BusinessType;
+  onPreviewTypeChange: (type: BusinessType) => void;
+  isPreview: boolean;
+}) {
   const template = industryTemplateFor(data.businessType);
   const setup = data.sourceSetup;
   const missing = setup.missingRequired.slice(0, 3).join(", ");
@@ -24,6 +46,20 @@ export function SetupOverviewCard({ data }: { data: DashboardData }) {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <label className="flex items-center gap-2 rounded-md border border-copper-dim bg-ink/60 px-3 py-1.5 text-xs text-muted">
+            Meeting preview
+            <select
+              value={previewType}
+              onChange={(e) => onPreviewTypeChange(e.target.value as BusinessType)}
+              className="max-w-[220px] bg-transparent text-copper-soft outline-none"
+            >
+              {TEMPLATE_OPTIONS.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <Link
             href="/settings/business"
             className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper"
@@ -38,6 +74,12 @@ export function SetupOverviewCard({ data }: { data: DashboardData }) {
           </Link>
         </div>
       </div>
+
+      {isPreview && (
+        <div className="mt-3 rounded-md border border-copper-dim/50 bg-copper/10 px-3 py-2 text-xs leading-relaxed text-copper-soft">
+          Previewing this dashboard as a {template.label.toLowerCase()}. This does not change the saved business template.
+        </div>
+      )}
 
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">

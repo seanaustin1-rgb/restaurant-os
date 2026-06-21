@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import type { BusinessType } from "@prisma/client";
 import { AdvisorBrief } from "./AdvisorBrief";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatSummary } from "./HeartbeatSummary";
@@ -14,11 +15,27 @@ import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
 import { QuickAccessStrip } from "./QuickAccessStrip";
 import type { RoleKey } from "@/lib/mock/dashboard";
-import type { DashboardData } from "@/lib/dashboard/data";
+import type { DashboardData, SourceSetupSummary } from "@/lib/dashboard/data";
 import { type ModuleDef } from "@/lib/modules";
 import { orderModules, modulesByKeys, sanitizeModuleOrder } from "@/lib/dashboard/module-order";
 import { industryTemplateFor } from "@/lib/industry-templates";
+import { sourceMapFor } from "@/lib/source-map";
 import { saveDashboardLayout } from "@/app/dashboard/actions";
+
+function previewSourceSetup(type: BusinessType): SourceSetupSummary {
+  const sourceMap = sourceMapFor(type);
+  const minimumOptions = sourceMap.groups.flatMap((group) => group.options.filter((option) => option.minimum).map((option) => option.name));
+
+  return {
+    minimumAutoInput: sourceMap.minimumAutoInput,
+    requiredCount: minimumOptions.length,
+    connectedCount: 0,
+    plannedCount: minimumOptions.length,
+    blockedCount: 0,
+    notNeededCount: 0,
+    missingRequired: minimumOptions,
+  };
+}
 
 export function DashboardView({
   dashboards,
@@ -40,7 +57,24 @@ export function DashboardView({
   const [pinned, setPinned] = useState<string[]>(() => sanitizeModuleOrder(pinnedModules));
 
   const active = dashboards.find((d) => d.restaurantId === activeId) ?? dashboards[0];
-  const template = industryTemplateFor(active?.businessType);
+  const [previewType, setPreviewType] = useState<BusinessType>(active?.businessType ?? "RESTAURANT");
+
+  useEffect(() => {
+    setPreviewType(active?.businessType ?? "RESTAURANT");
+  }, [active?.restaurantId, active?.businessType]);
+
+  const isTemplatePreview = Boolean(active && previewType !== active.businessType);
+  const displayActive = useMemo<DashboardData | undefined>(() => {
+    if (!active) return undefined;
+    if (!isTemplatePreview) return active;
+    return {
+      ...active,
+      businessType: previewType,
+      sourceSetup: previewSourceSetup(previewType),
+    };
+  }, [active, isTemplatePreview, previewType]);
+
+  const template = industryTemplateFor(displayActive?.businessType);
   const templateModuleKeys = useMemo(() => new Set(template.defaultModuleKeys), [template]);
   const visibleOrder = useMemo(() => order.filter((m) => templateModuleKeys.has(m.key)), [order, templateModuleKeys]);
 
@@ -74,7 +108,7 @@ export function DashboardView({
     persist(order, next);
   }
 
-  if (!active) {
+  if (!displayActive) {
     return (
       <main className="flex min-h-screen items-center justify-center p-8">
         <div className="max-w-sm rounded-xl border border-line bg-surface p-8 text-center">
@@ -98,7 +132,7 @@ export function DashboardView({
     <div>
       <DashboardHeader
         restaurants={dashboards.map((d) => ({ id: d.restaurantId, name: d.name }))}
-        activeId={active.restaurantId}
+        activeId={displayActive.restaurantId}
         onSelectRestaurant={setActiveId}
         role={role}
         onSelectRole={setRole}
@@ -107,18 +141,23 @@ export function DashboardView({
 
       <main className="mx-auto max-w-7xl space-y-8 px-6 py-6">
         <div className="flex items-baseline justify-between">
-          <h1 className="font-display text-2xl text-[#E6E8E4]">{active.name}</h1>
-          <span className="text-sm text-muted">{active.periodLabel}</span>
+          <h1 className="font-display text-2xl text-[#E6E8E4]">{displayActive.name}</h1>
+          <span className="text-sm text-muted">{displayActive.periodLabel}</span>
         </div>
 
         {/* Quick Access — pinned modules, one click away at the top. */}
-        <SetupOverviewCard data={active} />
+        <SetupOverviewCard
+          data={displayActive}
+          previewType={previewType}
+          onPreviewTypeChange={setPreviewType}
+          isPreview={isTemplatePreview}
+        />
 
         {!isInvestor && (
           <QuickAccessStrip items={pinnedList} onReorder={handleReorderPinned} onUnpin={handleUnpin} />
         )}
 
-        {!active.hasData && (
+        {!displayActive.hasData && (
           <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
             No data for this period yet.{" "}
             <Link href="/connections" className="text-copper-soft hover:underline">
@@ -128,15 +167,15 @@ export function DashboardView({
           </div>
         )}
 
-        <HeartbeatSummary data={active} />
-        {isAdvisor && <AdvisorBrief data={active} />}
-        <HeartbeatStrip data={active.heartbeat} />
-        <RevenueRow data={active.revenue} />
-        <GoLiveCoachCard data={active.goLiveCoach} />
+        <HeartbeatSummary data={displayActive} />
+        {isAdvisor && <AdvisorBrief data={displayActive} />}
+        <HeartbeatStrip data={displayActive.heartbeat} />
+        <RevenueRow data={displayActive.revenue} />
+        <GoLiveCoachCard data={displayActive.goLiveCoach} />
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
-        {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
-        {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
+        {!isInvestor && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}
+        {!isInvestor && <BeverageCostGauges gauges={displayActive.costRatios} />}
         {!isInvestor && (
           <ModuleGrid items={visibleOrder} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
         )}

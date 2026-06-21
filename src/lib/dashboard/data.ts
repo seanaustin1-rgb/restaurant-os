@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   calculatePrimeCost,
@@ -49,8 +50,11 @@ const n = (v: unknown): number => (v == null ? 0 : Number(v));
  * costs come from categorized Transactions (bank tier). All ratios run through
  * the Profit First calculator.
  */
-export async function loadDashboardData(restaurantId: string): Promise<DashboardData> {
-  const restaurant = await prisma.restaurant.findUnique({
+export async function loadDashboardData(
+  restaurantId: string,
+  db: PrismaClient = prisma,
+): Promise<DashboardData> {
+  const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
     include: { tapSettings: true, targetSettings: true },
   });
@@ -69,7 +73,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
     : DEFAULT_TAPS;
 
   // Period = month of latest DailySales (else current month).
-  const latest = await prisma.dailySales.findFirst({
+  const latest = await db.dailySales.findFirst({
     where: { restaurantId },
     orderBy: { date: "desc" },
     select: { date: true },
@@ -80,7 +84,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   const periodLabel = `${MONTHS[ref.getUTCMonth()]} ${ref.getUTCFullYear()} · MTD`;
 
   // Sales/operational from DailySales.
-  const sales = await prisma.dailySales.aggregate({
+  const sales = await db.dailySales.aggregate({
     where: { restaurantId, date: { gte: start, lt: end } },
     _sum: { netSales: true, liquorSales: true, beverageSales: true, covers: true, checkCount: true, hoursOpen: true },
   });
@@ -93,14 +97,14 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
 
   // Costs/spend per TAP, rolled up from each transaction's Category -> tapBucket.
   // (Two-level model: operator-extensible categories sum into the fixed TAP set.)
-  const cats = await prisma.category.findMany({
+  const cats = await db.category.findMany({
     where: { restaurantId },
     select: { id: true, name: true, tapBucket: true },
   });
   const tapByCatId = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
   const nameByCatId = new Map(cats.map((c) => [c.id, c.name]));
 
-  const byCat = await prisma.transaction.groupBy({
+  const byCat = await db.transaction.groupBy({
     by: ["categoryId"],
     where: { restaurantId, date: { gte: start, lt: end } },
     _sum: { amount: true },
@@ -136,7 +140,7 @@ export async function loadDashboardData(restaurantId: string): Promise<Dashboard
   // TAX_SALES, TAX_PAYROLL, REVENUE, and EXCLUDED are intentionally not gauged.
 
   // Last 7 days of covers for the sparkline.
-  const recent = await prisma.dailySales.findMany({
+  const recent = await db.dailySales.findMany({
     where: { restaurantId },
     orderBy: { date: "desc" },
     take: 7,

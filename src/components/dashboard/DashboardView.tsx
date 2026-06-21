@@ -19,10 +19,12 @@ export function DashboardView({
   dashboards,
   moduleOrder,
   pinnedModules,
+  demoMode = false,
 }: {
   dashboards: DashboardData[];
   moduleOrder: string[] | null;
   pinnedModules: string[];
+  demoMode?: boolean;
 }) {
   const [activeId, setActiveId] = useState(dashboards[0]?.restaurantId ?? "");
   const [role, setRole] = useState<RoleKey>("OPERATOR");
@@ -40,6 +42,8 @@ export function DashboardView({
   const pinnedList = useMemo(() => modulesByKeys(pinned).filter((m) => liveKeys.has(m.key)), [pinned, liveKeys]);
 
   function persist(nextOrder: ModuleDef[], nextPinned: string[]) {
+    // The public demo has no authenticated session to persist a layout to.
+    if (demoMode) return;
     void saveDashboardLayout(nextOrder.map((m) => m.key), nextPinned).catch(() => {});
   }
   function handleReorder(next: ModuleDef[]) {
@@ -89,6 +93,7 @@ export function DashboardView({
         onSelectRestaurant={setActiveId}
         role={role}
         onSelectRole={setRole}
+        demoMode={demoMode}
       />
 
       <main className="mx-auto max-w-7xl space-y-8 px-6 py-6">
@@ -119,7 +124,7 @@ export function DashboardView({
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
         {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
         {!isInvestor && (
-          <ModuleGrid items={order} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} />
+          <ModuleGrid items={order} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
         )}
       </main>
     </div>

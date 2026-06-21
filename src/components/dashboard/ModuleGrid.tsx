@@ -30,11 +30,13 @@ export function ModuleGrid({
   pinnedKeys,
   onReorder,
   onTogglePin,
+  demoMode = false,
 }: {
   items: ModuleDef[];
   pinnedKeys: Set<string>;
   onReorder: (next: ModuleDef[]) => void;
   onTogglePin: (key: string) => void;
+  demoMode?: boolean;
 }) {
   const sensors = useSensors(
     // A small drag threshold so a click still navigates; only a deliberate drag reorders.
@@ -49,6 +51,46 @@ export function ModuleGrid({
     const to = items.findIndex((m) => m.key === over.id);
     if (from < 0 || to < 0) return;
     onReorder(arrayMove(items, from, to));
+  }
+
+  // Public demo: a static, non-interactive showcase — the tiles point to
+  // account-gated pages, so they read-only here (no links, drag, or pinning).
+  if (demoMode) {
+    return (
+      <section>
+        <div className="mb-2 flex items-baseline justify-between">
+          <h2 className="font-display text-lg text-copper-soft">Modules</h2>
+          <span className="text-xs text-muted">
+            {MODULES.filter((m) => m.status === "live").length} live · sign up to open
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {items.map((m) => {
+            const live = m.status === "live" && m.href;
+            return (
+              <div
+                key={m.key}
+                className={
+                  "relative rounded-lg border p-4 " +
+                  (live ? "border-line bg-surface" : "border-line/70 bg-surface/50")
+                }
+              >
+                {!live && (
+                  <span
+                    className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full border border-line px-1.5 py-0.5 text-[10px] text-muted"
+                    title={`Coming soon — needs: ${m.blockedBy}`}
+                  >
+                    <Lock size={9} /> {m.blockedBy}
+                  </span>
+                )}
+                <div className={"font-display text-base " + (live ? "text-[#E6E8E4]" : "text-muted")}>{m.name}</div>
+                <div className={"mt-1 text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    );
   }
 
   return (

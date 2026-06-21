@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Activity, Banknote, CircleDollarSign, Gauge, Megaphone } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import type { DashboardData } from "@/lib/dashboard/data";
+import { industryTemplateFor } from "@/lib/industry-templates";
 import { money, pct } from "@/lib/format";
 
 type LensKey = "cash" | "discipline" | "pressure" | "momentum" | "aura";
@@ -153,6 +154,7 @@ function nextAction(lenses: HeartbeatLens[]): HeartbeatLens {
 }
 
 export function HeartbeatSummary({ data }: { data: DashboardData }) {
+  const template = industryTemplateFor(data.businessType);
   const lenses = buildLenses(data);
   const focus = nextAction(lenses);
 
@@ -163,7 +165,7 @@ export function HeartbeatSummary({ data }: { data: DashboardData }) {
           <p className="text-[11px] uppercase tracking-wider text-muted">Heartbeat summary</p>
           <h2 className="mt-1 font-display text-xl text-copper-soft">{headline(lenses)}</h2>
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
-            Consultant view: cash, Profit First discipline, operating pressure, sales momentum, and market energy in one read.
+            {template.label} template: cash, Profit First discipline, operating pressure, sales momentum, and market energy in one read.
           </p>
         </div>
         <Link href={focus.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">

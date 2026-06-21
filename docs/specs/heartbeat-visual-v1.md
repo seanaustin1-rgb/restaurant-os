@@ -57,6 +57,12 @@ Investor Mode:
 ## V3: Industry templates
 During onboarding, choose a heartbeat template based on business type.
 
+Foundation shipped:
+- Restaurant now has a `businessType` field.
+- Onboarding asks for Restaurant / Service / Retail.
+- New tenants get template-specific default module configuration.
+- The dashboard names the active template and filters the module grid to that template's default modules.
+
 Restaurant template:
 - Prime cost, labor, COGS, sales mix, covers, menu engineering, Aura, tax reserve, Profit First.
 

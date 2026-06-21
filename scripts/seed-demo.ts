@@ -50,6 +50,7 @@ async function main() {
       data: {
         name,
         slug: `${slugify(name)}-${suffix}`,
+        businessType: "RESTAURANT",
         seatCount: 120,
         tapSettings: { create: {} },
         ...(userId ? { userRoles: { create: { clerkUserId: userId, role: "OPERATOR" } } } : {}),

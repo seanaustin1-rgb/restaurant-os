@@ -2,6 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { createRestaurant, type OnboardingInput } from "@/app/onboarding/actions";
+import { INDUSTRY_TEMPLATES } from "@/lib/industry-templates";
+
+const BUSINESS_TYPES = [
+  INDUSTRY_TEMPLATES.RESTAURANT,
+  INDUSTRY_TEMPLATES.SERVICE,
+  INDUSTRY_TEMPLATES.RETAIL,
+];
 
 const TIERS: { key: OnboardingInput["tier"]; name: string; blurb: string; tag: string }[] = [
   { key: "TIER_1", name: "POS + Food Cost", blurb: "MarginEdge + Toast/Clover. Automatic, real-time.", tag: "Best" },
@@ -13,6 +20,7 @@ const TIERS: { key: OnboardingInput["tier"]; name: string; blurb: string; tag: s
 export function OnboardingFlow() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [businessType, setBusinessType] = useState<OnboardingInput["businessType"]>("RESTAURANT");
   const [seatCount, setSeatCount] = useState("");
   const [tier, setTier] = useState<OnboardingInput["tier"]>("TIER_2");
   const [pending, startTransition] = useTransition();
@@ -21,7 +29,7 @@ export function OnboardingFlow() {
 
   function submit() {
     startTransition(async () => {
-      await createRestaurant({ name: name.trim(), seatCount: Number(seatCount) || 0, tier });
+      await createRestaurant({ name: name.trim(), businessType, seatCount: Number(seatCount) || 0, tier });
     });
   }
 
@@ -30,7 +38,9 @@ export function OnboardingFlow() {
       <div className="mb-6 flex items-center gap-2 text-xs text-muted">
         <Dot on={step >= 1} /> Details
         <span className="h-px w-6 bg-line" />
-        <Dot on={step >= 2} /> Data source
+        <Dot on={step >= 2} /> Template
+        <span className="h-px w-6 bg-line" />
+        <Dot on={step >= 3} /> Data source
       </div>
 
       {step === 1 && (
@@ -65,6 +75,41 @@ export function OnboardingFlow() {
 
       {step === 2 && (
         <div className="space-y-5">
+          <h1 className="font-display text-2xl text-copper-soft">What kind of business is this?</h1>
+          <p className="text-sm text-muted">
+            This shapes the heartbeat and which modules show up first. You can refine it later.
+          </p>
+          <div className="space-y-2">
+            {BUSINESS_TYPES.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setBusinessType(t.key)}
+                className={
+                  "flex w-full items-start justify-between rounded-md border px-3 py-2.5 text-left " +
+                  (businessType === t.key ? "border-copper bg-copper/10" : "border-line bg-ink hover:border-copper-dim")
+                }
+              >
+                <span>
+                  <span className="block text-sm text-[#E6E8E4]">{t.label}</span>
+                  <span className="block text-xs text-muted">{t.description}</span>
+                </span>
+                <span className="ml-3 max-w-[120px] text-right text-[10px] text-copper-soft">{t.primarySetup}</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setStep(1)} className="rounded-md border border-line px-4 py-2.5 text-sm text-[#E6E8E4] hover:border-copper-dim">
+              Back
+            </button>
+            <button onClick={() => setStep(3)} className="flex-1 rounded-md bg-copper px-4 py-2.5 font-medium text-ink hover:bg-copper-soft">
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-5">
           <h1 className="font-display text-2xl text-copper-soft">How will data flow in?</h1>
           <p className="text-sm text-muted">Pick where your numbers come from. You can change this later — nobody gets turned away.</p>
           <div className="space-y-2">
@@ -86,7 +131,7 @@ export function OnboardingFlow() {
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="rounded-md border border-line px-4 py-2.5 text-sm text-[#E6E8E4] hover:border-copper-dim">
+            <button onClick={() => setStep(2)} className="rounded-md border border-line px-4 py-2.5 text-sm text-[#E6E8E4] hover:border-copper-dim">
               Back
             </button>
             <button

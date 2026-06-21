@@ -2,8 +2,9 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import type { BusinessType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_MODULES } from "@/lib/mock/dashboard";
+import { industryTemplateFor } from "@/lib/industry-templates";
 
 function slugify(name: string): string {
   const base = name
@@ -17,6 +18,7 @@ function slugify(name: string): string {
 
 export interface OnboardingInput {
   name: string;
+  businessType: BusinessType;
   seatCount: number;
   tier: "TIER_1" | "TIER_2" | "TIER_3" | "TIER_4";
 }
@@ -37,10 +39,13 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
     redirect("/sign-in");
   }
 
+  const template = industryTemplateFor(input.businessType);
+
   await prisma.restaurant.create({
     data: {
       name: input.name,
       slug: slugify(input.name),
+      businessType: template.key,
       seatCount: input.seatCount || null,
       userRoles: {
         create: { clerkUserId: userId, role: "OPERATOR" },
@@ -62,7 +67,7 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
         },
       },
       moduleConfigs: {
-        create: DEFAULT_MODULES.map((mod, i) => ({ moduleKey: mod.key, position: i })),
+        create: template.defaultModuleKeys.map((moduleKey, i) => ({ moduleKey, position: i })),
       },
       virtualAccounts: {
         create: SEED_ACCOUNTS.map((a) => ({ key: a.key, name: a.name, targetPct: a.targetPct })),

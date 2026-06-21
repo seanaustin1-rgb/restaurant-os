@@ -30,6 +30,7 @@ export async function POST(req: Request) {
       data: {
         name: "Demo Bistro",
         slug: `demo-bistro-${suffix}`,
+        businessType: "RESTAURANT",
         seatCount: 120,
         tapSettings: { create: {} },
         ...(userId ? { userRoles: { create: { clerkUserId: userId, role: "OPERATOR" } } } : {}),

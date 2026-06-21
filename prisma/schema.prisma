@@ -29,6 +29,12 @@ enum PosProvider {
   SQUARE
 }
 
+enum BusinessType {
+  RESTAURANT
+  SERVICE
+  RETAIL
+}
+
 enum TransactionBucket {
   REVENUE
   COGS_FOOD
@@ -92,6 +98,7 @@ model Restaurant {
   clerkOrgId  String?  @unique
   name        String
   slug        String   @unique
+  businessType BusinessType @default(RESTAURANT)
   seatCount   Int?
   timezone    String   @default("America/New_York")
   // Cash Runway anchor: operator-entered bank balance on a known date (from any

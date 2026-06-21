@@ -56,7 +56,7 @@ export async function seedDemoBistro(): Promise<string> {
   });
   if (!restaurant) {
     restaurant = await db.restaurant.create({
-      data: { name: DEMO_NAME, slug: DEMO_SLUG, seatCount: 120, tapSettings: { create: {} } },
+      data: { name: DEMO_NAME, slug: DEMO_SLUG, businessType: "RESTAURANT", seatCount: 120, tapSettings: { create: {} } },
       select: { id: true },
     });
   }

@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import type { BusinessType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   calculatePrimeCost,
@@ -18,6 +19,7 @@ import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coa
 export interface DashboardData {
   restaurantId: string;
   name: string;
+  businessType: BusinessType;
   periodLabel: string;
   hasData: boolean;
   realRevenue: number;
@@ -235,6 +237,7 @@ export async function loadDashboardData(
   return {
     restaurantId,
     name,
+    businessType: restaurant?.businessType ?? "RESTAURANT",
     periodLabel,
     hasData,
     realRevenue,

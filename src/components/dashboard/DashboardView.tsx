@@ -16,6 +16,7 @@ import type { RoleKey } from "@/lib/mock/dashboard";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { type ModuleDef } from "@/lib/modules";
 import { orderModules, modulesByKeys, sanitizeModuleOrder } from "@/lib/dashboard/module-order";
+import { industryTemplateFor } from "@/lib/industry-templates";
 import { saveDashboardLayout } from "@/app/dashboard/actions";
 
 export function DashboardView({
@@ -38,9 +39,12 @@ export function DashboardView({
   const [pinned, setPinned] = useState<string[]>(() => sanitizeModuleOrder(pinnedModules));
 
   const active = dashboards.find((d) => d.restaurantId === activeId) ?? dashboards[0];
+  const template = industryTemplateFor(active?.businessType);
+  const templateModuleKeys = useMemo(() => new Set(template.defaultModuleKeys), [template]);
+  const visibleOrder = useMemo(() => order.filter((m) => templateModuleKeys.has(m.key)), [order, templateModuleKeys]);
 
   // Only live modules can be pinned (a "soon" tile has nowhere to go).
-  const liveKeys = useMemo(() => new Set(order.filter((m) => m.status === "live" && m.href).map((m) => m.key)), [order]);
+  const liveKeys = useMemo(() => new Set(visibleOrder.filter((m) => m.status === "live" && m.href).map((m) => m.key)), [visibleOrder]);
   const pinnedKeys = useMemo(() => new Set(pinned), [pinned]);
   const pinnedList = useMemo(() => modulesByKeys(pinned).filter((m) => liveKeys.has(m.key)), [pinned, liveKeys]);
 
@@ -131,7 +135,7 @@ export function DashboardView({
         {!isInvestor && <TapGauges gauges={active.gauges} base={active.revenue.revenueMTD} />}
         {!isInvestor && <BeverageCostGauges gauges={active.costRatios} />}
         {!isInvestor && (
-          <ModuleGrid items={order} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
+          <ModuleGrid items={visibleOrder} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
         )}
       </main>
     </div>

@@ -10,6 +10,8 @@ import {
   syncToastMenuItemSales,
 } from "@/lib/integrations/toast/sync";
 import { runLedger } from "@/lib/profit-first/ledger";
+import { seedDemoBistro } from "@/lib/demo/demo-tenant";
+import { demoPrisma } from "@/lib/demo/demo-prisma";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -114,9 +116,27 @@ export const syncToastMetrics = inngest.createFunction(
   },
 );
 
+/**
+ * Monthly demo re-seed — keeps the public /demo/tour "Demo Bistro" current.
+ * seedDemoData seeds the CURRENT calendar month, so refreshing on the 1st keeps
+ * the tour from going stale at month rollover. Writes ONLY to the separate demo
+ * database (DEMO_DATABASE_URL); no-ops cleanly when that isn't configured, so it
+ * can never touch production data.
+ */
+export const monthlyDemoReseed = inngest.createFunction(
+  { id: "monthly-demo-reseed", retries: 2 },
+  { cron: "TZ=America/New_York 0 6 1 * *" }, // 6:00am ET on the 1st of each month
+  async ({ step }) => {
+    if (!demoPrisma) return { seeded: false, reason: "demo-db-not-configured" };
+    const restaurantId = await step.run("reseed-demo-bistro", () => seedDemoBistro());
+    return { seeded: true, restaurantId };
+  },
+);
+
 export const functions = [
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
   dailyToastSyncScheduler,
   syncToastMetrics,
+  monthlyDemoReseed,
 ];

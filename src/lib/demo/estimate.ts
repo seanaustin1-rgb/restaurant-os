@@ -87,7 +87,9 @@ export interface EstimateResult {
   benchOverall: Health;
   benchGreenCount: number;
 
-  // Break-even
+  // Break-even: the sales needed to cover the expense dollars entered in the
+  // public demo. Unlike a contribution-margin model, this should not move just
+  // because the operator changes sales while leaving spend unchanged.
   cmRatio: number;
   monthlyBreakEven: number | null;
   breakEvenPerDay: number | null;
@@ -190,18 +192,20 @@ export function computeEstimate(input: EstimateInputs): EstimateResult {
   const benchOverall = bench.reduce<Health>((w, r) => (rank[r.status] > rank[w] ? r.status : w), "green");
   const benchGreenCount = bench.filter((r) => r.status === "green").length;
 
-  // Break-even (monthly basis).
+  // Break-even (monthly basis). The public demo accepts rough spend as dollars,
+  // so the useful "profit starts here" number is total entered expenses:
+  // food/bev + labor + fixed bills. The contribution margin ratio is still kept
+  // as "left after prime cost" context, but it should not drive this threshold.
   const daysPerWeek = input.daysOpenPerWeek && input.daysOpenPerWeek > 0 ? input.daysOpenPerWeek : 7;
   const daysPerMonth = (daysPerWeek / 7) * DAYS_PER_MONTH;
   const variableCost = cogs + labor;
   const cmRatio = monthlySales > 0 ? (monthlySales - variableCost) / monthlySales : 0;
-  const cmPositive = cmRatio > 0;
-  const monthlyBreakEven = cmPositive ? fixedCosts / cmRatio : null;
-  const breakEvenPerDay = monthlyBreakEven != null && daysPerMonth > 0 ? monthlyBreakEven / daysPerMonth : null;
-  const dollarsAboveBreakEven = monthlyBreakEven != null ? monthlySales - monthlyBreakEven : -fixedCosts;
+  const monthlyBreakEven = variableCost + fixedCosts;
+  const breakEvenPerDay = daysPerMonth > 0 ? monthlyBreakEven / daysPerMonth : null;
+  const dollarsAboveBreakEven = monthlySales - monthlyBreakEven;
   const marginOfSafety =
-    monthlyBreakEven != null && monthlySales > 0 ? ((monthlySales - monthlyBreakEven) / monthlySales) * 100 : -100;
-  const breakEvenHealth: Health = cmPositive ? bandMos(marginOfSafety) : "red";
+    monthlySales > 0 ? ((monthlySales - monthlyBreakEven) / monthlySales) * 100 : -100;
+  const breakEvenHealth: Health = bandMos(marginOfSafety);
 
   // Profit First starting set-asides (off total sales).
   const pf: PfLine[] = [

@@ -18,6 +18,10 @@ import {
   type PropertyHeartbeatResult,
 } from "@/lib/demo/property-heartbeat";
 import {
+  computePropertyPortfolio,
+  type PropertyPortfolioResult,
+} from "@/lib/demo/property-portfolio";
+import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
@@ -255,6 +259,59 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
     futureBookedNights: Math.max(8, Math.round(num(f.pendingDeals) * 1.5)),
     next30AvailableNights: 28,
   });
+  const propertyPortfolio = computePropertyPortfolio([
+    {
+      name: "Lake House",
+      monthlyBookingRevenue: Math.max(15_000, r.expectedPipelineCompanyDollar * 0.45),
+      occupancyPct: 72,
+      averageDailyRate: 325,
+      cleaningCosts: 2_100,
+      maintenanceCosts: 1_400,
+      platformFees: 900,
+      managementFeePct: 18,
+      ownerReserveTarget: 8_000,
+      openIssues: 1,
+      repeatIssues: 0,
+      avgResponseHours: 3,
+      reviewRating: 4.8,
+      futureBookedNights: 18,
+      next30AvailableNights: 28,
+    },
+    {
+      name: "Beach Cottage",
+      monthlyBookingRevenue: Math.max(18_000, r.expectedPipelineCompanyDollar * 0.5),
+      occupancyPct: 78,
+      averageDailyRate: 410,
+      cleaningCosts: 2_400,
+      maintenanceCosts: 1_100,
+      platformFees: 1_100,
+      managementFeePct: 18,
+      ownerReserveTarget: 9_500,
+      openIssues: 0,
+      repeatIssues: 0,
+      avgResponseHours: 2,
+      reviewRating: 4.9,
+      futureBookedNights: 21,
+      next30AvailableNights: 27,
+    },
+    {
+      name: "Downtown Condo",
+      monthlyBookingRevenue: r.breakEvenCushion < 0 ? 8_500 : 11_000,
+      occupancyPct: r.breakEvenCushion < 0 ? 42 : 58,
+      averageDailyRate: 180,
+      cleaningCosts: 1_700,
+      maintenanceCosts: r.breakEvenCushion < 0 ? 2_600 : 1_200,
+      platformFees: 650,
+      managementFeePct: 20,
+      ownerReserveTarget: 5_000,
+      openIssues: r.breakEvenCushion < 0 ? 5 : 2,
+      repeatIssues: r.breakEvenCushion < 0 ? 2 : 0,
+      avgResponseHours: r.breakEvenCushion < 0 ? 24 : 8,
+      reviewRating: r.breakEvenCushion < 0 ? 3.9 : 4.4,
+      futureBookedNights: r.breakEvenCushion < 0 ? 7 : 13,
+      next30AvailableNights: 25,
+    },
+  ]);
   const marketAura = computeMarketAura({
     market: f.market || "Local market",
     newListings7d: Math.max(45, Math.round(num(f.pendingDeals) * 8)),
@@ -309,6 +366,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <AgentPerformancePreview rows={agentRows} />
       <MarketAuraPreview market={marketAura} />
       <PropertyHeartbeatPreview property={property} />
+      <PropertyPortfolioPreview portfolio={propertyPortfolio} />
       <ImportReadinessPreview readiness={importReadiness} />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
@@ -534,6 +592,48 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
         The owner-facing version would connect PMS, reviews, owner statements, cleaning, and maintenance reports per property.
       </p>
+    </div>
+  );
+}
+
+function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioResult }) {
+  return (
+    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Portfolio view</div>
+          <h3 className="font-display text-xl text-[#E6E8E4]">Rental Property Rollup</h3>
+        </div>
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(portfolio.overallHealth)}>
+          {portfolio.pressureCount > 0 ? `${portfolio.pressureCount} needs attention` : "portfolio healthy"}
+        </span>
+      </div>
+      <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <Stat label="Properties" value={portfolio.propertyCount.toLocaleString()} />
+          <Stat label="Booking revenue" value={money(portfolio.monthlyBookingRevenue)} />
+          <Stat label="Owner proceeds" value={money(portfolio.ownerProceeds)} tone={portfolio.ownerProceedsPct >= 45 ? "green" : portfolio.ownerProceedsPct >= 30 ? "yellow" : "red"} />
+          <Stat label="Maintenance drag" value={pct(portfolio.maintenancePressurePct)} tone={portfolio.maintenancePressurePct <= 20 ? "green" : portfolio.maintenancePressurePct <= 28 ? "yellow" : "red"} />
+          <Stat label="Avg Aura" value={Math.round(portfolio.averageGuestAuraScore).toLocaleString()} tone={portfolio.averageGuestAuraScore >= 75 ? "green" : portfolio.averageGuestAuraScore >= 55 ? "yellow" : "red"} />
+        </div>
+        <p className={"mt-3 text-[11px] leading-relaxed " + HEALTH_TEXT[portfolio.overallHealth]}>{portfolio.note}</p>
+        <div className="mt-4 space-y-2">
+          {portfolio.properties.map((property) => (
+            <div key={property.name} className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
+              <div>
+                <div className="text-sm text-[#E6E8E4]">{property.name}</div>
+                <div className={"text-[11px] " + HEALTH_TEXT[property.overallHealth]}>
+                  {portfolio.topPressure?.name === property.name ? "highest pressure" : "property heartbeat"}
+                </div>
+              </div>
+              <Stat label="Owner proceeds" value={money(property.ownerProceeds)} tone={property.ownerProceedsHealth} />
+              <Stat label="Maintenance" value={pct(property.maintenancePressurePct)} tone={property.maintenanceHealth} />
+              <Stat label="Aura" value={Math.round(property.guestAuraScore).toLocaleString()} tone={property.guestAuraHealth} />
+              <Stat label="Booking pace" value={pct(property.bookingPacePct, 0)} tone={property.bookingMomentumHealth} />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

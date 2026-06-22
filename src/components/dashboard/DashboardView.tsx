@@ -1,8 +1,10 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { BusinessType } from "@prisma/client";
+import { Building2, Home, Search, Users } from "lucide-react";
 import { AdvisorBrief } from "./AdvisorBrief";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatSummary } from "./HeartbeatSummary";
@@ -127,6 +129,7 @@ export function DashboardView({
 
   const isInvestor = role === "INVESTOR";
   const isAdvisor = role === "CONSULTANT" || role === "MANAGER";
+  const isRestaurantTemplate = displayActive.businessType === "RESTAURANT";
 
   return (
     <div>
@@ -171,17 +174,80 @@ export function DashboardView({
 
         <HeartbeatSummary data={displayActive} demoMode={demoMode} />
         {isAdvisor && <AdvisorBrief data={displayActive} demoMode={demoMode} />}
-        <HeartbeatStrip data={displayActive.heartbeat} />
-        <RevenueRow data={displayActive.revenue} />
+        {isRestaurantTemplate ? (
+          <>
+            <HeartbeatStrip data={displayActive.heartbeat} />
+            <RevenueRow data={displayActive.revenue} />
+          </>
+        ) : (
+          <IndustryHeartbeatPreview businessType={displayActive.businessType} />
+        )}
         <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
-        {!isInvestor && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}
-        {!isInvestor && <BeverageCostGauges gauges={displayActive.costRatios} demoMode={demoMode} />}
+        {!isInvestor && isRestaurantTemplate && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}
+        {!isInvestor && isRestaurantTemplate && <BeverageCostGauges gauges={displayActive.costRatios} demoMode={demoMode} />}
         {!isInvestor && (
           <ModuleGrid items={visibleOrder} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
         )}
       </main>
+    </div>
+  );
+}
+
+function IndustryHeartbeatPreview({ businessType }: { businessType: BusinessType }) {
+  if (businessType === "REAL_ESTATE_BROKERAGE") {
+    return (
+      <section>
+        <h2 className="mb-2 font-display text-lg text-copper-soft">Brokerage heartbeat</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="GCI retained after splits, caps, referrals, and franchise fees." />
+          <PreviewCard icon={<Users size={15} />} title="Agent Performance" detail="Company Dollar yield, cap pressure, pipeline, and lead ROI by agent." />
+          <PreviewCard icon={<Search size={15} />} title="Market Intelligence" detail="MLS velocity, DOM, price drops, rates, showing demand, and intent." />
+          <PreviewCard icon={<Home size={15} />} title="Property Heartbeat" detail="Owner proceeds, maintenance drag, booking pace, and guest Aura add-on." />
+        </div>
+      </section>
+    );
+  }
+
+  if (businessType === "VACATION_RENTAL") {
+    return (
+      <section>
+        <h2 className="mb-2 font-display text-lg text-copper-soft">Property heartbeat</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <PreviewCard icon={<Home size={15} />} title="Owner Proceeds" detail="Booking revenue after cleaning, maintenance, platform fees, and management fees." />
+          <PreviewCard icon={<GaugeIcon />} title="Maintenance Drag" detail="Open issues, repeat issues, and repair cost pressure by property." />
+          <PreviewCard icon={<Search size={15} />} title="Guest Aura" detail="Review score, response time, complaint themes, and repeat issue signals." />
+          <PreviewCard icon={<Building2 size={15} />} title="Booking Pace" detail="Occupancy, ADR, RevPAR, future booked nights, and seasonality." />
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h2 className="mb-2 font-display text-lg text-copper-soft">Industry heartbeat</h2>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <PreviewCard icon={<Building2 size={15} />} title="Cash Safety" detail="Runway, recurring spend, and source coverage for this business type." />
+        <PreviewCard icon={<Users size={15} />} title="Operating Pressure" detail="Industry-specific pressure metrics replace restaurant food and cover metrics." />
+        <PreviewCard icon={<Search size={15} />} title="Market Aura" detail="Reputation, demand, and external intent signals for the selected template." />
+      </div>
+    </section>
+  );
+}
+
+function GaugeIcon() {
+  return <span className="inline-block h-3.5 w-3.5 rounded-full border border-current" />;
+}
+
+function PreviewCard({ icon, title, detail }: { icon: React.ReactNode; title: string; detail: string }) {
+  return (
+    <div className="rounded-lg border border-line bg-surface px-4 py-3">
+      <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+        <span className="text-copper-soft">{icon}</span>
+        {title}
+      </div>
+      <p className="mt-1 text-xs leading-relaxed text-muted">{detail}</p>
     </div>
   );
 }

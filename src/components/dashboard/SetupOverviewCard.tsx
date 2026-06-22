@@ -31,20 +31,38 @@ export function SetupOverviewCard({
   const template = industryTemplateFor(data.businessType);
   const setup = data.sourceSetup;
   const missing = setup.missingRequired.slice(0, 3).join(", ");
+  const setupLabel = demoMode ? "Demo setup" : "Business setup";
+  const description = demoMode
+    ? "This tour is already populated with sample restaurant data. Explore the heartbeat first; source connections come later."
+    : template.description;
+  const minimumLabel = demoMode ? "Sample data included" : "Minimum auto-input";
+  const minimumText = demoMode
+    ? "No bank, POS, or accounting connection is required to use this public demo."
+    : setup.minimumAutoInput;
+  const progressLabel = demoMode ? "Demo status" : "Source progress";
   const statusLine =
-    setup.connectedCount > 0
+    demoMode
+      ? "Ready to explore"
+      : setup.connectedCount > 0
       ? `${setup.connectedCount} connected, ${setup.plannedCount} planned, ${setup.blockedCount} blocked`
       : `Minimum sources to plan: ${setup.requiredCount}`;
+  const progressSubtext = demoMode ? "Sample restaurant data is loaded" : `${setup.notNeededCount} marked not needed`;
+  const missingLabel = demoMode ? "After signup" : "Missing minimum";
+  const missingText = demoMode
+    ? "Connect real sources only when you want your own live dashboard."
+    : setup.missingRequired.length > 0
+      ? missing
+      : "Minimum source plan is connected.";
 
   return (
     <section className="rounded-lg border border-line bg-surface px-4 py-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-            <Building2 size={13} /> Business setup
+            <Building2 size={13} /> {setupLabel}
           </p>
           <h2 className="mt-1 font-display text-xl text-copper-soft">{template.label}</h2>
-          <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{template.description}</p>
+          <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{description}</p>
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
@@ -91,20 +109,20 @@ export function SetupOverviewCard({
 
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted">Minimum auto-input</p>
-          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-[#E6E8E4]">{setup.minimumAutoInput}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted">{minimumLabel}</p>
+          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-[#E6E8E4]">{minimumText}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted">Source progress</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted">{progressLabel}</p>
           <p className="mt-1 text-sm text-[#E6E8E4]">{statusLine}</p>
-          <p className="mt-0.5 text-[11px] text-muted">{setup.notNeededCount} marked not needed</p>
+          <p className="mt-0.5 text-[11px] text-muted">{progressSubtext}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted">Missing minimum</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted">{missingLabel}</p>
           <p className="mt-1 line-clamp-2 text-sm text-[#E6E8E4]">
-            {setup.missingRequired.length > 0 ? missing : "Minimum source plan is connected."}
+            {missingText}
           </p>
-          {setup.missingRequired.length > 3 && <p className="mt-0.5 text-[11px] text-muted">+{setup.missingRequired.length - 3} more</p>}
+          {!demoMode && setup.missingRequired.length > 3 && <p className="mt-0.5 text-[11px] text-muted">+{setup.missingRequired.length - 3} more</p>}
         </div>
       </div>
     </section>

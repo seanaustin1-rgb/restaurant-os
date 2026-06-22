@@ -134,6 +134,22 @@ function assertPublicDemoChrome(probe: Probe) {
   }
 }
 
+function assertLowFrictionDemoCopy(probe: Probe) {
+  const highFrictionCopy = [
+    "Minimum auto-input",
+    "Minimum sources to plan",
+    "Missing minimum",
+    "Connect your bank and POS",
+    "Unlocks when you connect your bank",
+  ];
+
+  for (const text of highFrictionCopy) {
+    if (probe.body.includes(text)) {
+      throw new Error(`${probe.path} rendered high-friction demo copy (${text})`);
+    }
+  }
+}
+
 function isWindowsTlsPrismaError(logs: string) {
   return logs.includes("No credentials are available in the security package");
 }
@@ -156,6 +172,8 @@ async function main() {
   assertProbe(result.tour, /Aura|Market energy/i);
   assertPublicDemoChrome(result.demo);
   assertPublicDemoChrome(result.tour);
+  assertLowFrictionDemoCopy(result.demo);
+  assertLowFrictionDemoCopy(result.tour);
 
   console.log(
     JSON.stringify(

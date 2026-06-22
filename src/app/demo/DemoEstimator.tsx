@@ -97,7 +97,8 @@ export function DemoEstimator() {
 
   // Prefill from query params, e.g. a shareable link a rep sends a prospect:
   //   /demo?name=...&city=...&sales=250000&food=30&labor=30&overhead=70000
-  // When name + sales are present, jump straight to the populated results.
+  // When sales are present, jump straight to the populated results. Name/city
+  // only improve the optional reputation lookup.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const sp = new URLSearchParams(window.location.search);
@@ -113,9 +114,9 @@ export function DemoEstimator() {
     const seeded = { ...INITIAL, ...next } as FormState;
     setF(seeded);
     const inp = buildInputs(seeded);
-    if (inp.name && inp.monthlySales > 0) {
+    if (inp.monthlySales > 0) {
       setView("results");
-      startTransition(async () => setAura(await lookupReputation(inp.name, inp.city)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.city)));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -123,15 +124,16 @@ export function DemoEstimator() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const inp = buildInputs(f);
-    if (!inp.name) return setError("Add your restaurant's name.");
     if (inp.monthlySales <= 0) return setError("Add your average monthly sales.");
     setError(null);
     setView("results");
     setAura(null);
-    startTransition(async () => {
-      const r = await lookupReputation(inp.name, inp.city);
-      setAura(r);
-    });
+    if (inp.name) {
+      startTransition(async () => {
+        const r = await lookupReputation(inp.name, inp.city);
+        setAura(r);
+      });
+    }
   }
 
   if (view === "results" && result) {
@@ -149,14 +151,13 @@ export function DemoEstimator() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl">
       <p className="text-sm text-muted">
-        Answer a few numbers and watch your own version of the dashboard fill in. Takes about a minute — every
-        field past your name has a sensible default.
+        One number is enough to get a first read. Add the rest only if you want the estimate to feel closer to your restaurant.
       </p>
 
       {/* Tier A — identity */}
       <fieldset className="mt-6 space-y-4">
-        <Legend n="1" title="Your restaurant" hint="So we can pull your real Google rating" />
-        <Field label="Restaurant name" required>
+        <Legend n="1" title="Optional identity" hint="Only used to try a live Google rating match" />
+        <Field label="Restaurant name">
           <input className={inputCls} placeholder="Stone Grille & Taphouse" value={f.name} onChange={upd("name")} />
         </Field>
         <Field label="City & state">
@@ -166,7 +167,7 @@ export function DemoEstimator() {
 
       {/* Tier B — core economics */}
       <fieldset className="mt-8 space-y-4">
-        <Legend n="2" title="Your core numbers" hint="Rough monthly averages are fine" />
+        <Legend n="2" title="One required number" hint="Rough monthly sales is enough to start" />
         <Field label="Average monthly sales" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="250,000" value={f.monthlySales} onChange={upd("monthlySales")} />
         </Field>
@@ -190,7 +191,7 @@ export function DemoEstimator() {
           onClick={() => setShowOptional((s) => !s)}
           className="text-sm text-copper-soft hover:text-copper"
         >
-          {showOptional ? "– Hide" : "+ Want it sharper?"} <span className="text-muted">(optional — unlocks more tiles)</span>
+          {showOptional ? "– Hide" : "+ Want it sharper?"} <span className="text-muted">(optional)</span>
         </button>
         {showOptional && (
           <fieldset className="mt-4 grid grid-cols-2 gap-4">
@@ -258,8 +259,7 @@ function Results({
         <p className="text-[13px] leading-relaxed text-[#CFD2CC]">
           This is a 60-second estimate from a handful of numbers — a taste, not a diagnosis. The{" "}
           <span className="text-health-green">highlighted tiles</span> are driven by what you entered. The{" "}
-          <span className="text-muted">faded tiles</span> need your live bank + POS data — that&apos;s the full
-          OutFront Data picture.
+          <span className="text-muted">faded tiles</span> are intentionally left out of this quick demo because they need deeper detail.
         </p>
       </div>
 
@@ -278,7 +278,7 @@ function Results({
       {/* Locked tiles */}
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
-          <Lock size={12} /> Unlocks when you connect your bank + POS
+          <Lock size={12} /> Deeper diagnostics outside this quick estimate
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {LOCKED_TILES.map((t) => (
@@ -296,8 +296,7 @@ function Results({
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5 text-center">
         <div className="font-display text-xl text-[#E6E8E4]">Want the full picture?</div>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted">
-          Connect your bank and POS and every faded tile fills in with your real numbers — leak detection,
-          cash runway, vendor spend, and more.
+          The full account adds leak detection, cash runway, vendor spend, and more. No connection is needed to explore the demo first.
         </p>
         <SignUpButton forceRedirectUrl="/onboarding">
           <button
@@ -365,8 +364,8 @@ function AuraTile({ aura, pending, name }: { aura: ReputationResult | null; pend
       )}
       {!pending && aura && !aura.found && (
         <div className="text-sm text-muted">
-          We couldn&apos;t auto-match your Google listing. Inside OutFront Data you&apos;ll connect Google + Yelp
-          directly so your live rating and reviews land here.
+          We couldn&apos;t auto-match your Google listing. In the full account, reputation sources can fill this in
+          alongside the financial read.
         </div>
       )}
       {!pending && !aura && <div className="text-sm text-muted">Reputation lookup queued…</div>}

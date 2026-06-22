@@ -3,12 +3,16 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Gauge, PiggyBank, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Gauge, Home, PiggyBank, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import {
   computeAgentPerformanceList,
   type AgentPerformanceResult,
 } from "@/lib/demo/real-estate-agent-performance";
+import {
+  computePropertyHeartbeat,
+  type PropertyHeartbeatResult,
+} from "@/lib/demo/property-heartbeat";
 import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
@@ -226,6 +230,23 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       leadSpend: 2_400,
     },
   ]);
+  const property = computePropertyHeartbeat({
+    name: "Managed owner property",
+    monthlyBookingRevenue: Math.max(7_500, r.expectedPipelineCompanyDollar * 0.55),
+    occupancyPct: 68,
+    averageDailyRate: Math.max(175, num(f.avgSalePrice) / 1_250),
+    cleaningCosts: 1_900,
+    maintenanceCosts: r.breakEvenCushion < 0 ? 2_800 : 1_300,
+    platformFees: Math.max(500, r.expectedPipelineCompanyDollar * 0.025),
+    managementFeePct: 18,
+    ownerReserveTarget: Math.max(4_500, r.monthlyOpex * 0.2),
+    openIssues: r.breakEvenCushion < 0 ? 4 : 1,
+    repeatIssues: r.breakEvenCushion < 0 ? 1 : 0,
+    avgResponseHours: r.breakEvenCushion < 0 ? 18 : 4,
+    reviewRating: r.breakEvenCushion < 0 ? 4.1 : 4.8,
+    futureBookedNights: Math.max(8, Math.round(num(f.pendingDeals) * 1.5)),
+    next30AvailableNights: 28,
+  });
 
   return (
     <div>
@@ -255,6 +276,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       </div>
 
       <AgentPerformancePreview rows={agentRows} />
+      <PropertyHeartbeatPreview property={property} />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
         <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>
@@ -433,6 +455,52 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
         <Stat label="Weighted pipeline" value={money(row.expectedPipelineCompanyDollar)} />
         <Stat label="Lead ROI" value={row.leadRoi != null ? `${row.leadRoi.toFixed(1)}x` : "-"} />
       </div>
+    </div>
+  );
+}
+
+function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatResult }) {
+  return (
+    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
+          <h3 className="font-display text-xl text-[#E6E8E4]">Property Heartbeat</h3>
+        </div>
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(property.overallHealth)}>
+          {property.overallHealth === "green" ? "healthy property" : property.overallHealth === "yellow" ? "watch property" : "property pressure"}
+        </span>
+      </div>
+      <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+              <Home size={14} className="text-copper-soft" /> {property.name}
+            </div>
+            <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[property.overallHealth]}>{property.note}</div>
+          </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted">
+            <Star size={12} className="text-copper-soft" /> Mini Aura {Math.round(property.guestAuraScore)}
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Owner proceeds" value={money(property.ownerProceeds)} tone={property.ownerProceedsHealth} />
+          <Stat label="Maintenance drag" value={pct(property.maintenancePressurePct)} tone={property.maintenanceHealth} />
+          <Stat label="Booking pace" value={pct(property.bookingPacePct, 0)} tone={property.bookingMomentumHealth} />
+          <Stat
+            label={property.reserveCushion >= 0 ? "Reserve cushion" : "Reserve gap"}
+            value={money(Math.abs(property.reserveCushion))}
+            tone={property.reserveCushion >= 0 ? "green" : "red"}
+          />
+          <Stat label="Occupancy" value={pct(property.occupancyPct, 0)} />
+          <Stat label="ADR" value={money(property.averageDailyRate)} />
+          <Stat label="RevPAR" value={money(property.revPar)} />
+          <Stat label="Open issues" value={Math.round(property.openIssues).toLocaleString()} tone={property.maintenanceHealth} />
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted">
+        The owner-facing version would connect PMS, reviews, owner statements, cleaning, and maintenance reports per property.
+      </p>
     </div>
   );
 }

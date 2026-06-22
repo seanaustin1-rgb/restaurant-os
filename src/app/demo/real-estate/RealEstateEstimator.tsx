@@ -14,6 +14,10 @@ import {
   type MarketAuraResult,
 } from "@/lib/demo/market-aura";
 import {
+  buildPropertyActionQueue,
+  type PropertyActionItem,
+} from "@/lib/demo/property-action-queue";
+import {
   computePropertyHeartbeat,
   type PropertyHeartbeatResult,
 } from "@/lib/demo/property-heartbeat";
@@ -597,6 +601,8 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
 }
 
 function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioResult }) {
+  const actionQueue = buildPropertyActionQueue(portfolio.properties, 4);
+
   return (
     <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -633,6 +639,31 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
             </div>
           ))}
         </div>
+        {actionQueue.length > 0 && <PropertyActionQueue items={actionQueue} />}
+      </div>
+    </div>
+  );
+}
+
+function PropertyActionQueue({ items }: { items: PropertyActionItem[] }) {
+  return (
+    <div className="mt-4 rounded-lg border border-copper-dim/40 bg-copper-dim/10 p-3">
+      <div className="text-[11px] uppercase tracking-wider text-copper-soft">Operator action queue</div>
+      <div className="mt-3 space-y-2">
+        {items.map((item) => (
+          <div key={`${item.propertyName}-${item.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="text-sm text-[#E6E8E4]">{item.title}</div>
+                <div className="text-[11px] text-muted">{item.propertyName}</div>
+              </div>
+              <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(item.priority)}>
+                {item.priority === "red" ? "urgent" : "watch"}
+              </span>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted">{item.detail}</p>
+          </div>
+        ))}
       </div>
     </div>
   );

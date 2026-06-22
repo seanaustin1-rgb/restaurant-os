@@ -10,10 +10,34 @@ export default async function ConnectionsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  const role = await prisma.userRestaurantRole.findFirst({
+  const roles = await prisma.userRestaurantRole.findMany({
     where: { clerkUserId: userId },
-    select: { restaurantId: true, restaurant: { select: { name: true } } },
+    select: {
+      restaurantId: true,
+      createdAt: true,
+      restaurant: {
+        select: {
+          name: true,
+          _count: {
+            select: {
+              dailySales: true,
+              transactions: true,
+              posConnections: true,
+              plaidConnections: true,
+            },
+          },
+        },
+      },
+    },
   });
+  const role = roles.sort((a, b) => {
+    const aCount = a.restaurant._count;
+    const bCount = b.restaurant._count;
+    const aScore = aCount.dailySales * 4 + aCount.transactions + aCount.posConnections * 10 + aCount.plaidConnections * 10;
+    const bScore = bCount.dailySales * 4 + bCount.transactions + bCount.posConnections * 10 + bCount.plaidConnections * 10;
+    if (bScore !== aScore) return bScore - aScore;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  })[0];
 
   const connections = role
     ? await prisma.plaidConnection.findMany({

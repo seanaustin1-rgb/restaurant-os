@@ -31,4 +31,22 @@ describe("industry templates", () => {
       }
     }
   });
+
+  it("surfaces the real estate paid add-on lanes in the brokerage template", () => {
+    expect(INDUSTRY_TEMPLATES.REAL_ESTATE_BROKERAGE.defaultModuleKeys).toEqual(
+      expect.arrayContaining([
+        "company-dollar",
+        "commission-pipeline",
+        "agent-performance",
+        "market-intelligence",
+        "lead-roi",
+      ]),
+    );
+  });
+
+  it("surfaces the property heartbeat lane in the vacation rental template", () => {
+    expect(INDUSTRY_TEMPLATES.VACATION_RENTAL.defaultModuleKeys).toEqual(
+      expect.arrayContaining(["property-heartbeat", "occupancy", "property-profit"]),
+    );
+  });
 });

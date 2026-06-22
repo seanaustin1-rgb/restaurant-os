@@ -88,6 +88,42 @@ enum DataSourceStatus {
   BLOCKED
 }
 
+enum VacationRentalSourceKind {
+  ESCAPIA
+  PMS
+  CSV
+  QUICKBOOKS
+  REVIEWS
+  MAINTENANCE
+  OTHER
+}
+
+enum VacationRentalImportStatus {
+  STAGED
+  COMMITTED
+  FAILED
+}
+
+enum RentalExpenseKind {
+  CLEANING
+  MAINTENANCE
+  PLATFORM_FEE
+  MANAGEMENT_FEE
+  TAX
+  OWNER_PAYOUT
+  SUPPLIES
+  UTILITIES
+  INSURANCE
+  OTHER
+}
+
+enum RentalIssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  DEFERRED
+}
+
 // How a categorization Rule matches a transaction's merchant/description.
 //   KEYWORD   — case-insensitive substring match (operator-friendly default)
 //   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
@@ -104,39 +140,47 @@ enum RuleMatchType {
 // ─────────────────────────────────────────────────────────────
 
 model Restaurant {
-  id          String   @id @default(cuid())
-  clerkOrgId  String?  @unique
-  name        String
-  slug        String   @unique
-  businessType BusinessType @default(RESTAURANT)
-  seatCount   Int?
-  timezone    String   @default("America/New_York")
+  id                    String       @id @default(cuid())
+  clerkOrgId            String?      @unique
+  name                  String
+  slug                  String       @unique
+  businessType          BusinessType @default(RESTAURANT)
+  seatCount             Int?
+  timezone              String       @default("America/New_York")
   // Cash Runway anchor: operator-entered bank balance on a known date (from any
   // statement). Runway = anchor + net transactions since. No live balance feed
   // exists (statement import skips balance lines; no Plaid balance stored).
-  cashBalanceAnchor     Decimal?  @db.Decimal(12, 2)
-  cashBalanceAnchorDate DateTime? @db.Date
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  cashBalanceAnchor     Decimal?     @db.Decimal(12, 2)
+  cashBalanceAnchorDate DateTime?    @db.Date
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
-  userRoles       UserRestaurantRole[]
-  posConnections  PosConnection[]
-  dailySales      DailySales[]
-  menuItemSales   MenuItemSales[]
-  plaidConnections PlaidConnection[]
-  transactions    Transaction[]
-  categories      Category[]
-  rules           Rule[]
-  tapSettings     TapSettings?
-  virtualAccounts VirtualAccount[]
-  bucketAllocations BucketAllocation[]
-  bucketSweeps    BucketSweep[]
-  targetSettings  TargetSettings?
-  moduleConfigs   ModuleConfig[]
-  dataSourceConfigs DataSourceConfig[]
-  reviewCaches    ReviewCache[]
-  socialCaches    SocialCache[]
-  aiActionLogs    AiActionLog[]
+  userRoles                   UserRestaurantRole[]
+  posConnections              PosConnection[]
+  dailySales                  DailySales[]
+  menuItemSales               MenuItemSales[]
+  plaidConnections            PlaidConnection[]
+  transactions                Transaction[]
+  categories                  Category[]
+  rules                       Rule[]
+  tapSettings                 TapSettings?
+  virtualAccounts             VirtualAccount[]
+  bucketAllocations           BucketAllocation[]
+  bucketSweeps                BucketSweep[]
+  targetSettings              TargetSettings?
+  moduleConfigs               ModuleConfig[]
+  dataSourceConfigs           DataSourceConfig[]
+  reviewCaches                ReviewCache[]
+  socialCaches                SocialCache[]
+  vacationRentalSources       VacationRentalSource[]
+  vacationRentalImportBatches VacationRentalImportBatch[]
+  rentalProperties            RentalProperty[]
+  rentalBookings              RentalBooking[]
+  rentalOwnerStatements       RentalOwnerStatement[]
+  rentalExpenses              RentalExpense[]
+  rentalMaintenanceIssues     RentalMaintenanceIssue[]
+  rentalReviews               RentalReview[]
+  aiActionLogs                AiActionLog[]
 }
 
 model UserRestaurantRole {
@@ -147,7 +191,7 @@ model UserRestaurantRole {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([clerkUserId, restaurantId])
   @@index([restaurantId])
@@ -159,43 +203,43 @@ model UserRestaurantRole {
 // ─────────────────────────────────────────────────────────────
 
 model PosConnection {
-  id            String      @id @default(cuid())
-  restaurantId  String
-  provider      PosProvider
-  externalId    String?
-  accessToken   String?     // encrypted at rest
-  refreshToken  String?     // encrypted at rest
-  lastSyncedAt  DateTime?
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id           String      @id @default(cuid())
+  restaurantId String
+  provider     PosProvider
+  externalId   String?
+  accessToken  String? // encrypted at rest
+  refreshToken String? // encrypted at rest
+  lastSyncedAt DateTime?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  restaurant    Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
 }
 
 model DailySales {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  date          DateTime @db.Date
-  grossSales    Decimal  @db.Decimal(12, 2)
-  netSales      Decimal  @db.Decimal(12, 2)
-  foodSales     Decimal? @db.Decimal(12, 2)
-  liquorSales   Decimal? @db.Decimal(12, 2)
-  beverageSales Decimal? @db.Decimal(12, 2)
-  covers        Int?
-  checkCount    Int?
-  laborCost     Decimal? @db.Decimal(12, 2)
-  laborHours    Decimal? @db.Decimal(7, 2)  // actual worked hours (Toast era hourlyJobTotalHours)
-  hoursOpen     Decimal? @db.Decimal(5, 2)
-  salesTaxCollected Decimal? @db.Decimal(12, 2) // collected sales tax (Toast Orders API per-check taxAmount sum) — pre-allocation skim source
+  id                 String   @id @default(cuid())
+  restaurantId       String
+  date               DateTime @db.Date
+  grossSales         Decimal  @db.Decimal(12, 2)
+  netSales           Decimal  @db.Decimal(12, 2)
+  foodSales          Decimal? @db.Decimal(12, 2)
+  liquorSales        Decimal? @db.Decimal(12, 2)
+  beverageSales      Decimal? @db.Decimal(12, 2)
+  covers             Int?
+  checkCount         Int?
+  laborCost          Decimal? @db.Decimal(12, 2)
+  laborHours         Decimal? @db.Decimal(7, 2) // actual worked hours (Toast era hourlyJobTotalHours)
+  hoursOpen          Decimal? @db.Decimal(5, 2)
+  salesTaxCollected  Decimal? @db.Decimal(12, 2) // collected sales tax (Toast Orders API per-check taxAmount sum) — pre-allocation skim source
   mixByRevenueCenter Json? // [{revenueCenter,netSales,orders,guests}] — Toast era groupBy REVENUE_CENTER
-  source        String?  // pos provider name or "manual"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  source             String? // pos provider name or "manual"
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, date])
   @@index([restaurantId])
@@ -204,38 +248,38 @@ model DailySales {
 // Per-day, per-menu-item sales from the Toast Analytics menu report (groupBy
 // MENU_ITEM). Feeds Menu Engineering; one row per restaurant × date × item.
 model MenuItemSales {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  date          DateTime @db.Date
-  menuItemGuid  String
-  menuItemName  String
-  quantitySold  Int
-  netSales      Decimal  @db.Decimal(12, 2)
-  avgPrice      Decimal? @db.Decimal(10, 2)
-  source        String?  // "toast"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  restaurantId String
+  date         DateTime @db.Date
+  menuItemGuid String
+  menuItemName String
+  quantitySold Int
+  netSales     Decimal  @db.Decimal(12, 2)
+  avgPrice     Decimal? @db.Decimal(10, 2)
+  source       String? // "toast"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, date, menuItemGuid])
   @@index([restaurantId, date])
 }
 
 model PlaidConnection {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  itemId        String   @unique
-  accessToken   String   // encrypted at rest
-  institution   String?
-  cursor        String?  // transactions sync cursor
-  lastSyncedAt  DateTime?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  restaurantId String
+  itemId       String    @unique
+  accessToken  String // encrypted at rest
+  institution  String?
+  cursor       String? // transactions sync cursor
+  lastSyncedAt DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  restaurant    Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  transactions  Transaction[]
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@index([restaurantId])
 }
@@ -257,9 +301,9 @@ model Transaction {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  restaurant        Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  plaidConnection   PlaidConnection? @relation(fields: [plaidConnectionId], references: [id], onDelete: SetNull)
-  category          Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  restaurant      Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  plaidConnection PlaidConnection? @relation(fields: [plaidConnectionId], references: [id], onDelete: SetNull)
+  category        Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([restaurantId])
   @@index([restaurantId, date])
@@ -270,16 +314,16 @@ model Transaction {
 // Operator-extensible expense/income category (per restaurant). Rolls up into a
 // fixed TapBucket for the Profit First gauges. "Misc" is the system catch-all.
 model Category {
-  id           String    @id @default(cuid())
-  restaurantId String
-  name         String
-  tapBucket    TapBucket
-  monthlyBudget Decimal? @db.Decimal(12, 2) // optional per-category monthly spend budget (OpEx sub-budgets etc.)
-  isSystem     Boolean   @default(false)
-  sortOrder    Int       @default(0)
-  archivedAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  restaurantId  String
+  name          String
+  tapBucket     TapBucket
+  monthlyBudget Decimal?  @db.Decimal(12, 2) // optional per-category monthly spend budget (OpEx sub-budgets etc.)
+  isSystem      Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   transactions Transaction[]
@@ -299,7 +343,7 @@ model Rule {
   restaurantId String
   categoryId   String
   matchType    RuleMatchType @default(KEYWORD)
-  pattern      String        // keyword | regex source | numeric threshold (CHECK_MIN)
+  pattern      String // keyword | regex source | numeric threshold (CHECK_MIN)
   priority     Int           @default(100)
   isSystem     Boolean       @default(false) // seeded default vs operator-created
   enabled      Boolean       @default(true)
@@ -307,8 +351,8 @@ model Rule {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category   Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
   @@index([categoryId])
@@ -319,38 +363,38 @@ model Rule {
 // ─────────────────────────────────────────────────────────────
 
 model TapSettings {
-  id            String   @id @default(cuid())
-  restaurantId  String   @unique
+  id             String   @id @default(cuid())
+  restaurantId   String   @unique
   // TAP percentages (stored as whole-number percents, e.g. 5.00 = 5%)
-  profitPct     Decimal  @default(5.00)  @db.Decimal(5, 2)
-  ownerPayPct   Decimal  @default(5.00)  @db.Decimal(5, 2)
-  cogsFoodPct   Decimal  @default(18.00) @db.Decimal(5, 2)
-  cogsLiquorPct Decimal  @default(12.00) @db.Decimal(5, 2)
-  laborPct      Decimal  @default(32.00) @db.Decimal(5, 2)
-  opexPct       Decimal  @default(28.00) @db.Decimal(5, 2)
-  simulationMode Boolean @default(true)  // true until "Go Live" activates Dwolla ACH
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  profitPct      Decimal  @default(5.00) @db.Decimal(5, 2)
+  ownerPayPct    Decimal  @default(5.00) @db.Decimal(5, 2)
+  cogsFoodPct    Decimal  @default(18.00) @db.Decimal(5, 2)
+  cogsLiquorPct  Decimal  @default(12.00) @db.Decimal(5, 2)
+  laborPct       Decimal  @default(32.00) @db.Decimal(5, 2)
+  opexPct        Decimal  @default(28.00) @db.Decimal(5, 2)
+  simulationMode Boolean  @default(true) // true until "Go Live" activates Dwolla ACH
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 model VirtualAccount {
-  id            String   @id @default(cuid())
-  restaurantId  String
+  id              String    @id @default(cuid())
+  restaurantId    String
   // Profit First account identity: profit | owner_pay | cogs_food | cogs_liquor | cogs_beverage | labor | opex | spill | tax_reserve
-  key           String
-  name          String
-  balance       Decimal  @default(0) @db.Decimal(12, 2)
-  targetPct     Decimal? @db.Decimal(5, 2)
+  key             String
+  name            String
+  balance         Decimal   @default(0) @db.Decimal(12, 2)
+  targetPct       Decimal?  @db.Decimal(5, 2)
   // Persisted-ledger bookkeeping (production phase): when the bucket last accrued
   // an allocation, and (for accrue-only buckets) when it was last swept to zero.
   lastAllocatedAt DateTime?
   lastSweptAt     DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, key])
   @@index([restaurantId])
@@ -361,24 +405,24 @@ model VirtualAccount {
 // date) so a re-run/backfill never double-allocates. The per-bucket columns store
 // the dollars set aside that day; running balances live on VirtualAccount.
 model BucketAllocation {
-  id              String   @id @default(cuid())
-  restaurantId    String
-  date            DateTime @db.Date
-  netSalesBasis   Decimal  @db.Decimal(12, 2)
-  salesTaxReserved Decimal @default(0) @db.Decimal(12, 2)
-  allocable       Decimal  @db.Decimal(12, 2)
-  profit          Decimal  @default(0) @db.Decimal(12, 2)
-  ownerPay        Decimal  @default(0) @db.Decimal(12, 2)
-  cogsFood        Decimal  @default(0) @db.Decimal(12, 2)
-  cogsLiquor      Decimal  @default(0) @db.Decimal(12, 2)
-  cogsBeverage    Decimal  @default(0) @db.Decimal(12, 2)
-  labor           Decimal  @default(0) @db.Decimal(12, 2)
-  opex            Decimal  @default(0) @db.Decimal(12, 2)
-  spill           Decimal  @default(0) @db.Decimal(12, 2)
-  source          String   @default("toast") // earned-basis source: toast | manual
-  createdAt       DateTime @default(now())
+  id               String   @id @default(cuid())
+  restaurantId     String
+  date             DateTime @db.Date
+  netSalesBasis    Decimal  @db.Decimal(12, 2)
+  salesTaxReserved Decimal  @default(0) @db.Decimal(12, 2)
+  allocable        Decimal  @db.Decimal(12, 2)
+  profit           Decimal  @default(0) @db.Decimal(12, 2)
+  ownerPay         Decimal  @default(0) @db.Decimal(12, 2)
+  cogsFood         Decimal  @default(0) @db.Decimal(12, 2)
+  cogsLiquor       Decimal  @default(0) @db.Decimal(12, 2)
+  cogsBeverage     Decimal  @default(0) @db.Decimal(12, 2)
+  labor            Decimal  @default(0) @db.Decimal(12, 2)
+  opex             Decimal  @default(0) @db.Decimal(12, 2)
+  spill            Decimal  @default(0) @db.Decimal(12, 2)
+  source           String   @default("toast") // earned-basis source: toast | manual
+  createdAt        DateTime @default(now())
 
-  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, date])
   @@index([restaurantId])
@@ -387,26 +431,26 @@ model BucketAllocation {
 // A sweep event — Profit & Owner's Pay zeroed on the 10th & 25th (simulation: no
 // real money moves, just a logged distribution). One row per bucket per sweep.
 model BucketSweep {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  key           String   // virtual-account key swept (profit | owner_pay)
-  amount        Decimal  @db.Decimal(12, 2)
-  sweptAt       DateTime @db.Date // the sweep date (10th/25th) this settled
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  restaurantId String
+  key          String // virtual-account key swept (profit | owner_pay)
+  amount       Decimal  @db.Decimal(12, 2)
+  sweptAt      DateTime @db.Date // the sweep date (10th/25th) this settled
+  createdAt    DateTime @default(now())
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
 }
 
 model TargetSettings {
-  id              String   @id @default(cuid())
-  restaurantId    String   @unique
-  targetPrimeCost Decimal? @db.Decimal(5, 2)  // e.g. 60.00 (% of revenue)
-  targetFoodCost  Decimal? @db.Decimal(5, 2)
-  targetLiquorCost Decimal? @db.Decimal(5, 2)
-  targetLaborCost Decimal? @db.Decimal(5, 2)
-  targetRevPASH   Decimal? @db.Decimal(8, 2)
+  id                    String   @id @default(cuid())
+  restaurantId          String   @unique
+  targetPrimeCost       Decimal? @db.Decimal(5, 2) // e.g. 60.00 (% of revenue)
+  targetFoodCost        Decimal? @db.Decimal(5, 2)
+  targetLiquorCost      Decimal? @db.Decimal(5, 2)
+  targetLaborCost       Decimal? @db.Decimal(5, 2)
+  targetRevPASH         Decimal? @db.Decimal(8, 2)
   // Beverage cost ratios (Milestone B). Pour-cost targets are a % of the matching
   // ALCOHOL sales (not total revenue): liquor COGS ÷ liquor sales, beer/bev COGS ÷
   // beverage sales. The *MixPct fields are a manual fallback for the denominator —
@@ -416,10 +460,10 @@ model TargetSettings {
   targetBeveragePourPct Decimal? @db.Decimal(5, 2)
   liquorSalesMixPct     Decimal? @db.Decimal(5, 2)
   beverageSalesMixPct   Decimal? @db.Decimal(5, 2)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
-  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -427,16 +471,16 @@ model TargetSettings {
 // ─────────────────────────────────────────────────────────────
 
 model ModuleConfig {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  moduleKey     String
-  isEnabled     Boolean  @default(true)
-  position      Int      @default(0)
-  settings      Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  restaurantId String
+  moduleKey    String
+  isEnabled    Boolean  @default(true)
+  position     Int      @default(0)
+  settings     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, moduleKey])
   @@index([restaurantId])
@@ -454,62 +498,322 @@ model DashboardLayout {
 }
 
 model DataSourceConfig {
-  id            String           @id @default(cuid())
-  restaurantId  String
-  category      String
-  providerName  String
-  status        DataSourceStatus @default(PLANNED)
-  notes         String?
-  updatedBy     String?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id           String           @id @default(cuid())
+  restaurantId String
+  category     String
+  providerName String
+  status       DataSourceStatus @default(PLANNED)
+  notes        String?
+  updatedBy    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
 
-  restaurant    Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@unique([restaurantId, category, providerName])
   @@index([restaurantId])
   @@index([status])
 }
 
-model ReviewCache {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  source        String   // e.g. "google", "yelp"
-  payload       Json
-  fetchedAt     DateTime @default(now())
-  expiresAt     DateTime?
+model VacationRentalSource {
+  id                String                   @id @default(cuid())
+  restaurantId      String
+  kind              VacationRentalSourceKind
+  providerName      String
+  externalAccountId String?
+  displayName       String?
+  capabilities      Json?
+  lastSyncedAt      DateTime?
+  isActive          Boolean                  @default(true)
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant        Restaurant                  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  importBatches     VacationRentalImportBatch[]
+  properties        RentalProperty[]
+  bookings          RentalBooking[]
+  ownerStatements   RentalOwnerStatement[]
+  expenses          RentalExpense[]
+  maintenanceIssues RentalMaintenanceIssue[]
+  reviews           RentalReview[]
+
+  @@unique([restaurantId, kind, providerName, externalAccountId])
+  @@index([restaurantId])
+  @@index([kind])
+}
+
+model VacationRentalImportBatch {
+  id             String                     @id @default(cuid())
+  restaurantId   String
+  sourceId       String?
+  sourceName     String
+  status         VacationRentalImportStatus @default(STAGED)
+  importedBy     String?
+  fileName       String?
+  externalCursor String?
+  rowCount       Int                        @default(0)
+  acceptedCount  Int                        @default(0)
+  rejectedCount  Int                        @default(0)
+  summary        Json?
+  error          String?
+  createdAt      DateTime                   @default(now())
+  committedAt    DateTime?
+
+  restaurant        Restaurant               @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  source            VacationRentalSource?    @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  properties        RentalProperty[]
+  bookings          RentalBooking[]
+  ownerStatements   RentalOwnerStatement[]
+  expenses          RentalExpense[]
+  maintenanceIssues RentalMaintenanceIssue[]
+  reviews           RentalReview[]
+
+  @@index([restaurantId])
+  @@index([sourceId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model RentalProperty {
+  id             String   @id @default(cuid())
+  restaurantId   String
+  sourceId       String?
+  importBatchId  String?
+  externalUnitId String
+  name           String
+  address1       String?
+  address2       String?
+  city           String?
+  state          String?
+  postalCode     String?
+  bedrooms       Int?
+  bathrooms      Decimal? @db.Decimal(5, 2)
+  sleeps         Int?
+  active         Boolean  @default(true)
+  rawPayload     Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  restaurant        Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  source            VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch       VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+  bookings          RentalBooking[]
+  ownerStatements   RentalOwnerStatement[]
+  expenses          RentalExpense[]
+  maintenanceIssues RentalMaintenanceIssue[]
+  reviews           RentalReview[]
+
+  @@unique([restaurantId, externalUnitId])
+  @@index([restaurantId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([active])
+}
+
+model RentalBooking {
+  id                String    @id @default(cuid())
+  restaurantId      String
+  propertyId        String?
+  sourceId          String?
+  importBatchId     String?
+  externalBookingId String
+  externalUnitId    String?
+  channel           String?
+  guestName         String?
+  bookedAt          DateTime?
+  checkIn           DateTime  @db.Date
+  checkOut          DateTime  @db.Date
+  nights            Int
+  grossRent         Decimal   @db.Decimal(12, 2)
+  fees              Decimal   @default(0) @db.Decimal(12, 2)
+  taxes             Decimal   @default(0) @db.Decimal(12, 2)
+  platformFees      Decimal   @default(0) @db.Decimal(12, 2)
+  ownerPayout       Decimal?  @db.Decimal(12, 2)
+  status            String?
+  rawPayload        Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  restaurant  Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  property    RentalProperty?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  source      VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalBookingId])
+  @@index([restaurantId])
+  @@index([propertyId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([checkIn])
+}
+
+model RentalOwnerStatement {
+  id                  String   @id @default(cuid())
+  restaurantId        String
+  propertyId          String?
+  sourceId            String?
+  importBatchId       String?
+  externalStatementId String
+  externalUnitId      String?
+  periodStart         DateTime @db.Date
+  periodEnd           DateTime @db.Date
+  grossRevenue        Decimal  @default(0) @db.Decimal(12, 2)
+  ownerPayout         Decimal  @default(0) @db.Decimal(12, 2)
+  managementFees      Decimal  @default(0) @db.Decimal(12, 2)
+  expenses            Decimal  @default(0) @db.Decimal(12, 2)
+  reserveHeld         Decimal  @default(0) @db.Decimal(12, 2)
+  rawPayload          Json?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  restaurant  Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  property    RentalProperty?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  source      VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalStatementId])
+  @@index([restaurantId])
+  @@index([propertyId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([periodStart, periodEnd])
+}
+
+model RentalExpense {
+  id                String            @id @default(cuid())
+  restaurantId      String
+  propertyId        String?
+  sourceId          String?
+  importBatchId     String?
+  externalExpenseId String
+  externalUnitId    String?
+  kind              RentalExpenseKind @default(OTHER)
+  vendor            String?
+  description       String?
+  date              DateTime          @db.Date
+  amount            Decimal           @db.Decimal(12, 2)
+  rawPayload        Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  restaurant  Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  property    RentalProperty?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  source      VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalExpenseId])
+  @@index([restaurantId])
+  @@index([propertyId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([date])
+  @@index([kind])
+}
+
+model RentalMaintenanceIssue {
+  id              String            @id @default(cuid())
+  restaurantId    String
+  propertyId      String?
+  sourceId        String?
+  importBatchId   String?
+  externalIssueId String
+  externalUnitId  String?
+  title           String
+  description     String?
+  status          RentalIssueStatus @default(OPEN)
+  openedAt        DateTime
+  resolvedAt      DateTime?
+  estimatedCost   Decimal?          @db.Decimal(12, 2)
+  actualCost      Decimal?          @db.Decimal(12, 2)
+  isRepeatIssue   Boolean           @default(false)
+  rawPayload      Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  restaurant  Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  property    RentalProperty?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  source      VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalIssueId])
+  @@index([restaurantId])
+  @@index([propertyId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([status])
+  @@index([openedAt])
+}
+
+model RentalReview {
+  id               String   @id @default(cuid())
+  restaurantId     String
+  propertyId       String?
+  sourceId         String?
+  importBatchId    String?
+  externalReviewId String
+  externalUnitId   String?
+  platform         String
+  rating           Decimal? @db.Decimal(3, 2)
+  reviewText       String?
+  reviewedAt       DateTime @db.Date
+  responseHours    Decimal? @db.Decimal(8, 2)
+  rawPayload       Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  restaurant  Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  property    RentalProperty?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  source      VacationRentalSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  importBatch VacationRentalImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalReviewId])
+  @@index([restaurantId])
+  @@index([propertyId])
+  @@index([sourceId])
+  @@index([importBatchId])
+  @@index([platform])
+  @@index([reviewedAt])
+}
+
+model ReviewCache {
+  id           String    @id @default(cuid())
+  restaurantId String
+  source       String // e.g. "google", "yelp"
+  payload      Json
+  fetchedAt    DateTime  @default(now())
+  expiresAt    DateTime?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId, source])
 }
 
 model SocialCache {
-  id            String   @id @default(cuid())
-  restaurantId  String
-  platform      String   // e.g. "instagram", "facebook"
-  payload       Json
-  fetchedAt     DateTime @default(now())
-  expiresAt     DateTime?
+  id           String    @id @default(cuid())
+  restaurantId String
+  platform     String // e.g. "instagram", "facebook"
+  payload      Json
+  fetchedAt    DateTime  @default(now())
+  expiresAt    DateTime?
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId, platform])
 }
 
 model AiActionLog {
-  id            String         @id @default(cuid())
-  restaurantId  String
-  clerkUserId   String?
-  action        String
-  input         Json?
-  output        Json?
-  status        AiActionStatus @default(PENDING)
-  error         String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id           String         @id @default(cuid())
+  restaurantId String
+  clerkUserId  String?
+  action       String
+  input        Json?
+  output       Json?
+  status       AiActionStatus @default(PENDING)
+  error        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 
-  restaurant    Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@index([restaurantId])
   @@index([status])

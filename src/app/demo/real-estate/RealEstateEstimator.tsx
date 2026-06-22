@@ -3,12 +3,16 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Gauge, Home, PiggyBank, Star, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import {
   computeAgentPerformanceList,
   type AgentPerformanceResult,
 } from "@/lib/demo/real-estate-agent-performance";
+import {
+  computeMarketAura,
+  type MarketAuraResult,
+} from "@/lib/demo/market-aura";
 import {
   computePropertyHeartbeat,
   type PropertyHeartbeatResult,
@@ -247,6 +251,19 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
     futureBookedNights: Math.max(8, Math.round(num(f.pendingDeals) * 1.5)),
     next30AvailableNights: 28,
   });
+  const marketAura = computeMarketAura({
+    market: f.market || "Local market",
+    newListings7d: Math.max(45, Math.round(num(f.pendingDeals) * 8)),
+    pendings7d: Math.max(20, Math.round(num(f.pendingDeals) * (r.pipelineHealth === "green" ? 7 : r.pipelineHealth === "yellow" ? 5 : 3))),
+    avgDom: r.pipelineHealth === "green" ? 31 : r.pipelineHealth === "yellow" ? 48 : 72,
+    domTrendPct: r.pipelineHealth === "green" ? -3 : r.pipelineHealth === "yellow" ? 8 : 24,
+    priceDrops7d: r.pipelineHealth === "green" ? 8 : r.pipelineHealth === "yellow" ? 18 : 34,
+    showingAppointments7d: r.pipelineHealth === "green" ? 145 : r.pipelineHealth === "yellow" ? 82 : 36,
+    showingTrendPct: r.pipelineHealth === "green" ? 10 : r.pipelineHealth === "yellow" ? -4 : -19,
+    mortgageRatePct: r.pipelineHealth === "green" ? 6.35 : r.pipelineHealth === "yellow" ? 6.95 : 7.55,
+    mortgageRateChangeBps7d: r.pipelineHealth === "green" ? -4 : r.pipelineHealth === "yellow" ? 18 : 38,
+    googleIntentTrendPct: r.pipelineHealth === "green" ? 14 : r.pipelineHealth === "yellow" ? 2 : -16,
+  });
 
   return (
     <div>
@@ -276,6 +293,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       </div>
 
       <AgentPerformancePreview rows={agentRows} />
+      <MarketAuraPreview market={marketAura} />
       <PropertyHeartbeatPreview property={property} />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
@@ -503,6 +521,49 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       </p>
     </div>
   );
+}
+
+function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
+  return (
+    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
+          <h3 className="font-display text-xl text-[#E6E8E4]">Market Intelligence</h3>
+        </div>
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(market.marketAuraHealth)}>
+          {market.marketAuraHealth === "green" ? "market tailwind" : market.marketAuraHealth === "yellow" ? "mixed market" : "market pressure"}
+        </span>
+      </div>
+      <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+              <Search size={14} className="text-copper-soft" /> {market.market}
+            </div>
+            <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[market.marketAuraHealth]}>{market.note}</div>
+          </div>
+          <div className="tnum text-3xl text-[#E6E8E4]">{Math.round(market.marketAuraScore)}</div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <ScoreStat label="Contract velocity" value={market.contractVelocityScore} />
+          <ScoreStat label="DOM pressure" value={market.domPressureScore} />
+          <ScoreStat label="Price drop pressure" value={market.priceDropPressureScore} />
+          <ScoreStat label="Showing demand" value={market.showingDemandScore} />
+          <ScoreStat label="Rate pressure" value={market.ratePressureScore} />
+          <ScoreStat label="Digital intent" value={market.digitalIntentScore} />
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted">
+          Live version connects MLS/RESO, mortgage-rate data, ShowingTime, and Google Business Profile intent.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ScoreStat({ label, value }: { label: string; value: number }) {
+  const health: Health = value >= 70 ? "green" : value >= 50 ? "yellow" : "red";
+  return <Stat label={label} value={Math.round(value).toLocaleString()} tone={health} />;
 }
 
 function badgeCls(health: Health): string {

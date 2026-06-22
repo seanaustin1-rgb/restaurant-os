@@ -489,22 +489,38 @@ function PrimeCostTile({ r }: { r: EstimateResult }) {
 }
 
 function BreakEvenTile({ r }: { r: EstimateResult }) {
+  const weeklySales = r.monthlySales / 4.33;
+  const weeklyBreakEven = r.monthlyBreakEven != null ? r.monthlyBreakEven / 4.33 : null;
+  const weeklyCushion = r.dollarsAboveBreakEven / 4.33;
+
   return (
     <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{r.monthlyBreakEven != null ? money(r.monthlyBreakEven) : "—"}</span>
-        <span className="text-sm text-muted">/ month to break even</span>
+        <span className="tnum text-3xl text-[#E6E8E4]">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
+        <span className="text-sm text-muted">/ week to break even</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <Stat label="Margin of safety" value={r.monthlyBreakEven != null ? pct(r.marginOfSafety, 0) : "—"} tone={r.breakEvenHealth} />
+        <Stat label="Your weekly sales" value={money(weeklySales)} />
         <Stat
-          label={r.dollarsAboveBreakEven >= 0 ? "Cushion / month" : "Shortfall / month"}
-          value={money(Math.abs(r.dollarsAboveBreakEven))}
+          label={weeklyCushion >= 0 ? "Cushion / week" : "Shortfall / week"}
+          value={money(Math.abs(weeklyCushion))}
+          tone={weeklyCushion >= 0 ? "green" : "red"}
+        />
+        <Stat
+          label="Margin of safety"
+          value={r.monthlyBreakEven != null ? pct(r.marginOfSafety, 0) : "—"}
+          tone={r.breakEvenHealth}
+        />
+        <Stat
+          label="Monthly equivalent"
+          value={r.monthlyBreakEven != null ? money(r.monthlyBreakEven) : "—"}
           tone={r.dollarsAboveBreakEven >= 0 ? "green" : "red"}
         />
       </div>
       <p className="mt-3 text-[11px] text-muted">
-        {r.breakEvenPerDay != null ? `About ${money(r.breakEvenPerDay)}/day of sales covers your costs.` : "Costs exceed sales — no break-even at these numbers."}
+        {weeklyBreakEven != null
+          ? `This covers your weekly labor, food/bev costs, and monthly fixed bills converted to a weekly target.`
+          : "Costs exceed sales — no break-even at these numbers."}
       </p>
     </Tile>
   );

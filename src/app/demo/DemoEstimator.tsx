@@ -42,14 +42,14 @@ const BENCH_OVERALL_LABEL: Record<Health, string> = {
 };
 
 type FormState = Record<
-  | "name" | "city" | "monthlySales" | "foodPct" | "laborPct" | "fixedCosts"
-  | "bevSharePct" | "avgCheck" | "seats" | "daysOpenPerWeek",
+  | "name" | "city" | "weeklySales" | "weeklyLabor" | "weeklyFood" | "weeklyAlcohol" | "monthlyFixedCosts"
+  | "avgCheck" | "seats" | "daysOpenPerWeek",
   string
 >;
 
 const INITIAL: FormState = {
-  name: "", city: "", monthlySales: "", foodPct: "30", laborPct: "30", fixedCosts: "",
-  bevSharePct: "", avgCheck: "", seats: "", daysOpenPerWeek: "",
+  name: "", city: "", weeklySales: "", weeklyLabor: "", weeklyFood: "", weeklyAlcohol: "", monthlyFixedCosts: "",
+  avgCheck: "", seats: "", daysOpenPerWeek: "",
 };
 
 const num = (s: string): number => {
@@ -64,14 +64,23 @@ const optNum = (s: string): number | null => {
 };
 
 function buildInputs(f: FormState): EstimateInputs {
+  const weeklySales = num(f.weeklySales);
+  const weeklyLabor = num(f.weeklyLabor);
+  const weeklyFood = num(f.weeklyFood);
+  const weeklyAlcohol = num(f.weeklyAlcohol);
+  const weeklyCogs = weeklyFood + weeklyAlcohol;
+  const foodPct = weeklySales > 0 && weeklyCogs > 0 ? (weeklyCogs / weeklySales) * 100 : 30;
+  const laborPct = weeklySales > 0 && weeklyLabor > 0 ? (weeklyLabor / weeklySales) * 100 : 30;
+  const bevSharePct = weeklyCogs > 0 && weeklyAlcohol > 0 ? (weeklyAlcohol / weeklyCogs) * 100 : null;
+
   return {
     name: f.name.trim(),
     city: f.city.trim(),
-    monthlySales: num(f.monthlySales),
-    foodPct: num(f.foodPct),
-    laborPct: num(f.laborPct),
-    fixedCosts: num(f.fixedCosts),
-    bevSharePct: optNum(f.bevSharePct),
+    monthlySales: weeklySales * 4.33,
+    foodPct,
+    laborPct,
+    fixedCosts: num(f.monthlyFixedCosts),
+    bevSharePct,
     avgCheck: optNum(f.avgCheck),
     seats: optNum(f.seats),
     daysOpenPerWeek: optNum(f.daysOpenPerWeek),
@@ -96,7 +105,7 @@ export function DemoEstimator() {
   );
 
   // Prefill from query params, e.g. a shareable link a rep sends a prospect:
-  //   /demo?name=...&city=...&sales=250000&food=30&labor=30&overhead=70000
+  //   /demo?name=...&city=...&weeklySales=60000&weeklyLabor=18000&weeklyFood=12000&weeklyAlcohol=5000&fixed=70000
   // When sales are present, jump straight to the populated results. Name/city
   // only improve the optional reputation lookup.
   useEffect(() => {
@@ -104,13 +113,21 @@ export function DemoEstimator() {
     const sp = new URLSearchParams(window.location.search);
     if (![...sp.keys()].length) return;
     const map: [string, keyof FormState][] = [
-      ["name", "name"], ["city", "city"], ["sales", "monthlySales"], ["food", "foodPct"],
-      ["labor", "laborPct"], ["overhead", "fixedCosts"], ["bev", "bevSharePct"],
+      ["name", "name"], ["city", "city"], ["weeklySales", "weeklySales"], ["weeklyLabor", "weeklyLabor"],
+      ["weeklyFood", "weeklyFood"], ["weeklyAlcohol", "weeklyAlcohol"], ["fixed", "monthlyFixedCosts"],
       ["check", "avgCheck"], ["days", "daysOpenPerWeek"], ["seats", "seats"],
     ];
     const next: Partial<FormState> = {};
     for (const [q, k] of map) { const v = sp.get(q); if (v != null) next[k] = v; }
     if (!Object.keys(next).length) return;
+    if (!next.weeklySales && sp.get("sales")) next.weeklySales = String(Math.round(num(sp.get("sales") ?? "") / 4.33));
+    if (!next.weeklyLabor && sp.get("labor") && next.weeklySales) {
+      next.weeklyLabor = String(Math.round((num(next.weeklySales) * num(sp.get("labor") ?? "")) / 100));
+    }
+    if (!next.weeklyFood && sp.get("food") && next.weeklySales) {
+      next.weeklyFood = String(Math.round((num(next.weeklySales) * num(sp.get("food") ?? "")) / 100));
+    }
+    if (!next.monthlyFixedCosts && sp.get("overhead")) next.monthlyFixedCosts = sp.get("overhead") ?? "";
     const seeded = { ...INITIAL, ...next } as FormState;
     setF(seeded);
     const inp = buildInputs(seeded);
@@ -124,7 +141,7 @@ export function DemoEstimator() {
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const inp = buildInputs(f);
-    if (inp.monthlySales <= 0) return setError("Add your average monthly sales.");
+    if (inp.monthlySales <= 0) return setError("Add your average weekly sales.");
     setError(null);
     setView("results");
     setAura(null);
@@ -151,7 +168,7 @@ export function DemoEstimator() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-xl">
       <p className="text-sm text-muted">
-        One number is enough to get a first read. Add the rest only if you want the estimate to feel closer to your restaurant.
+        Enter the rough weekly numbers you already know. Ballparks are fine.
       </p>
 
       {/* Tier A — identity */}
@@ -167,21 +184,29 @@ export function DemoEstimator() {
 
       {/* Tier B — core economics */}
       <fieldset className="mt-8 space-y-4">
-        <Legend n="2" title="One required number" hint="Rough monthly sales is enough to start" />
-        <Field label="Average monthly sales" required prefix="$">
-          <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="250,000" value={f.monthlySales} onChange={upd("monthlySales")} />
+        <Legend n="2" title="Known weekly numbers" hint="Sales plus major weekly spend gives the clearest feedback" />
+        <Field label="Average weekly sales" required prefix="$">
+          <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="60,000" value={f.weeklySales} onChange={upd("weeklySales")} />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Food + bev cost" suffix="%">
-            <input className={inputCls + " pr-8"} inputMode="numeric" placeholder="30" value={f.foodPct} onChange={upd("foodPct")} />
+          <Field label="Weekly labor" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="18,000" value={f.weeklyLabor} onChange={upd("weeklyLabor")} />
           </Field>
-          <Field label="Labor cost" suffix="%">
-            <input className={inputCls + " pr-8"} inputMode="numeric" placeholder="30" value={f.laborPct} onChange={upd("laborPct")} />
+          <Field label="Weekly food" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="12,000" value={f.weeklyFood} onChange={upd("weeklyFood")} />
           </Field>
         </div>
-        <Field label="Monthly overhead — rent, utilities, insurance, admin (everything but food & labor)" prefix="$">
-          <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="70,000" value={f.fixedCosts} onChange={upd("fixedCosts")} />
-        </Field>
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Weekly alcohol / beverage" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="5,000" value={f.weeklyAlcohol} onChange={upd("weeklyAlcohol")} />
+          </Field>
+          <Field label="Monthly rent + fixed bills" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="70,000" value={f.monthlyFixedCosts} onChange={upd("monthlyFixedCosts")} />
+          </Field>
+        </div>
+        <p className="text-[11px] leading-relaxed text-muted">
+          Best quick read: weekly sales, labor, food, alcohol/beverage, and monthly fixed bills. Leave anything unknown blank.
+        </p>
       </fieldset>
 
       {/* Tier C — optional */}
@@ -191,13 +216,10 @@ export function DemoEstimator() {
           onClick={() => setShowOptional((s) => !s)}
           className="text-sm text-copper-soft hover:text-copper"
         >
-          {showOptional ? "– Hide" : "+ Want it sharper?"} <span className="text-muted">(optional)</span>
+          {showOptional ? "– Hide" : "+ Add covers detail"} <span className="text-muted">(optional)</span>
         </button>
         {showOptional && (
           <fieldset className="mt-4 grid grid-cols-2 gap-4">
-            <Field label="Bar / bev share" suffix="%">
-              <input className={inputCls + " pr-8"} inputMode="numeric" placeholder="30" value={f.bevSharePct} onChange={upd("bevSharePct")} />
-            </Field>
             <Field label="Average check" prefix="$">
               <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="32" value={f.avgCheck} onChange={upd("avgCheck")} />
             </Field>

@@ -49,10 +49,12 @@ export default async function DemoTourPage() {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-2.5">
           <p className="text-[13px] text-[#CFD2CC]">
             <span className="font-medium text-copper-soft">Live demo</span> — a sample restaurant with realistic
-            data. Everything here runs on your own bank + POS once you connect.
+            data. Use it to see the shape of the dashboard, then enter rough weekly numbers for your own first read.
           </p>
           <div className="flex items-center gap-3 text-[13px]">
-            <Link href="/demo" className="text-muted hover:text-[#E6E8E4]">Try your numbers</Link>
+            <Link href="/demo" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
+              Enter your numbers
+            </Link>
             <SignUpButton forceRedirectUrl="/onboarding">
               <button
                 type="button"

@@ -98,6 +98,14 @@ export function SetupOverviewCard({
               </Link>
             </>
           )}
+          {demoMode && (
+            <Link
+              href="/demo"
+              className="inline-flex items-center justify-center rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs font-medium text-copper-soft hover:bg-copper/20"
+            >
+              Enter your numbers
+            </Link>
+          )}
         </div>
       </div>
 

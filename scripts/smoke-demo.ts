@@ -150,6 +150,15 @@ function assertLowFrictionDemoCopy(probe: Probe) {
   }
 }
 
+function assertNumberEntryPath(demo: Probe, tour: Probe) {
+  if (!demo.body.includes("Average weekly sales")) {
+    throw new Error("/demo did not render the weekly number-entry form");
+  }
+  if (!tour.body.includes("Enter your numbers")) {
+    throw new Error("/demo/tour did not render a clear number-entry CTA");
+  }
+}
+
 function isWindowsTlsPrismaError(logs: string) {
   return logs.includes("No credentials are available in the security package");
 }
@@ -174,6 +183,7 @@ async function main() {
   assertPublicDemoChrome(result.tour);
   assertLowFrictionDemoCopy(result.demo);
   assertLowFrictionDemoCopy(result.tour);
+  assertNumberEntryPath(result.demo, result.tour);
 
   console.log(
     JSON.stringify(

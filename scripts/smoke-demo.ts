@@ -154,6 +154,9 @@ function assertNumberEntryPath(demo: Probe, tour: Probe) {
   if (!demo.body.includes("Average weekly sales")) {
     throw new Error("/demo did not render the weekly number-entry form");
   }
+  if (!demo.body.includes("Rent / lease")) {
+    throw new Error("/demo did not render fixed-expense bill buckets");
+  }
   if (!tour.body.includes("Enter your numbers")) {
     throw new Error("/demo/tour did not render a clear number-entry CTA");
   }

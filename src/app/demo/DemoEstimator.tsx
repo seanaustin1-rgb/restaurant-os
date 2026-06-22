@@ -42,13 +42,15 @@ const BENCH_OVERALL_LABEL: Record<Health, string> = {
 };
 
 type FormState = Record<
-  | "name" | "city" | "weeklySales" | "weeklyLabor" | "weeklyFood" | "weeklyAlcohol" | "monthlyFixedCosts"
+  | "name" | "city" | "weeklySales" | "weeklyLabor" | "weeklyFood" | "weeklyAlcohol"
+  | "monthlyRent" | "monthlyUtilities" | "monthlyInsurance" | "monthlyDebt" | "monthlySoftware" | "monthlyOtherFixed"
   | "avgCheck" | "seats" | "daysOpenPerWeek",
   string
 >;
 
 const INITIAL: FormState = {
-  name: "", city: "", weeklySales: "", weeklyLabor: "", weeklyFood: "", weeklyAlcohol: "", monthlyFixedCosts: "",
+  name: "", city: "", weeklySales: "", weeklyLabor: "", weeklyFood: "", weeklyAlcohol: "",
+  monthlyRent: "", monthlyUtilities: "", monthlyInsurance: "", monthlyDebt: "", monthlySoftware: "", monthlyOtherFixed: "",
   avgCheck: "", seats: "", daysOpenPerWeek: "",
 };
 
@@ -72,6 +74,13 @@ function buildInputs(f: FormState): EstimateInputs {
   const foodPct = weeklySales > 0 && weeklyCogs > 0 ? (weeklyCogs / weeklySales) * 100 : 30;
   const laborPct = weeklySales > 0 && weeklyLabor > 0 ? (weeklyLabor / weeklySales) * 100 : 30;
   const bevSharePct = weeklyCogs > 0 && weeklyAlcohol > 0 ? (weeklyAlcohol / weeklyCogs) * 100 : null;
+  const fixedCosts =
+    num(f.monthlyRent) +
+    num(f.monthlyUtilities) +
+    num(f.monthlyInsurance) +
+    num(f.monthlyDebt) +
+    num(f.monthlySoftware) +
+    num(f.monthlyOtherFixed);
 
   return {
     name: f.name.trim(),
@@ -79,7 +88,7 @@ function buildInputs(f: FormState): EstimateInputs {
     monthlySales: weeklySales * 4.33,
     foodPct,
     laborPct,
-    fixedCosts: num(f.monthlyFixedCosts),
+    fixedCosts,
     bevSharePct,
     avgCheck: optNum(f.avgCheck),
     seats: optNum(f.seats),
@@ -105,7 +114,7 @@ export function DemoEstimator() {
   );
 
   // Prefill from query params, e.g. a shareable link a rep sends a prospect:
-  //   /demo?name=...&city=...&weeklySales=60000&weeklyLabor=18000&weeklyFood=12000&weeklyAlcohol=5000&fixed=70000
+  //   /demo?name=...&city=...&weeklySales=60000&weeklyLabor=18000&weeklyFood=12000&weeklyAlcohol=5000&rent=12000
   // When sales are present, jump straight to the populated results. Name/city
   // only improve the optional reputation lookup.
   useEffect(() => {
@@ -114,7 +123,9 @@ export function DemoEstimator() {
     if (![...sp.keys()].length) return;
     const map: [string, keyof FormState][] = [
       ["name", "name"], ["city", "city"], ["weeklySales", "weeklySales"], ["weeklyLabor", "weeklyLabor"],
-      ["weeklyFood", "weeklyFood"], ["weeklyAlcohol", "weeklyAlcohol"], ["fixed", "monthlyFixedCosts"],
+      ["weeklyFood", "weeklyFood"], ["weeklyAlcohol", "weeklyAlcohol"], ["rent", "monthlyRent"],
+      ["utilities", "monthlyUtilities"], ["insurance", "monthlyInsurance"], ["debt", "monthlyDebt"],
+      ["software", "monthlySoftware"], ["otherFixed", "monthlyOtherFixed"],
       ["check", "avgCheck"], ["days", "daysOpenPerWeek"], ["seats", "seats"],
     ];
     const next: Partial<FormState> = {};
@@ -127,7 +138,8 @@ export function DemoEstimator() {
     if (!next.weeklyFood && sp.get("food") && next.weeklySales) {
       next.weeklyFood = String(Math.round((num(next.weeklySales) * num(sp.get("food") ?? "")) / 100));
     }
-    if (!next.monthlyFixedCosts && sp.get("overhead")) next.monthlyFixedCosts = sp.get("overhead") ?? "";
+    if (!next.monthlyOtherFixed && sp.get("overhead")) next.monthlyOtherFixed = sp.get("overhead") ?? "";
+    if (!next.monthlyOtherFixed && sp.get("fixed")) next.monthlyOtherFixed = sp.get("fixed") ?? "";
     const seeded = { ...INITIAL, ...next } as FormState;
     setF(seeded);
     const inp = buildInputs(seeded);
@@ -200,12 +212,36 @@ export function DemoEstimator() {
           <Field label="Weekly alcohol / beverage" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="5,000" value={f.weeklyAlcohol} onChange={upd("weeklyAlcohol")} />
           </Field>
-          <Field label="Monthly rent + fixed bills" prefix="$">
-            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="70,000" value={f.monthlyFixedCosts} onChange={upd("monthlyFixedCosts")} />
+        </div>
+        <p className="text-[11px] leading-relaxed text-muted">
+          Weekly sales plus labor, food, and beverage spend gives the first pressure read. Add fixed bills below for break-even.
+        </p>
+      </fieldset>
+
+      <fieldset className="mt-8 space-y-4">
+        <Legend n="3" title="Monthly fixed bills" hint="Use the bills you know; leave the rest blank" />
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Rent / lease" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="12,000" value={f.monthlyRent} onChange={upd("monthlyRent")} />
+          </Field>
+          <Field label="Utilities" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="3,500" value={f.monthlyUtilities} onChange={upd("monthlyUtilities")} />
+          </Field>
+          <Field label="Insurance" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="2,000" value={f.monthlyInsurance} onChange={upd("monthlyInsurance")} />
+          </Field>
+          <Field label="Debt / loan payments" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="6,000" value={f.monthlyDebt} onChange={upd("monthlyDebt")} />
+          </Field>
+          <Field label="Software / services" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="1,500" value={f.monthlySoftware} onChange={upd("monthlySoftware")} />
+          </Field>
+          <Field label="Other fixed bills" prefix="$">
+            <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="10,000" value={f.monthlyOtherFixed} onChange={upd("monthlyOtherFixed")} />
           </Field>
         </div>
         <p className="text-[11px] leading-relaxed text-muted">
-          Best quick read: weekly sales, labor, food, alcohol/beverage, and monthly fixed bills. Leave anything unknown blank.
+          These are monthly numbers. The demo converts them to a weekly target for break-even and cash flow.
         </p>
       </fieldset>
 

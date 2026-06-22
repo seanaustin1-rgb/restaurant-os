@@ -119,6 +119,82 @@ type BaseRow = {
   rawPayload?: unknown;
 };
 
+export type NormalizedRentalProperty = BaseRow & {
+  externalUnitId: string;
+  name: string;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  sleeps: number | null;
+  active: boolean;
+};
+
+export type NormalizedRentalBooking = BaseRow & {
+  externalBookingId: string;
+  externalUnitId: string;
+  channel: string | null;
+  guestName: string | null;
+  bookedAt: string | Date | null;
+  checkIn: string | Date;
+  checkOut: string | Date;
+  nights: number;
+  grossRent: number;
+  fees: number;
+  taxes: number;
+  platformFees: number;
+  ownerPayout: number | null;
+  status: string | null;
+};
+
+export type NormalizedRentalOwnerStatement = BaseRow & {
+  externalStatementId: string;
+  externalUnitId: string;
+  periodStart: string | Date;
+  periodEnd: string | Date;
+  grossRevenue: number;
+  ownerPayout: number;
+  managementFees: number;
+  expenses: number;
+  reserveHeld: number;
+};
+
+export type NormalizedRentalExpense = BaseRow & {
+  externalExpenseId: string;
+  externalUnitId: string;
+  kind: RentalExpenseKind;
+  vendor: string | null;
+  description: string | null;
+  date: string | Date;
+  amount: number;
+};
+
+export type NormalizedRentalMaintenanceIssue = BaseRow & {
+  externalIssueId: string;
+  externalUnitId: string;
+  title: string;
+  description: string | null;
+  status: RentalIssueStatus;
+  openedAt: string | Date;
+  resolvedAt: string | Date | null;
+  estimatedCost: number | null;
+  actualCost: number | null;
+  isRepeatIssue: boolean;
+};
+
+export type NormalizedRentalReview = BaseRow & {
+  externalReviewId: string;
+  externalUnitId: string;
+  platform: string;
+  rating: number | null;
+  reviewText: string | null;
+  reviewedAt: string | Date;
+  responseHours: number | null;
+};
+
 export interface NormalizedVacationRentalImport {
   source: {
     restaurantId: string;
@@ -134,12 +210,12 @@ export interface NormalizedVacationRentalImport {
     rejectedCount: number;
     summary: NormalizedImportSummary;
   };
-  properties: Array<BaseRow & Omit<RawRentalProperty, "rawPayload">>;
-  bookings: Array<BaseRow & Required<Pick<RawRentalBooking, "externalBookingId" | "nights">> & Omit<RawRentalBooking, "externalBookingId" | "nights" | "rawPayload">>;
-  ownerStatements: Array<BaseRow & Required<Pick<RawRentalOwnerStatement, "externalStatementId">> & Omit<RawRentalOwnerStatement, "externalStatementId" | "rawPayload">>;
-  expenses: Array<BaseRow & Required<Pick<RawRentalExpense, "externalExpenseId" | "kind">> & Omit<RawRentalExpense, "externalExpenseId" | "kind" | "rawPayload">>;
-  maintenanceIssues: Array<BaseRow & Required<Pick<RawRentalMaintenanceIssue, "externalIssueId" | "status">> & Omit<RawRentalMaintenanceIssue, "externalIssueId" | "status" | "rawPayload">>;
-  reviews: Array<BaseRow & Required<Pick<RawRentalReview, "externalReviewId">> & Omit<RawRentalReview, "externalReviewId" | "rawPayload">>;
+  properties: NormalizedRentalProperty[];
+  bookings: NormalizedRentalBooking[];
+  ownerStatements: NormalizedRentalOwnerStatement[];
+  expenses: NormalizedRentalExpense[];
+  maintenanceIssues: NormalizedRentalMaintenanceIssue[];
+  reviews: NormalizedRentalReview[];
   rejected: string[];
 }
 
@@ -189,7 +265,7 @@ export function normalizeVacationRentalImport(
   const knownUnitIds = new Set((payload.properties ?? []).map((property) => clean(property.externalUnitId)).filter(Boolean));
   const missingUnitReferences = new Set<string>();
 
-  const properties = (payload.properties ?? []).flatMap((property) => {
+  const properties: NormalizedRentalProperty[] = (payload.properties ?? []).flatMap((property) => {
     const externalUnitId = clean(property.externalUnitId);
     const name = clean(property.name);
     if (!externalUnitId || !name) {
@@ -212,7 +288,7 @@ export function normalizeVacationRentalImport(
     }];
   });
 
-  const bookings = (payload.bookings ?? []).flatMap((booking) => {
+  const bookings: NormalizedRentalBooking[] = (payload.bookings ?? []).flatMap((booking) => {
     const externalUnitId = clean(booking.externalUnitId);
     if (!externalUnitId || !validDate(booking.checkIn) || !validDate(booking.checkOut) || money(booking.grossRent) <= 0) {
       rejected.push(`booking missing unit/date/rent: ${booking.externalBookingId || externalUnitId || "unknown"}`);
@@ -239,7 +315,7 @@ export function normalizeVacationRentalImport(
     }];
   });
 
-  const ownerStatements = (payload.ownerStatements ?? []).flatMap((statement) => {
+  const ownerStatements: NormalizedRentalOwnerStatement[] = (payload.ownerStatements ?? []).flatMap((statement) => {
     const externalUnitId = clean(statement.externalUnitId);
     if (!externalUnitId || !validDate(statement.periodStart) || !validDate(statement.periodEnd)) {
       rejected.push(`owner statement missing unit or period: ${statement.externalStatementId || externalUnitId || "unknown"}`);
@@ -260,7 +336,7 @@ export function normalizeVacationRentalImport(
     }];
   });
 
-  const expenses = (payload.expenses ?? []).flatMap((expense) => {
+  const expenses: NormalizedRentalExpense[] = (payload.expenses ?? []).flatMap((expense) => {
     const externalUnitId = clean(expense.externalUnitId);
     if (!externalUnitId || !validDate(expense.date) || money(expense.amount) <= 0) {
       rejected.push(`expense missing unit/date/amount: ${expense.externalExpenseId || externalUnitId || "unknown"}`);
@@ -279,7 +355,7 @@ export function normalizeVacationRentalImport(
     }];
   });
 
-  const maintenanceIssues = (payload.maintenanceIssues ?? []).flatMap((issue) => {
+  const maintenanceIssues: NormalizedRentalMaintenanceIssue[] = (payload.maintenanceIssues ?? []).flatMap((issue) => {
     const externalUnitId = clean(issue.externalUnitId);
     const title = clean(issue.title);
     if (!externalUnitId || !title || !validDate(issue.openedAt)) {
@@ -302,7 +378,7 @@ export function normalizeVacationRentalImport(
     }];
   });
 
-  const reviews = (payload.reviews ?? []).flatMap((review) => {
+  const reviews: NormalizedRentalReview[] = (payload.reviews ?? []).flatMap((review) => {
     const externalUnitId = clean(review.externalUnitId);
     const platform = clean(review.platform);
     if (!externalUnitId || !platform || !validDate(review.reviewedAt)) {

@@ -364,6 +364,7 @@ function Tile({
 }
 
 const YOURS = "Based on your numbers";
+const WEEKS_PER_MONTH = 4.33;
 const clampPct = (v: number, max: number) => Math.max(0, Math.min(100, (v / max) * 100));
 
 function AuraTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
@@ -473,6 +474,9 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
 }
 
 function PrimeCostTile({ r }: { r: EstimateResult }) {
+  const weeklyCogs = r.cogs / WEEKS_PER_MONTH;
+  const weeklyLabor = r.labor / WEEKS_PER_MONTH;
+
   return (
     <Tile title="Prime cost" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS}>
       <div className="flex items-baseline gap-2">
@@ -480,18 +484,18 @@ function PrimeCostTile({ r }: { r: EstimateResult }) {
         <span className="text-sm text-muted">of sales</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
-        <Stat label="Food / COGS" value={money(r.cogs)} />
-        <Stat label="Labor" value={money(r.labor)} />
+        <Stat label="Food + bev / week" value={money(weeklyCogs)} />
+        <Stat label="Labor / week" value={money(weeklyLabor)} />
       </div>
-      <p className="mt-3 text-[11px] text-muted">Target is ≤60%. Food + labor are the two costs that make or break a restaurant.</p>
+      <p className="mt-3 text-[11px] text-muted">Target is ≤60%. This uses weekly food, beverage, and labor spend against weekly sales.</p>
     </Tile>
   );
 }
 
 function BreakEvenTile({ r }: { r: EstimateResult }) {
-  const weeklySales = r.monthlySales / 4.33;
-  const weeklyBreakEven = r.monthlyBreakEven != null ? r.monthlyBreakEven / 4.33 : null;
-  const weeklyCushion = r.dollarsAboveBreakEven / 4.33;
+  const weeklySales = r.monthlySales / WEEKS_PER_MONTH;
+  const weeklyBreakEven = r.monthlyBreakEven != null ? r.monthlyBreakEven / WEEKS_PER_MONTH : null;
+  const weeklyCushion = r.dollarsAboveBreakEven / WEEKS_PER_MONTH;
 
   return (
     <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
@@ -529,12 +533,12 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
 function ProfitFirstTile({ r }: { r: EstimateResult }) {
   return (
     <Tile title="Profit First set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} badge={YOURS}>
-      <p className="text-[11px] text-muted">The first dollars to carve out each month — before the business spends a cent:</p>
+      <p className="text-[11px] text-muted">A weekly starting point for dollars to set aside before the business spends a cent:</p>
       <div className="mt-3 space-y-2">
         {r.pf.map((p) => (
           <div key={p.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
             <span className="text-sm text-[#E6E8E4]">{p.label} <span className="text-muted">({p.pct}%)</span></span>
-            <span className="tnum text-base text-copper-soft">{money(p.amount)}</span>
+            <span className="tnum text-base text-copper-soft">{money(p.amount / WEEKS_PER_MONTH)}</span>
           </div>
         ))}
       </div>
@@ -543,23 +547,27 @@ function ProfitFirstTile({ r }: { r: EstimateResult }) {
 }
 
 function CashFlowTile({ r }: { r: EstimateResult }) {
+  const weeklyCashIn = r.cashIn / WEEKS_PER_MONTH;
+  const weeklyCashOut = r.cashOut / WEEKS_PER_MONTH;
+  const weeklyCashLeft = r.cashLeft / WEEKS_PER_MONTH;
+
   return (
     <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
-          <div className="text-[11px] text-muted">In</div>
-          <div className="tnum text-base text-[#E6E8E4]">{money(r.cashIn)}</div>
+          <div className="text-[11px] text-muted">In / week</div>
+          <div className="tnum text-base text-[#E6E8E4]">{money(weeklyCashIn)}</div>
         </div>
         <div>
-          <div className="text-[11px] text-muted">Out</div>
-          <div className="tnum text-base text-[#E6E8E4]">{money(r.cashOut)}</div>
+          <div className="text-[11px] text-muted">Out / week</div>
+          <div className="tnum text-base text-[#E6E8E4]">{money(weeklyCashOut)}</div>
         </div>
         <div>
-          <div className="text-[11px] text-muted">Left</div>
-          <div className={"tnum text-base " + (r.cashLeft >= 0 ? "text-health-green" : "text-health-red")}>{money(r.cashLeft)}</div>
+          <div className="text-[11px] text-muted">Left / week</div>
+          <div className={"tnum text-base " + (weeklyCashLeft >= 0 ? "text-health-green" : "text-health-red")}>{money(weeklyCashLeft)}</div>
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-muted">Before owner pay, taxes, and debt service — your live data sharpens this into a daily runway.</p>
+      <p className="mt-3 text-[11px] text-muted">Monthly fixed bills are converted into a weekly estimate. Before owner pay, taxes, and debt service.</p>
     </Tile>
   );
 }

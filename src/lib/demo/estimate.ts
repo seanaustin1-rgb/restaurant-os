@@ -169,7 +169,7 @@ export function computeEstimate(input: EstimateInputs): EstimateResult {
       note: costNote(primeCostPct, 60, bandLower(primeCostPct, 60, 65)),
     },
     {
-      key: "cogs", label: "Food / COGS", value: foodPct,
+      key: "cogs", label: "Food + bev COGS", value: foodPct,
       typicalLow: 28, typicalHigh: 32, status: bandLower(foodPct, 32, 35),
       scaleMax: 50, lowerIsBetter: true, greenEdge: 32, yellowEdge: 35,
       note: costNote(foodPct, 32, bandLower(foodPct, 32, 35)),

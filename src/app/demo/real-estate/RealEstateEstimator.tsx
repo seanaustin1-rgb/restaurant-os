@@ -3,7 +3,7 @@
 import type React from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Database, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import {
   computeAgentPerformanceList,
@@ -22,6 +22,10 @@ import {
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
 } from "@/lib/demo/real-estate-estimate";
+import {
+  computeVacationRentalImportReadiness,
+  type VacationRentalImportReadinessResult,
+} from "@/lib/demo/vacation-rental-import-readiness";
 import type { Health } from "@/lib/demo/estimate";
 
 type FormState = Record<
@@ -264,6 +268,16 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
     mortgageRateChangeBps7d: r.pipelineHealth === "green" ? -4 : r.pipelineHealth === "yellow" ? 18 : 38,
     googleIntentTrendPct: r.pipelineHealth === "green" ? 14 : r.pipelineHealth === "yellow" ? 2 : -16,
   });
+  const importReadiness = computeVacationRentalImportReadiness({
+    unitCount: 1_000,
+    annualBookings: 14_000,
+    sources: [
+      {
+        name: "Escapia",
+        capabilities: ["propertyManagers", "unitInventory", "rates", "feesTaxes", "bookingRestrictions", "bookingChannels"],
+      },
+    ],
+  });
 
   return (
     <div>
@@ -295,6 +309,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <AgentPerformancePreview rows={agentRows} />
       <MarketAuraPreview market={marketAura} />
       <PropertyHeartbeatPreview property={property} />
+      <ImportReadinessPreview readiness={importReadiness} />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
         <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>
@@ -555,6 +570,53 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-muted">
           Live version connects MLS/RESO, mortgage-rate data, ShowingTime, and Google Business Profile intent.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImportReadinessResult }) {
+  return (
+    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Pilot import preview</div>
+          <h3 className="font-display text-xl text-[#E6E8E4]">Vacation Rental Import Readiness</h3>
+        </div>
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(readiness.overallHealth)}>
+          {Math.round(readiness.overallCoveragePct)}% mapped
+        </span>
+      </div>
+      <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+              <Database size={14} className="text-copper-soft" /> Escapia-like PMS foundation
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {readiness.connectedSources.join(", ")} connected for {readiness.unitCount.toLocaleString()} units and{" "}
+              {readiness.annualBookings.toLocaleString()} annual bookings.
+            </div>
+          </div>
+          <div className={"tnum text-3xl " + HEALTH_TEXT[readiness.overallHealth]}>
+            {Math.round(readiness.overallCoveragePct)}%
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {readiness.layers.map((layer) => (
+            <div key={layer.key} className="rounded-lg border border-line bg-surface/80 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm text-[#E6E8E4]">{layer.label}</div>
+                <span className={"tnum text-sm " + HEALTH_TEXT[layer.health]}>{Math.round(layer.coveragePct)}%</span>
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted">{layer.note}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted">
+          Next best source: <span className="text-copper-soft">{readiness.nextBestSource}</span>. Escapia gives the operating
+          structure; bookings, owner statements, expenses, maintenance, and reviews complete the money and Aura layers.
         </p>
       </div>
     </div>

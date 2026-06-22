@@ -154,7 +154,8 @@ export function DashboardView({
           demoMode={demoMode}
         />
 
-        {!isInvestor && (
+        {/* Public demo stays read-only: no pinned shortcuts into protected app pages. */}
+        {!demoMode && !isInvestor && (
           <QuickAccessStrip items={pinnedList} onReorder={handleReorderPinned} onUnpin={handleUnpin} />
         )}
 

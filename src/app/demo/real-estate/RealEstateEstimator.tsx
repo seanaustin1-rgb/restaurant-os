@@ -6,6 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Gauge, PiggyBank, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import {
+  computeAgentPerformanceList,
+  type AgentPerformanceResult,
+} from "@/lib/demo/real-estate-agent-performance";
+import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
@@ -190,6 +194,39 @@ export function RealEstateEstimator() {
 }
 
 function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; onEdit: () => void }) {
+  const agentRows = computeAgentPerformanceList([
+    {
+      name: "Top producer near cap",
+      closedGci: r.monthlyGci * 0.42,
+      agentSplitPct: 92,
+      capRemaining: 2_500,
+      pendingDeals: Math.max(1, Math.round(num(f.pendingDeals) * 0.25)),
+      avgDealGci: num(f.avgSalePrice) * ((num(f.avgCommissionPct) || 2.5) / 100),
+      expectedCloseRatePct: num(f.expectedCloseRatePct) || 75,
+      leadSpend: 1_500,
+    },
+    {
+      name: "Core agent",
+      closedGci: r.monthlyGci * 0.34,
+      agentSplitPct: num(f.agentSplitPct) || 70,
+      capRemaining: 14_000,
+      pendingDeals: Math.max(1, Math.round(num(f.pendingDeals) * 0.4)),
+      avgDealGci: num(f.avgSalePrice) * ((num(f.avgCommissionPct) || 2.5) / 100),
+      expectedCloseRatePct: num(f.expectedCloseRatePct) || 75,
+      leadSpend: 900,
+    },
+    {
+      name: "Growth agent",
+      closedGci: r.monthlyGci * 0.18,
+      agentSplitPct: 65,
+      capRemaining: 20_000,
+      pendingDeals: Math.max(0, Math.round(num(f.pendingDeals) * 0.2)),
+      avgDealGci: num(f.avgSalePrice) * ((num(f.avgCommissionPct) || 2.5) / 100),
+      expectedCloseRatePct: Math.max(50, (num(f.expectedCloseRatePct) || 75) - 10),
+      leadSpend: 2_400,
+    },
+  ]);
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
@@ -216,6 +253,8 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
         <PipelineTile r={r} />
         <ProfitFirstTile r={r} />
       </div>
+
+      <AgentPerformancePreview rows={agentRows} />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
         <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>
@@ -354,6 +393,54 @@ function ProfitFirstTile({ r }: { r: RealEstateEstimateResult }) {
       </div>
     </Tile>
   );
+}
+
+function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
+  return (
+    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
+          <h3 className="font-display text-xl text-[#E6E8E4]">Agent Performance</h3>
+        </div>
+        <div className="text-[11px] text-muted">Sample rows generated from the brokerage estimate</div>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-3">
+        {rows.map((row) => (
+          <AgentRow key={row.name} row={row} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AgentRow({ row }: { row: AgentPerformanceResult }) {
+  return (
+    <div className="rounded-lg border border-line bg-ink/50 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <div className="text-sm text-[#E6E8E4]">{row.name}</div>
+          <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[row.overallHealth]}>{row.note}</div>
+        </div>
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(row.overallHealth)}>
+          {row.overallHealth === "green" ? "healthy" : row.overallHealth === "yellow" ? "watch" : "pressure"}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <Stat label="Company Dollar" value={money(row.companyDollar)} tone={row.companyDollarYieldPct >= 25 ? "green" : row.companyDollarYieldPct >= 18 ? "yellow" : "red"} />
+        <Stat label="Retained yield" value={pct(row.companyDollarYieldPct)} />
+        <Stat label="Cap remaining" value={money(row.capRemaining)} tone={row.capPressureHealth} />
+        <Stat label="Weighted pipeline" value={money(row.expectedPipelineCompanyDollar)} />
+        <Stat label="Lead ROI" value={row.leadRoi != null ? `${row.leadRoi.toFixed(1)}x` : "-"} />
+      </div>
+    </div>
+  );
+}
+
+function badgeCls(health: Health): string {
+  if (health === "green") return "border-health-green/30 bg-health-green/10 text-health-green";
+  if (health === "yellow") return "border-health-yellow/30 bg-health-yellow/10 text-health-yellow";
+  return "border-health-red/30 bg-health-red/10 text-health-red";
 }
 
 function AddOn({ title, text }: { title: string; text: string }) {

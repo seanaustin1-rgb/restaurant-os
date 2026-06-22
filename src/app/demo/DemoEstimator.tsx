@@ -532,12 +532,13 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
   const weeklySales = r.monthlySales / WEEKS_PER_MONTH;
   const weeklyBreakEven = r.monthlyBreakEven != null ? r.monthlyBreakEven / WEEKS_PER_MONTH : null;
   const weeklyCushion = r.dollarsAboveBreakEven / WEEKS_PER_MONTH;
+  const marginLeft = Math.max(0, r.cmRatio * 100);
 
   return (
-    <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Break-even number" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
       <div className="flex items-baseline gap-2">
         <span className="tnum text-3xl text-[#E6E8E4]">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
-        <span className="text-sm text-muted">/ week to break even</span>
+        <span className="text-sm text-muted">/ week before profit starts</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Your weekly sales" value={money(weeklySales)} />
@@ -547,19 +548,19 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
           tone={weeklyCushion >= 0 ? "green" : "red"}
         />
         <Stat
-          label="Margin of safety"
-          value={r.monthlyBreakEven != null ? pct(r.marginOfSafety, 0) : "—"}
+          label="Left after prime cost"
+          value={pct(marginLeft, 0)}
           tone={r.breakEvenHealth}
         />
         <Stat
-          label="Monthly equivalent"
+          label="Monthly break-even"
           value={r.monthlyBreakEven != null ? money(r.monthlyBreakEven) : "—"}
           tone={r.dollarsAboveBreakEven >= 0 ? "green" : "red"}
         />
       </div>
       <p className="mt-3 text-[11px] text-muted">
         {weeklyBreakEven != null
-          ? `This covers your weekly labor, food/bev costs, and monthly fixed bills converted to a weekly target.`
+          ? `Profit starts after this covers the weekly labor, food/bev, and monthly fixed bills you entered. This does not include owner pay or taxes unless you include them as fixed bills.`
           : "Costs exceed sales — no break-even at these numbers."}
       </p>
     </Tile>

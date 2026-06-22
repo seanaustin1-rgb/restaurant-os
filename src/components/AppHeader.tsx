@@ -12,6 +12,7 @@ import { NAV_LINKS } from "@/lib/nav";
 // we skip the global one there to avoid a double header.
 function isHidden(path: string): boolean {
   if (path === "/" || path === "/dashboard" || path === "/onboarding") return true;
+  if (path.startsWith("/demo")) return true;
   return path.startsWith("/sign-in") || path.startsWith("/sign-up");
 }
 

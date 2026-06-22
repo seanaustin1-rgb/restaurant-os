@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, CircleDashed } from "lucide-react";
 import type { GoLiveCoachData } from "@/lib/modules/go-live-coach";
 import { money } from "@/lib/format";
 
-export function GoLiveCoachCard({ data }: { data: GoLiveCoachData }) {
+export function GoLiveCoachCard({ data, demoMode = false }: { data: GoLiveCoachData; demoMode?: boolean }) {
   const Icon = data.stage === "pilot_ready" || data.stage === "enforce_ready" ? CheckCircle2 : data.stage === "coach" ? AlertTriangle : CircleDashed;
   const color =
     data.stage === "pilot_ready" || data.stage === "enforce_ready"
@@ -29,9 +29,11 @@ export function GoLiveCoachCard({ data }: { data: GoLiveCoachData }) {
         <div className="text-right">
           <p className="text-[11px] uppercase tracking-wider text-muted">virtual sales read</p>
           <p className="tnum text-xl text-[#E6E8E4]">{money(data.netSales)}</p>
-          <Link href="/modules/go-live" className="mt-1 inline-block text-xs text-copper-soft underline-offset-2 hover:underline">
-            open readiness plan
-          </Link>
+          {!demoMode && (
+            <Link href="/modules/go-live" className="mt-1 inline-block text-xs text-copper-soft underline-offset-2 hover:underline">
+              open readiness plan
+            </Link>
+          )}
         </div>
       </div>
     </section>

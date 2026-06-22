@@ -151,6 +151,7 @@ export function DashboardView({
           previewType={previewType}
           onPreviewTypeChange={setPreviewType}
           isPreview={isTemplatePreview}
+          demoMode={demoMode}
         />
 
         {!isInvestor && (
@@ -167,15 +168,15 @@ export function DashboardView({
           </div>
         )}
 
-        <HeartbeatSummary data={displayActive} />
-        {isAdvisor && <AdvisorBrief data={displayActive} />}
+        <HeartbeatSummary data={displayActive} demoMode={demoMode} />
+        {isAdvisor && <AdvisorBrief data={displayActive} demoMode={demoMode} />}
         <HeartbeatStrip data={displayActive.heartbeat} />
         <RevenueRow data={displayActive.revenue} />
-        <GoLiveCoachCard data={displayActive.goLiveCoach} />
+        <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}
-        {!isInvestor && <BeverageCostGauges gauges={displayActive.costRatios} />}
+        {!isInvestor && <BeverageCostGauges gauges={displayActive.costRatios} demoMode={demoMode} />}
         {!isInvestor && (
           <ModuleGrid items={visibleOrder} pinnedKeys={pinnedKeys} onReorder={handleReorder} onTogglePin={handleTogglePin} demoMode={demoMode} />
         )}

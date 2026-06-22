@@ -117,6 +117,23 @@ function assertProbe(probe: Probe, expectedText: RegExp) {
   if (!expectedText.test(probe.body)) throw new Error(`${probe.path} did not include expected page content`);
 }
 
+function assertPublicDemoChrome(probe: Probe) {
+  const protectedLinks = [
+    "/dashboard",
+    "/connections",
+    "/transactions",
+    "/settings",
+    "/modules",
+    "/onboarding",
+  ];
+
+  for (const href of protectedLinks) {
+    if (probe.body.includes(`href="${href}`)) {
+      throw new Error(`${probe.path} rendered a protected app link (${href})`);
+    }
+  }
+}
+
 function isWindowsTlsPrismaError(logs: string) {
   return logs.includes("No credentials are available in the security package");
 }
@@ -137,6 +154,8 @@ async function main() {
   assertProbe(result.demo, /OutFront|demo/i);
   assertProbe(result.tour, /Go-Live Coach/i);
   assertProbe(result.tour, /Aura|Market energy/i);
+  assertPublicDemoChrome(result.demo);
+  assertPublicDemoChrome(result.tour);
 
   console.log(
     JSON.stringify(

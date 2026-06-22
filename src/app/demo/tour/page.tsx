@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SignUpButton } from "@clerk/nextjs";
 import { getDemoBistroId } from "@/lib/demo/demo-tenant";
 import { demoPrisma } from "@/lib/demo/demo-prisma";
 import { loadDashboardData } from "@/lib/dashboard/data";
@@ -52,9 +53,14 @@ export default async function DemoTourPage() {
           </p>
           <div className="flex items-center gap-3 text-[13px]">
             <Link href="/demo" className="text-muted hover:text-[#E6E8E4]">Try your numbers</Link>
-            <Link href="/sign-up" className="rounded-md bg-copper px-3 py-1.5 font-medium text-ink hover:bg-copper-soft">
-              Start free
-            </Link>
+            <SignUpButton forceRedirectUrl="/onboarding">
+              <button
+                type="button"
+                className="rounded-md bg-copper px-3 py-1.5 font-medium text-ink hover:bg-copper-soft"
+              >
+                Start free
+              </button>
+            </SignUpButton>
           </div>
         </div>
       </div>

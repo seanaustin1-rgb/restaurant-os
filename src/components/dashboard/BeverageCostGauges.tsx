@@ -25,7 +25,7 @@ const barColor: Record<HealthStatus, string> = {
   red: "bg-health-red",
 };
 
-export function BeverageCostGauges({ gauges }: { gauges: CostRatioGauge[] }) {
+export function BeverageCostGauges({ gauges, demoMode = false }: { gauges: CostRatioGauge[]; demoMode?: boolean }) {
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
@@ -34,14 +34,14 @@ export function BeverageCostGauges({ gauges }: { gauges: CostRatioGauge[] }) {
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {gauges.map((g) => (
-          <RatioCard key={g.key} g={g} />
+          <RatioCard key={g.key} g={g} demoMode={demoMode} />
         ))}
       </div>
     </section>
   );
 }
 
-function RatioCard({ g }: { g: CostRatioGauge }) {
+function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
   const hasRatio = g.costPct != null;
   const hasTarget = g.target != null;
   // Fill = how much of target the ratio uses (lower is better). Capped for the bar.
@@ -70,7 +70,7 @@ function RatioCard({ g }: { g: CostRatioGauge }) {
             {g.basis === "actual"
               ? "of alcohol sales · from POS"
               : "of alcohol sales · estimated from your sales mix"}
-            {g.basis === "estimated" && (
+            {g.basis === "estimated" && !demoMode && (
               <>
                 {" "}
                 <Link href="/settings/beverage" className="text-copper-soft hover:underline">
@@ -83,9 +83,13 @@ function RatioCard({ g }: { g: CostRatioGauge }) {
       ) : (
         <div className="mt-2 text-xs text-muted">
           No alcohol-sales figure yet.{" "}
-          <Link href="/settings/beverage" className="text-copper-soft hover:underline">
-            Set your sales mix
-          </Link>{" "}
+          {demoMode ? (
+            "Set your sales mix"
+          ) : (
+            <Link href="/settings/beverage" className="text-copper-soft hover:underline">
+              Set your sales mix
+            </Link>
+          )}{" "}
           to see this ratio (or connect Toast).
         </div>
       )}

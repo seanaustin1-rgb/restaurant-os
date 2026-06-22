@@ -20,11 +20,13 @@ export function SetupOverviewCard({
   previewType,
   onPreviewTypeChange,
   isPreview,
+  demoMode = false,
 }: {
   data: DashboardData;
   previewType: BusinessType;
   onPreviewTypeChange: (type: BusinessType) => void;
   isPreview: boolean;
+  demoMode?: boolean;
 }) {
   const template = industryTemplateFor(data.businessType);
   const setup = data.sourceSetup;
@@ -62,18 +64,22 @@ export function SetupOverviewCard({
               ))}
             </select>
           </label>
-          <Link
-            href="/settings/business"
-            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-copper-soft hover:border-copper"
-          >
-            <Settings2 size={13} /> Template
-          </Link>
-          <Link
-            href="/settings/sources"
-            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
-          >
-            <PlugZap size={13} /> Source Map
-          </Link>
+          {!demoMode && (
+            <>
+              <Link
+                href="/settings/business"
+                className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-copper-soft hover:border-copper"
+              >
+                <Settings2 size={13} /> Template
+              </Link>
+              <Link
+                href="/settings/sources"
+                className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
+              >
+                <PlugZap size={13} /> Source Map
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

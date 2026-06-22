@@ -128,7 +128,7 @@ function conversationPrompt(data: DashboardData, watchout: BriefItem): string {
   return 'Ask the operator: "Does this heartbeat match what you feel in the restaurant this week?"';
 }
 
-export function AdvisorBrief({ data }: { data: DashboardData }) {
+export function AdvisorBrief({ data, demoMode = false }: { data: DashboardData; demoMode?: boolean }) {
   const watchout = topWatchout(data);
   const win = topWin(data);
   const missing = missingData(data);
@@ -145,16 +145,22 @@ export function AdvisorBrief({ data }: { data: DashboardData }) {
             A consultant/accountant view of what to celebrate, what to inspect, and what data is still missing.
           </p>
         </div>
-        <Link href={watchout.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
-          Start with watchout
-        </Link>
+        {demoMode ? (
+          <span className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft">
+            Start with watchout
+          </span>
+        ) : (
+          <Link href={watchout.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
+            Start with watchout
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-4">
-        <AdvisorCard icon="watchout" label="Top watchout" item={watchout} />
-        <AdvisorCard icon="win" label="Top win" item={win} />
-        <AdvisorCard icon="missing" label="Missing data" item={missing} />
-        <AdvisorCard icon="go-live" label="Go-Live status" item={goLive} />
+        <AdvisorCard icon="watchout" label="Top watchout" item={watchout} demoMode={demoMode} />
+        <AdvisorCard icon="win" label="Top win" item={win} demoMode={demoMode} />
+        <AdvisorCard icon="missing" label="Missing data" item={missing} demoMode={demoMode} />
+        <AdvisorCard icon="go-live" label="Go-Live status" item={goLive} demoMode={demoMode} />
       </div>
 
       <div className="mt-3 rounded-lg border border-copper-dim/40 bg-copper-dim/10 px-3 py-3">
@@ -170,7 +176,17 @@ export function AdvisorBrief({ data }: { data: DashboardData }) {
   );
 }
 
-function AdvisorCard({ icon, label, item }: { icon: "watchout" | "win" | "missing" | "go-live"; label: string; item: BriefItem }) {
+function AdvisorCard({
+  icon,
+  label,
+  item,
+  demoMode,
+}: {
+  icon: "watchout" | "win" | "missing" | "go-live";
+  label: string;
+  item: BriefItem;
+  demoMode: boolean;
+}) {
   const Icon =
     icon === "watchout" ? AlertTriangle : icon === "win" ? CheckCircle2 : icon === "missing" ? PlugZap : ShieldCheck;
   const color =
@@ -180,13 +196,23 @@ function AdvisorCard({ icon, label, item }: { icon: "watchout" | "win" | "missin
         ? "text-health-green"
         : "text-copper-soft";
 
-  return (
-    <Link href={item.href} className="rounded-lg border border-line bg-ink/30 px-3 py-3 transition-colors hover:border-copper">
+  const content = (
+    <>
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
         <Icon size={13} className={color} /> {label}
       </div>
       <p className="mt-2 text-sm text-[#E6E8E4]">{item.label}</p>
       <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-muted">{item.detail}</p>
+    </>
+  );
+
+  return demoMode ? (
+    <div className="rounded-lg border border-line bg-ink/30 px-3 py-3">
+      {content}
+    </div>
+  ) : (
+    <Link href={item.href} className="rounded-lg border border-line bg-ink/30 px-3 py-3 transition-colors hover:border-copper">
+      {content}
     </Link>
   );
 }

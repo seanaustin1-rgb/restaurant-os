@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { SignUpButton } from "@clerk/nextjs";
 import {
   ArrowLeft,
   Gauge,
@@ -298,12 +299,14 @@ function Results({
           Connect your bank and POS and every faded tile fills in with your real numbers — leak detection,
           cash runway, vendor spend, and more.
         </p>
-        <a
-          href="/sign-up"
-          className="mt-4 inline-block rounded-lg bg-copper px-5 py-2.5 font-medium text-ink transition hover:bg-copper-soft"
-        >
-          Get started
-        </a>
+        <SignUpButton forceRedirectUrl="/onboarding">
+          <button
+            type="button"
+            className="mt-4 inline-block rounded-lg bg-copper px-5 py-2.5 font-medium text-ink transition hover:bg-copper-soft"
+          >
+            Get started
+          </button>
+        </SignUpButton>
         <span className="mt-3 block text-[11px] text-muted">
           Prefer to look around first? <a href="/demo/tour" className="text-copper-soft hover:text-copper">See the full demo restaurant</a>
         </span>

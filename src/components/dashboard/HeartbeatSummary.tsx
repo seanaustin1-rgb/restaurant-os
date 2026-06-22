@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type React from "react";
 import { Activity, Banknote, CircleDollarSign, Gauge, Megaphone } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import type { DashboardData } from "@/lib/dashboard/data";
@@ -153,7 +154,7 @@ function nextAction(lenses: HeartbeatLens[]): HeartbeatLens {
   return lenses.find((l) => l.status === "red") ?? lenses.find((l) => l.status === "yellow") ?? lenses[0];
 }
 
-export function HeartbeatSummary({ data }: { data: DashboardData }) {
+export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardData; demoMode?: boolean }) {
   const template = industryTemplateFor(data.businessType);
   const lenses = buildLenses(data);
   const focus = nextAction(lenses);
@@ -168,19 +169,25 @@ export function HeartbeatSummary({ data }: { data: DashboardData }) {
             {template.label} template: cash, Profit First discipline, operating pressure, sales momentum, and market energy in one read.
           </p>
         </div>
-        <Link href={focus.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
-          Next: {focus.action}
-        </Link>
+        {demoMode ? (
+          <span className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft">
+            Next: {focus.action}
+          </span>
+        ) : (
+          <Link href={focus.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
+            Next: {focus.action}
+          </Link>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-5">
         {lenses.map((lens) => {
           const Icon = ICONS[lens.key];
           return (
-            <Link
+            <LensCard
               key={lens.key}
-              href={lens.href}
-              className={"rounded-lg border px-3 py-3 transition-colors hover:border-copper " + STATUS_BORDER[lens.status]}
+              lens={lens}
+              demoMode={demoMode}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
@@ -192,10 +199,31 @@ export function HeartbeatSummary({ data }: { data: DashboardData }) {
               </div>
               <div className={"tnum mt-2 text-xl " + STATUS_TEXT[lens.status]}>{lens.value}</div>
               <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-muted">{lens.detail}</p>
-            </Link>
+            </LensCard>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function LensCard({
+  lens,
+  demoMode,
+  children,
+}: {
+  lens: HeartbeatLens;
+  demoMode: boolean;
+  children: React.ReactNode;
+}) {
+  const className =
+    "rounded-lg border px-3 py-3 transition-colors " + (!demoMode ? "hover:border-copper " : "") + STATUS_BORDER[lens.status];
+
+  return demoMode ? (
+    <div className={className}>{children}</div>
+  ) : (
+    <Link href={lens.href} className={className}>
+      {children}
+    </Link>
   );
 }

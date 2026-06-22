@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, PlugZap, Settings2 } from "lucide-react";
+import { Building2, ChevronDown, PlugZap, Settings2 } from "lucide-react";
 import type { BusinessType } from "@prisma/client";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { INDUSTRY_TEMPLATES, industryTemplateFor } from "@/lib/industry-templates";
@@ -45,13 +45,15 @@ export function SetupOverviewCard({
           <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{template.description}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <label className="flex items-center gap-2 rounded-md border border-copper-dim bg-ink/60 px-3 py-1.5 text-xs text-muted">
-            Meeting preview
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+          <label className="block rounded-md border border-copper-dim bg-ink/60 px-3 py-2 sm:min-w-[300px]">
+            <span className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted">
+              <ChevronDown size={12} /> Meeting preview
+            </span>
             <select
               value={previewType}
               onChange={(e) => onPreviewTypeChange(e.target.value as BusinessType)}
-              className="max-w-[220px] bg-transparent text-copper-soft outline-none"
+              className="w-full rounded-md border border-line bg-surface px-2 py-2 text-sm text-copper-soft outline-none focus:border-copper-dim"
             >
               {TEMPLATE_OPTIONS.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -62,13 +64,13 @@ export function SetupOverviewCard({
           </label>
           <Link
             href="/settings/business"
-            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-copper-soft hover:border-copper"
           >
             <Settings2 size={13} /> Template
           </Link>
           <Link
             href="/settings/sources"
-            className="inline-flex items-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-xs text-copper-soft hover:bg-copper/20"
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
           >
             <PlugZap size={13} /> Source Map
           </Link>

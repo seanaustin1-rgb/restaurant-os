@@ -34,6 +34,8 @@ export default async function Home() {
         <Link href="/demo" className="text-copper-soft hover:text-copper">See your numbers</Link>
         <span className="text-line"> · </span>
         <Link href="/demo/tour" className="text-copper-soft hover:text-copper">Tour a live demo</Link>
+        <span className="text-line"> Â· </span>
+        <Link href="/access" className="text-copper-soft hover:text-copper">Choose access path</Link>
       </p>
 
       <footer className="mt-4">

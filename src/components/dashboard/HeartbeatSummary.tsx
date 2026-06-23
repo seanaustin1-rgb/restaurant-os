@@ -58,24 +58,41 @@ function worstStatus(statuses: HealthStatus[]): HealthStatus {
 function cashLens(data: DashboardData): HeartbeatLens {
   const cash = data.goLiveCoach.cashSafety;
   const status: HealthStatus = cash.ready ? "green" : cash.hasAnchor ? "red" : "yellow";
+  const cushionRatio =
+    cash.currentCash != null && cash.minimumOperatingCash != null && cash.minimumOperatingCash > 0
+      ? cash.currentCash / cash.minimumOperatingCash
+      : null;
   return {
     key: "cash",
     label: "Cash oxygen",
     status,
     statusLabel: cash.ready ? "breathing room" : cash.hasAnchor ? "below floor" : "needs anchor",
-    value: cash.currentCash != null ? money(cash.currentCash) : "Unknown",
+    value: cushionRatio != null ? `${cushionRatio.toFixed(1)}x floor` : cash.currentCash != null ? money(cash.currentCash) : "Unknown",
     detail:
-      cash.currentCash != null && cash.minimumOperatingCash != null
-        ? `${money(cash.minimumOperatingCash)} floor, ${money(cash.pilotSetAside)} virtual pilot set-aside`
+      cash.currentCash != null && cash.minimumOperatingCash != null && cushionRatio != null
+        ? `${money(cash.currentCash)} cash vs. ${money(cash.minimumOperatingCash)} floor. ${cushionRatio >= 1.5 ? "Healthy demo cushion." : cushionRatio >= 1 ? "Thin cushion." : "Below the floor."}`
         : "Set a cash anchor so the heartbeat can judge runway and pilot safety.",
-    explainer: "Cash oxygen compares available operating cash to the minimum buffer needed to keep running safely.",
+    explainer: "Cash oxygen compares available operating cash to a minimum cash floor. There is no single industry standard, but many operators use 1-3 months of core operating costs as the safety range; the demo treats 1.5x the floor as healthy.",
     action: "open Go-Live Coach",
     href: "/modules/go-live",
   };
 }
 
-function disciplineLens(data: DashboardData): HeartbeatLens {
+function disciplineLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
   const coach = data.goLiveCoach;
+  if (demoMode) {
+    return {
+      key: "discipline",
+      label: "Profit discipline",
+      status: "yellow",
+      statusLabel: "close gap",
+      value: "90%",
+      detail: "90% of dollars are categorized. Review the top uncategorized vendors and confirm the tax/owner-pay rules to get this to 100%.",
+      explainer: "Profit discipline measures how much money can be safely routed into Profit First buckets. The call to action is to categorize the remaining dollars and confirm the rules before any automatic transfers go live.",
+      action: "clean up categories",
+      href: "/modules/go-live",
+    };
+  }
   const status: HealthStatus =
     coach.stage === "coach" ? "yellow" : coach.stage === "pilot_ready" || coach.stage === "enforce_ready" ? "green" : "yellow";
   const coverage = pct(coach.categorizationCoveragePct, 0);
@@ -126,8 +143,8 @@ function demoPressureLens(data: DashboardData): HeartbeatLens | null {
       status: "yellow",
       statusLabel: "cap watch",
       value: "71.6%",
-      detail: "Agent payouts, franchise fees, and referrals are passing through 71.6% of closed GCI.",
-      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar.",
+      detail: "Agent payouts, franchise fees, and referrals are passing through 71.6% of closed GCI. Practical watch band: 70-75%; above 80% is usually high pressure unless OpEx is very lean.",
+      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar. There is no universal industry standard because teams, caps, franchises, and agent mix vary, but a brokerage often wants retained Company Dollar around 25-30% or better.",
       action: "enter brokerage numbers",
       href: "/demo/real-estate",
     };
@@ -191,7 +208,7 @@ function pressureLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
       statusLabel: "needs deals",
       value: "Waiting",
       detail: "Import agents, deals, splits, caps, and brokerage expenses to read Company Dollar pressure.",
-      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar.",
+      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar. There is no universal industry standard because teams, caps, franchises, and agent mix vary, but retained Company Dollar around 25-30% or better is a practical starting benchmark.",
       action: "review pilot plan",
       href: "/reports/rental-pilot",
     };
@@ -511,7 +528,7 @@ function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
 }
 
 function buildLenses(data: DashboardData, demoMode: boolean): HeartbeatLens[] {
-  return [cashLens(data), disciplineLens(data), pressureLens(data, demoMode), momentumLens(data, demoMode), auraLens(data, demoMode)];
+  return [cashLens(data), disciplineLens(data, demoMode), pressureLens(data, demoMode), momentumLens(data, demoMode), auraLens(data, demoMode)];
 }
 
 function headline(lenses: HeartbeatLens[]): string {

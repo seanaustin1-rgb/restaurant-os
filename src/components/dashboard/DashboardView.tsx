@@ -264,7 +264,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
       <section>
         <h2 className="mb-2 font-display text-lg text-copper-soft">Brokerage heartbeat</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="GCI retained after splits, caps, referrals, and franchise fees." />
+          <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="Retained Company Dollar is the operating base. Practical target: about 25-30%+ of GCI after splits, referrals, and fees." />
           <PreviewCard icon={<Users size={15} />} title="Agent Performance" detail="Company Dollar yield, cap pressure, pipeline, and lead ROI by agent." />
           <PreviewCard icon={<Search size={15} />} title="Market Intelligence" detail="MLS velocity, DOM, price drops, rates, showing demand, and intent." />
           <PreviewCard icon={<Home size={15} />} title="Property Heartbeat" detail="Owner proceeds, maintenance drag, booking pace, and guest Aura add-on." />

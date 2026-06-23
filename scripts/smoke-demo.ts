@@ -196,13 +196,16 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, r
   if (!restaurantTour.body.includes("Demo Bistro") || !restaurantTour.body.includes("Operating pressure")) {
     throw new Error("/demo/tour/restaurant did not render the restaurant tour");
   }
+  if (!restaurantTour.body.includes("90%") || !restaurantTour.body.includes("floor")) {
+    throw new Error("/demo/tour/restaurant did not render demo cash and discipline cues");
+  }
   if (!serviceTour.body.includes("Keystone Service Co.") || !serviceTour.body.includes("Delivery pressure")) {
     throw new Error("/demo/tour/service did not render the service tour");
   }
   if (!contractorTour.body.includes("Iron Ridge Field Services") || !contractorTour.body.includes("Job Margin")) {
     throw new Error("/demo/tour/contractor did not render the contractor feedback tour");
   }
-  if (!brokerageTour.body.includes("Harbor &amp; Main Realty") || !brokerageTour.body.includes("Split pressure")) {
+  if (!brokerageTour.body.includes("Harbor &amp; Main Realty") || !brokerageTour.body.includes("Split pressure") || !brokerageTour.body.includes("70-75%")) {
     throw new Error("/demo/tour/real-estate did not render the brokerage tour");
   }
   if (!retailTour.body.includes("Copper Lane Goods") || !retailTour.body.includes('href="/demo/retail"')) {

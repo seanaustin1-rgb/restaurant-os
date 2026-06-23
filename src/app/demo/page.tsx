@@ -28,6 +28,9 @@ export default function DemoPage() {
             <Link href="/demo/real-estate" className="text-copper-soft hover:text-copper">
               Try the real estate brokerage estimate
             </Link>
+            <Link href="/demo/retail" className="text-copper-soft hover:text-copper">
+              Try the retail estimate
+            </Link>
           </div>
         </header>
         <DemoEstimator />

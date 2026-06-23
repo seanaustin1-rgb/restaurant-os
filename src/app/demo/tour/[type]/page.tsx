@@ -23,6 +23,7 @@ const ESTIMATE_HREF: Partial<Record<BusinessType, string>> = {
   RESTAURANT: "/demo",
   SERVICE: "/demo/service",
   REAL_ESTATE_BROKERAGE: "/demo/real-estate",
+  RETAIL: "/demo/retail",
 };
 
 export const dynamic = "force-dynamic";

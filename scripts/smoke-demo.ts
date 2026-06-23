@@ -106,18 +106,22 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
     const demo = await getWithRetry("/demo");
     const service = await getWithRetry("/demo/service");
     const realEstate = await getWithRetry("/demo/real-estate");
+    const retail = await getWithRetry("/demo/retail");
     const tour = await getWithRetry("/demo/tour");
     const restaurantTour = await getWithRetry("/demo/tour/restaurant");
     const serviceTour = await getWithRetry("/demo/tour/service");
     const brokerageTour = await getWithRetry("/demo/tour/real-estate");
+    const retailTour = await getWithRetry("/demo/tour/retail");
     return {
       demo,
       service,
       realEstate,
+      retail,
       tour,
       restaurantTour,
       serviceTour,
       brokerageTour,
+      retailTour,
       logs: logs.text,
       usedWindowsDemoWorkaround: useWindowsDemoWorkaround,
     };
@@ -165,7 +169,7 @@ function assertLowFrictionDemoCopy(probe: Probe) {
   }
 }
 
-function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, tour: Probe, restaurantTour: Probe, serviceTour: Probe, brokerageTour: Probe) {
+function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, retail: Probe, tour: Probe, restaurantTour: Probe, serviceTour: Probe, brokerageTour: Probe, retailTour: Probe) {
   if (!demo.body.includes("Average weekly sales")) {
     throw new Error("/demo did not render the weekly number-entry form");
   }
@@ -177,6 +181,9 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, t
   }
   if (!realEstate.body.includes("Company Dollar")) {
     throw new Error("/demo/real-estate did not render the brokerage number-entry form");
+  }
+  if (!retail.body.includes("Average weekly sales") || !retail.body.includes("POS system")) {
+    throw new Error("/demo/retail did not render the retail number-entry form");
   }
   if (!tour.body.includes("What kind of business do you want to see?")) {
     throw new Error("/demo/tour did not render the business-type selector");
@@ -192,6 +199,9 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, t
   }
   if (!brokerageTour.body.includes("Harbor &amp; Main Realty") || !brokerageTour.body.includes("Split pressure")) {
     throw new Error("/demo/tour/real-estate did not render the brokerage tour");
+  }
+  if (!retailTour.body.includes("Copper Lane Goods") || !retailTour.body.includes('href="/demo/retail"')) {
+    throw new Error("/demo/tour/retail did not render the retail tour and estimate CTA");
   }
 }
 
@@ -215,6 +225,7 @@ async function main() {
   assertProbe(result.demo, /OutFront|demo/i);
   assertProbe(result.service, /Service business estimate|Average weekly revenue/i);
   assertProbe(result.realEstate, /Company Dollar|brokerage/i);
+  assertProbe(result.retail, /Retail estimate|POS system/i);
   assertProbe(result.tour, /What kind of business/i);
   assertProbe(result.restaurantTour, /Go-Live Coach/i);
   assertProbe(result.serviceTour, /Delivery pressure|Client momentum/i);
@@ -222,6 +233,7 @@ async function main() {
   assertPublicDemoChrome(result.demo);
   assertPublicDemoChrome(result.service);
   assertPublicDemoChrome(result.realEstate);
+  assertPublicDemoChrome(result.retail);
   assertPublicDemoChrome(result.tour);
   assertPublicDemoChrome(result.restaurantTour);
   assertPublicDemoChrome(result.serviceTour);
@@ -229,11 +241,12 @@ async function main() {
   assertLowFrictionDemoCopy(result.demo);
   assertLowFrictionDemoCopy(result.service);
   assertLowFrictionDemoCopy(result.realEstate);
+  assertLowFrictionDemoCopy(result.retail);
   assertLowFrictionDemoCopy(result.tour);
   assertLowFrictionDemoCopy(result.restaurantTour);
   assertLowFrictionDemoCopy(result.serviceTour);
   assertLowFrictionDemoCopy(result.brokerageTour);
-  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.tour, result.restaurantTour, result.serviceTour, result.brokerageTour);
+  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.retail, result.tour, result.restaurantTour, result.serviceTour, result.brokerageTour, result.retailTour);
 
   console.log(
     JSON.stringify(
@@ -245,10 +258,12 @@ async function main() {
           { path: result.demo.path, status: result.demo.status },
           { path: result.service.path, status: result.service.status },
           { path: result.realEstate.path, status: result.realEstate.status },
+          { path: result.retail.path, status: result.retail.status },
           { path: result.tour.path, status: result.tour.status },
           { path: result.restaurantTour.path, status: result.restaurantTour.status },
           { path: result.serviceTour.path, status: result.serviceTour.status },
           { path: result.brokerageTour.path, status: result.brokerageTour.status },
+          { path: result.retailTour.path, status: result.retailTour.status },
         ],
       },
       null,

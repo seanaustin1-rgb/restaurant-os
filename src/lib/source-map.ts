@@ -185,8 +185,11 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Sales and channels",
         purpose: "Tracks store/ecommerce sales, returns, and channel performance.",
         options: [
-          { name: "Shopify", role: "Ecommerce sales, orders, returns", unlocks: ["sales momentum", "channel mix"], minimum: true },
-          { name: "Square / Lightspeed / Clover", role: "POS sales", unlocks: ["store sales", "gross margin"] },
+          { name: "Square", role: "POS sales, tenders, refunds, item/category sales", unlocks: ["store sales", "gross margin"], minimum: true },
+          { name: "Clover", role: "POS sales, employees, tenders, and inventory add-ons", unlocks: ["store sales", "payroll context", "gross margin"] },
+          { name: "Shopify POS", role: "Store and ecommerce sales, orders, returns, inventory", unlocks: ["channel mix", "sales momentum", "inventory pressure"], minimum: true },
+          { name: "Lightspeed Retail", role: "POS, inventory, vendors, purchase orders, multi-location retail", unlocks: ["inventory pressure", "gross margin", "sell-through"] },
+          { name: "Helcim / GoDaddy POS / Revel / Other POS", role: "Sales, refunds, tenders, and item/category exports", unlocks: ["store sales", "payment mix"] },
         ],
       },
       {
@@ -194,7 +197,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Inventory and margin",
         purpose: "Shows inventory pressure, sell-through, and gross-margin drag.",
         options: [
-          { name: "Shopify inventory / Lightspeed inventory", role: "Stock and item costs", unlocks: ["inventory pressure", "gross margin"], minimum: true },
+          { name: "Shopify / Lightspeed / Square / Clover inventory", role: "Stock, item costs, variants, vendors, and adjustments", unlocks: ["inventory pressure", "gross margin"], minimum: true },
         ],
       },
       auraGroup,

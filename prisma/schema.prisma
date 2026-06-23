@@ -124,6 +124,14 @@ enum RentalIssueStatus {
   DEFERRED
 }
 
+enum BrokerageDealStage {
+  LEAD
+  ACTIVE
+  PENDING
+  CLOSED
+  LOST
+}
+
 // How a categorization Rule matches a transaction's merchant/description.
 //   KEYWORD   — case-insensitive substring match (operator-friendly default)
 //   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
@@ -180,6 +188,10 @@ model Restaurant {
   rentalExpenses              RentalExpense[]
   rentalMaintenanceIssues     RentalMaintenanceIssue[]
   rentalReviews               RentalReview[]
+  brokerageAgents             BrokerageAgent[]
+  brokerageDeals              BrokerageDeal[]
+  brokerageLeadSpend          BrokerageLeadSpend[]
+  brokerageMarketMetrics      BrokerageMarketMetric[]
   aiActionLogs                AiActionLog[]
 }
 
@@ -773,6 +785,110 @@ model RentalReview {
   @@index([importBatchId])
   @@index([platform])
   @@index([reviewedAt])
+}
+
+model BrokerageAgent {
+  id              String    @id @default(cuid())
+  restaurantId    String
+  externalAgentId String
+  name            String
+  email           String?
+  status          String?
+  defaultSplitPct Decimal?  @db.Decimal(5, 2)
+  annualCap       Decimal?  @db.Decimal(12, 2)
+  capPaid         Decimal   @default(0) @db.Decimal(12, 2)
+  capResetDate    DateTime? @db.Date
+  rawPayload      Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  restaurant Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  deals      BrokerageDeal[]
+  leadSpend  BrokerageLeadSpend[]
+
+  @@unique([restaurantId, externalAgentId])
+  @@index([restaurantId])
+  @@index([status])
+}
+
+model BrokerageDeal {
+  id                String             @id @default(cuid())
+  restaurantId      String
+  agentId           String?
+  externalDealId    String
+  label             String
+  market            String?
+  stage             BrokerageDealStage @default(ACTIVE)
+  expectedCloseDate DateTime?          @db.Date
+  closedDate        DateTime?          @db.Date
+  salePrice         Decimal?           @db.Decimal(14, 2)
+  gci               Decimal            @default(0) @db.Decimal(12, 2)
+  referralFee       Decimal            @default(0) @db.Decimal(12, 2)
+  franchiseFee      Decimal            @default(0) @db.Decimal(12, 2)
+  agentPayout       Decimal            @default(0) @db.Decimal(12, 2)
+  companyDollar     Decimal            @default(0) @db.Decimal(12, 2)
+  probabilityPct    Decimal?           @db.Decimal(5, 2)
+  rawPayload        Json?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@unique([restaurantId, externalDealId])
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([stage])
+  @@index([expectedCloseDate])
+  @@index([closedDate])
+}
+
+model BrokerageLeadSpend {
+  id              String   @id @default(cuid())
+  restaurantId    String
+  agentId         String?
+  source          String
+  periodStart     DateTime @db.Date
+  periodEnd       DateTime @db.Date
+  spend           Decimal  @db.Decimal(12, 2)
+  attributedGci   Decimal  @default(0) @db.Decimal(12, 2)
+  attributedDeals Int      @default(0)
+  rawPayload      Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([source])
+  @@index([periodStart, periodEnd])
+}
+
+model BrokerageMarketMetric {
+  id                   String   @id @default(cuid())
+  restaurantId         String
+  market               String
+  date                 DateTime @db.Date
+  newListings          Int      @default(0)
+  pendings             Int      @default(0)
+  closedSales          Int      @default(0)
+  avgDom               Decimal? @db.Decimal(8, 2)
+  priceReductions      Int      @default(0)
+  showingAppointments  Int      @default(0)
+  mortgageRatePct      Decimal? @db.Decimal(5, 2)
+  googleIntentTrendPct Decimal? @db.Decimal(6, 2)
+  rawPayload           Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, market, date])
+  @@index([restaurantId])
+  @@index([market])
+  @@index([date])
 }
 
 model ReviewCache {

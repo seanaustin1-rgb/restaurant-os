@@ -12,6 +12,7 @@
     "check:launch": "tsx scripts/check-launch.ts",
     "smoke:demo": "tsx scripts/smoke-demo.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:rental-pilot": "tsx scripts/generate-rental-pilot-payload.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",

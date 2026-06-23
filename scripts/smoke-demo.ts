@@ -190,6 +190,12 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, r
   if (!tour.body.includes("What kind of business do you want to see?")) {
     throw new Error("/demo/tour did not render the business-type selector");
   }
+  if (tour.body.includes("Prefer to enter your own restaurant numbers?")) {
+    throw new Error("/demo/tour rendered restaurant-only estimate copy");
+  }
+  if (!tour.body.includes("Restaurant estimate") || !tour.body.includes("Retail estimate")) {
+    throw new Error("/demo/tour did not render neutral estimate links");
+  }
   if (!tour.body.includes('href="/demo/tour/service"') || !tour.body.includes('href="/demo/tour/real-estate"')) {
     throw new Error("/demo/tour did not render industry tour links");
   }

@@ -12,6 +12,7 @@ import {
   type RetailEstimateResult,
   type RetailPosProvider,
 } from "@/lib/demo/retail-estimate";
+import { DemoModulePreview } from "../DemoModulePreview";
 
 type FormState = Record<
   | "name"
@@ -299,6 +300,8 @@ function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEd
           </div>
         </Tile>
       </div>
+
+      <DemoModulePreview businessType="RETAIL" />
 
       <div className="mt-8 text-center">
         <Link href="/demo/tour/retail" className="text-sm text-copper-soft hover:text-copper">

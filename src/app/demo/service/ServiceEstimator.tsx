@@ -11,6 +11,7 @@ import {
   type ServiceEstimateInputs,
   type ServiceEstimateResult,
 } from "@/lib/demo/service-estimate";
+import { DemoModulePreview } from "../DemoModulePreview";
 
 type FormState = Record<
   | "name"
@@ -283,6 +284,8 @@ function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onE
           </div>
         </div>
       )}
+
+      <DemoModulePreview businessType="SERVICE" />
 
       <div className="mt-8 text-center">
         <Link href="/demo/tour" className="text-sm text-copper-soft hover:text-copper">

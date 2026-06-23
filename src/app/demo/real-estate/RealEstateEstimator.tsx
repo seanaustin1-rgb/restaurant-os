@@ -35,6 +35,7 @@ import {
   type VacationRentalImportReadinessResult,
 } from "@/lib/demo/vacation-rental-import-readiness";
 import type { Health } from "@/lib/demo/estimate";
+import { DemoModulePreview } from "../DemoModulePreview";
 
 type FormState = Record<
   | "name"
@@ -372,6 +373,8 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <PropertyHeartbeatPreview property={property} />
       <PropertyPortfolioPreview portfolio={propertyPortfolio} />
       <ImportReadinessPreview readiness={importReadiness} />
+
+      <DemoModulePreview businessType="REAL_ESTATE_BROKERAGE" />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
         <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>

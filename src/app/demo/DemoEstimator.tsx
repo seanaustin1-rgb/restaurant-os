@@ -24,6 +24,7 @@ import {
 } from "@/lib/demo/estimate";
 import { money, pct } from "@/lib/format";
 import { lookupReputation, type ReputationResult } from "./actions";
+import { DemoModulePreview } from "./DemoModulePreview";
 
 const HEALTH_TEXT: Record<Health, string> = {
   green: "text-health-green",
@@ -349,6 +350,8 @@ function Results({
           ))}
         </div>
       </div>
+
+      <DemoModulePreview businessType="RESTAURANT" />
 
       {/* CTA */}
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5 text-center">

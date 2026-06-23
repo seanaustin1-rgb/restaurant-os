@@ -107,6 +107,7 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
     const service = await getWithRetry("/demo/service");
     const realEstate = await getWithRetry("/demo/real-estate");
     const retail = await getWithRetry("/demo/retail");
+    const profitFirst = await getWithRetry("/profit-first");
     const tour = await getWithRetry("/demo/tour");
     const restaurantTour = await getWithRetry("/demo/tour/restaurant");
     const serviceTour = await getWithRetry("/demo/tour/service");
@@ -118,6 +119,7 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
       service,
       realEstate,
       retail,
+      profitFirst,
       tour,
       restaurantTour,
       serviceTour,
@@ -240,6 +242,7 @@ async function main() {
   assertProbe(result.service, /Service business estimate|Average weekly revenue/i);
   assertProbe(result.realEstate, /Company Dollar|brokerage/i);
   assertProbe(result.retail, /Retail estimate|POS system/i);
+  assertProbe(result.profitFirst, /Profit First, in plain English|Owner pay/i);
   assertProbe(result.tour, /What kind of business/i);
   assertProbe(result.restaurantTour, /Go-Live Coach/i);
   assertProbe(result.serviceTour, /Delivery pressure|Client momentum/i);
@@ -249,6 +252,7 @@ async function main() {
   assertPublicDemoChrome(result.service);
   assertPublicDemoChrome(result.realEstate);
   assertPublicDemoChrome(result.retail);
+  assertPublicDemoChrome(result.profitFirst);
   assertPublicDemoChrome(result.tour);
   assertPublicDemoChrome(result.restaurantTour);
   assertPublicDemoChrome(result.serviceTour);
@@ -276,6 +280,7 @@ async function main() {
           { path: result.service.path, status: result.service.status },
           { path: result.realEstate.path, status: result.realEstate.status },
           { path: result.retail.path, status: result.retail.status },
+          { path: result.profitFirst.path, status: result.profitFirst.status },
           { path: result.tour.path, status: result.tour.status },
           { path: result.restaurantTour.path, status: result.restaurantTour.status },
           { path: result.serviceTour.path, status: result.serviceTour.status },

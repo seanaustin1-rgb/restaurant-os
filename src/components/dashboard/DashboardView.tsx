@@ -17,6 +17,7 @@ import { TapGauges } from "./TapGauges";
 import { BeverageCostGauges } from "./BeverageCostGauges";
 import { ModuleGrid } from "./ModuleGrid";
 import { QuickAccessStrip } from "./QuickAccessStrip";
+import { ProfitFirstExplainer } from "@/components/profit-first/ProfitFirstExplainer";
 import type { RoleKey } from "@/lib/mock/dashboard";
 import type { DashboardData, SourceSetupSummary } from "@/lib/dashboard/data";
 import { type ModuleDef } from "@/lib/modules";
@@ -245,6 +246,7 @@ export function DashboardView({
           <IndustryHeartbeatPreview data={displayActive} />
         )}
         <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
+        <ProfitFirstExplainer />
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && isRestaurantTemplate && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}

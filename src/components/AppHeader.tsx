@@ -13,6 +13,7 @@ import { NAV_LINKS } from "@/lib/nav";
 function isHidden(path: string): boolean {
   if (path === "/" || path === "/dashboard" || path === "/onboarding") return true;
   if (path.startsWith("/demo")) return true;
+  if (path.startsWith("/profit-first")) return true;
   return path.startsWith("/sign-in") || path.startsWith("/sign-up");
 }
 

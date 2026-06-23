@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 const isPublicRoute = createRouteMatcher([
   "/",
   "/privacy(.*)",
+  "/profit-first(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   // Public Mode-2 instant-estimate demo (no login).

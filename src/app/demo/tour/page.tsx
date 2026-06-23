@@ -55,6 +55,9 @@ export default async function DemoTourPage() {
             <Link href="/demo" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
               Restaurant estimate
             </Link>
+            <Link href="/demo/service" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
+              Service estimate
+            </Link>
             <Link href="/demo/real-estate" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
               Brokerage estimate
             </Link>

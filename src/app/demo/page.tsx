@@ -21,9 +21,14 @@ export default function DemoPage() {
           <p className="mx-auto mt-2 max-w-lg text-muted">
             A 60-second, no-login estimate from a few numbers you already know.
           </p>
-          <Link href="/demo/real-estate" className="mt-3 inline-block text-sm text-copper-soft hover:text-copper">
-            Try the real estate brokerage estimate
-          </Link>
+          <div className="mt-3 flex flex-wrap justify-center gap-3 text-sm">
+            <Link href="/demo/service" className="text-copper-soft hover:text-copper">
+              Try the service estimate
+            </Link>
+            <Link href="/demo/real-estate" className="text-copper-soft hover:text-copper">
+              Try the real estate brokerage estimate
+            </Link>
+          </div>
         </header>
         <DemoEstimator />
       </div>

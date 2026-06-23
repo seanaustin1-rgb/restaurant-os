@@ -17,6 +17,7 @@ const TEMPLATE_OPTIONS = [
 
 function demoEstimateFor(type: BusinessType): { href: string; label: string } | null {
   if (type === "RESTAURANT") return { href: "/demo", label: "Enter restaurant numbers" };
+  if (type === "SERVICE") return { href: "/demo/service", label: "Enter service numbers" };
   if (type === "REAL_ESTATE_BROKERAGE") return { href: "/demo/real-estate", label: "Enter brokerage numbers" };
   return null;
 }

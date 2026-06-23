@@ -46,7 +46,7 @@ export const MODULES: ModuleDef[] = [
   { key: "agent-performance", name: "Agent Performance", description: "Company Dollar yield, cap pressure, pipeline & lead ROI", status: "soon", blockedBy: "agent roster + CRM" },
   { key: "market-intelligence", name: "Market Intelligence", description: "MLS velocity, DOM, price drops, rates & showing demand", status: "soon", blockedBy: "MLS/RESO + rate feed" },
   { key: "lead-roi", name: "Lead ROI", description: "Lead source spend to retained Company Dollar", status: "soon", blockedBy: "CRM + ad sources" },
-  { key: "property-heartbeat", name: "Property Heartbeat", description: "Owner proceeds, maintenance drag, booking pace & guest Aura", status: "soon", blockedBy: "PMS/property feed" },
+  { key: "property-heartbeat", name: "Property Heartbeat", description: "Owner proceeds, maintenance drag, booking pace & guest Aura", status: "live", href: "/modules/property-heartbeat" },
   { key: "property-profit", name: "Property Profit", description: "Profit by unit after payouts & turns", status: "soon", blockedBy: "booking/property feed" },
   { key: "occupancy", name: "Occupancy Pace", description: "Booked nights, ADR & RevPAR", status: "soon", blockedBy: "booking platform" },
   { key: "job-margin", name: "Job Margin", description: "Revenue, labor & materials by job", status: "soon", blockedBy: "job/accounting feed" },

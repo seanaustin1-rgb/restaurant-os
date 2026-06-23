@@ -16,6 +16,7 @@ import type { RevenueData } from "@/components/dashboard/RevenueRow";
 import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/TapGauges";
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
+import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 
 export interface DashboardData {
   restaurantId: string;
@@ -28,6 +29,7 @@ export interface DashboardData {
   revenue: RevenueData;
   goLiveCoach: GoLiveCoachData;
   sourceSetup: SourceSetupSummary;
+  rentalPropertyRollup: RentalPropertyRollupData | null;
   gauges: TapGauge[];
   costRatios: CostRatioGauge[];
 }
@@ -247,15 +249,18 @@ export async function loadDashboardData(
 
   const hasData = revenue > 0 || byCat.length > 0;
 
+  const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
+
   return {
     restaurantId,
     name,
     businessType,
-    periodLabel,
-    hasData,
+    periodLabel: rentalPropertyRollup?.periodLabel ?? periodLabel,
+    hasData: businessType === "VACATION_RENTAL" ? Boolean(rentalPropertyRollup?.hasImportedRentalData || hasData) : hasData,
     realRevenue,
     goLiveCoach: await loadGoLiveCoach(restaurantId, db),
     sourceSetup: await loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
+    rentalPropertyRollup,
     heartbeat: {
       primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
       laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,

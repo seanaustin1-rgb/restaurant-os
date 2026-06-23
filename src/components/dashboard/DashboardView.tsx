@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { BusinessType } from "@prisma/client";
 import { Building2, Home, Search, Users } from "lucide-react";
+import { money, pct } from "@/lib/format";
 import { AdvisorBrief } from "./AdvisorBrief";
 import { DashboardHeader } from "./DashboardHeader";
 import { HeartbeatSummary } from "./HeartbeatSummary";
@@ -180,7 +181,7 @@ export function DashboardView({
             <RevenueRow data={displayActive.revenue} />
           </>
         ) : (
-          <IndustryHeartbeatPreview businessType={displayActive.businessType} />
+          <IndustryHeartbeatPreview data={displayActive} />
         )}
         <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
 
@@ -195,7 +196,8 @@ export function DashboardView({
   );
 }
 
-function IndustryHeartbeatPreview({ businessType }: { businessType: BusinessType }) {
+function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
+  const businessType = data.businessType;
   if (businessType === "REAL_ESTATE_BROKERAGE") {
     return (
       <section>
@@ -211,9 +213,49 @@ function IndustryHeartbeatPreview({ businessType }: { businessType: BusinessType
   }
 
   if (businessType === "VACATION_RENTAL") {
+    const portfolio = data.rentalPropertyRollup?.portfolio;
+    if (portfolio) {
+      return (
+        <section>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg text-copper-soft">Property heartbeat</h2>
+            <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
+              Import rental data
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <PreviewCard
+              icon={<Home size={15} />}
+              title="Owner Proceeds"
+              detail={`${money(portfolio.ownerProceeds)} this period, ${pct(portfolio.ownerProceedsPct)} of booking revenue.`}
+            />
+            <PreviewCard
+              icon={<GaugeIcon />}
+              title="Maintenance Drag"
+              detail={`${pct(portfolio.maintenancePressurePct)} of revenue. ${portfolio.pressureCount} properties need attention.`}
+            />
+            <PreviewCard
+              icon={<Search size={15} />}
+              title="Guest Aura"
+              detail={`Average Aura ${Math.round(portfolio.averageGuestAuraScore)} across ${portfolio.propertyCount} properties.`}
+            />
+            <PreviewCard
+              icon={<Building2 size={15} />}
+              title="Booking Pace"
+              detail={`Average occupancy ${pct(portfolio.averageOccupancyPct, 0)}. Highest pressure: ${portfolio.topPressure?.name ?? "none"}.`}
+            />
+          </div>
+        </section>
+      );
+    }
     return (
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Property heartbeat</h2>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-lg text-copper-soft">Property heartbeat</h2>
+          <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
+            Import rental data
+          </Link>
+        </div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <PreviewCard icon={<Home size={15} />} title="Owner Proceeds" detail="Booking revenue after cleaning, maintenance, platform fees, and management fees." />
           <PreviewCard icon={<GaugeIcon />} title="Maintenance Drag" detail="Open issues, repeat issues, and repair cost pressure by property." />

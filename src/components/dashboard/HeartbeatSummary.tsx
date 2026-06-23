@@ -117,6 +117,45 @@ function pressureLens(data: DashboardData): HeartbeatLens {
     };
   }
 
+  if (data.businessType === "CONTRACTOR") {
+    return {
+      key: "pressure",
+      label: "Job pressure",
+      status: "yellow",
+      statusLabel: "needs jobs",
+      value: "Waiting",
+      detail: "Connect job revenue, labor, materials, and schedule data to read margin pressure by project.",
+      action: "plan job sources",
+      href: "/settings/sources",
+    };
+  }
+
+  if (data.businessType === "SERVICE") {
+    return {
+      key: "pressure",
+      label: "Service pressure",
+      status: "yellow",
+      statusLabel: "needs clients",
+      value: "Waiting",
+      detail: "Connect bank, accounting, payroll, and CRM data to read payroll load, recurring cost, and client profitability.",
+      action: "plan service sources",
+      href: "/settings/sources",
+    };
+  }
+
+  if (data.businessType === "RETAIL") {
+    return {
+      key: "pressure",
+      label: "Margin pressure",
+      status: "yellow",
+      statusLabel: "needs POS",
+      value: "Waiting",
+      detail: "Connect POS, inventory, bank, and ecommerce data to read gross margin, inventory pressure, and sell-through.",
+      action: "plan retail sources",
+      href: "/settings/sources",
+    };
+  }
+
   const status = worstStatus(data.gauges.map((g) => g.health));
   const worstGauge = [...data.gauges].sort((a, b) => b.usagePct - a.usagePct)[0];
   return {
@@ -161,6 +200,45 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       detail: "Import pending deals and expected close dates to see forward Company Dollar.",
       action: "review pilot plan",
       href: "/reports/rental-pilot",
+    };
+  }
+
+  if (data.businessType === "CONTRACTOR") {
+    return {
+      key: "momentum",
+      label: "Schedule momentum",
+      status: "yellow",
+      statusLabel: "needs schedule",
+      value: "Waiting",
+      detail: "Connect jobs and schedule capacity to see upcoming work, backlog, labor load, and cash timing.",
+      action: "plan job sources",
+      href: "/settings/sources",
+    };
+  }
+
+  if (data.businessType === "SERVICE") {
+    return {
+      key: "momentum",
+      label: "Client momentum",
+      status: "yellow",
+      statusLabel: "needs CRM",
+      value: "Waiting",
+      detail: "Connect CRM, invoicing, and recurring revenue data to see lead flow, booked work, and client profitability.",
+      action: "plan service sources",
+      href: "/settings/sources",
+    };
+  }
+
+  if (data.businessType === "RETAIL") {
+    return {
+      key: "momentum",
+      label: "Traffic momentum",
+      status: "yellow",
+      statusLabel: "needs sales",
+      value: "Waiting",
+      detail: "Connect POS and ecommerce data to see sales pace, sell-through, returns, and inventory turnover.",
+      action: "plan retail sources",
+      href: "/settings/sources",
     };
   }
 

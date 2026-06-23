@@ -64,6 +64,27 @@ function noDataMessage(type: BusinessType): { text: string; href: string; cta: s
       cta: "Review pilot reports",
     };
   }
+  if (type === "CONTRACTOR") {
+    return {
+      text: "No job or field-service data imported yet.",
+      href: "/settings/sources",
+      cta: "Plan job sources",
+    };
+  }
+  if (type === "SERVICE") {
+    return {
+      text: "No service-business data imported yet.",
+      href: "/settings/sources",
+      cta: "Plan service sources",
+    };
+  }
+  if (type === "RETAIL") {
+    return {
+      text: "No retail data imported yet.",
+      href: "/settings/sources",
+      cta: "Plan retail sources",
+    };
+  }
   return {
     text: "No data for this period yet.",
     href: "/connections",

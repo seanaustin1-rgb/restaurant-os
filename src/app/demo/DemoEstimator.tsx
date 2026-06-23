@@ -365,7 +365,7 @@ function Results({
           </button>
         </SignUpButton>
         <span className="mt-3 block text-[11px] text-muted">
-          Prefer to look around first? <a href="/demo/tour" className="text-copper-soft hover:text-copper">See the full demo restaurant</a>
+          Prefer to look around first? <a href="/demo/tour/restaurant" className="text-copper-soft hover:text-copper">See the full restaurant tour</a>
         </span>
       </div>
     </div>

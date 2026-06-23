@@ -107,7 +107,20 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
     const service = await getWithRetry("/demo/service");
     const realEstate = await getWithRetry("/demo/real-estate");
     const tour = await getWithRetry("/demo/tour");
-    return { demo, service, realEstate, tour, logs: logs.text, usedWindowsDemoWorkaround: useWindowsDemoWorkaround };
+    const restaurantTour = await getWithRetry("/demo/tour/restaurant");
+    const serviceTour = await getWithRetry("/demo/tour/service");
+    const brokerageTour = await getWithRetry("/demo/tour/real-estate");
+    return {
+      demo,
+      service,
+      realEstate,
+      tour,
+      restaurantTour,
+      serviceTour,
+      brokerageTour,
+      logs: logs.text,
+      usedWindowsDemoWorkaround: useWindowsDemoWorkaround,
+    };
   } finally {
     child.kill("SIGTERM");
     setTimeout(() => child.kill("SIGKILL"), 2_000).unref();
@@ -152,7 +165,7 @@ function assertLowFrictionDemoCopy(probe: Probe) {
   }
 }
 
-function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, tour: Probe) {
+function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, tour: Probe, restaurantTour: Probe, serviceTour: Probe, brokerageTour: Probe) {
   if (!demo.body.includes("Average weekly sales")) {
     throw new Error("/demo did not render the weekly number-entry form");
   }
@@ -165,14 +178,20 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, t
   if (!realEstate.body.includes("Company Dollar")) {
     throw new Error("/demo/real-estate did not render the brokerage number-entry form");
   }
-  if (!tour.body.includes("Restaurant estimate") || !tour.body.includes('href="/demo"')) {
-    throw new Error("/demo/tour did not render the restaurant estimate CTA");
+  if (!tour.body.includes("What kind of business do you want to see?")) {
+    throw new Error("/demo/tour did not render the business-type selector");
   }
-  if (!tour.body.includes("Service estimate") || !tour.body.includes('href="/demo/service"')) {
-    throw new Error("/demo/tour did not render the service estimate CTA");
+  if (!tour.body.includes('href="/demo/tour/service"') || !tour.body.includes('href="/demo/tour/real-estate"')) {
+    throw new Error("/demo/tour did not render industry tour links");
   }
-  if (!tour.body.includes("Brokerage estimate") || !tour.body.includes('href="/demo/real-estate"')) {
-    throw new Error("/demo/tour did not render the brokerage estimate CTA");
+  if (!restaurantTour.body.includes("Demo Bistro") || !restaurantTour.body.includes("Operating pressure")) {
+    throw new Error("/demo/tour/restaurant did not render the restaurant tour");
+  }
+  if (!serviceTour.body.includes("Keystone Service Co.") || !serviceTour.body.includes("Delivery pressure")) {
+    throw new Error("/demo/tour/service did not render the service tour");
+  }
+  if (!brokerageTour.body.includes("Harbor &amp; Main Realty") || !brokerageTour.body.includes("Split pressure")) {
+    throw new Error("/demo/tour/real-estate did not render the brokerage tour");
   }
 }
 
@@ -185,10 +204,10 @@ async function main() {
 
   let result = await runAttempt(false);
   if (
-    result.tour.status !== 200 &&
+    (result.restaurantTour.status !== 200 || result.restaurantTour.body.includes("The live demo is being prepared")) &&
     process.platform === "win32" &&
     process.env.DEMO_DIRECT_URL &&
-    isWindowsTlsPrismaError(result.logs)
+    (result.restaurantTour.body.includes("The live demo is being prepared") || isWindowsTlsPrismaError(result.logs))
   ) {
     result = await runAttempt(true);
   }
@@ -196,17 +215,25 @@ async function main() {
   assertProbe(result.demo, /OutFront|demo/i);
   assertProbe(result.service, /Service business estimate|Average weekly revenue/i);
   assertProbe(result.realEstate, /Company Dollar|brokerage/i);
-  assertProbe(result.tour, /Go-Live Coach/i);
-  assertProbe(result.tour, /Aura|Market energy/i);
+  assertProbe(result.tour, /What kind of business/i);
+  assertProbe(result.restaurantTour, /Go-Live Coach/i);
+  assertProbe(result.serviceTour, /Delivery pressure|Client momentum/i);
+  assertProbe(result.brokerageTour, /Split pressure|Pipeline momentum/i);
   assertPublicDemoChrome(result.demo);
   assertPublicDemoChrome(result.service);
   assertPublicDemoChrome(result.realEstate);
   assertPublicDemoChrome(result.tour);
+  assertPublicDemoChrome(result.restaurantTour);
+  assertPublicDemoChrome(result.serviceTour);
+  assertPublicDemoChrome(result.brokerageTour);
   assertLowFrictionDemoCopy(result.demo);
   assertLowFrictionDemoCopy(result.service);
   assertLowFrictionDemoCopy(result.realEstate);
   assertLowFrictionDemoCopy(result.tour);
-  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.tour);
+  assertLowFrictionDemoCopy(result.restaurantTour);
+  assertLowFrictionDemoCopy(result.serviceTour);
+  assertLowFrictionDemoCopy(result.brokerageTour);
+  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.tour, result.restaurantTour, result.serviceTour, result.brokerageTour);
 
   console.log(
     JSON.stringify(
@@ -219,6 +246,9 @@ async function main() {
           { path: result.service.path, status: result.service.status },
           { path: result.realEstate.path, status: result.realEstate.status },
           { path: result.tour.path, status: result.tour.status },
+          { path: result.restaurantTour.path, status: result.restaurantTour.status },
+          { path: result.serviceTour.path, status: result.serviceTour.status },
+          { path: result.brokerageTour.path, status: result.brokerageTour.status },
         ],
       },
       null,

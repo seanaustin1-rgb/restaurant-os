@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type React from "react";
-import { Activity, Banknote, CircleDollarSign, Gauge, Megaphone } from "lucide-react";
+import { Activity, Banknote, CircleDollarSign, Gauge, Info, Megaphone } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { industryTemplateFor } from "@/lib/industry-templates";
@@ -15,6 +15,7 @@ interface HeartbeatLens {
   statusLabel: string;
   value: string;
   detail: string;
+  explainer: string;
   action: string;
   href: string;
 }
@@ -64,6 +65,7 @@ function cashLens(data: DashboardData): HeartbeatLens {
       cash.currentCash != null && cash.minimumOperatingCash != null
         ? `${money(cash.minimumOperatingCash)} floor, ${money(cash.pilotSetAside)} virtual pilot set-aside`
         : "Set a cash anchor so the heartbeat can judge runway and pilot safety.",
+    explainer: "Cash oxygen compares available operating cash to the minimum buffer needed to keep running safely.",
     action: "open Go-Live Coach",
     href: "/modules/go-live",
   };
@@ -81,12 +83,85 @@ function disciplineLens(data: DashboardData): HeartbeatLens {
     statusLabel: coach.stageLabel.toLowerCase(),
     value: coverage,
     detail: `${coach.checks.find((c) => c.key === "categorization")?.detail ?? "Named-dollar coverage"}; ${coach.summary}`,
+    explainer: "Profit discipline shows whether money is being separated into Profit First buckets before spending decisions happen.",
     action: "review readiness",
     href: "/modules/go-live",
   };
 }
 
-function pressureLens(data: DashboardData): HeartbeatLens {
+function demoPressureLens(data: DashboardData): HeartbeatLens | null {
+  if (data.businessType === "SERVICE") {
+    return {
+      key: "pressure",
+      label: "Delivery pressure",
+      status: "yellow",
+      statusLabel: "watch labor",
+      value: "66.4%",
+      detail: "Payroll, materials, and subcontractors are taking 66.4% of revenue this month.",
+      explainer: "Delivery pressure is the service-business version of prime cost: direct labor plus job costs compared with revenue.",
+      action: "enter service numbers",
+      href: "/demo/service",
+    };
+  }
+  if (data.businessType === "CONTRACTOR") {
+    return {
+      key: "pressure",
+      label: "Job pressure",
+      status: "yellow",
+      statusLabel: "materials high",
+      value: "31.8%",
+      detail: "Materials are running 3.8 points above the target job budget across active work.",
+      explainer: "Job pressure shows whether labor, materials, and subs are compressing job margin before invoices land.",
+      action: "plan job sources",
+      href: "/settings/sources",
+    };
+  }
+  if (data.businessType === "REAL_ESTATE_BROKERAGE") {
+    return {
+      key: "pressure",
+      label: "Split pressure",
+      status: "yellow",
+      statusLabel: "cap watch",
+      value: "71.6%",
+      detail: "Agent payouts, franchise fees, and referrals are passing through 71.6% of closed GCI.",
+      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar.",
+      action: "enter brokerage numbers",
+      href: "/demo/real-estate",
+    };
+  }
+  if (data.businessType === "VACATION_RENTAL") {
+    return {
+      key: "pressure",
+      label: "Property pressure",
+      status: "yellow",
+      statusLabel: "2 watch",
+      value: "22.4%",
+      detail: "Maintenance and turn costs are elevated on 2 properties, led by Driftwood Condo.",
+      explainer: "Property pressure rolls up maintenance drag, turn cost, issue count, and owner-proceeds pressure by property.",
+      action: "inspect properties",
+      href: "/modules/property-heartbeat",
+    };
+  }
+  if (data.businessType === "RETAIL") {
+    return {
+      key: "pressure",
+      label: "Margin pressure",
+      status: "green",
+      statusLabel: "healthy",
+      value: "48.2%",
+      detail: "Gross margin is holding at 48.2% after markdowns, returns, and inventory cost.",
+      explainer: "Margin pressure shows whether product cost, markdowns, returns, and shrink are eating into retail gross margin.",
+      action: "plan retail sources",
+      href: "/settings/sources",
+    };
+  }
+  return null;
+}
+
+function pressureLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
+  const demo = demoMode ? demoPressureLens(data) : null;
+  if (demo) return demo;
+
   if (data.businessType === "VACATION_RENTAL") {
     const portfolio = data.rentalPropertyRollup?.portfolio;
     const status: HealthStatus = portfolio?.overallHealth ?? "yellow";
@@ -99,6 +174,7 @@ function pressureLens(data: DashboardData): HeartbeatLens {
       detail: portfolio
         ? `${portfolio.pressureCount} properties need attention; ${portfolio.topPressure?.name ?? "no property"} is the top pressure point.`
         : "Import bookings, owner statements, expenses, maintenance, and reviews to read property pressure.",
+      explainer: "Property pressure rolls up maintenance drag, turn cost, issue count, and owner-proceeds pressure by property.",
       action: "inspect properties",
       href: "/modules/property-heartbeat",
     };
@@ -112,6 +188,7 @@ function pressureLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs deals",
       value: "Waiting",
       detail: "Import agents, deals, splits, caps, and brokerage expenses to read Company Dollar pressure.",
+      explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar.",
       action: "review pilot plan",
       href: "/reports/rental-pilot",
     };
@@ -125,6 +202,7 @@ function pressureLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs jobs",
       value: "Waiting",
       detail: "Connect job revenue, labor, materials, and schedule data to read margin pressure by project.",
+      explainer: "Job pressure shows whether labor, materials, and subs are compressing job margin before invoices land.",
       action: "plan job sources",
       href: "/settings/sources",
     };
@@ -138,6 +216,7 @@ function pressureLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs clients",
       value: "Waiting",
       detail: "Connect bank, accounting, payroll, and CRM data to read payroll load, recurring cost, and client profitability.",
+      explainer: "Delivery pressure is the service-business version of prime cost: direct labor plus job costs compared with revenue.",
       action: "plan service sources",
       href: "/settings/sources",
     };
@@ -151,6 +230,7 @@ function pressureLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs POS",
       value: "Waiting",
       detail: "Connect POS, inventory, bank, and ecommerce data to read gross margin, inventory pressure, and sell-through.",
+      explainer: "Margin pressure shows whether product cost, markdowns, returns, and shrink are eating into retail gross margin.",
       action: "plan retail sources",
       href: "/settings/sources",
     };
@@ -167,12 +247,85 @@ function pressureLens(data: DashboardData): HeartbeatLens {
     detail: worstGauge
       ? `${worstGauge.label} is using ${pct(worstGauge.usagePct, 0)} of its virtual target.`
       : "No operating pressure visible yet.",
+    explainer: "Operating pressure shows whether the largest controllable costs are consuming too much of current sales.",
     action: "inspect TAPs",
     href: "/dashboard",
   };
 }
 
-function momentumLens(data: DashboardData): HeartbeatLens {
+function demoMomentumLens(data: DashboardData): HeartbeatLens | null {
+  if (data.businessType === "SERVICE") {
+    return {
+      key: "momentum",
+      label: "Client momentum",
+      status: "green",
+      statusLabel: "booked",
+      value: "$184,500",
+      detail: "Booked work plus recurring clients cover 6.2 weeks of delivery capacity.",
+      explainer: "Client momentum shows whether new leads, booked jobs, and recurring work are keeping the next few weeks full.",
+      action: "enter service numbers",
+      href: "/demo/service",
+    };
+  }
+  if (data.businessType === "CONTRACTOR") {
+    return {
+      key: "momentum",
+      label: "Schedule momentum",
+      status: "green",
+      statusLabel: "backlog",
+      value: "$412,000",
+      detail: "Weighted backlog covers 8.4 weeks with two jobs waiting on materials.",
+      explainer: "Schedule momentum reads upcoming work, backlog quality, labor capacity, and cash timing.",
+      action: "plan job sources",
+      href: "/settings/sources",
+    };
+  }
+  if (data.businessType === "REAL_ESTATE_BROKERAGE") {
+    return {
+      key: "momentum",
+      label: "Pipeline momentum",
+      status: "green",
+      statusLabel: "closing",
+      value: "$74,800",
+      detail: "Weighted 45-90 day Company Dollar from pending deals is ahead of break-even.",
+      explainer: "Pipeline momentum converts pending deals into expected retained Company Dollar after splits and close probability.",
+      action: "enter brokerage numbers",
+      href: "/demo/real-estate",
+    };
+  }
+  if (data.businessType === "VACATION_RENTAL") {
+    return {
+      key: "momentum",
+      label: "Booking momentum",
+      status: "green",
+      statusLabel: "ahead",
+      value: "$286,400",
+      detail: "Portfolio occupancy is 74% with 312 future booked nights in the next 60 days.",
+      explainer: "Booking momentum tracks occupancy, ADR, booked nights, booking pace, and owner proceeds.",
+      action: "inspect properties",
+      href: "/modules/property-heartbeat",
+    };
+  }
+  if (data.businessType === "RETAIL") {
+    return {
+      key: "momentum",
+      label: "Traffic momentum",
+      status: "yellow",
+      statusLabel: "mixed",
+      value: "$128,900",
+      detail: "Store traffic is up 7%, but online conversion softened over the last 10 days.",
+      explainer: "Traffic momentum combines sales pace, store traffic, ecommerce conversion, returns, and sell-through.",
+      action: "plan retail sources",
+      href: "/settings/sources",
+    };
+  }
+  return null;
+}
+
+function momentumLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
+  const demo = demoMode ? demoMomentumLens(data) : null;
+  if (demo) return demo;
+
   if (data.businessType === "VACATION_RENTAL") {
     const portfolio = data.rentalPropertyRollup?.portfolio;
     const status: HealthStatus = portfolio ? portfolio.overallHealth : "yellow";
@@ -185,6 +338,7 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       detail: portfolio
         ? `${portfolio.propertyCount} properties, ${pct(portfolio.averageOccupancyPct, 0)} average occupancy, ${money(portfolio.ownerProceeds)} owner proceeds.`
         : "Import rental bookings to see occupancy, ADR, booking pace, and owner proceeds.",
+      explainer: "Booking momentum tracks occupancy, ADR, booked nights, booking pace, and owner proceeds.",
       action: "import rental data",
       href: "/import/rentals",
     };
@@ -198,6 +352,7 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs pipeline",
       value: "Waiting",
       detail: "Import pending deals and expected close dates to see forward Company Dollar.",
+      explainer: "Pipeline momentum converts pending deals into expected retained Company Dollar after splits and close probability.",
       action: "review pilot plan",
       href: "/reports/rental-pilot",
     };
@@ -211,6 +366,7 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs schedule",
       value: "Waiting",
       detail: "Connect jobs and schedule capacity to see upcoming work, backlog, labor load, and cash timing.",
+      explainer: "Schedule momentum reads upcoming work, backlog quality, labor capacity, and cash timing.",
       action: "plan job sources",
       href: "/settings/sources",
     };
@@ -224,6 +380,7 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs CRM",
       value: "Waiting",
       detail: "Connect CRM, invoicing, and recurring revenue data to see lead flow, booked work, and client profitability.",
+      explainer: "Client momentum shows whether new leads, booked jobs, and recurring work are keeping the next few weeks full.",
       action: "plan service sources",
       href: "/settings/sources",
     };
@@ -237,6 +394,7 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       statusLabel: "needs sales",
       value: "Waiting",
       detail: "Connect POS and ecommerce data to see sales pace, sell-through, returns, and inventory turnover.",
+      explainer: "Traffic momentum combines sales pace, store traffic, ecommerce conversion, returns, and sell-through.",
       action: "plan retail sources",
       href: "/settings/sources",
     };
@@ -257,12 +415,85 @@ function momentumLens(data: DashboardData): HeartbeatLens {
       data.revenue.revenueMTD > 0
         ? `${pct(data.revenue.checkAverage > 0 ? (flow / Math.max(prev, 1)) * 100 : 0, 0)} latest cover flow; ${money(data.revenue.realRevenueMTD)} real revenue.`
         : "Connect POS sales to see demand momentum.",
+    explainer: "Sales momentum shows whether revenue and guest count are moving strongly enough to support current cost levels.",
     action: "view revenue",
     href: "/dashboard",
   };
 }
 
-function auraLens(): HeartbeatLens {
+function demoAuraLens(data: DashboardData): HeartbeatLens | null {
+  if (data.businessType === "SERVICE") {
+    return {
+      key: "aura",
+      label: "Aura",
+      status: "green",
+      statusLabel: "trusted",
+      value: "4.8",
+      detail: "Reviews, referral mentions, and quote requests are trending up this month.",
+      explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
+      action: "open Aura",
+      href: "/modules/aura",
+    };
+  }
+  if (data.businessType === "CONTRACTOR") {
+    return {
+      key: "aura",
+      label: "Aura",
+      status: "yellow",
+      statusLabel: "response lag",
+      value: "4.5",
+      detail: "Lead intent is strong, but response time is slipping on estimate requests.",
+      explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
+      action: "open Aura",
+      href: "/modules/aura",
+    };
+  }
+  if (data.businessType === "REAL_ESTATE_BROKERAGE") {
+    return {
+      key: "aura",
+      label: "Aura",
+      status: "green",
+      statusLabel: "intent rising",
+      value: "82",
+      detail: "Searches, showing demand, and profile actions are up against the prior 7 days.",
+      explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
+      action: "open Aura",
+      href: "/modules/aura",
+    };
+  }
+  if (data.businessType === "VACATION_RENTAL") {
+    return {
+      key: "aura",
+      label: "Guest Aura",
+      status: "green",
+      statusLabel: "strong",
+      value: "86",
+      detail: "Guest rating, response speed, and repeat-issue score are healthy across the portfolio.",
+      explainer: "Guest Aura reads review score, response speed, issue themes, and repeat problems by property.",
+      action: "inspect properties",
+      href: "/modules/property-heartbeat",
+    };
+  }
+  if (data.businessType === "RETAIL") {
+    return {
+      key: "aura",
+      label: "Aura",
+      status: "yellow",
+      statusLabel: "reviews flat",
+      value: "4.4",
+      detail: "Foot traffic is rising, but review velocity and product mentions are flat.",
+      explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
+      action: "open Aura",
+      href: "/modules/aura",
+    };
+  }
+  return null;
+}
+
+function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
+  const demo = demoMode ? demoAuraLens(data) : null;
+  if (demo) return demo;
+
   return {
     key: "aura",
     label: "Aura",
@@ -270,13 +501,14 @@ function auraLens(): HeartbeatLens {
     statusLabel: "connect intent",
     value: "Waiting",
     detail: "Wire reviews plus Google calls, directions, website clicks, and profile views for the outside-world heartbeat.",
+    explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
     action: "open Aura",
     href: "/modules/aura",
   };
 }
 
-function buildLenses(data: DashboardData): HeartbeatLens[] {
-  return [cashLens(data), disciplineLens(data), pressureLens(data), momentumLens(data), auraLens()];
+function buildLenses(data: DashboardData, demoMode: boolean): HeartbeatLens[] {
+  return [cashLens(data), disciplineLens(data), pressureLens(data, demoMode), momentumLens(data, demoMode), auraLens(data, demoMode)];
 }
 
 function headline(lenses: HeartbeatLens[]): string {
@@ -294,7 +526,7 @@ function nextAction(lenses: HeartbeatLens[]): HeartbeatLens {
 
 export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardData; demoMode?: boolean }) {
   const template = industryTemplateFor(data.businessType);
-  const lenses = buildLenses(data);
+  const lenses = buildLenses(data, demoMode);
   const focus = nextAction(lenses);
 
   return (
@@ -331,8 +563,18 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
                 <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
                   <Icon size={13} /> {lens.label}
                 </span>
-                <span className={"text-[10px] uppercase tracking-wider " + STATUS_TEXT[lens.status]}>
-                  {lens.statusLabel}
+                <span className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    className="rounded-full text-muted hover:text-copper-soft"
+                    title={lens.explainer}
+                    aria-label={`What ${lens.label} means`}
+                  >
+                    <Info size={12} />
+                  </button>
+                  <span className={"text-[10px] uppercase tracking-wider " + STATUS_TEXT[lens.status]}>
+                    {lens.statusLabel}
+                  </span>
                 </span>
               </div>
               <div className={"tnum mt-2 text-xl " + STATUS_TEXT[lens.status]}>{lens.value}</div>

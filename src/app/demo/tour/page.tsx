@@ -1,79 +1,102 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SignUpButton } from "@clerk/nextjs";
-import { getDemoBistroId } from "@/lib/demo/demo-tenant";
-import { demoPrisma } from "@/lib/demo/demo-prisma";
-import { loadDashboardData } from "@/lib/dashboard/data";
-import { DashboardView } from "@/components/dashboard/DashboardView";
+import { Building2, BriefcaseBusiness, Hammer, Home, Store, Utensils } from "lucide-react";
+import { INDUSTRY_TEMPLATES } from "@/lib/industry-templates";
 
 export const metadata: Metadata = {
-  title: "Live demo - OutFront Data",
-  description: "Tour the full OutFront Data dashboard with a sample business - no login required.",
+  title: "Choose a demo tour - OutFront Data",
+  description: "Pick an industry and tour a realistic OutFront Data dashboard with no login required.",
 };
 
-// Read-only and always dynamic. NEVER seeds; if the sample tenant is not prepared,
-// it shows a friendly state. Seeding is a deliberate operator action.
-export const dynamic = "force-dynamic";
+const TOUR_OPTIONS = [
+  {
+    type: "restaurant",
+    template: INDUSTRY_TEMPLATES.RESTAURANT,
+    company: "Demo Bistro",
+    icon: Utensils,
+    detail: "Prime cost, sales momentum, covers, cash flow, and Aura.",
+  },
+  {
+    type: "service",
+    template: INDUSTRY_TEMPLATES.SERVICE,
+    company: "Keystone Service Co.",
+    icon: BriefcaseBusiness,
+    detail: "Payroll load, delivery pressure, recurring cost, cash safety, and client momentum.",
+  },
+  {
+    type: "contractor",
+    template: INDUSTRY_TEMPLATES.CONTRACTOR,
+    company: "Iron Ridge Field Services",
+    icon: Hammer,
+    detail: "Job margin, materials pressure, schedule momentum, receivables, and runway.",
+  },
+  {
+    type: "real-estate",
+    template: INDUSTRY_TEMPLATES.REAL_ESTATE_BROKERAGE,
+    company: "Harbor & Main Realty",
+    icon: Building2,
+    detail: "Company Dollar, split pressure, pipeline, agent performance, and market energy.",
+  },
+  {
+    type: "vacation-rental",
+    template: INDUSTRY_TEMPLATES.VACATION_RENTAL,
+    company: "Shoreline Stay Group",
+    icon: Home,
+    detail: "Occupancy, owner proceeds, maintenance drag, booking pace, and guest Aura.",
+  },
+  {
+    type: "retail",
+    template: INDUSTRY_TEMPLATES.RETAIL,
+    company: "Copper Lane Goods",
+    icon: Store,
+    detail: "Gross margin, inventory pressure, traffic momentum, returns, and reviews.",
+  },
+] as const;
 
-// Public Mode-1 tour: the complete dashboard for a seeded sample tenant, no login.
-export default async function DemoTourPage() {
-  // Reads from the SEPARATE demo database only. If it is not configured/seeded,
-  // fall through to the "being prepared" state; the production DB is never used.
-  const db = demoPrisma;
-  const restaurantId = db ? await getDemoBistroId(db) : null;
-
-  if (!restaurantId || !db) {
-    return (
-      <main className="flex min-h-[70vh] items-center justify-center px-6">
-        <div className="max-w-md rounded-xl border border-line bg-surface p-8 text-center">
-          <h1 className="font-display text-2xl text-copper-soft">The live demo is being prepared</h1>
-          <p className="mt-2 text-sm text-muted">
-            Our sample business is warming up. In the meantime, see your own numbers in 60 seconds.
+export default function DemoTourSelectorPage() {
+  return (
+    <main className="min-h-screen bg-ink px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <header className="text-center">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-copper-soft">OutFront Data tour</div>
+          <h1 className="mt-2 font-display text-4xl text-[#E6E8E4]">What kind of business do you want to see?</h1>
+          <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            Pick a template and we will open a fictional company with realistic sample numbers already loaded.
           </p>
-          <Link
-            href="/demo"
-            className="mt-5 inline-block rounded-lg bg-copper px-5 py-2.5 font-medium text-ink hover:bg-copper-soft"
-          >
-            Try the instant estimate {"->"}
+        </header>
+
+        <div className="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {TOUR_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            return (
+              <Link
+                key={option.type}
+                href={`/demo/tour/${option.type}`}
+                className="group rounded-lg border border-line bg-surface p-5 transition hover:border-copper-dim"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 text-sm text-copper-soft">
+                      <Icon size={16} /> {option.template.label}
+                    </div>
+                    <h2 className="mt-2 font-display text-2xl text-[#E6E8E4]">{option.company}</h2>
+                  </div>
+                  <span className="rounded-md border border-copper-dim bg-copper/10 px-2 py-1 text-xs text-copper-soft group-hover:bg-copper/20">
+                    Tour
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{option.detail}</p>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 text-center text-sm">
+          <Link href="/demo" className="text-copper-soft hover:text-copper">
+            Prefer to enter your own restaurant numbers?
           </Link>
         </div>
-      </main>
-    );
-  }
-
-  const data = await loadDashboardData(restaurantId, db);
-
-  return (
-    <div>
-      <div className="border-b border-copper-dim/40 bg-copper-dim/10">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-2.5">
-          <p className="text-[13px] text-[#CFD2CC]">
-            <span className="font-medium text-copper-soft">Live demo</span> - a sample business with realistic
-            data. Use it to see the shape of the dashboard, then enter rough weekly numbers for your own first read.
-          </p>
-          <div className="flex items-center gap-3 text-[13px]">
-            <Link href="/demo" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-              Restaurant estimate
-            </Link>
-            <Link href="/demo/service" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-              Service estimate
-            </Link>
-            <Link href="/demo/real-estate" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-              Brokerage estimate
-            </Link>
-            <SignUpButton forceRedirectUrl="/onboarding">
-              <button
-                type="button"
-                className="rounded-md bg-copper px-3 py-1.5 font-medium text-ink hover:bg-copper-soft"
-              >
-                Start free
-              </button>
-            </SignUpButton>
-          </div>
-        </div>
       </div>
-
-      <DashboardView dashboards={[data]} moduleOrder={null} pinnedModules={[]} demoMode />
-    </div>
+    </main>
   );
 }

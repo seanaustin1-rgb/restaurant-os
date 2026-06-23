@@ -41,11 +41,11 @@ function previewSourceSetup(type: BusinessType): SourceSetupSummary {
 }
 
 function previewBusinessName(type: BusinessType, fallback: string): string {
-  if (type === "REAL_ESTATE_BROKERAGE") return "Demo Brokerage";
-  if (type === "VACATION_RENTAL") return "Demo Rental Portfolio";
-  if (type === "CONTRACTOR") return "Demo Field Service";
-  if (type === "SERVICE") return "Demo Service Business";
-  if (type === "RETAIL") return "Demo Retail Shop";
+  if (type === "REAL_ESTATE_BROKERAGE") return "Harbor & Main Realty";
+  if (type === "VACATION_RENTAL") return "Shoreline Stay Group";
+  if (type === "CONTRACTOR") return "Iron Ridge Field Services";
+  if (type === "SERVICE") return "Keystone Service Co.";
+  if (type === "RETAIL") return "Copper Lane Goods";
   return fallback;
 }
 
@@ -97,11 +97,13 @@ export function DashboardView({
   moduleOrder,
   pinnedModules,
   demoMode = false,
+  initialPreviewType,
 }: {
   dashboards: DashboardData[];
   moduleOrder: string[] | null;
   pinnedModules: string[];
   demoMode?: boolean;
+  initialPreviewType?: BusinessType;
 }) {
   const [activeId, setActiveId] = useState(dashboards[0]?.restaurantId ?? "");
   const [role, setRole] = useState<RoleKey>("OPERATOR");
@@ -112,11 +114,11 @@ export function DashboardView({
   const [pinned, setPinned] = useState<string[]>(() => sanitizeModuleOrder(pinnedModules));
 
   const active = dashboards.find((d) => d.restaurantId === activeId) ?? dashboards[0];
-  const [previewType, setPreviewType] = useState<BusinessType>(active?.businessType ?? "RESTAURANT");
+  const [previewType, setPreviewType] = useState<BusinessType>(initialPreviewType ?? active?.businessType ?? "RESTAURANT");
 
   useEffect(() => {
-    setPreviewType(active?.businessType ?? "RESTAURANT");
-  }, [active?.restaurantId, active?.businessType]);
+    setPreviewType(initialPreviewType ?? active?.businessType ?? "RESTAURANT");
+  }, [active?.restaurantId, active?.businessType, initialPreviewType]);
 
   const isTemplatePreview = Boolean(active && previewType !== active.businessType);
   const displayName = active ? (isTemplatePreview ? previewBusinessName(previewType, active.name) : active.name) : "";

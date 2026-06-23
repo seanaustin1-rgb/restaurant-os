@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Lock, GripVertical, Star } from "lucide-react";
+import { Lock, GripVertical, Info, Star } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -84,7 +84,17 @@ export function ModuleGrid({
                   </span>
                 )}
                 <div className={"font-display text-base " + (live ? "text-[#E6E8E4]" : "text-muted")}>{m.name}</div>
-                <div className={"mt-1 text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
+                <div className="mt-1 flex items-start gap-1.5">
+                  <button
+                    type="button"
+                    className="mt-0.5 shrink-0 rounded-full text-muted/70 hover:text-copper-soft"
+                    title={moduleExplainer(m)}
+                    aria-label={`What ${m.name} shows`}
+                  >
+                    <Info size={12} />
+                  </button>
+                  <div className={"text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
+                </div>
               </div>
             );
           })}
@@ -112,6 +122,13 @@ export function ModuleGrid({
       </DndContext>
     </section>
   );
+}
+
+function moduleExplainer(m: ModuleDef): string {
+  if (m.status !== "live") {
+    return `${m.name} is planned. It will light up when ${m.blockedBy ?? "the required data source"} is connected.`;
+  }
+  return `${m.name} shows ${m.description.toLowerCase()}. In a live account, this opens the full module detail page.`;
 }
 
 function SortableTile({

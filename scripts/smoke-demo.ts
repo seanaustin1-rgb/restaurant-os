@@ -110,6 +110,7 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
     const tour = await getWithRetry("/demo/tour");
     const restaurantTour = await getWithRetry("/demo/tour/restaurant");
     const serviceTour = await getWithRetry("/demo/tour/service");
+    const contractorTour = await getWithRetry("/demo/tour/contractor");
     const brokerageTour = await getWithRetry("/demo/tour/real-estate");
     const retailTour = await getWithRetry("/demo/tour/retail");
     return {
@@ -120,6 +121,7 @@ async function runAttempt(useWindowsDemoWorkaround: boolean) {
       tour,
       restaurantTour,
       serviceTour,
+      contractorTour,
       brokerageTour,
       retailTour,
       logs: logs.text,
@@ -169,7 +171,7 @@ function assertLowFrictionDemoCopy(probe: Probe) {
   }
 }
 
-function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, retail: Probe, tour: Probe, restaurantTour: Probe, serviceTour: Probe, brokerageTour: Probe, retailTour: Probe) {
+function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, retail: Probe, tour: Probe, restaurantTour: Probe, serviceTour: Probe, contractorTour: Probe, brokerageTour: Probe, retailTour: Probe) {
   if (!demo.body.includes("Average weekly sales")) {
     throw new Error("/demo did not render the weekly number-entry form");
   }
@@ -196,6 +198,9 @@ function assertNumberEntryPath(demo: Probe, service: Probe, realEstate: Probe, r
   }
   if (!serviceTour.body.includes("Keystone Service Co.") || !serviceTour.body.includes("Delivery pressure")) {
     throw new Error("/demo/tour/service did not render the service tour");
+  }
+  if (!contractorTour.body.includes("Iron Ridge Field Services") || !contractorTour.body.includes("Job Margin")) {
+    throw new Error("/demo/tour/contractor did not render the contractor feedback tour");
   }
   if (!brokerageTour.body.includes("Harbor &amp; Main Realty") || !brokerageTour.body.includes("Split pressure")) {
     throw new Error("/demo/tour/real-estate did not render the brokerage tour");
@@ -229,6 +234,7 @@ async function main() {
   assertProbe(result.tour, /What kind of business/i);
   assertProbe(result.restaurantTour, /Go-Live Coach/i);
   assertProbe(result.serviceTour, /Delivery pressure|Client momentum/i);
+  assertProbe(result.contractorTour, /Job Margin|Backlog/i);
   assertProbe(result.brokerageTour, /Split pressure|Pipeline momentum/i);
   assertPublicDemoChrome(result.demo);
   assertPublicDemoChrome(result.service);
@@ -237,6 +243,7 @@ async function main() {
   assertPublicDemoChrome(result.tour);
   assertPublicDemoChrome(result.restaurantTour);
   assertPublicDemoChrome(result.serviceTour);
+  assertPublicDemoChrome(result.contractorTour);
   assertPublicDemoChrome(result.brokerageTour);
   assertLowFrictionDemoCopy(result.demo);
   assertLowFrictionDemoCopy(result.service);
@@ -245,8 +252,9 @@ async function main() {
   assertLowFrictionDemoCopy(result.tour);
   assertLowFrictionDemoCopy(result.restaurantTour);
   assertLowFrictionDemoCopy(result.serviceTour);
+  assertLowFrictionDemoCopy(result.contractorTour);
   assertLowFrictionDemoCopy(result.brokerageTour);
-  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.retail, result.tour, result.restaurantTour, result.serviceTour, result.brokerageTour, result.retailTour);
+  assertNumberEntryPath(result.demo, result.service, result.realEstate, result.retail, result.tour, result.restaurantTour, result.serviceTour, result.contractorTour, result.brokerageTour, result.retailTour);
 
   console.log(
     JSON.stringify(
@@ -262,6 +270,7 @@ async function main() {
           { path: result.tour.path, status: result.tour.status },
           { path: result.restaurantTour.path, status: result.restaurantTour.status },
           { path: result.serviceTour.path, status: result.serviceTour.status },
+          { path: result.contractorTour.path, status: result.contractorTour.status },
           { path: result.brokerageTour.path, status: result.brokerageTour.status },
           { path: result.retailTour.path, status: result.retailTour.status },
         ],

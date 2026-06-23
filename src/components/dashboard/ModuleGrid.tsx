@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Lock, GripVertical, Info, Star } from "lucide-react";
 import {
   DndContext,
@@ -38,6 +39,7 @@ export function ModuleGrid({
   onTogglePin: (key: string) => void;
   demoMode?: boolean;
 }) {
+  const [openInfo, setOpenInfo] = useState<string | null>(null);
   const sensors = useSensors(
     // A small drag threshold so a click still navigates; only a deliberate drag reorders.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -87,14 +89,21 @@ export function ModuleGrid({
                 <div className="mt-1 flex items-start gap-1.5">
                   <button
                     type="button"
+                    onClick={() => setOpenInfo((current) => (current === m.key ? null : m.key))}
                     className="mt-0.5 shrink-0 rounded-full text-muted/70 hover:text-copper-soft"
                     title={moduleExplainer(m)}
+                    aria-expanded={openInfo === m.key}
                     aria-label={`What ${m.name} shows`}
                   >
                     <Info size={12} />
                   </button>
                   <div className={"text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
                 </div>
+                {openInfo === m.key && (
+                  <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                    {moduleExplainer(m)}
+                  </div>
+                )}
               </div>
             );
           })}

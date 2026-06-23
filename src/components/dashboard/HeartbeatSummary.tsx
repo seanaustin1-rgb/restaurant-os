@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import type React from "react";
+import { useState } from "react";
 import { Activity, Banknote, CircleDollarSign, Gauge, Info, Megaphone } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import type { DashboardData } from "@/lib/dashboard/data";
@@ -528,6 +531,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
   const template = industryTemplateFor(data.businessType);
   const lenses = buildLenses(data, demoMode);
   const focus = nextAction(lenses);
+  const [openInfo, setOpenInfo] = useState<LensKey | null>(null);
 
   return (
     <section className="rounded-lg border border-copper-dim/40 bg-surface px-4 py-4">
@@ -566,8 +570,14 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
                 <span className="flex items-center gap-1.5">
                   <button
                     type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setOpenInfo((current) => (current === lens.key ? null : lens.key));
+                    }}
                     className="rounded-full text-muted hover:text-copper-soft"
                     title={lens.explainer}
+                    aria-expanded={openInfo === lens.key}
                     aria-label={`What ${lens.label} means`}
                   >
                     <Info size={12} />
@@ -578,7 +588,12 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
                 </span>
               </div>
               <div className={"tnum mt-2 text-xl " + STATUS_TEXT[lens.status]}>{lens.value}</div>
-              <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-muted">{lens.detail}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted">{lens.detail}</p>
+              {openInfo === lens.key && (
+                <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                  {lens.explainer}
+                </div>
+              )}
             </LensCard>
           );
         })}

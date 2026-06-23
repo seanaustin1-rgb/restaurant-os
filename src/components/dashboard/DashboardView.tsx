@@ -327,6 +327,36 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
     );
   }
 
+  if (businessType === "CONTRACTOR") {
+    return (
+      <section>
+        <h2 className="mb-2 font-display text-lg text-copper-soft">Contractor heartbeat</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <PreviewCard
+            icon={<GaugeIcon />}
+            title="Job Margin"
+            detail="32.6% blended margin across active jobs. Two jobs are under target after labor and materials."
+          />
+          <PreviewCard
+            icon={<Building2 size={15} />}
+            title="Backlog"
+            detail="$412,000 weighted backlog, covering about 8.4 weeks of crew capacity."
+          />
+          <PreviewCard
+            icon={<Users size={15} />}
+            title="Labor Load"
+            detail="76% crew utilization. Overtime is starting to pressure two crews next week."
+          />
+          <PreviewCard
+            icon={<Search size={15} />}
+            title="Receivables"
+            detail="$68,500 open AR, with $18,200 past 30 days and one progress bill needing follow-up."
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section>
       <h2 className="mb-2 font-display text-lg text-copper-soft">Industry heartbeat</h2>

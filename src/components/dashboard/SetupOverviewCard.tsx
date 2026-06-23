@@ -15,6 +15,12 @@ const TEMPLATE_OPTIONS = [
   INDUSTRY_TEMPLATES.RETAIL,
 ];
 
+function demoEstimateFor(type: BusinessType): { href: string; label: string } | null {
+  if (type === "RESTAURANT") return { href: "/demo", label: "Enter restaurant numbers" };
+  if (type === "REAL_ESTATE_BROKERAGE") return { href: "/demo/real-estate", label: "Enter brokerage numbers" };
+  return null;
+}
+
 export function SetupOverviewCard({
   data,
   previewType,
@@ -29,6 +35,7 @@ export function SetupOverviewCard({
   demoMode?: boolean;
 }) {
   const template = industryTemplateFor(data.businessType);
+  const demoEstimate = demoEstimateFor(data.businessType);
   const setup = data.sourceSetup;
   const missing = setup.missingRequired.slice(0, 3).join(", ");
   const setupLabel = demoMode ? "Demo setup" : "Business setup";
@@ -98,13 +105,18 @@ export function SetupOverviewCard({
               </Link>
             </>
           )}
-          {demoMode && (
+          {demoMode && demoEstimate && (
             <Link
-              href="/demo"
+              href={demoEstimate.href}
               className="inline-flex items-center justify-center rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs font-medium text-copper-soft hover:bg-copper/20"
             >
-              Enter your numbers
+              {demoEstimate.label}
             </Link>
+          )}
+          {demoMode && !demoEstimate && (
+            <span className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2 text-xs text-muted">
+              Preview only
+            </span>
           )}
         </div>
       </div>

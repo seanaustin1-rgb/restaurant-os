@@ -53,7 +53,10 @@ export default async function DemoTourPage() {
           </p>
           <div className="flex items-center gap-3 text-[13px]">
             <Link href="/demo" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-              Enter your numbers
+              Restaurant estimate
+            </Link>
+            <Link href="/demo/real-estate" className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
+              Brokerage estimate
             </Link>
             <SignUpButton forceRedirectUrl="/onboarding">
               <button

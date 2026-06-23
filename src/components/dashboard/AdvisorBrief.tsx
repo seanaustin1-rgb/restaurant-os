@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, CheckCircle2, MessageSquareText, PlugZap, ShieldCheck } from "lucide-react";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { money, pct } from "@/lib/format";
+import { industryTemplateFor } from "@/lib/industry-templates";
 
 interface BriefItem {
   label: string;
@@ -116,6 +117,7 @@ function goLiveStatus(data: DashboardData): BriefItem {
 }
 
 function conversationPrompt(data: DashboardData, watchout: BriefItem): string {
+  const template = industryTemplateFor(data.businessType);
   if (watchout.href === "/modules/go-live") {
     return `Ask the operator: "${watchout.label} is the first constraint. What changed operationally this week?"`;
   }
@@ -125,7 +127,7 @@ function conversationPrompt(data: DashboardData, watchout: BriefItem): string {
   if (data.revenue.revenueMTD <= 0) {
     return 'Ask the operator: "Which data source should be connected first so this heartbeat becomes useful?"';
   }
-  return 'Ask the operator: "Does this heartbeat match what you feel in the restaurant this week?"';
+  return `Ask the operator: "Does this heartbeat match what you feel in the ${template.label.toLowerCase()} this week?"`;
 }
 
 export function AdvisorBrief({ data, demoMode = false }: { data: DashboardData; demoMode?: boolean }) {

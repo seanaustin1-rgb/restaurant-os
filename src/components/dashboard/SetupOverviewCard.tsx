@@ -33,7 +33,7 @@ export function SetupOverviewCard({
   const missing = setup.missingRequired.slice(0, 3).join(", ");
   const setupLabel = demoMode ? "Demo setup" : "Business setup";
   const description = demoMode
-    ? "This tour is already populated with sample restaurant data. Explore the heartbeat first; source connections come later."
+    ? `This tour is showing a sample ${template.label.toLowerCase()} view. Explore the heartbeat first; source connections come later.`
     : template.description;
   const minimumLabel = demoMode ? "Sample data included" : "Minimum auto-input";
   const minimumText = demoMode
@@ -46,7 +46,7 @@ export function SetupOverviewCard({
       : setup.connectedCount > 0
       ? `${setup.connectedCount} connected, ${setup.plannedCount} planned, ${setup.blockedCount} blocked`
       : `Minimum sources to plan: ${setup.requiredCount}`;
-  const progressSubtext = demoMode ? "Sample restaurant data is loaded" : `${setup.notNeededCount} marked not needed`;
+  const progressSubtext = demoMode ? `Sample ${template.label.toLowerCase()} data is loaded` : `${setup.notNeededCount} marked not needed`;
   const missingLabel = demoMode ? "After signup" : "Missing minimum";
   const missingText = demoMode
     ? "Connect real sources only when you want your own live dashboard."

@@ -87,6 +87,36 @@ function disciplineLens(data: DashboardData): HeartbeatLens {
 }
 
 function pressureLens(data: DashboardData): HeartbeatLens {
+  if (data.businessType === "VACATION_RENTAL") {
+    const portfolio = data.rentalPropertyRollup?.portfolio;
+    const status: HealthStatus = portfolio?.overallHealth ?? "yellow";
+    return {
+      key: "pressure",
+      label: "Property pressure",
+      status,
+      statusLabel: STATUS_LABEL[status],
+      value: portfolio ? pct(portfolio.maintenancePressurePct, 1) : "Waiting",
+      detail: portfolio
+        ? `${portfolio.pressureCount} properties need attention; ${portfolio.topPressure?.name ?? "no property"} is the top pressure point.`
+        : "Import bookings, owner statements, expenses, maintenance, and reviews to read property pressure.",
+      action: "inspect properties",
+      href: "/modules/property-heartbeat",
+    };
+  }
+
+  if (data.businessType === "REAL_ESTATE_BROKERAGE") {
+    return {
+      key: "pressure",
+      label: "Split pressure",
+      status: "yellow",
+      statusLabel: "needs deals",
+      value: "Waiting",
+      detail: "Import agents, deals, splits, caps, and brokerage expenses to read Company Dollar pressure.",
+      action: "review pilot plan",
+      href: "/reports/rental-pilot",
+    };
+  }
+
   const status = worstStatus(data.gauges.map((g) => g.health));
   const worstGauge = [...data.gauges].sort((a, b) => b.usagePct - a.usagePct)[0];
   return {
@@ -104,6 +134,36 @@ function pressureLens(data: DashboardData): HeartbeatLens {
 }
 
 function momentumLens(data: DashboardData): HeartbeatLens {
+  if (data.businessType === "VACATION_RENTAL") {
+    const portfolio = data.rentalPropertyRollup?.portfolio;
+    const status: HealthStatus = portfolio ? portfolio.overallHealth : "yellow";
+    return {
+      key: "momentum",
+      label: "Booking momentum",
+      status,
+      statusLabel: portfolio ? STATUS_LABEL[status] : "waiting",
+      value: portfolio ? money(portfolio.monthlyBookingRevenue) : "Waiting",
+      detail: portfolio
+        ? `${portfolio.propertyCount} properties, ${pct(portfolio.averageOccupancyPct, 0)} average occupancy, ${money(portfolio.ownerProceeds)} owner proceeds.`
+        : "Import rental bookings to see occupancy, ADR, booking pace, and owner proceeds.",
+      action: "import rental data",
+      href: "/import/rentals",
+    };
+  }
+
+  if (data.businessType === "REAL_ESTATE_BROKERAGE") {
+    return {
+      key: "momentum",
+      label: "Pipeline momentum",
+      status: "yellow",
+      statusLabel: "needs pipeline",
+      value: "Waiting",
+      detail: "Import pending deals and expected close dates to see forward Company Dollar.",
+      action: "review pilot plan",
+      href: "/reports/rental-pilot",
+    };
+  }
+
   const spark = data.heartbeat.coversSparkline;
   const last = spark[spark.length - 1] ?? 0;
   const prev = spark[spark.length - 2] ?? last;

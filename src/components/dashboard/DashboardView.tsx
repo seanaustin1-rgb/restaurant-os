@@ -40,6 +40,37 @@ function previewSourceSetup(type: BusinessType): SourceSetupSummary {
   };
 }
 
+function previewBusinessName(type: BusinessType, fallback: string): string {
+  if (type === "REAL_ESTATE_BROKERAGE") return "Demo Brokerage";
+  if (type === "VACATION_RENTAL") return "Demo Rental Portfolio";
+  if (type === "CONTRACTOR") return "Demo Field Service";
+  if (type === "SERVICE") return "Demo Service Business";
+  if (type === "RETAIL") return "Demo Retail Shop";
+  return fallback;
+}
+
+function noDataMessage(type: BusinessType): { text: string; href: string; cta: string } {
+  if (type === "VACATION_RENTAL") {
+    return {
+      text: "No rental data imported yet.",
+      href: "/import/rentals",
+      cta: "Import rental data",
+    };
+  }
+  if (type === "REAL_ESTATE_BROKERAGE") {
+    return {
+      text: "No brokerage data imported yet.",
+      href: "/reports/rental-pilot",
+      cta: "Review pilot reports",
+    };
+  }
+  return {
+    text: "No data for this period yet.",
+    href: "/connections",
+    cta: "Connect a source",
+  };
+}
+
 export function DashboardView({
   dashboards,
   moduleOrder,
@@ -67,15 +98,17 @@ export function DashboardView({
   }, [active?.restaurantId, active?.businessType]);
 
   const isTemplatePreview = Boolean(active && previewType !== active.businessType);
+  const displayName = active ? (isTemplatePreview ? previewBusinessName(previewType, active.name) : active.name) : "";
   const displayActive = useMemo<DashboardData | undefined>(() => {
     if (!active) return undefined;
     if (!isTemplatePreview) return active;
     return {
       ...active,
+      name: displayName,
       businessType: previewType,
       sourceSetup: previewSourceSetup(previewType),
     };
-  }, [active, isTemplatePreview, previewType]);
+  }, [active, displayName, isTemplatePreview, previewType]);
 
   const template = industryTemplateFor(displayActive?.businessType);
   const templateModuleKeys = useMemo(() => new Set(template.defaultModuleKeys), [template]);
@@ -115,8 +148,8 @@ export function DashboardView({
     return (
       <main className="flex min-h-screen items-center justify-center p-8">
         <div className="max-w-sm rounded-xl border border-line bg-surface p-8 text-center">
-          <h1 className="font-display text-xl text-copper-soft">No restaurant yet</h1>
-          <p className="mt-2 text-sm text-muted">Set up your restaurant to see your dashboard.</p>
+          <h1 className="font-display text-xl text-copper-soft">No business yet</h1>
+          <p className="mt-2 text-sm text-muted">Set up your business to see your dashboard.</p>
           <Link
             href="/onboarding"
             className="mt-4 inline-block rounded-md bg-copper px-4 py-2 text-sm font-medium text-ink hover:bg-copper-soft"
@@ -131,11 +164,16 @@ export function DashboardView({
   const isInvestor = role === "INVESTOR";
   const isAdvisor = role === "CONSULTANT" || role === "MANAGER";
   const isRestaurantTemplate = displayActive.businessType === "RESTAURANT";
+  const emptyState = noDataMessage(displayActive.businessType);
+  const headerRestaurants = dashboards.map((d) => ({
+    id: d.restaurantId,
+    name: d.restaurantId === activeId ? displayActive.name : d.name,
+  }));
 
   return (
     <div>
       <DashboardHeader
-        restaurants={dashboards.map((d) => ({ id: d.restaurantId, name: d.name }))}
+        restaurants={headerRestaurants}
         activeId={displayActive.restaurantId}
         onSelectRestaurant={setActiveId}
         role={role}
@@ -165,11 +203,11 @@ export function DashboardView({
 
         {!displayActive.hasData && (
           <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
-            No data for this period yet.{" "}
-            <Link href="/connections" className="text-copper-soft hover:underline">
-              Connect a bank
+            {emptyState.text}{" "}
+            <Link href={emptyState.href} className="text-copper-soft hover:underline">
+              {emptyState.cta}
             </Link>{" "}
-            and sync, or add daily sales, to populate these metrics.
+            to populate these metrics.
           </div>
         )}
 

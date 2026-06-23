@@ -22,6 +22,10 @@ export function GoLiveCoachCard({ data, demoMode = false }: { data: GoLiveCoachD
               <h2 className="font-display text-lg text-copper-soft">Go-Live Coach</h2>
               <span className={"text-xs uppercase tracking-wider " + color}>{data.stageLabel}</span>
             </div>
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Readiness coach for Profit First automation. It runs the money-movement plan virtually first, then tells
+              you what must be fixed before real transfers should begin.
+            </p>
             <p className="mt-1 text-sm text-[#E6E8E4]">{data.recommendation}</p>
             <p className="mt-1 text-xs text-muted">{data.summary}</p>
           </div>

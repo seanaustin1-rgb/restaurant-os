@@ -25,6 +25,11 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
             <p className="text-[11px] uppercase tracking-wider text-muted">Current stage</p>
             <h2 className="mt-1 font-display text-3xl text-copper-soft">{data.stageLabel}</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted">{data.stageNote}</p>
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#CFD2CC]">
+              Go-Live Coach is not a generic business coach. It is a virtual readiness check for Profit First money
+              movement: it replays what would have been set aside, compares that to cash safety and bucket pressure,
+              then recommends whether to observe, keep coaching, rehearse a pilot, or go live.
+            </p>
           </div>
           <div className="rounded-lg border border-copper-dim/40 bg-copper-dim/10 px-4 py-3 text-right">
             <p className="text-[11px] uppercase tracking-wider text-muted">Net sales read</p>
@@ -39,6 +44,13 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
           <p className="text-xs uppercase tracking-wider text-muted">Recommendation</p>
           <p className="mt-1 text-sm text-[#E6E8E4]">{data.recommendation}</p>
           <p className="mt-1 text-xs text-muted">{data.summary}</p>
+        </div>
+
+        <div className="mt-3 grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-4">
+          <StageExplainer label="Observe" text="Collect enough clean sales, cash, and spend data to trust the heartbeat." active={data.stage === "observe"} />
+          <StageExplainer label="Coach" text="Find the bucket, category, tax, or cash issue that would break if transfers started today." active={data.stage === "coach" || data.stage === "simulate"} />
+          <StageExplainer label="Pilot" text="Run a narrow real-world rehearsal after the virtual model shows enough cushion." active={data.stage === "pilot_ready"} />
+          <StageExplainer label="Go live" text="Turn on the operating rhythm once cash safety, categorization, and bucket pressure are stable." active={data.stage === "enforce_ready"} />
         </div>
       </section>
 
@@ -187,6 +199,15 @@ function verdictClass(verdict: "go" | "wait" | "watch"): string {
   if (verdict === "go") return "text-health-green";
   if (verdict === "wait") return "text-health-red";
   return "text-health-yellow";
+}
+
+function StageExplainer({ label, text, active }: { label: string; text: string; active: boolean }) {
+  return (
+    <div className={"rounded-md border px-3 py-2 " + (active ? "border-copper-dim bg-copper/10" : "border-line bg-surface/60")}>
+      <div className={active ? "text-copper-soft" : "text-[#E6E8E4]"}>{label}</div>
+      <p className="mt-1 leading-relaxed text-muted">{text}</p>
+    </div>
+  );
 }
 
 function BucketCard({ bucket }: { bucket: GoLiveBucket }) {

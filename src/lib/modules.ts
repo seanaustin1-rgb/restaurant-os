@@ -15,7 +15,7 @@ export interface ModuleDef {
 
 export const MODULES: ModuleDef[] = [
   { key: "allocation", name: "Allocation & Variance", description: "Profit First set-aside vs. actual", status: "live", href: "/modules/allocation" },
-  { key: "go-live", name: "Go-Live Coach", description: "Virtual readiness before money moves", status: "live", href: "/modules/go-live" },
+  { key: "go-live", name: "Go-Live Coach", description: "Profit First readiness before money moves", status: "live", href: "/modules/go-live" },
   { key: "prime-cost", name: "Prime Cost", description: "COGS + labor vs. target, by week", status: "live", href: "/modules/prime-cost" },
   { key: "break-even", name: "Break-even", description: "Sales needed to cover fixed costs", status: "live", href: "/modules/break-even" },
   { key: "processing-fees", name: "Processing Fee Leak", description: "Card fees vs. benchmark & creep", status: "live", href: "/modules/processing-fees" },

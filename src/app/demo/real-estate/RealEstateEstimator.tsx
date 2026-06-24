@@ -359,6 +359,8 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
         then runs Profit First and break-even from Company Dollar.
       </div>
 
+      <SetupLeversPanel />
+
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
         <CompanyDollarTile r={r} />
         <SplitPressureTile r={r} />
@@ -411,6 +413,70 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   );
 }
 
+function SetupLeversPanel() {
+  const editable = [
+    "Agent split by agent",
+    "Annual cap and cap paid-to-date",
+    "Franchise and referral fees",
+    "Monthly OpEx and current cash",
+    "Pending deals and close rate",
+    "Average deal size and commission rate",
+  ];
+  const outcomes = [
+    "Company Dollar",
+    "Split pressure",
+    "Break-even",
+    "Cash oxygen",
+    "Pipeline momentum",
+    "Profit First set-asides",
+  ];
+
+  return (
+    <div className="mt-5 rounded-xl border border-line bg-surface px-4 py-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-2xl">
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">What you can manipulate</div>
+          <h3 className="mt-1 font-display text-xl text-[#E6E8E4]">Setup levers change the dashboard outcomes.</h3>
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            During setup, a brokerage should be able to edit the agent economics and operating assumptions below. The dashboard then turns those choices into the color-coded outcomes.
+          </p>
+        </div>
+        <Link href="#agent-performance-levers" className="text-xs text-copper-soft hover:text-copper">
+          See agent-level levers
+        </Link>
+      </div>
+      <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <LeverList title="Editable inputs" items={editable} />
+        <LeverList title="Calculated outcomes" items={outcomes} />
+      </div>
+    </div>
+  );
+}
+
+function LeverList({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="rounded-lg border border-line bg-ink/50 p-3">
+      <div className="text-sm text-[#E6E8E4]">{title}</div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {items.map((item) => (
+          <span key={item} className="rounded-full border border-line px-2 py-1 text-[11px] text-muted">
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function WhatMovesThis({ items }: { items: string[] }) {
+  return (
+    <div className="mt-3 rounded-lg border border-copper-dim/30 bg-copper-dim/10 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-copper-soft">What moves this?</div>
+      <p className="mt-1 text-[11px] leading-relaxed text-muted">{items.join(", ")}.</p>
+    </div>
+  );
+}
+
 function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
   return (
     <Tile title="Company Dollar" icon={<Building2 size={12} className="text-copper-soft" />}>
@@ -423,6 +489,7 @@ function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
         <Stat label="Retained share" value={pct(r.companyDollarPct)} tone={r.companyDollarHealth} />
       </div>
       <p className="mt-3 text-[11px] text-muted">Company Dollar is GCI after agent payouts, franchise fees, and referral fees.</p>
+      <WhatMovesThis items={["monthly closed GCI", "agent split percentages", "franchise fee", "referral fee"]} />
     </Tile>
   );
 }
@@ -440,6 +507,7 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
         <Stat label="Referral" value={money(r.referralFees)} />
       </div>
       <p className="mt-3 text-[11px] text-muted">This is the real estate version of prime-cost pressure.</p>
+      <WhatMovesThis items={["agent splits", "agent cap remaining", "franchise fees", "referral fees", "which agents are closing the deals"]} />
     </Tile>
   );
 }
@@ -460,6 +528,7 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
         />
       </div>
       <p className="mt-3 text-[11px] text-muted">Profit starts after Company Dollar covers brokerage OpEx.</p>
+      <WhatMovesThis items={["monthly OpEx", "retained Company Dollar", "agent split pressure", "franchise/referral fees"]} />
     </Tile>
   );
 }
@@ -477,6 +546,7 @@ function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
         <Stat label="Operating cash" value={money(r.currentCash)} />
         <Stat label="Monthly OpEx" value={money(r.monthlyOpex)} />
       </div>
+      <WhatMovesThis items={["current operating cash", "monthly fixed OpEx", "expected closings", "timing of cash receipts"]} />
     </Tile>
   );
 }
@@ -493,6 +563,7 @@ function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
         <Stat label="Pipeline span" value={`${r.pipelineMonths.toFixed(1)} mo`} />
       </div>
       <p className="mt-3 text-[11px] text-muted">This is the rough 45-90 day forward read before closings land.</p>
+      <WhatMovesThis items={["pending deals", "average sale price", "commission rate", "expected close rate", "brokerage retained share", "days to close"]} />
     </Tile>
   );
 }
@@ -511,13 +582,14 @@ function ProfitFirstTile({ r }: { r: RealEstateEstimateResult }) {
           </div>
         ))}
       </div>
+      <WhatMovesThis items={["Company Dollar", "Profit First target percentages", "owner pay target", "tax reserve target", "go-live stage"]} />
     </Tile>
   );
 }
 
 function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
   return (
-    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
+    <div id="agent-performance-levers" className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
@@ -530,6 +602,9 @@ function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
           <AgentRow key={row.name} row={row} />
         ))}
       </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted">
+        In a live setup, these rows should be editable per agent: split %, annual cap, cap paid-to-date, pending deals, expected close rate, lead spend, and source. Cap remaining is the warning light for how much Company Dollar the brokerage can still collect before that agent's future deals retain less.
+      </p>
     </div>
   );
 }

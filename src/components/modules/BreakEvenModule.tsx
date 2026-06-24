@@ -5,6 +5,15 @@ import { Scale, ShieldCheck, ShieldAlert, Target, TrendingUp } from "lucide-reac
 import type { BreakEvenData } from "@/lib/modules/break-even";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
+
+// Margin-of-Safety reads as a cushion, not a budget — so its words diverge from the
+// gauge vocabulary while the icon set stays constant.
+const MOS_WORD: Record<HealthStatus, string> = {
+  green: "Healthy",
+  yellow: "Thin",
+  red: "At risk",
+};
 
 const HEALTH_HEX: Record<HealthStatus, string> = {
   green: "#5FA777",
@@ -93,7 +102,10 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
           <div className="mt-0.5 text-[11px] text-muted">≈ {money(data.monthlyBreakEven ?? 0)}/mo</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
-          <span className="text-[11px] uppercase tracking-wider text-muted">Margin of Safety</span>
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-muted">Margin of Safety</span>
+            <HealthSignal status={data.health} mode="badge" label={MOS_WORD[data.health]} />
+          </div>
           <div className={"tnum mt-1 text-2xl " + HEALTH_TEXT[data.health]}>{pct(data.marginOfSafety)}</div>
           <div className="mt-0.5 text-[11px] text-muted">
             sales can fall this far before a loss

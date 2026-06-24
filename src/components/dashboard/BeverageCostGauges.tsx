@@ -2,6 +2,7 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
 
 // A beverage cost ratio = alcohol COGS ÷ matching alcohol sales (a "pour cost"),
 // judged against an operator-set target where lower is better. Split into liquor
@@ -46,6 +47,15 @@ function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
   const hasTarget = g.target != null;
   // Fill = how much of target the ratio uses (lower is better). Capped for the bar.
   const fill = hasRatio && hasTarget && g.target! > 0 ? Math.min((g.costPct! / g.target!) * 100, 100) : 0;
+  // Honest read beside the colored bar: pour cost vs target, in points (lower is better).
+  const verdict = (() => {
+    if (!hasRatio || !hasTarget) return "";
+    const delta = g.costPct! - g.target!;
+    const mag = Math.abs(delta);
+    if (mag < 0.5) return delta > 0 ? `just over ≤${pct(g.target!, 0)}` : `just under ≤${pct(g.target!, 0)}`;
+    const pts = mag >= 10 ? mag.toFixed(0) : (Math.round(mag * 10) / 10).toString();
+    return `${pts} pt${pts === "1" ? "" : "s"} ${delta > 0 ? "over" : "under"} ≤${pct(g.target!, 0)}`;
+  })();
 
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
@@ -66,6 +76,7 @@ function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
               style={{ width: `${fill}%` }}
             />
           </div>
+          {hasTarget && <HealthSignal status={g.health} detail={verdict} className="mt-1.5" />}
           <div className="mt-1 text-[11px] text-muted">
             {g.basis === "actual"
               ? "of alcohol sales · from POS"

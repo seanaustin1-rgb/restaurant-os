@@ -2,6 +2,7 @@ import { clsx } from "clsx";
 import { ChevronRight } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
 
 export interface CategorySpend {
   name: string;
@@ -65,6 +66,18 @@ function GaugeCard({ g }: { g: TapGauge }) {
     ? subGroups.reduce((s, sg) => s + sg.amount, 0)
     : g.categories.reduce((s, c) => s + c.amount, 0);
 
+  // The honest read beside the health-colored bar (color-not-alone): how spend tracks
+  // the virtual target. Over → the dollar overage; within → share of target consumed.
+  const overTarget = g.spent - g.target;
+  const verdict = g.usagePct > 100
+    ? `${money(overTarget)} over target (${pct(g.usagePct, 0)})`
+    : `${pct(g.usagePct, 0)} of target`;
+  const breakdown = hasSubs
+    ? subGroups.map((s) => s.label).join(" · ")
+    : hasDrill
+      ? `${g.categories.length} categor${g.categories.length === 1 ? "y" : "ies"}`
+      : "";
+
   return (
     <details
       className={clsx(
@@ -94,16 +107,8 @@ function GaugeCard({ g }: { g: TapGauge }) {
             style={{ width: `${Math.min(g.usagePct, 100)}%` }}
           />
         </div>
-        <div className="mt-1 flex items-center justify-between text-[11px] text-muted">
-          <span>
-            {hasSubs
-              ? subGroups.map((s) => s.label).join(" · ")
-              : hasDrill
-                ? `${g.categories.length} categor${g.categories.length === 1 ? "y" : "ies"}`
-                : ""}
-          </span>
-          <span>{pct(g.usagePct, 0)} of target</span>
-        </div>
+        <HealthSignal status={g.health} detail={verdict} className="mt-1.5" />
+        {breakdown && <div className="mt-1 text-[11px] text-muted">{breakdown}</div>}
       </summary>
 
       {hasSubs && (

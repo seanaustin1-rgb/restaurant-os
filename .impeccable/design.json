@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-21T00:00:00.000Z",
+  "title": "Design System: OutFront Data",
+  "extensions": {
+    "colorMeta": {
+      "copper": { "role": "primary", "displayName": "Copper", "canonical": "#C8873A", "tonalRamp": ["#2A1C0D", "#43300F", "#5E4419", "#7A5526", "#9C6C2E", "#C8873A", "#D9A35E", "#ECC894"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#0B0D0B", "tonalRamp": ["#0B0D0B", "#141614", "#1B1E1B", "#232623", "#34372F", "#55584F", "#8A8F89", "#E6E8E4"] },
+      "ink-text": { "role": "neutral", "displayName": "Ink Text", "canonical": "#E6E8E4", "tonalRamp": ["#16181A", "#2C2F2C", "#4A4D49", "#6E726C", "#8A8F89", "#B4B8B2", "#D2D5CF", "#E6E8E4"] },
+      "health-green": { "role": "status", "displayName": "Health Green", "canonical": "#5FA777", "tonalRamp": ["#15271C", "#1E3A2A", "#2C5640", "#3C7556", "#4E916A", "#5FA777", "#86C29A", "#B7DBC4"] },
+      "health-yellow": { "role": "status", "displayName": "Health Yellow", "canonical": "#D9A35E", "tonalRamp": ["#3A2A12", "#54401C", "#735628", "#956E33", "#B98843", "#D9A35E", "#E6C08C", "#F1D9B6"] },
+      "health-red": { "role": "status", "displayName": "Health Red", "canonical": "#C8643A", "tonalRamp": ["#321408", "#4A1E0F", "#6B2D17", "#8C3D20", "#AC4E2C", "#C8643A", "#DC8A66", "#ECB69C"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Cormorant Garamond serif for page/hero and tenant names only." },
+      "numeric": { "displayName": "Numeric", "purpose": "Space Mono tabular figures for every metric (.tnum)." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "state", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Ease-out for state transitions, 150-250ms. No bounce." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "7xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The page's single main commitment (Start free, See my estimate).",
+      "html": "<button class=\"ds-btn-primary\">See my estimate</button>",
+      "css": ".ds-btn-primary{background:#C8873A;color:#0B0D0B;font-family:'DM Sans',system-ui,sans-serif;font-weight:500;font-size:.875rem;padding:10px 20px;border:none;border-radius:8px;cursor:pointer;transition:background .2s cubic-bezier(0.16,1,0.3,1);}.ds-btn-primary:hover{background:#D9A35E;}.ds-btn-primary:focus-visible{outline:2px solid #D9A35E;outline-offset:2px;}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Tertiary actions (sign in, adjust numbers).",
+      "html": "<button class=\"ds-btn-secondary\">Adjust numbers</button>",
+      "css": ".ds-btn-secondary{background:#141614;color:#E6E8E4;font-family:'DM Sans',system-ui,sans-serif;font-weight:500;font-size:.875rem;padding:8px 16px;border:1px solid #232623;border-radius:8px;cursor:pointer;transition:border-color .2s cubic-bezier(0.16,1,0.3,1);}.ds-btn-secondary:hover{border-color:#7A5526;}.ds-btn-secondary:focus-visible{outline:2px solid #D9A35E;outline-offset:2px;}"
+    },
+    {
+      "name": "Field Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Numeric/text field; metrics use tabular figures.",
+      "html": "<input class=\"ds-input\" inputmode=\"numeric\" placeholder=\"250,000\" />",
+      "css": ".ds-input{width:100%;background:#0B0D0B;color:#E6E8E4;font-family:'Space Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.875rem;padding:10px 12px;border:1px solid #232623;border-radius:8px;outline:none;transition:border-color .2s cubic-bezier(0.16,1,0.3,1);}.ds-input::placeholder{color:rgba(138,143,137,.6);}.ds-input:focus{border-color:#D9A35E;}"
+    },
+    {
+      "name": "Panel Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Surface panel lifted off Ink by tonal step + hairline border. No shadow.",
+      "html": "<div class=\"ds-card\"><span class=\"ds-card-label\">OVERALL REPUTATION</span><div class=\"ds-card-value\">4.0</div></div>",
+      "css": ".ds-card{background:#141614;border:1px solid #232623;border-radius:8px;padding:16px;}.ds-card-label{display:block;font-family:'DM Sans',system-ui,sans-serif;font-weight:500;font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;color:#8A8F89;}.ds-card-value{margin-top:8px;font-family:'Space Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:1.5rem;color:#E6E8E4;}"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Health status pill — tints toward its hue and always carries a word, never color alone.",
+      "html": "<span class=\"ds-badge-green\">On benchmark</span>",
+      "css": ".ds-badge-green{display:inline-flex;align-items:center;gap:4px;font-family:'DM Sans',system-ui,sans-serif;font-size:.6875rem;color:#5FA777;background:rgba(95,167,119,.10);border:1px solid rgba(95,167,119,.30);border-radius:9999px;padding:2px 8px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Operator's Instrument Panel",
+    "overview": "OutFront Data reads like the instrument panel of a well-run business after dark - a calm, low-glow surface where a tired owner can glance once and know whether they are safe, profitable, and what is pressuring them. Credible like a good ledger, warm like a serif headline, never flashy. It rejects generic SaaS, bank-scare screens, over-technical accounting software, and the flashy AI toy. Density is earned: calm on a phone, dense on desktop. Color is rationed so a single copper accent or health signal carries real weight.",
+    "keyCharacteristics": [
+      "Matte near-black canvas; warmth from copper + serif, never a tinted warm background.",
+      "Monospaced tabular figures for every number.",
+      "One copper accent, rationed; health green/yellow/red is a separate labeled vocabulary.",
+      "Serif display headings over a clean sans body.",
+      "Restraint as default; cool factor from precision and motion, not decoration."
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Copper appears on ~<=10% of any screen - primary action, current selection, the single most important figure. If two things are copper, one is wrong.", "section": "colors" },
+      { "name": "The Status-Is-Not-Decoration Rule", "body": "Green/yellow/red belong to financial health only and never carry meaning by color alone - always pair with a word, number, or icon. Health Yellow and Copper Soft share a hex; never let an accent read as a watch status.", "section": "colors" },
+      { "name": "The Quiet-Ground Rule", "body": "The background stays Ink. Warmth is copper, serif, and data - never a cream/sand/warm canvas.", "section": "colors" },
+      { "name": "The Every-Number-Is-Mono Rule", "body": "All metrics use Space Mono tabular figures. A dollar amount in body sans is a bug.", "section": "typography" },
+      { "name": "The Serif-Stays-In-Headings Rule", "body": "Cormorant is for display and titles only - never buttons, labels, inputs, or table data.", "section": "typography" },
+      { "name": "The No-Shadow Rule", "body": "Surfaces are flat. Separation via the Ink->Surface tonal step and 1px Line border. No drop shadows, glows, or glassmorphism.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do show the heartbeat first - feedback before every source is connected.",
+      "Do render every number in Space Mono via .tnum.",
+      "Do pair every green/yellow/red signal with a label, number, or icon and verify AA contrast.",
+      "Do ration copper to ~one accent per view.",
+      "Do separate panels with the Ink->Surface tonal step and a 1px Line border.",
+      "Do make each industry feel modeled, not the same dashboard relabeled.",
+      "Do write the money in plain language; teach while diagnosing.",
+      "Do keep motion 150-250ms conveying state, and honor prefers-reduced-motion."
+    ],
+    "donts": [
+      "Don't make it look like generic SaaS - no cream/sand bg, no gradient hero-metric, no identical card grid.",
+      "Don't use glassmorphism, decorative shadows/glows, or gradient text.",
+      "Don't use a colored border-left/right stripe as a card/alert accent.",
+      "Don't convey financial status with color alone.",
+      "Don't let Copper and Health Yellow (both #D9A35E) blur roles.",
+      "Don't tint the Ink ground toward warm.",
+      "Don't put the serif in buttons, labels, inputs, or table data.",
+      "Don't trap the owner in setup before showing value.",
+      "Don't reach for a modal as the first answer."
+    ]
+  }
+}

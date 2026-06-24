@@ -22,6 +22,7 @@ function demoEstimateFor(type: BusinessType): { href: string; label: string } | 
   if (type === "REAL_ESTATE_BROKERAGE") return { href: "/demo/real-estate", label: "Enter brokerage numbers" };
   if (type === "RETAIL") return { href: "/demo/retail", label: "Enter retail numbers" };
   if (type === "VACATION_RENTAL") return { href: "/demo/vacation-rental", label: "Enter rental numbers" };
+  if (type === "CONTRACTOR") return { href: "/demo/contractor", label: "Enter contractor numbers" };
   return null;
 }
 

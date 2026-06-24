@@ -34,6 +34,9 @@ export default function DemoPage() {
             <Link href="/demo/vacation-rental" className="text-copper-soft hover:text-copper">
               Try the vacation rental estimate
             </Link>
+            <Link href="/demo/contractor" className="text-copper-soft hover:text-copper">
+              Try the contractor estimate
+            </Link>
           </div>
         </header>
         <DemoEstimator />

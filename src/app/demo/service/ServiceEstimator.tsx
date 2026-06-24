@@ -289,7 +289,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onE
 
       <div className="mt-8 text-center">
         <Link href="/demo/tour" className="text-sm text-copper-soft hover:text-copper">
-          Back to full demo tour
+          Back to demo selector
         </Link>
       </div>
     </div>

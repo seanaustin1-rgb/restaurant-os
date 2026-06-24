@@ -145,7 +145,7 @@ export function DemoModulePreview({ businessType }: { businessType: BusinessType
             className="inline-flex items-center gap-2 rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-xs font-medium text-copper-soft hover:bg-copper/20"
             aria-expanded={showGuide}
           >
-            Get full tour
+            Tour these results
             <ChevronDown size={13} className={showGuide ? "rotate-180 transition-transform" : "transition-transform"} />
           </button>
           <Link href={TOUR_HREF[businessType]} className="text-xs text-muted hover:text-copper-soft">

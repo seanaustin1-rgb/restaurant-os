@@ -305,7 +305,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEd
 
       <div className="mt-8 text-center">
         <Link href="/demo/tour/retail" className="text-sm text-copper-soft hover:text-copper">
-          Back to retail tour
+          Open the sample retail dashboard
         </Link>
       </div>
     </div>

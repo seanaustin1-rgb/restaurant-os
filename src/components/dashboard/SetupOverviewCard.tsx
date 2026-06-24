@@ -5,6 +5,7 @@ import { Building2, ChevronDown, PlugZap, Settings2 } from "lucide-react";
 import type { BusinessType } from "@prisma/client";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { INDUSTRY_TEMPLATES, industryTemplateFor } from "@/lib/industry-templates";
+import { EnterNumbersButton } from "@/components/demo/EnterNumbersButton";
 
 const TEMPLATE_OPTIONS = [
   INDUSTRY_TEMPLATES.RESTAURANT,
@@ -108,12 +109,11 @@ export function SetupOverviewCard({
             </>
           )}
           {demoMode && demoEstimate && (
-            <Link
+            <EnterNumbersButton
               href={demoEstimate.href}
-              className="inline-flex items-center justify-center rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs font-medium text-copper-soft hover:bg-copper/20"
-            >
-              {demoEstimate.label}
-            </Link>
+              label={demoEstimate.label}
+              helper="See this dashboard with your own figures"
+            />
           )}
           {demoMode && !demoEstimate && (
             <span className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2 text-xs text-muted">

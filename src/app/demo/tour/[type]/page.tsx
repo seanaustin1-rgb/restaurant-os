@@ -8,6 +8,7 @@ import { demoPrisma } from "@/lib/demo/demo-prisma";
 import { loadDashboardData } from "@/lib/dashboard/data";
 import { buildDemoTourData } from "@/lib/demo/tour-data";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { EnterNumbersButton } from "@/components/demo/EnterNumbersButton";
 import { industryTemplateFor } from "@/lib/industry-templates";
 
 const ROUTES: Record<string, BusinessType> = {
@@ -62,11 +63,7 @@ export default async function DemoTemplateTourPage({ params }: { params: { type:
             <Link href="/demo/tour" className="rounded-md border border-line px-3 py-1.5 font-medium text-copper-soft hover:border-copper">
               Change business type
             </Link>
-            {estimateHref && (
-              <Link href={estimateHref} className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-                Enter your numbers
-              </Link>
-            )}
+            {estimateHref && <EnterNumbersButton href={estimateHref} />}
             <SignUpButton forceRedirectUrl="/onboarding">
               <button
                 type="button"

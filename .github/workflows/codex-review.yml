@@ -59,6 +59,17 @@ jobs:
         if: steps.guard.outputs.enabled == 'true'
         run: npm i -g @openai/codex
 
+      # Write ~/.codex/auth.json explicitly. Relying on the OPENAI_API_KEY env
+      # var alone is unreliable headless: the CLI's WebSocket->HTTPS transport
+      # fallback can drop the auth header, yielding a 401 "Missing bearer".
+      # Piping the key into `codex login --with-api-key` caches an API-key
+      # profile both transports use. See openai/codex#15492, #5282.
+      - name: Authenticate Codex
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: printenv OPENAI_API_KEY | codex login --with-api-key
+
       - name: Compute PR diff
         if: steps.guard.outputs.enabled == 'true'
         run: |

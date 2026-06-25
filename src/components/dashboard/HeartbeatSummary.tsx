@@ -514,13 +514,30 @@ function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
   const demo = demoMode ? demoAuraLens(data) : null;
   if (demo) return demo;
 
+  if (data.aura.hasAnyData && data.aura.overallRating != null) {
+    return {
+      key: "aura",
+      label: "Aura",
+      status: data.aura.health,
+      statusLabel: data.aura.health === "green" ? "live" : data.aura.health === "red" ? "weak" : "watch",
+      value: data.aura.overallRating.toFixed(1),
+      detail: `${data.aura.totalReviews.toLocaleString()} reviews across ${data.aura.liveCount} live source${data.aura.liveCount === 1 ? "" : "s"}. Connect Google Business Profile intent for calls, directions, clicks, and profile views.`,
+      explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
+      action: "open Aura",
+      href: "/modules/aura",
+    };
+  }
+
   return {
     key: "aura",
     label: "Aura",
     status: "yellow",
-    statusLabel: "connect intent",
+    statusLabel: data.aura.configuredCount > 0 ? "check source" : "not connected",
     value: "Waiting",
-    detail: "Wire reviews plus Google calls, directions, website clicks, and profile views for the outside-world heartbeat.",
+    detail:
+      data.aura.configuredCount > 0
+        ? "A review source is configured, but no rating data is coming through yet. Open Aura to see the source error."
+        : "Connect Google Places for reviews, then Google Business Profile for calls, directions, website clicks, and profile views.",
     explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
     action: "open Aura",
     href: "/modules/aura",

@@ -17,6 +17,7 @@ import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/T
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
+import { loadAura, type AuraData } from "@/lib/modules/aura";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
 
 export interface DashboardData {
@@ -29,10 +30,20 @@ export interface DashboardData {
   heartbeat: HeartbeatData;
   revenue: RevenueData;
   goLiveCoach: GoLiveCoachData;
+  aura: DashboardAuraSummary;
   sourceSetup: SourceSetupSummary;
   rentalPropertyRollup: RentalPropertyRollupData | null;
   gauges: TapGauge[];
   costRatios: CostRatioGauge[];
+}
+
+export interface DashboardAuraSummary {
+  configuredCount: number;
+  liveCount: number;
+  overallRating: number | null;
+  totalReviews: number;
+  health: AuraData["health"];
+  hasAnyData: boolean;
 }
 
 export interface SourceSetupSummary {
@@ -251,6 +262,7 @@ export async function loadDashboardData(
   const hasData = revenue > 0 || byCat.length > 0;
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
+  const aura = await loadDashboardAura();
 
   return {
     restaurantId,
@@ -260,6 +272,7 @@ export async function loadDashboardData(
     hasData: businessType === "VACATION_RENTAL" ? Boolean(rentalPropertyRollup?.hasImportedRentalData || hasData) : hasData,
     realRevenue,
     goLiveCoach: await loadGoLiveCoach(restaurantId, db),
+    aura,
     sourceSetup: await loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     rentalPropertyRollup,
     heartbeat: {
@@ -280,6 +293,29 @@ export async function loadDashboardData(
     gauges,
     costRatios,
   };
+}
+
+async function loadDashboardAura(): Promise<DashboardAuraSummary> {
+  try {
+    const aura = await loadAura();
+    return {
+      configuredCount: aura.configuredCount,
+      liveCount: aura.sources.filter((source) => source.state === "live").length,
+      overallRating: aura.overallRating,
+      totalReviews: aura.totalReviews,
+      health: aura.health,
+      hasAnyData: aura.hasAnyData,
+    };
+  } catch {
+    return {
+      configuredCount: 0,
+      liveCount: 0,
+      overallRating: null,
+      totalReviews: 0,
+      health: "yellow",
+      hasAnyData: false,
+    };
+  }
 }
 
 async function loadSourceSetupSummary(

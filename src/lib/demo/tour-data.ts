@@ -66,6 +66,14 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     hasData: true,
     realRevenue,
     sourceSetup: sourceSetup(type),
+    aura: {
+      configuredCount: 1,
+      liveCount: 1,
+      overallRating: 4.7,
+      totalReviews: 3827,
+      health: "green",
+      hasAnyData: true,
+    },
     rentalPropertyRollup: null,
     goLiveCoach: assessGoLiveReadiness({
       periodLabel: MONTH,

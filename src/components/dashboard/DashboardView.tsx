@@ -131,6 +131,14 @@ export function DashboardView({
       name: displayName,
       businessType: previewType,
       sourceSetup: previewSourceSetup(previewType),
+      aura: {
+        configuredCount: 0,
+        liveCount: 0,
+        overallRating: null,
+        totalReviews: 0,
+        health: "yellow",
+        hasAnyData: false,
+      },
     };
   }, [active, displayName, isTemplatePreview, previewType]);
 

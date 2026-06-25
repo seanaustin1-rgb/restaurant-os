@@ -96,7 +96,7 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
           <select
             value={targetCat}
             onChange={(e) => setTargetCat(e.target.value)}
-            className="min-w-0 flex-1 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim sm:flex-none"
+            className="min-w-0 flex-1 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft sm:flex-none"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>

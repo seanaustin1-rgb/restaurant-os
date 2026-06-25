@@ -107,7 +107,7 @@ function Row({
                 placeholder="—"
                 onBlur={(e) => onSaveBudget(r.categoryId, e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                className="w-20 bg-transparent py-1 text-sm text-[#E6E8E4] outline-none"
+                className="w-20 rounded bg-transparent py-1 text-sm text-[#E6E8E4] outline-none focus-visible:ring-1 focus-visible:ring-copper-soft"
               />
             </div>
             {used != null && <span className={clsx("tnum text-xs", usedTone)}>{used.toFixed(0)}%</span>}

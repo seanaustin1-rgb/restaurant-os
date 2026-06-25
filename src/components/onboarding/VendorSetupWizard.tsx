@@ -100,7 +100,7 @@ export function VendorSetupWizard({
                   value={sel[r.signature] ?? ""}
                   disabled={pending}
                   onChange={(e) => setSel((s) => ({ ...s, [r.signature]: e.target.value }))}
-                  className="w-52 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50"
+                  className="w-52 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50"
                 >
                   <option value="">— choose category —</option>
                   {categories.map((c) => (

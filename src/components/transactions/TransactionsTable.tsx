@@ -70,7 +70,7 @@ export function TransactionsTable({ rows }: { rows: TxnRow[] }) {
       value={state[r.id]?.bucket}
       disabled={pendingId === r.id}
       onChange={(e) => onChange(r.id, e.target.value as TransactionBucket)}
-      className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim disabled:opacity-50 sm:w-auto"
+      className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50 sm:w-auto"
     >
       {BUCKETS.map((b) => (
         <option key={b.value} value={b.value}>{b.label}</option>

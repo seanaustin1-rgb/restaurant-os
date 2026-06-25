@@ -58,7 +58,7 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0"
-          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim"
+          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
         />
         <span className="text-sm text-muted">%</span>
       </div>

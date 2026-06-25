@@ -125,7 +125,7 @@ export function SourceMapPlanner({
                     <select
                       value={draft.status}
                       onChange={(e) => updateDraft(key, { status: e.target.value as DataSourceStatus })}
-                      className={"rounded-md border bg-surface px-2 py-1 text-xs outline-none " + STATUS_STYLE[draft.status]}
+                      className={"rounded-md border bg-surface px-2 py-1 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " + STATUS_STYLE[draft.status]}
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status.value} value={status.value}>
@@ -142,7 +142,7 @@ export function SourceMapPlanner({
                       value={draft.notes}
                       onChange={(e) => updateDraft(key, { notes: e.target.value })}
                       placeholder="Setup note, credential owner, blocker..."
-                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-[#E6E8E4] outline-none focus:border-copper-dim"
+                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
                     />
                     <button
                       type="button"

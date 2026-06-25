@@ -85,7 +85,7 @@ export function SetupOverviewCard({
             <select
               value={previewType}
               onChange={(e) => onPreviewTypeChange(e.target.value as BusinessType)}
-              className="w-full rounded-md border border-line bg-surface px-2 py-2 text-sm text-copper-soft outline-none focus:border-copper-dim"
+              className="w-full rounded-md border border-line bg-surface px-2 py-2 text-sm text-copper-soft outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             >
               {TEMPLATE_OPTIONS.map((option) => (
                 <option key={option.key} value={option.key}>

@@ -54,7 +54,7 @@ export function OnboardingFlow() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Stone Grille & Taphouse"
-              className="w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-dim"
+              className="w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             />
           </Field>
           <Field label="Seat count / team size (optional)">
@@ -63,7 +63,7 @@ export function OnboardingFlow() {
               onChange={(e) => setSeatCount(e.target.value.replace(/[^0-9]/g, ""))}
               inputMode="numeric"
               placeholder="215"
-              className="tnum w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-dim"
+              className="tnum w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             />
           </Field>
           <button

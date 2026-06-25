@@ -6,9 +6,34 @@ const PF_PROFIT_PCT = 5;
 const PF_OWNER_PAY_PCT = 35;
 const PF_TAX_PCT = 15;
 
+export type RealEstateSoftware = "followupboss" | "boldtrail" | "sierra" | "lofty" | "brokermint" | "quickbooks" | "spreadsheet" | "other";
+
+const SOFTWARE_LABELS: Record<RealEstateSoftware, string> = {
+  followupboss: "Follow Up Boss",
+  boldtrail: "BoldTrail / kvCORE",
+  sierra: "Sierra Interactive",
+  lofty: "Lofty (Chime)",
+  brokermint: "Brokermint",
+  quickbooks: "QuickBooks",
+  spreadsheet: "Spreadsheet / none",
+  other: "Other CRM / back office",
+};
+
+const SOFTWARE_NOTES: Record<RealEstateSoftware, string> = {
+  followupboss: "Strong for pipeline and agent activity; pair with accounting + a back office for splits and Company Dollar.",
+  boldtrail: "Lead-to-close pipeline and agent production; add back-office data for caps, splits, and fees.",
+  sierra: "Good for lead gen and pipeline velocity; connect accounting for the money side.",
+  lofty: "Pipeline, marketing, and agent activity; add a back office for commission disbursement detail.",
+  brokermint: "Back-office source: commission disbursements, splits, caps, fees, and agent ledgers roll in cleanly.",
+  quickbooks: "Accounting backbone — GCI, OpEx, and Company Dollar come straight from here.",
+  spreadsheet: "Start with GCI, splits, fees, and OpEx; a back office later automates agent-level economics.",
+  other: "Begin with closed GCI, splits, franchise/referral fees, and brokerage OpEx; most platforms export these.",
+};
+
 export interface RealEstateEstimateInputs {
   name: string;
   market: string;
+  software: RealEstateSoftware;
   monthlyGci: number;
   agentSplitPct: number;
   franchiseFeePct: number;
@@ -56,6 +81,9 @@ export interface RealEstateEstimateResult {
   pipelineMonths: number;
   pipelineHealth: Health;
   pf: RealEstatePfLine[];
+  software: RealEstateSoftware;
+  softwareLabel: string;
+  softwareNote: string;
 }
 
 const clampPct = (value: number): number => Math.max(0, Math.min(100, value));
@@ -144,5 +172,8 @@ export function computeRealEstateEstimate(input: RealEstateEstimateInputs): Real
     pipelineMonths,
     pipelineHealth: bandHigher(monthlyPipelineCompanyDollar, monthlyOpex, monthlyOpex * 0.6),
     pf,
+    software: input.software,
+    softwareLabel: SOFTWARE_LABELS[input.software],
+    softwareNote: SOFTWARE_NOTES[input.software],
   };
 }

@@ -7,10 +7,23 @@ const PF_TAX_PCT = 6;
 
 export type RetailPosProvider = "square" | "clover" | "shopify" | "lightspeed" | "helcim" | "godaddy" | "revel" | "other";
 
+export type RetailSeason = "typical" | "peak" | "slow";
+
+// The reads a few averages can't honestly drive — rendered locked in the UI.
+export const RETAIL_LOCKED_TILES: { key: string; label: string; needs: string }[] = [
+  { key: "per-sku", label: "Per-SKU Margin", needs: "item-level POS data" },
+  { key: "sell-through", label: "Sell-Through by Category", needs: "inventory + sales by item" },
+  { key: "shrink", label: "Shrink / Theft", needs: "physical counts vs. system" },
+  { key: "vendor-terms", label: "Vendor Terms & Spend", needs: "purchase-order history" },
+  { key: "basket", label: "Basket / Attach Rate", needs: "transaction-line data" },
+  { key: "channel", label: "Channel Profitability", needs: "in-store vs. online split" },
+];
+
 export interface RetailEstimateInputs {
   name: string;
   market: string;
   posProvider: RetailPosProvider;
+  season: RetailSeason;
   weeklySales: number;
   weeklyInventoryPurchases: number;
   weeklyPayroll: number;
@@ -48,6 +61,7 @@ export interface RetailEstimateResult {
   posProvider: RetailPosProvider;
   posLabel: string;
   posNote: string;
+  season: RetailSeason;
   marginHealth: Health;
   payrollHealth: Health;
   breakEvenHealth: Health;
@@ -126,6 +140,7 @@ export function computeRetailEstimate(input: RetailEstimateInputs): RetailEstima
     posProvider: input.posProvider,
     posLabel: POS_LABELS[input.posProvider],
     posNote: POS_NOTES[input.posProvider],
+    season: input.season,
     marginHealth: healthHigher(grossMarginPct, 45, 35),
     payrollHealth: healthLower(payrollPct, 18, 24),
     breakEvenHealth: healthHigher(marginOfSafetyPct, 20, 10),

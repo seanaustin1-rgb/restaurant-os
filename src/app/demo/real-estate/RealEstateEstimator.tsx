@@ -1,10 +1,11 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowLeft, Building2, Database, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
+import { lookupReputation, type ReputationResult } from "../actions";
 import {
   computeAgentPerformanceList,
   type AgentPerformanceResult,
@@ -29,6 +30,7 @@ import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
+  type RealEstateSoftware,
 } from "@/lib/demo/real-estate-estimate";
 import {
   computeVacationRentalImportReadiness,
@@ -40,6 +42,7 @@ import { DemoModulePreview } from "../DemoModulePreview";
 type FormState = Record<
   | "name"
   | "market"
+  | "software"
   | "monthlyGci"
   | "agentSplitPct"
   | "franchiseFeePct"
@@ -58,6 +61,7 @@ type FormState = Record<
 const INITIAL: FormState = {
   name: "",
   market: "",
+  software: "followupboss",
   monthlyGci: "",
   agentSplitPct: "",
   franchiseFeePct: "",
@@ -80,6 +84,8 @@ const HEALTH_TEXT: Record<Health, string> = {
 
 const inputCls =
   "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+const selectCls =
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] outline-none focus:border-copper-soft";
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -90,6 +96,7 @@ function buildInputs(f: FormState): RealEstateEstimateInputs {
   return {
     name: f.name.trim(),
     market: f.market.trim(),
+    software: (f.software as RealEstateSoftware) || "followupboss",
     monthlyGci: num(f.monthlyGci),
     agentSplitPct: num(f.agentSplitPct) || 70,
     franchiseFeePct: num(f.franchiseFeePct),
@@ -109,12 +116,38 @@ export function RealEstateEstimator() {
   const [f, setF] = useState<FormState>(INITIAL);
   const [view, setView] = useState<"form" | "results">("form");
   const [error, setError] = useState<string | null>(null);
+  const [aura, setAura] = useState<ReputationResult | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
   const inputs = useMemo(() => buildInputs(f), [f]);
   const result = useMemo(() => (view === "results" ? computeRealEstateEstimate(inputs) : null), [inputs, view]);
+
+  // Prefill from a shared link a consultant sends, e.g.
+  //   /demo/real-estate?name=...&monthlyGci=120000&agentSplitPct=70
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (![...sp.keys()].length) return;
+    const keys: (keyof FormState)[] = [
+      "name", "market", "software", "monthlyGci", "agentSplitPct", "franchiseFeePct", "referralFeePct",
+      "monthlyOpex", "currentCash", "pendingDeals", "avgSalePrice", "avgCommissionPct", "expectedCloseRatePct",
+      "avgBrokerageSharePct", "daysToClose",
+    ];
+    const next: Partial<FormState> = {};
+    for (const k of keys) { const v = sp.get(k); if (v != null) next[k] = v; }
+    if (!Object.keys(next).length) return;
+    const seeded = { ...INITIAL, ...next } as FormState;
+    setF(seeded);
+    const inp = buildInputs(seeded);
+    if (inp.monthlyGci > 0 && inp.monthlyOpex > 0) {
+      setView("results");
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,10 +156,12 @@ export function RealEstateEstimator() {
     if (next.monthlyOpex <= 0) return setError("Add monthly brokerage operating expenses.");
     setError(null);
     setView("results");
+    setAura(null);
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
   }
 
   if (view === "results" && result) {
-    return <Results f={f} r={result} onEdit={() => setView("form")} />;
+    return <Results f={f} r={result} aura={aura} auraPending={pending} onEdit={() => setView("form")} />;
   }
 
   return (
@@ -142,6 +177,18 @@ export function RealEstateEstimator() {
         </Field>
         <Field label="Market">
           <input className={inputCls} placeholder="York, PA" value={f.market} onChange={upd("market")} />
+        </Field>
+        <Field label="CRM / back office" hint="Tells the demo what would light this up live">
+          <select className={selectCls} value={f.software} onChange={upd("software")}>
+            <option value="followupboss">Follow Up Boss</option>
+            <option value="boldtrail">BoldTrail / kvCORE</option>
+            <option value="sierra">Sierra Interactive</option>
+            <option value="lofty">Lofty (Chime)</option>
+            <option value="brokermint">Brokermint</option>
+            <option value="quickbooks">QuickBooks</option>
+            <option value="spreadsheet">Spreadsheet / none</option>
+            <option value="other">Other</option>
+          </select>
         </Field>
       </fieldset>
 
@@ -214,7 +261,7 @@ export function RealEstateEstimator() {
   );
 }
 
-function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; onEdit: () => void }) {
+function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEstateEstimateResult; aura: ReputationResult | null; auraPending: boolean; onEdit: () => void }) {
   const agentRows = computeAgentPerformanceList([
     {
       name: "Top producer near cap",
@@ -362,6 +409,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <SetupLeversPanel />
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ReputationTile aura={aura} pending={auraPending} name={f.name} />
         <CompanyDollarTile r={r} />
         <SplitPressureTile r={r} />
         <BreakEvenTile r={r} />
@@ -375,6 +423,10 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <PropertyHeartbeatPreview property={property} />
       <PropertyPortfolioPreview portfolio={propertyPortfolio} />
       <ImportReadinessPreview readiness={importReadiness} />
+
+      <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
+        Source pipe: <span className="text-[#E6E8E4]">{r.softwareLabel}</span>. {r.softwareNote}
+      </div>
 
       <DemoModulePreview businessType="REAL_ESTATE_BROKERAGE" />
 
@@ -474,6 +526,36 @@ function WhatMovesThis({ items }: { items: string[] }) {
       <div className="text-[10px] uppercase tracking-wider text-copper-soft">What moves this?</div>
       <p className="mt-1 text-[11px] leading-relaxed text-muted">{items.join(", ")}.</p>
     </div>
+  );
+}
+
+function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
+  return (
+    <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />}>
+      {pending && <div className="text-sm text-muted">Looking up {name || "your brokerage"} on Google…</div>}
+      {!pending && aura?.found && (
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+            <Stars rating={aura.rating ?? 0} />
+          </div>
+          <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
+          {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` · ${aura.matchedAddress}` : ""}</div>}
+        </div>
+      )}
+      {!pending && aura && !aura.found && <div className="text-sm text-muted">We couldn&apos;t auto-match a Google listing. Market Aura below reads demand and intent; the full account adds review sources.</div>}
+      {!pending && !aura && <div className="text-sm text-muted">Add a brokerage name above to try a live Google rating match. Market Aura below reads demand even without it.</div>}
+    </Tile>
+  );
+}
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={16} className={i <= Math.round(rating) ? "text-copper-soft" : "text-line"} fill={i <= Math.round(rating) ? "#D9A35E" : "none"} />
+      ))}
+    </span>
   );
 }
 
@@ -868,18 +950,21 @@ function Field({
   required,
   prefix,
   suffix,
+  hint,
 }: {
   label: string;
   children: React.ReactNode;
   required?: boolean;
   prefix?: string;
   suffix?: string;
+  hint?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] text-muted">
         {label}
         {required && <span className="text-copper-soft"> *</span>}
+        {hint && <span className="block text-[10px] text-muted/80">{hint}</span>}
       </span>
       <span className="relative block">
         {prefix && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">{prefix}</span>}

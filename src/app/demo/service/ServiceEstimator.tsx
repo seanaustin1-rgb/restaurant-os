@@ -1,21 +1,25 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, BriefcaseBusiness, Gauge, PiggyBank, Wallet } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Gauge, Lock, PiggyBank, Star, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import type { Health } from "@/lib/demo/estimate";
 import {
   computeServiceEstimate,
+  SERVICE_LOCKED_TILES,
   type ServiceEstimateInputs,
   type ServiceEstimateResult,
+  type ServiceSoftware,
 } from "@/lib/demo/service-estimate";
+import { lookupReputation, type ReputationResult } from "../actions";
 import { DemoModulePreview } from "../DemoModulePreview";
 
 type FormState = Record<
   | "name"
   | "market"
+  | "software"
   | "weeklyRevenue"
   | "weeklyLabor"
   | "weeklyMaterials"
@@ -35,6 +39,7 @@ type FormState = Record<
 const INITIAL: FormState = {
   name: "",
   market: "",
+  software: "housecall",
   weeklyRevenue: "",
   weeklyLabor: "",
   weeklyMaterials: "",
@@ -52,6 +57,8 @@ const INITIAL: FormState = {
 
 const inputCls =
   "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+const selectCls =
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] outline-none focus:border-copper-soft";
 
 const HEALTH_TEXT: Record<Health, string> = {
   green: "text-health-green",
@@ -73,6 +80,7 @@ function buildInputs(f: FormState): ServiceEstimateInputs {
   return {
     name: f.name.trim(),
     market: f.market.trim(),
+    software: (f.software as ServiceSoftware) || "housecall",
     weeklyRevenue: num(f.weeklyRevenue),
     weeklyLabor: num(f.weeklyLabor),
     weeklyMaterials: num(f.weeklyMaterials),
@@ -94,11 +102,37 @@ export function ServiceEstimator() {
   const [f, setF] = useState<FormState>(INITIAL);
   const [view, setView] = useState<"form" | "results">("form");
   const [error, setError] = useState<string | null>(null);
+  const [aura, setAura] = useState<ReputationResult | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
   const inputs = useMemo(() => buildInputs(f), [f]);
   const result = useMemo(() => (view === "results" ? computeServiceEstimate(inputs) : null), [inputs, view]);
+
+  // Prefill from a shared link a consultant sends, e.g.
+  //   /demo/service?name=...&weeklyRevenue=45000&weeklyLabor=14000
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (![...sp.keys()].length) return;
+    const keys: (keyof FormState)[] = [
+      "name", "market", "software", "weeklyRevenue", "weeklyLabor", "weeklyMaterials", "weeklySubcontractors",
+      "monthlyRent", "monthlyUtilities", "monthlyInsurance", "monthlyVehicles", "monthlySoftware", "monthlyDebt", "monthlyOther",
+      "avgJobValue", "jobsPerWeek",
+    ];
+    const next: Partial<FormState> = {};
+    for (const k of keys) { const v = sp.get(k); if (v != null) next[k] = v; }
+    if (!Object.keys(next).length) return;
+    const seeded = { ...INITIAL, ...next } as FormState;
+    setF(seeded);
+    const inp = buildInputs(seeded);
+    if (inp.weeklyRevenue > 0) {
+      setView("results");
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -106,10 +140,12 @@ export function ServiceEstimator() {
     if (next.weeklyRevenue <= 0) return setError("Add average weekly revenue.");
     setError(null);
     setView("results");
+    setAura(null);
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
   }
 
   if (view === "results" && result) {
-    return <Results f={f} r={result} onEdit={() => setView("form")} />;
+    return <Results f={f} r={result} aura={aura} auraPending={pending} onEdit={() => setView("form")} />;
   }
 
   return (
@@ -125,6 +161,17 @@ export function ServiceEstimator() {
         </Field>
         <Field label="City & state">
           <input className={inputCls} placeholder="York, PA" value={f.market} onChange={upd("market")} />
+        </Field>
+        <Field label="Field software / system" hint="Tells the demo what would light this up live">
+          <select className={selectCls} value={f.software} onChange={upd("software")}>
+            <option value="housecall">Housecall Pro</option>
+            <option value="jobber">Jobber</option>
+            <option value="servicetitan">ServiceTitan</option>
+            <option value="quickbooks">QuickBooks</option>
+            <option value="hubspot">HubSpot / CRM</option>
+            <option value="spreadsheet">Spreadsheet / none</option>
+            <option value="other">Other</option>
+          </select>
         </Field>
       </fieldset>
 
@@ -203,7 +250,7 @@ export function ServiceEstimator() {
   );
 }
 
-function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onEdit: () => void }) {
+function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: ServiceEstimateResult; aura: ReputationResult | null; auraPending: boolean; onEdit: () => void }) {
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
@@ -222,6 +269,22 @@ function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onE
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />}>
+          {auraPending && <div className="text-sm text-muted">Looking up {f.name || "your business"} on Google…</div>}
+          {!auraPending && aura?.found && (
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+                <Stars rating={aura.rating ?? 0} />
+              </div>
+              <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
+              {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` · ${aura.matchedAddress}` : ""}</div>}
+            </div>
+          )}
+          {!auraPending && aura && !aura.found && <div className="text-sm text-muted">We couldn&apos;t auto-match a Google listing. In the full account, review sources fill this alongside the money read.</div>}
+          {!auraPending && !aura && <div className="text-sm text-muted">Add a business name above to try a live Google rating match.</div>}
+        </Tile>
+
         <Tile title="Delivery Pressure" icon={<Gauge size={12} className="text-copper-soft" />}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.deliveryHealth]}>{pct(r.deliveryPressurePct)}</span>
@@ -285,6 +348,22 @@ function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onE
         </div>
       )}
 
+      <div className="mt-8">
+        <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {SERVICE_LOCKED_TILES.map((t) => (
+            <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
+              <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>
+              <div className="mt-1 text-[11px] text-muted/80">needs {t.needs}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
+        Source pipe: <span className="text-[#E6E8E4]">{r.softwareLabel}</span>. {r.softwareNote}
+      </div>
+
       <DemoModulePreview businessType="SERVICE" />
 
       <div className="mt-8 text-center">
@@ -293,6 +372,16 @@ function Results({ f, r, onEdit }: { f: FormState; r: ServiceEstimateResult; onE
         </Link>
       </div>
     </div>
+  );
+}
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={16} className={i <= Math.round(rating) ? "text-copper-soft" : "text-line"} fill={i <= Math.round(rating) ? "#D9A35E" : "none"} />
+      ))}
+    </span>
   );
 }
 
@@ -331,17 +420,20 @@ function Field({
   children,
   required,
   prefix,
+  hint,
 }: {
   label: string;
   children: React.ReactNode;
   required?: boolean;
   prefix?: string;
+  hint?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] text-muted">
         {label}
         {required && <span className="text-copper-soft"> *</span>}
+        {hint && <span className="block text-[10px] text-muted/80">{hint}</span>}
       </span>
       <span className="relative block">
         {prefix && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">{prefix}</span>}

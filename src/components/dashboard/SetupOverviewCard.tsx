@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ChevronDown, PlugZap, Settings2 } from "lucide-react";
+import { useState } from "react";
+import { Building2, ChevronDown, ChevronRight, PlugZap, Settings2 } from "lucide-react";
 import type { BusinessType } from "@prisma/client";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { INDUSTRY_TEMPLATES, industryTemplateFor } from "@/lib/industry-templates";
@@ -42,6 +43,7 @@ export function SetupOverviewCard({
   const template = industryTemplateFor(data.businessType);
   const demoEstimate = demoEstimateFor(data.businessType);
   const setup = data.sourceSetup;
+  const [expanded, setExpanded] = useState(demoMode || !data.hasData || setup.connectedCount === 0 || isPreview);
   const missing = setup.missingRequired.slice(0, 3).join(", ");
   const setupLabel = demoMode ? "Demo setup" : "Business setup";
   const description = demoMode
@@ -65,6 +67,55 @@ export function SetupOverviewCard({
     : setup.missingRequired.length > 0
       ? missing
       : "Minimum source plan is connected.";
+  const compactStatus = demoMode
+    ? "Sample data ready"
+    : setup.missingRequired.length === 0
+      ? `${setup.connectedCount} connected`
+      : `${setup.connectedCount} connected · ${setup.missingRequired.length} minimum left`;
+
+  if (!expanded) {
+    return (
+      <section className="rounded-lg border border-line bg-surface px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted">
+              <Building2 size={12} /> {setupLabel}
+            </p>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 className="font-display text-base text-ink-text">{template.label}</h2>
+              <span className="text-xs text-muted">{compactStatus}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {!demoMode && (
+              <>
+                <Link
+                  href="/settings/business"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-copper-soft hover:border-copper"
+                >
+                  <Settings2 size={13} /> Template
+                </Link>
+                <Link
+                  href="/settings/sources"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-copper-soft hover:border-copper"
+                >
+                  <PlugZap size={13} /> Sources
+                </Link>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
+            >
+              <ChevronRight size={13} /> Setup details
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-lg border border-line bg-surface px-4 py-4">
@@ -109,6 +160,15 @@ export function SetupOverviewCard({
                 <PlugZap size={13} /> Source Map
               </Link>
             </>
+          )}
+          {!demoMode && (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs text-muted hover:border-copper-dim hover:text-copper-soft"
+            >
+              <ChevronDown size={13} /> Collapse
+            </button>
           )}
           {demoMode && demoEstimate && (
             <EnterNumbersButton

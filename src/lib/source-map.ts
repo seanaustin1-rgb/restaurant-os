@@ -74,12 +74,18 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Food cost and AP",
         purpose: "Moves COGS from estimated to invoice-backed.",
         options: [
-          { name: "MarginEdge", role: "Invoices, COGS, inventory, recipe/menu analysis", unlocks: ["true food cost", "vendor price pressure", "AP timing"], minimum: true },
+          { name: "MarginEdge", role: "Invoices, COGS, inventory, recipe/menu analysis", unlocks: ["true food cost", "vendor price pressure", "AP timing"] },
           { name: "Restaurant365 / MarketMan / Craftable", role: "Restaurant back office", unlocks: ["invoice-backed COGS", "inventory pressure"] },
         ],
       },
-      commonAccounting,
-      auraGroup,
+      {
+        ...commonAccounting,
+        options: commonAccounting.options.map((option) => ({ ...option, minimum: false })),
+      },
+      {
+        ...auraGroup,
+        options: auraGroup.options.map((option) => ({ ...option, minimum: false })),
+      },
     ],
   },
   SERVICE: {

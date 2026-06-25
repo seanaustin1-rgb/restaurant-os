@@ -3,9 +3,10 @@
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, BriefcaseBusiness, Gauge, Lock, PiggyBank, Star, Wallet } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, Gauge, Info, Lock, PiggyBank, Star, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import type { Health } from "@/lib/demo/estimate";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import {
   computeServiceEstimate,
   SERVICE_LOCKED_TILES,
@@ -65,6 +66,21 @@ const HEALTH_TEXT: Record<Health, string> = {
   yellow: "text-health-yellow",
   red: "text-health-red",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public rating, pulled live from Google. Service businesses win or lose jobs on reviews — a strong rating means more booked work at better prices.",
+  delivery:
+    "Delivery pressure = labor + materials + subcontractors as a share of revenue — the service version of prime cost. Keep it near or below 60%; above that, fixed bills and profit get squeezed.",
+  breakeven:
+    "The weekly revenue you need just to cover delivery costs plus the fixed bills you entered. Below it you lose money; the cushion above funds profit and owner pay.",
+  cash:
+    "Money in minus money out for a rough month. Before owner pay, taxes, and any debt not entered as a fixed bill.",
+  pf:
+    "A starting split to set aside before you spend — Profit, Owner Pay, and Tax — so profit is not 'whatever is left.'",
+} as const;
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -269,7 +285,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />}>
+        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
           {auraPending && <div className="text-sm text-muted">Looking up {f.name || "your business"} on Google…</div>}
           {!auraPending && aura?.found && (
             <div>
@@ -285,11 +301,17 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
           {!auraPending && !aura && <div className="text-sm text-muted">Add a business name above to try a live Google rating match.</div>}
         </Tile>
 
-        <Tile title="Delivery Pressure" icon={<Gauge size={12} className="text-copper-soft" />}>
+        <Tile title="Delivery Pressure" icon={<Gauge size={12} className="text-copper-soft" />} explainer={EXPLAIN.delivery}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.deliveryHealth]}>{pct(r.deliveryPressurePct)}</span>
             <span className="text-sm text-muted">of revenue</span>
           </div>
+          <HealthSignal
+            status={r.deliveryHealth}
+            label={word(r.deliveryHealth, "On track", "Watch", "Heavy")}
+            detail={Math.abs(r.deliveryPressurePct - 60) < 0.5 ? "right at ≤60% target" : `${Math.abs(r.deliveryPressurePct - 60).toFixed(1)} pts ${r.deliveryPressurePct > 60 ? "over" : "under"} ≤60%`}
+            className="mt-2"
+          />
           <div className="mt-3 grid grid-cols-3 gap-3">
             <Stat label="Labor" value={money(r.monthlyLabor)} />
             <Stat label="Materials" value={money(r.monthlyMaterials)} />
@@ -298,7 +320,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
           <p className="mt-3 text-[11px] text-muted">Target starting point: keep delivery costs near or below 60% of revenue.</p>
         </Tile>
 
-        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />}>
+        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
           <div className="flex items-baseline gap-2">
             <span className="tnum text-4xl text-[#E6E8E4]">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
@@ -314,7 +336,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
           <p className="mt-3 text-[11px] text-muted">This covers delivery costs plus fixed bills entered below.</p>
         </Tile>
 
-        <Tile title="Cash Flow (rough)" icon={<BriefcaseBusiness size={12} className="text-copper-soft" />}>
+        <Tile title="Cash Flow (rough)" icon={<BriefcaseBusiness size={12} className="text-copper-soft" />} explainer={EXPLAIN.cash}>
           <div className="grid grid-cols-3 gap-3 text-center">
             <Stat label="In" value={money(r.cashIn)} />
             <Stat label="Out" value={money(r.cashOut)} />
@@ -323,7 +345,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
           <p className="mt-3 text-[11px] text-muted">Before owner pay, taxes, and debt service not entered as fixed bills.</p>
         </Tile>
 
-        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />}>
+        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} explainer={EXPLAIN.pf}>
           <div className="space-y-2">
             {r.pf.map((line) => (
               <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
@@ -385,13 +407,24 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function Tile({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Tile({ title, icon, explainer, children }: { title: string; icon: React.ReactNode; explainer?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-        {icon} {title}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+          {icon} {title}
+        </div>
+        {explainer && (
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+            <Info size={13} />
+          </button>
+        )}
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+      )}
     </div>
   );
 }

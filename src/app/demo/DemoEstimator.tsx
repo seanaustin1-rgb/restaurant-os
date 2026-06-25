@@ -6,6 +6,7 @@ import { SignUpButton } from "@clerk/nextjs";
 import {
   ArrowLeft,
   Gauge,
+  Info,
   Lock,
   PiggyBank,
   Scale,
@@ -14,6 +15,7 @@ import {
   Utensils,
   Wallet,
 } from "lucide-react";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import {
   computeEstimate,
   LOCKED_TILES,
@@ -41,6 +43,27 @@ const BENCH_OVERALL_LABEL: Record<Health, string> = {
   yellow: "Watch a few",
   red: "Off benchmark",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public guest rating, pulled live from Google. It is the outside-world signal that drives bookings — a strong rating lifts search ranking and lets you hold price. We read it next to the money because demand starts with reputation.",
+  bench:
+    "Where your prime cost, COGS, labor, and net margin sit against typical full-service ranges. Static reference figures, not live peer data — guide-rails, not a grade.",
+  prime:
+    "Prime cost = food + beverage + labor as a share of sales. It is the restaurant's master number, the biggest controllable cost. Full-service typically aims for 60% or below; above that, profit gets very hard.",
+  breakeven:
+    "The weekly sales you need just to cover variable costs plus the fixed bills you entered. Below it you lose money; the cushion above is what funds profit and owner pay.",
+  pf:
+    "A weekly starting split to set aside before you spend — Profit, Owner Pay, and Tax. Pay these first so profit is not 'whatever is left' (usually nothing).",
+  cash:
+    "Money in minus money out for a rough month. A quick read on whether the business breathes; before owner pay, taxes, and debt service.",
+  mix:
+    "How sales split between food/kitchen and bar/beverage. Beverage usually carries a higher margin, so the mix shifts your blended profitability.",
+  covers:
+    "Guests served. Covers per day and average check translate revenue into floor reality — how many tables you actually turn.",
+} as const;
 
 type FormState = Record<
   | "name" | "city" | "weeklySales" | "weeklyLabor" | "weeklyFood" | "weeklyAlcohol"
@@ -381,26 +404,38 @@ function Results({
 // ---- Lit tiles -------------------------------------------------------------
 
 function Tile({
-  title, icon, badge, children,
+  title, icon, badge, explainer, children,
 }: {
   title: string;
   icon: React.ReactNode;
   badge?: string;
+  explainer?: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
           {icon} {title}
         </div>
-        {badge && (
-          <span className="rounded-full border border-health-green/30 bg-health-green/10 px-2 py-0.5 text-[10px] text-health-green">
-            {badge}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {badge && (
+            <span className="rounded-full border border-health-green/30 bg-health-green/10 px-2 py-0.5 text-[10px] text-health-green">
+              {badge}
+            </span>
+          )}
+          {explainer && (
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+              <Info size={13} />
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+      )}
     </div>
   );
 }
@@ -411,7 +446,7 @@ const clampPct = (v: number, max: number) => Math.max(0, Math.min(100, (v / max)
 
 function AuraTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
   return (
-    <Tile title="Reputation (Aura)" icon={<Star size={12} className="text-copper-soft" />} badge={aura?.found ? "Live from Google" : undefined}>
+    <Tile title="Reputation (Aura)" icon={<Star size={12} className="text-copper-soft" />} badge={aura?.found ? "Live from Google" : undefined} explainer={EXPLAIN.aura}>
       {pending && <div className="text-sm text-muted">Looking up {name || "your restaurant"} on Google…</div>}
       {!pending && aura?.found && (
         <div>
@@ -496,7 +531,7 @@ function ZoneBar({ row }: { row: BenchRow }) {
 
 function BenchmarksTile({ r }: { r: EstimateResult }) {
   return (
-    <Tile title="You vs. industry" icon={<Gauge size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="You vs. industry" icon={<Gauge size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.bench}>
       <div className={"text-2xl " + HEALTH_TEXT[r.benchOverall]}>{BENCH_OVERALL_LABEL[r.benchOverall]}</div>
       <div className="text-[11px] text-muted">{r.benchGreenCount} of {r.bench.length} within range · full-service / casual dining</div>
       <div className="mt-3 space-y-3">
@@ -520,11 +555,17 @@ function PrimeCostTile({ r }: { r: EstimateResult }) {
   const weeklyLabor = r.labor / WEEKS_PER_MONTH;
 
   return (
-    <Tile title="Prime cost" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Prime cost" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.prime}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.primeHealth]}>{pct(r.primeCostPct)}</span>
         <span className="text-sm text-muted">of sales</span>
       </div>
+      <HealthSignal
+        status={r.primeHealth}
+        label={word(r.primeHealth, "On track", "Watch", "Over")}
+        detail={Math.abs(r.primeCostPct - 60) < 0.5 ? "right at ≤60% target" : `${Math.abs(r.primeCostPct - 60).toFixed(1)} pts ${r.primeCostPct > 60 ? "over" : "under"} ≤60%`}
+        className="mt-2"
+      />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Food + bev / week" value={money(weeklyCogs)} />
         <Stat label="Labor / week" value={money(weeklyLabor)} />
@@ -541,7 +582,7 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
   const marginLeft = Math.max(0, r.cmRatio * 100);
 
   return (
-    <Tile title="Break-even number" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Break-even number" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
         <span className="tnum text-3xl text-[#E6E8E4]">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
         <span className="text-sm text-muted">/ week before profit starts</span>
@@ -575,7 +616,7 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
 
 function ProfitFirstTile({ r }: { r: EstimateResult }) {
   return (
-    <Tile title="Profit First set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Profit First set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.pf}>
       <p className="text-[11px] text-muted">A weekly starting point for dollars to set aside before the business spends a cent:</p>
       <div className="mt-3 space-y-2">
         {r.pf.map((p) => (
@@ -595,7 +636,7 @@ function CashFlowTile({ r }: { r: EstimateResult }) {
   const weeklyCashLeft = r.cashLeft / WEEKS_PER_MONTH;
 
   return (
-    <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
           <div className="text-[11px] text-muted">In / week</div>
@@ -618,7 +659,7 @@ function CashFlowTile({ r }: { r: EstimateResult }) {
 function SalesMixTile({ r }: { r: EstimateResult }) {
   const m = r.salesMix!;
   return (
-    <Tile title="Sales mix" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Sales mix" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.mix}>
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-ink">
         <div style={{ width: `${m.foodPct}%`, backgroundColor: HEALTH_HEX.green, opacity: 0.5 }} />
         <div style={{ width: `${m.bevPct}%`, backgroundColor: "#D9A35E", opacity: 0.6 }} />
@@ -634,7 +675,7 @@ function SalesMixTile({ r }: { r: EstimateResult }) {
 function CoversTile({ r }: { r: EstimateResult }) {
   const c = r.covers!;
   return (
-    <Tile title="Covers" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Covers" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.covers}>
       <div className="flex items-baseline gap-2">
         <span className="tnum text-3xl text-[#E6E8E4]">{Math.round(c.perDay).toLocaleString()}</span>
         <span className="text-sm text-muted">covers / day</span>

@@ -3,8 +3,9 @@
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Database, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Database, Gauge, Home, Info, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import { lookupReputation, type ReputationResult } from "../actions";
 import {
   computeAgentPerformanceList,
@@ -81,6 +82,25 @@ const HEALTH_TEXT: Record<Health, string> = {
   yellow: "text-health-yellow",
   red: "text-health-red",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public rating, pulled live from Google. A brokerage's reputation drives agent recruiting and client trust — it compounds into deal flow.",
+  companydollar:
+    "Company Dollar is what the brokerage keeps from GCI after agent payouts, franchise fees, and referral fees. GCI is vanity; Company Dollar is what pays the bills.",
+  split:
+    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). The real-estate version of prime cost; retained Company Dollar around 25–30% is a practical target.",
+  breakeven:
+    "The Company Dollar you need each month just to cover brokerage OpEx. Below it the brokerage loses money; the cushion above funds profit and owner pay.",
+  runway:
+    "Cash oxygen = days of operating cash at your current burn. Commissions are lumpy, so runway is the buffer that keeps payroll and rent covered between closings.",
+  pipeline:
+    "Pipeline momentum = expected Company Dollar from pending deals, weighted by close probability — a rough 45–90 day forward read before closings land.",
+  pf:
+    "Starting set-asides taken from Company Dollar (not GCI) — Profit, Owner Pay, and Tax — so profit is reserved first, not whatever is left.",
+} as const;
 
 const inputCls =
   "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
@@ -445,13 +465,24 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
   );
 }
 
-function Tile({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Tile({ title, icon, explainer, children }: { title: string; icon: React.ReactNode; explainer?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-        {icon} {title}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+          {icon} {title}
+        </div>
+        {explainer && (
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+            <Info size={13} />
+          </button>
+        )}
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+      )}
     </div>
   );
 }
@@ -531,7 +562,7 @@ function WhatMovesThis({ items }: { items: string[] }) {
 
 function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
   return (
-    <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />}>
+    <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
       {pending && <div className="text-sm text-muted">Looking up {name || "your brokerage"} on Google…</div>}
       {!pending && aura?.found && (
         <div>
@@ -561,11 +592,12 @@ function Stars({ rating }: { rating: number }) {
 
 function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Company Dollar" icon={<Building2 size={12} className="text-copper-soft" />}>
+    <Tile title="Company Dollar" icon={<Building2 size={12} className="text-copper-soft" />} explainer={EXPLAIN.companydollar}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.companyDollarHealth]}>{money(r.companyDollar)}</span>
         <span className="text-sm text-muted">/ month retained</span>
       </div>
+      <HealthSignal status={r.companyDollarHealth} label={word(r.companyDollarHealth, "Healthy", "Thin", "Low")} detail={`${pct(r.companyDollarPct)} of GCI retained · target ~25–30%`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Closed GCI" value={money(r.monthlyGci)} />
         <Stat label="Retained share" value={pct(r.companyDollarPct)} tone={r.companyDollarHealth} />
@@ -578,11 +610,12 @@ function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
 
 function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Split Pressure" icon={<Gauge size={12} className="text-copper-soft" />}>
+    <Tile title="Split Pressure" icon={<Gauge size={12} className="text-copper-soft" />} explainer={EXPLAIN.split}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.splitPressureHealth]}>{pct(r.splitPressurePct)}</span>
         <span className="text-sm text-muted">of GCI passes through</span>
       </div>
+      <HealthSignal status={r.splitPressureHealth} label={word(r.splitPressureHealth, "Lean", "Watch", "Heavy")} detail={`${pct(100 - r.splitPressurePct, 0)} kept as Company Dollar`} className="mt-2" />
       <div className="mt-3 grid grid-cols-3 gap-3">
         <Stat label="Agents" value={money(r.agentPayouts)} />
         <Stat label="Franchise" value={money(r.franchiseFees)} />
@@ -596,11 +629,12 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
 
 function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />}>
+    <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
         <span className="tnum text-3xl text-[#E6E8E4]">{money(r.breakEvenCompanyDollar)}</span>
         <span className="text-sm text-muted">Company Dollar needed</span>
       </div>
+      <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={r.breakEvenCushion >= 0 ? `${money(r.breakEvenCushion)} over OpEx` : `${money(Math.abs(r.breakEvenCushion))} short of OpEx`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="GCI needed" value={r.gciNeededToBreakEven != null ? money(r.gciNeededToBreakEven) : "-"} />
         <Stat
@@ -617,13 +651,16 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
 
 function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Cash Oxygen" icon={<Wallet size={12} className="text-copper-soft" />}>
+    <Tile title="Cash Oxygen" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.runway}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.cashRunwayHealth]}>
           {r.cashRunwayDays != null ? Math.round(r.cashRunwayDays).toLocaleString() : "-"}
         </span>
         <span className="text-sm text-muted">days runway</span>
       </div>
+      {r.cashRunwayDays != null && (
+        <HealthSignal status={r.cashRunwayHealth} label={word(r.cashRunwayHealth, "Comfortable", "Watch", "Tight")} detail="60+ days is a healthy buffer" className="mt-2" />
+      )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Operating cash" value={money(r.currentCash)} />
         <Stat label="Monthly OpEx" value={money(r.monthlyOpex)} />
@@ -635,11 +672,12 @@ function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
 
 function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Pipeline Momentum" icon={<TrendingUp size={12} className="text-copper-soft" />}>
+    <Tile title="Pipeline Momentum" icon={<TrendingUp size={12} className="text-copper-soft" />} explainer={EXPLAIN.pipeline}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.pipelineHealth]}>{money(r.expectedPipelineCompanyDollar)}</span>
         <span className="text-sm text-muted">weighted Company Dollar</span>
       </div>
+      <HealthSignal status={r.pipelineHealth} label={word(r.pipelineHealth, "Ahead", "Building", "Thin")} detail={`${r.pipelineMonths.toFixed(1)} mo of forward coverage`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Weighted GCI" value={money(r.weightedPipelineGci)} />
         <Stat label="Pipeline span" value={`${r.pipelineMonths.toFixed(1)} mo`} />
@@ -652,7 +690,7 @@ function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
 
 function ProfitFirstTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Profit First" icon={<PiggyBank size={12} className="text-copper-soft" />}>
+    <Tile title="Profit First" icon={<PiggyBank size={12} className="text-copper-soft" />} explainer={EXPLAIN.pf}>
       <p className="text-[11px] text-muted">Starting set-asides calculated from Company Dollar, not GCI:</p>
       <div className="mt-3 space-y-2">
         {r.pf.map((line) => (

@@ -3,9 +3,10 @@
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Barcode, Gauge, Lock, PiggyBank, ShoppingBag, Star, Wallet } from "lucide-react";
+import { ArrowLeft, Barcode, Gauge, Info, Lock, PiggyBank, ShoppingBag, Star, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import type { Health } from "@/lib/demo/estimate";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import {
   computeRetailEstimate,
   RETAIL_LOCKED_TILES,
@@ -75,6 +76,23 @@ const HEALTH_TEXT: Record<Health, string> = {
   yellow: "text-health-yellow",
   red: "text-health-red",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public rating, pulled live from Google. Reviews drive foot traffic and online conversion — a strong rating is cheaper than ads.",
+  margin:
+    "Gross margin = what is left of each sales dollar after product cost, returns, and markdowns. It is the retailer's core number; thin margin means volume cannot save you. Healthy specialty retail often runs 45% or better.",
+  breakeven:
+    "The weekly sales you need just to cover product cost, payroll, and the fixed bills you entered. Below it you lose money; the cushion above funds profit and owner pay.",
+  inventory:
+    "Weeks of inventory on hand = current stock value divided by weekly purchases. Too high ties up cash and invites markdowns; too low risks stockouts. About 8–12 weeks is a common comfort zone.",
+  pos:
+    "What your POS choice means for the live dashboard — which sales, tender, refund, and inventory data would flow in once connected.",
+  pf:
+    "A starting split to set aside before you spend — Profit, Owner Pay, and Tax — so profit is not 'whatever is left.'",
+} as const;
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -283,7 +301,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />}>
+        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
           {auraPending && <div className="text-sm text-muted">Looking up {f.name || "your store"} on Google…</div>}
           {!auraPending && aura?.found && (
             <div>
@@ -299,18 +317,24 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
           {!auraPending && !aura && <div className="text-sm text-muted">Add a store name above to try a live Google rating match.</div>}
         </Tile>
 
-        <Tile title="Gross Margin" icon={<Gauge size={12} className="text-copper-soft" />}>
+        <Tile title="Gross Margin" icon={<Gauge size={12} className="text-copper-soft" />} explainer={EXPLAIN.margin}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.marginHealth]}>{pct(r.grossMarginPct)}</span>
             <span className="text-sm text-muted">after COGS, returns, markdowns</span>
           </div>
+          <HealthSignal
+            status={r.marginHealth}
+            label={word(r.marginHealth, "Healthy", "Thin", "Low")}
+            detail={`${Math.abs(r.grossMarginPct - 45).toFixed(0)} pts ${r.grossMarginPct >= 45 ? "above" : "below"} ~45% target`}
+            className="mt-2"
+          />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Stat label="Inventory / COGS" value={money(r.monthlyInventoryPurchases)} />
             <Stat label="Returns / markdowns" value={money(r.monthlyReturnsMarkdowns)} />
           </div>
         </Tile>
 
-        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />}>
+        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
           <div className="flex items-baseline gap-2">
             <span className="tnum text-4xl text-[#E6E8E4]">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
@@ -325,20 +349,28 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
           </div>
         </Tile>
 
-        <Tile title="Inventory Position" icon={<Barcode size={12} className="text-copper-soft" />}>
+        <Tile title="Inventory Position" icon={<Barcode size={12} className="text-copper-soft" />} explainer={EXPLAIN.inventory}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.inventoryHealth]}>
               {r.inventoryWeeksOnHand != null ? r.inventoryWeeksOnHand.toFixed(1) : "-"}
             </span>
             <span className="text-sm text-muted">weeks on hand</span>
           </div>
+          {r.inventoryWeeksOnHand != null && (
+            <HealthSignal
+              status={r.inventoryHealth}
+              label={word(r.inventoryHealth, "Balanced", "Watch", "Heavy")}
+              detail="~8–12 weeks is the comfort zone"
+              className="mt-2"
+            />
+          )}
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Stat label="Payroll load" value={pct(r.payrollPct)} tone={r.payrollHealth} />
             <Stat label="Online share" value={r.ecommerceSharePct != null ? pct(r.ecommerceSharePct, 0) : "-"} />
           </div>
         </Tile>
 
-        <Tile title="POS Readiness" icon={<ShoppingBag size={12} className="text-copper-soft" />}>
+        <Tile title="POS Readiness" icon={<ShoppingBag size={12} className="text-copper-soft" />} explainer={EXPLAIN.pos}>
           <div className="tnum text-3xl text-[#E6E8E4]">{r.posLabel}</div>
           <p className="mt-3 text-[12px] leading-relaxed text-muted">{r.posNote}</p>
           <p className="mt-3 text-[11px] leading-relaxed text-copper-soft">
@@ -346,7 +378,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
           </p>
         </Tile>
 
-        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />}>
+        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} explainer={EXPLAIN.pf}>
           <div className="space-y-2">
             {r.pf.map((line) => (
               <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
@@ -393,13 +425,24 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
-function Tile({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Tile({ title, icon, explainer, children }: { title: string; icon: React.ReactNode; explainer?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-        {icon} {title}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+          {icon} {title}
+        </div>
+        {explainer && (
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+            <Info size={13} />
+          </button>
+        )}
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+      )}
     </div>
   );
 }

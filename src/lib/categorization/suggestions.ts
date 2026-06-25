@@ -17,13 +17,31 @@ export interface RuleSuggestion {
 const MIN_SUPPORT = 2; // need at least this many matching manual edits to suggest
 const MAX_SUGGESTIONS = 8;
 
-// Generic banking words that make terrible keywords (would match everything).
+// Words that make terrible keywords because they aren't vendor identifiers, so a
+// rule built on them silently miscategorizes. Three families:
+//  - generic banking/transaction words (CHECK, ACH, …),
+//  - common English filler that leads many descriptions ("THE BUTCHER" → THE),
+//  - corporate suffixes / locale tokens that aren't the distinctive part (LLC, USA).
+// (The leading-boundary KEYWORD match in rules.ts already stops a kept token from
+//  firing mid-word, e.g. ACE in "space"; this stops the bad token being picked at all.)
 const STOPWORDS = new Set([
+  // generic banking / transaction words
   "CHECK", "ACH", "POS", "DEBIT", "CREDIT", "CARD", "PAYMENT", "DEPOSIT", "WITHDRAWAL",
   "TRANSFER", "PURCHASE", "ONLINE", "BILL", "PMT", "AUTOPAY", "RECURRING", "MOBILE", "BANK",
+  "PAYROLL", "WIRE", "EFT", "FEE", "FEES", "REF", "TXN", "TRANS", "INVOICE", "INV",
+  // common English filler that often leads a description
+  "THE", "AND", "FOR", "OVER", "EVER", "FROM", "WITH", "YOUR", "OUR", "ARE", "WAS",
+  "THIS", "THAT", "NEW", "OLD", "NOT", "ALL", "ANY", "ONE", "TWO", "DAY", "DAILY",
+  // corporate suffixes / locale tokens — not the distinctive part of a name
+  "INC", "LLC", "LLP", "LTD", "CORP", "CO", "COMPANY", "GROUP", "USA", "US", "WWW", "COM",
 ]);
 
-/** Pick a meaningful keyword from a transaction: first non-generic 3+ letter word. */
+/**
+ * Pick a meaningful keyword from a transaction: the first 3+ letter word that
+ * isn't a generic banking/filler/locale token (see STOPWORDS). Returns null when
+ * the description carries no distinctive vendor word (e.g. a payee-less check) —
+ * the caller then treats it as not actionable as a vendor rule.
+ */
 export function signatureOf(merchant: string | null, description: string | null): string | null {
   const text = `${merchant ?? ""} ${description ?? ""}`.toUpperCase();
   const words = text.match(/[A-Z][A-Z&'-]{2,}/g) ?? [];

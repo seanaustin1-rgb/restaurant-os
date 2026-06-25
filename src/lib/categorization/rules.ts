@@ -119,7 +119,13 @@ export function compileRule(r: RuleInput): CompiledRule | null {
       if (Number.isNaN(threshold)) return null;
       return { ...base, regex: null, threshold };
     }
-    const source = r.matchType === "KEYWORD" ? escapeRegex(r.pattern) : r.pattern;
+    // KEYWORD matches the literal text, but only at a word start — so a short
+    // token like "ACE" can't fire inside "spACE"/"plACE", nor "OVER" inside
+    // "discOVERy" (the substring-rule hazard the setup wizard used to create).
+    // A leading boundary still allows prefix matches (keyword "ACE" → "ACE
+    // HARDWARE") and tolerates truncated bank descriptions, unlike a trailing one.
+    const source =
+      r.matchType === "KEYWORD" ? `(?<![A-Za-z0-9])${escapeRegex(r.pattern)}` : r.pattern;
     return { ...base, regex: new RegExp(source, "i"), threshold: null };
   } catch {
     // Bad operator-authored regex — skip it rather than break the whole import.

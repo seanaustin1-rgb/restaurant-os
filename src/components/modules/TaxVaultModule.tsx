@@ -18,7 +18,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 
       {/* Sales tax — reserve OK / SHORT. */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Sales tax</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Sales tax</h2>
         <div
           className={clsx(
             "rounded-lg border px-4 py-4",
@@ -65,7 +65,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 
       {/* Payroll tax — pulls only (honest about the missing accrual feed). */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Payroll tax</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Payroll tax</h2>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <div className="flex items-baseline justify-between">
             <span className="text-sm text-[#E6E8E4]">Pulled this period</span>
@@ -81,7 +81,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
       {/* Daily collected — small bar list (only when sourced). */}
       {sourced && data.daily.length > 0 && (
         <section>
-          <h2 className="mb-2 font-display text-lg text-copper-soft">Collected by day</h2>
+          <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Collected by day</h2>
           <div className="space-y-1.5 rounded-lg border border-line bg-surface px-4 py-3">
             {data.daily.map((d) => (
               <div key={d.date} className="flex items-center gap-3 text-xs">

@@ -67,7 +67,7 @@ function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: Reputation
     <section className="rounded-lg border border-line bg-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg text-copper-soft">Market energy</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Market energy</h2>
           <p className="mt-1 text-sm text-[#E6E8E4]">{headline}</p>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">{detail}</p>
         </div>

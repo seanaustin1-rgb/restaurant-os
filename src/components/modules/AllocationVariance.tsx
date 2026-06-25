@@ -27,7 +27,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
 
       {/* Operating buckets — the variance line. */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Operating buckets — 7-day variance</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Operating buckets — 7-day variance</h2>
         <div className="space-y-2">
           {data.variance.map((v) => (
             <VarianceRow key={v.key} v={v} />
@@ -38,7 +38,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {/* Accrue-only buckets. */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-copper-soft">Set-aside buckets</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Set-aside buckets</h2>
           <span className="text-xs text-muted">
             next sweep <span className="text-[#E6E8E4]">{data.nextSweep}</span> ({data.daysToSweep}d)
           </span>
@@ -67,7 +67,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {data.ledger?.hasLedger && (
         <section>
           <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="font-display text-lg text-copper-soft">Bucket balances</h2>
+            <h2 className="font-display text-lg text-[#E6E8E4]">Bucket balances</h2>
             <span className="text-xs text-muted">
               {data.ledger.allocationDays} day{data.ledger.allocationDays === 1 ? "" : "s"} allocated
               {data.ledger.lastAllocatedAt ? ` · through ${data.ledger.lastAllocatedAt}` : ""}
@@ -109,7 +109,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {/* Tax Reserve — binary OK / SHORT (top-priority alert). */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-copper-soft">Tax Reserve</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Tax Reserve</h2>
           <a href="/modules/tax-vault" className="text-xs text-copper-soft underline-offset-2 hover:underline">
             full Tax Vault →
           </a>

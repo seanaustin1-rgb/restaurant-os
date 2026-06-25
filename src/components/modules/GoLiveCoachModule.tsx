@@ -57,7 +57,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       <GoLiveAssumptionsForm assumptions={data.assumptions} />
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Readiness checks</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Readiness checks</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.checks.map((check) => (
             <div key={check.key} className="rounded-lg border border-line bg-surface px-3 py-3">
@@ -77,7 +77,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
 
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div className="rounded-lg border border-line bg-surface px-4 py-3 lg:col-span-1">
-          <h2 className="font-display text-lg text-copper-soft">Cash floor</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Cash floor</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted">{data.cashSafety.detail}</p>
           <div className="mt-3 space-y-2 text-[11px] text-muted">
             <div className="flex justify-between gap-3">
@@ -106,7 +106,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
         </div>
 
         <div className="rounded-lg border border-line bg-surface px-4 py-3 lg:col-span-2">
-          <h2 className="font-display text-lg text-copper-soft">Operator decisions</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Operator decisions</h2>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {data.decisions.map((decision) => (
               <div key={decision.key} className="rounded-md border border-line bg-ink/40 px-3 py-2">
@@ -149,7 +149,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       )}
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Virtual pilot path</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Virtual pilot path</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
           {data.pilotPlan.map((step) => (
             <div key={step.key} className="rounded-lg border border-line bg-surface px-3 py-3">
@@ -167,7 +167,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       </section>
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Virtual bucket pressure</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Virtual bucket pressure</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {data.buckets.map((bucket) => (
             <BucketCard key={bucket.key} bucket={bucket} />

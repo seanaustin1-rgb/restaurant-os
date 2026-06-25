@@ -27,7 +27,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">
+      <div className="mb-1 text-ink-text">
         week of {d.weekStart}
         {d.partial ? <span className="ml-1 text-muted">(partial)</span> : null}
       </div>
@@ -72,12 +72,12 @@ export function PrimeCostModule({ data }: { data: PrimeCostData }) {
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">COGS % of Sales</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{pct(data.cogsPct)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{pct(data.cogsPct)}</div>
           <div className="mt-0.5 text-[11px] text-muted">{money(data.cogs)}</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Labor % of Sales</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{pct(data.laborPct)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{pct(data.laborPct)}</div>
           <div className="mt-0.5 text-[11px] text-muted">{money(data.laborCost)}</div>
         </div>
       </div>
@@ -115,7 +115,7 @@ export function PrimeCostModule({ data }: { data: PrimeCostData }) {
             <div key={c.key} className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c.color }} />
               <span className="text-[11px] text-muted">
-                {c.label} <span className="tnum text-[#E6E8E4]">{pct((c.amount / ns) * 100)}</span>
+                {c.label} <span className="tnum text-ink-text">{pct((c.amount / ns) * 100)}</span>
               </span>
             </div>
           ))}
@@ -165,7 +165,7 @@ export function PrimeCostModule({ data }: { data: PrimeCostData }) {
                   {w.weekStart}
                   {w.partial ? <span className="ml-1 text-[10px]">(partial)</span> : null}
                 </td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(w.netSales)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{money(w.netSales)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(w.cogsPct)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(w.laborPct)}</td>
                 <td className={"tnum px-4 py-2 text-right " + (w.primeCostPct > data.targetPct ? "text-health-red" : "text-copper-soft")}>
@@ -181,7 +181,7 @@ export function PrimeCostModule({ data }: { data: PrimeCostData }) {
       <p className="text-[11px] leading-relaxed text-muted">
         Prime Cost = (COGS + Labor) ÷ Net Sales — the share of every sales dollar consumed before rent,
         utilities, and other fixed costs. Net sales &amp; labor come from Toast; COGS is{" "}
-        <span className="text-[#E6E8E4]">cash-basis</span> (counted when paid), so a large invoice can make a
+        <span className="text-ink-text">cash-basis</span> (counted when paid), so a large invoice can make a
         single week spike — the window total is the stable read. Beer COGS is included in actual prime cost but
         has no TAP target of its own yet.
       </p>

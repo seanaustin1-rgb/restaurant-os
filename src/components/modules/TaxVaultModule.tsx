@@ -18,7 +18,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 
       {/* Sales tax — reserve OK / SHORT. */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Sales tax</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Sales tax</h2>
         <div
           className={clsx(
             "rounded-lg border px-4 py-4",
@@ -56,7 +56,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
           </div>
           {sourced && sales.effectiveRatePct !== null && (
             <p className="mt-3 text-[11px] text-muted">
-              Effective rate <span className="tnum text-[#E6E8E4]">{pct(sales.effectiveRatePct, 2)}</span> of net
+              Effective rate <span className="tnum text-ink-text">{pct(sales.effectiveRatePct, 2)}</span> of net
               sales — below PA&rsquo;s 6% because alcohol is sales-tax exempt (no liquor-by-drink tax in York County).
             </p>
           )}
@@ -65,11 +65,11 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 
       {/* Payroll tax — pulls only (honest about the missing accrual feed). */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Payroll tax</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Payroll tax</h2>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <div className="flex items-baseline justify-between">
-            <span className="text-sm text-[#E6E8E4]">Pulled this period</span>
-            <span className="tnum text-base text-[#E6E8E4]">{money(payroll.pulled)}</span>
+            <span className="text-sm text-ink-text">Pulled this period</span>
+            <span className="tnum text-base text-ink-text">{money(payroll.pulled)}</span>
           </div>
           <p className="mt-2 text-[11px] text-muted">
             Forward payroll-tax accrual (employer FICA/FUTA/SUTA + withholdings per pay run) needs a payroll feed —
@@ -81,7 +81,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
       {/* Daily collected — small bar list (only when sourced). */}
       {sourced && data.daily.length > 0 && (
         <section>
-          <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Collected by day</h2>
+          <h2 className="mb-2 font-display text-lg text-ink-text">Collected by day</h2>
           <div className="space-y-1.5 rounded-lg border border-line bg-surface px-4 py-3">
             {data.daily.map((d) => (
               <div key={d.date} className="flex items-center gap-3 text-xs">
@@ -92,7 +92,7 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
                     style={{ width: `${maxDay > 0 ? (d.collected / maxDay) * 100 : 0}%` }}
                   />
                 </div>
-                <span className="tnum w-16 shrink-0 text-right text-[#E6E8E4]">{money(d.collected)}</span>
+                <span className="tnum w-16 shrink-0 text-right text-ink-text">{money(d.collected)}</span>
               </div>
             ))}
           </div>
@@ -109,7 +109,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "re
       <div
         className={clsx(
           "tnum mt-0.5 text-base",
-          tone === "red" ? "text-health-red" : tone === "green" ? "text-health-green" : "text-[#E6E8E4]",
+          tone === "red" ? "text-health-red" : tone === "green" ? "text-health-green" : "text-ink-text",
         )}
       >
         {value}

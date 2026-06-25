@@ -60,7 +60,7 @@ export default function AccessPathsPage() {
             </button>
           </SignUpButton>
           <SignInButton forceRedirectUrl="/dashboard">
-            <button className="rounded-md border border-line px-4 py-2 text-sm text-[#E6E8E4] hover:border-copper-dim">
+            <button className="rounded-md border border-line px-4 py-2 text-sm text-ink-text hover:border-copper-dim">
               Sign in
             </button>
           </SignInButton>
@@ -75,7 +75,7 @@ export default function AccessPathsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted">{path.eyebrow}</p>
-                  <h2 className="mt-1 flex items-center gap-1.5 text-lg font-medium text-[#E6E8E4]">
+                  <h2 className="mt-1 flex items-center gap-1.5 text-lg font-medium text-ink-text">
                     <Icon size={17} className="text-copper-soft" /> {path.title}
                   </h2>
                 </div>

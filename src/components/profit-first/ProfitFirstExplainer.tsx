@@ -35,7 +35,7 @@ export function ProfitFirstExplainer({ defaultOpen = false }: { defaultOpen?: bo
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-3xl">
           <p className="text-[11px] uppercase tracking-wider text-copper-soft">Profit First operating system</p>
-          <h2 className="mt-1 font-display text-lg text-[#E6E8E4]">
+          <h2 className="mt-1 font-display text-lg text-ink-text">
             Owner pay and profit get protected before the business spends the rest.
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">
@@ -48,7 +48,7 @@ export function ProfitFirstExplainer({ defaultOpen = false }: { defaultOpen?: bo
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-medium text-[#E6E8E4] hover:border-copper-dim"
+            className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-xs font-medium text-ink-text hover:border-copper-dim"
             aria-expanded={open}
           >
             <ToggleRight size={15} className="text-copper-soft" />
@@ -70,7 +70,7 @@ export function ProfitFirstExplainer({ defaultOpen = false }: { defaultOpen?: bo
             const Icon = step.icon;
             return (
               <div key={step.title} className="rounded-md border border-line bg-[#0B0F0D] p-3">
-                <div className="flex items-center gap-2 text-sm text-[#E6E8E4]">
+                <div className="flex items-center gap-2 text-sm text-ink-text">
                   <Icon size={15} className="text-copper-soft" />
                   <span>{step.title}</span>
                 </div>

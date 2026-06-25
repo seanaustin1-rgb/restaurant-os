@@ -103,9 +103,9 @@ const EXPLAIN = {
 } as const;
 
 const inputCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
 const selectCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] outline-none focus:border-copper-soft";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text outline-none focus:border-copper-soft";
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -413,15 +413,15 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Brokerage heartbeat estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your brokerage"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your brokerage"}</h2>
           {f.market && <div className="text-sm text-muted">{f.market}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]">
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text">
           <ArrowLeft size={14} /> Adjust numbers
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-[#CFD2CC]">
+      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-ink-text-soft">
         GCI is not the operating base. This estimate treats agent payouts, franchise fees, and referral fees as pass-through pressure,
         then runs Profit First and break-even from Company Dollar.
       </div>
@@ -445,13 +445,13 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
       <ImportReadinessPreview readiness={importReadiness} />
 
       <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
-        Source pipe: <span className="text-[#E6E8E4]">{r.softwareLabel}</span>. {r.softwareNote}
+        Source pipe: <span className="text-ink-text">{r.softwareLabel}</span>. {r.softwareNote}
       </div>
 
       <DemoModulePreview businessType="REAL_ESTATE_BROKERAGE" />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
-        <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>
+        <div className="font-display text-xl text-ink-text">Paid add-on lanes</div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <AddOn title="Agent Performance" text="Company Dollar yield, cap pressure, pipeline, close velocity, and coaching flags." />
           <AddOn title="Market Intelligence" text="MLS velocity, DOM, price drops, rates, showing demand, and local market Aura." />
@@ -481,7 +481,7 @@ function Tile({ title, icon, explainer, children }: { title: string; icon: React
       </div>
       <div className="mt-3">{children}</div>
       {open && explainer && (
-        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
       )}
     </div>
   );
@@ -491,7 +491,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -519,7 +519,7 @@ function SetupLeversPanel() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">What you can manipulate</div>
-          <h3 className="mt-1 font-display text-xl text-[#E6E8E4]">Setup levers change the dashboard outcomes.</h3>
+          <h3 className="mt-1 font-display text-xl text-ink-text">Setup levers change the dashboard outcomes.</h3>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             During setup, a brokerage should be able to edit the agent economics and operating assumptions below. The dashboard then turns those choices into the color-coded outcomes.
           </p>
@@ -539,7 +539,7 @@ function SetupLeversPanel() {
 function LeverList({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="rounded-lg border border-line bg-ink/50 p-3">
-      <div className="text-sm text-[#E6E8E4]">{title}</div>
+      <div className="text-sm text-ink-text">{title}</div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {items.map((item) => (
           <span key={item} className="rounded-full border border-line px-2 py-1 text-[11px] text-muted">
@@ -567,7 +567,7 @@ function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null
       {!pending && aura?.found && (
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+            <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
             <Stars rating={aura.rating ?? 0} />
           </div>
           <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
@@ -631,7 +631,7 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
   return (
     <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{money(r.breakEvenCompanyDollar)}</span>
+        <span className="tnum text-3xl text-ink-text">{money(r.breakEvenCompanyDollar)}</span>
         <span className="text-sm text-muted">Company Dollar needed</span>
       </div>
       <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={r.breakEvenCushion >= 0 ? `${money(r.breakEvenCushion)} over OpEx` : `${money(Math.abs(r.breakEvenCushion))} short of OpEx`} className="mt-2" />
@@ -695,7 +695,7 @@ function ProfitFirstTile({ r }: { r: RealEstateEstimateResult }) {
       <div className="mt-3 space-y-2">
         {r.pf.map((line) => (
           <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-            <span className="text-sm text-[#E6E8E4]">
+            <span className="text-sm text-ink-text">
               {line.label} <span className="text-muted">({line.pct}%)</span>
             </span>
             <span className="tnum text-base text-copper-soft">{money(line.amount)}</span>
@@ -713,7 +713,7 @@ function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Agent Performance</h3>
+          <h3 className="font-display text-xl text-ink-text">Agent Performance</h3>
         </div>
         <div className="text-[11px] text-muted">Sample rows generated from the brokerage estimate</div>
       </div>
@@ -734,7 +734,7 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
     <div className="rounded-lg border border-line bg-ink/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-sm text-[#E6E8E4]">{row.name}</div>
+          <div className="text-sm text-ink-text">{row.name}</div>
           <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[row.overallHealth]}>{row.note}</div>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(row.overallHealth)}>
@@ -758,7 +758,7 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Property Heartbeat</h3>
+          <h3 className="font-display text-xl text-ink-text">Property Heartbeat</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(property.overallHealth)}>
           {property.overallHealth === "green" ? "healthy property" : property.overallHealth === "yellow" ? "watch property" : "property pressure"}
@@ -767,7 +767,7 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Home size={14} className="text-copper-soft" /> {property.name}
             </div>
             <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[property.overallHealth]}>{property.note}</div>
@@ -806,7 +806,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Portfolio view</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Rental Property Rollup</h3>
+          <h3 className="font-display text-xl text-ink-text">Rental Property Rollup</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(portfolio.overallHealth)}>
           {portfolio.pressureCount > 0 ? `${portfolio.pressureCount} needs attention` : "portfolio healthy"}
@@ -825,7 +825,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
           {portfolio.properties.map((property) => (
             <div key={property.name} className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
               <div>
-                <div className="text-sm text-[#E6E8E4]">{property.name}</div>
+                <div className="text-sm text-ink-text">{property.name}</div>
                 <div className={"text-[11px] " + HEALTH_TEXT[property.overallHealth]}>
                   {portfolio.topPressure?.name === property.name ? "highest pressure" : "property heartbeat"}
                 </div>
@@ -852,7 +852,7 @@ function PropertyActionQueue({ items }: { items: PropertyActionItem[] }) {
           <div key={`${item.propertyName}-${item.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <div className="text-sm text-[#E6E8E4]">{item.title}</div>
+                <div className="text-sm text-ink-text">{item.title}</div>
                 <div className="text-[11px] text-muted">{item.propertyName}</div>
               </div>
               <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(item.priority)}>
@@ -873,7 +873,7 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Market Intelligence</h3>
+          <h3 className="font-display text-xl text-ink-text">Market Intelligence</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(market.marketAuraHealth)}>
           {market.marketAuraHealth === "green" ? "market tailwind" : market.marketAuraHealth === "yellow" ? "mixed market" : "market pressure"}
@@ -882,12 +882,12 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Search size={14} className="text-copper-soft" /> {market.market}
             </div>
             <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[market.marketAuraHealth]}>{market.note}</div>
           </div>
-          <div className="tnum text-3xl text-[#E6E8E4]">{Math.round(market.marketAuraScore)}</div>
+          <div className="tnum text-3xl text-ink-text">{Math.round(market.marketAuraScore)}</div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <ScoreStat label="Contract velocity" value={market.contractVelocityScore} />
@@ -911,7 +911,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Pilot import preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Vacation Rental Import Readiness</h3>
+          <h3 className="font-display text-xl text-ink-text">Vacation Rental Import Readiness</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(readiness.overallHealth)}>
           {Math.round(readiness.overallCoveragePct)}% mapped
@@ -920,7 +920,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Database size={14} className="text-copper-soft" /> Escapia-like PMS foundation
             </div>
             <div className="mt-0.5 text-[11px] text-muted">
@@ -936,7 +936,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
           {readiness.layers.map((layer) => (
             <div key={layer.key} className="rounded-lg border border-line bg-surface/80 p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="text-sm text-[#E6E8E4]">{layer.label}</div>
+                <div className="text-sm text-ink-text">{layer.label}</div>
                 <span className={"tnum text-sm " + HEALTH_TEXT[layer.health]}>{Math.round(layer.coveragePct)}%</span>
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{layer.note}</p>
@@ -966,7 +966,7 @@ function badgeCls(health: Health): string {
 function AddOn({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-lg border border-line bg-ink/50 p-3">
-      <div className="text-sm text-[#E6E8E4]">{title}</div>
+      <div className="text-sm text-ink-text">{title}</div>
       <p className="mt-1 text-[11px] leading-relaxed text-muted">{text}</p>
     </div>
   );
@@ -976,7 +976,7 @@ function Legend({ n, title, hint }: { n: string; title: string; hint: string }) 
   return (
     <div className="flex items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">- {hint}</span>
     </div>
   );

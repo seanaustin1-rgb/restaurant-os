@@ -33,7 +33,7 @@ export function MetricCard({
         <span className="text-[11px] uppercase tracking-wider text-muted">{label}</span>
         {children}
       </div>
-      <div className={clsx("tnum mt-1 text-2xl", health ? healthText[health] : "text-[#E6E8E4]")}>
+      <div className={clsx("tnum mt-1 text-2xl", health ? healthText[health] : "text-ink-text")}>
         {value}
       </div>
       {/* A health tile carries its verdict in words+icon (color-not-alone); a plain

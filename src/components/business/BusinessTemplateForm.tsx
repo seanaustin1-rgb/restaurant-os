@@ -57,7 +57,7 @@ export function BusinessTemplateForm({
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="flex items-center gap-1.5 text-sm font-medium text-[#E6E8E4]">
+            <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink-text">
               <Settings2 size={15} /> Template selection
             </h2>
             <p className="mt-1 text-xs leading-relaxed text-muted">
@@ -85,7 +85,7 @@ export function BusinessTemplateForm({
               }
             >
               <span>
-                <span className="block text-sm text-[#E6E8E4]">{template.label}</span>
+                <span className="block text-sm text-ink-text">{template.label}</span>
                 <span className="mt-0.5 block text-xs leading-relaxed text-muted">{template.description}</span>
               </span>
               <span className="max-w-[140px] shrink-0 text-right text-[10px] text-copper-soft">
@@ -99,7 +99,7 @@ export function BusinessTemplateForm({
       <section className="rounded-lg border border-line bg-surface p-4">
         <label className="flex items-start justify-between gap-3">
           <span>
-            <span className="block text-sm font-medium text-[#E6E8E4]">Apply recommended module setup</span>
+            <span className="block text-sm font-medium text-ink-text">Apply recommended module setup</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-muted">
               Turns on this template&apos;s recommended modules and de-emphasizes modules that do not fit the selected
               business type. Existing data is not deleted.
@@ -118,7 +118,7 @@ export function BusinessTemplateForm({
 
         <div className="mt-3 rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[11px] uppercase tracking-wider text-muted">Recommended modules</p>
-          <p className="mt-1 text-xs leading-relaxed text-[#E6E8E4]">{selected.defaultModuleKeys.join(", ")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-text">{selected.defaultModuleKeys.join(", ")}</p>
         </div>
       </section>
 

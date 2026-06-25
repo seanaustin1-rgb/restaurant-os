@@ -69,7 +69,7 @@ const POS_OPTIONS: { value: RetailPosProvider; label: string }[] = [
 ];
 
 const inputCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
 
 const HEALTH_TEXT: Record<Health, string> = {
   green: "text-health-green",
@@ -287,15 +287,15 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Retail heartbeat estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your retail business"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your retail business"}</h2>
           {f.market && <div className="text-sm text-muted">{f.market}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]">
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text">
           <ArrowLeft size={14} /> Adjust numbers
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-[#CFD2CC]">
+      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-ink-text-soft">
         Retail pressure starts with product cost, returns/markdowns, payroll, and fixed bills. POS and inventory data turn this from a rough read into a live dashboard.
         {seasonNote && <span className="mt-1 block text-muted">{seasonNote}</span>}
       </div>
@@ -306,7 +306,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
           {!auraPending && aura?.found && (
             <div>
               <div className="flex items-baseline gap-2">
-                <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+                <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
                 <Stars rating={aura.rating ?? 0} />
               </div>
               <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
@@ -336,7 +336,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
 
         <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
           <div className="flex items-baseline gap-2">
-            <span className="tnum text-4xl text-[#E6E8E4]">{money(r.weeklyBreakEven)}</span>
+            <span className="tnum text-4xl text-ink-text">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -371,7 +371,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
         </Tile>
 
         <Tile title="POS Readiness" icon={<ShoppingBag size={12} className="text-copper-soft" />} explainer={EXPLAIN.pos}>
-          <div className="tnum text-3xl text-[#E6E8E4]">{r.posLabel}</div>
+          <div className="tnum text-3xl text-ink-text">{r.posLabel}</div>
           <p className="mt-3 text-[12px] leading-relaxed text-muted">{r.posNote}</p>
           <p className="mt-3 text-[11px] leading-relaxed text-copper-soft">
             First import: sales, tenders, refunds, item/category sales, taxes, and inventory where available.
@@ -382,7 +382,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
           <div className="space-y-2">
             {r.pf.map((line) => (
               <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-                <span className="text-sm text-[#E6E8E4]">
+                <span className="text-sm text-ink-text">
                   {line.label} <span className="text-muted">({line.pct}%)</span>
                 </span>
                 <span className="tnum text-base text-copper-soft">{money(line.amount)}</span>
@@ -441,7 +441,7 @@ function Tile({ title, icon, explainer, children }: { title: string; icon: React
       </div>
       <div className="mt-3">{children}</div>
       {open && explainer && (
-        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
       )}
     </div>
   );
@@ -451,7 +451,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -460,7 +460,7 @@ function Legend({ n, title, hint }: { n: string; title: string; hint: string }) 
   return (
     <div className="flex items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">- {hint}</span>
     </div>
   );

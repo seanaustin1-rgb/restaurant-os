@@ -89,14 +89,14 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
       {/* Action bar */}
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface/95 p-3 backdrop-blur">
         <span className="text-sm text-muted">
-          <span className="tnum text-[#E6E8E4]">{selected.size}</span> selected
+          <span className="tnum text-ink-text">{selected.size}</span> selected
           {selected.size > 0 && <span className="tnum"> · {money(selectedAmount)}</span>}
         </span>
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <select
             value={targetCat}
             onChange={(e) => setTargetCat(e.target.value)}
-            className="min-w-0 flex-1 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft sm:flex-none"
+            className="min-w-0 flex-1 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft sm:flex-none"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -139,8 +139,8 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
                     <input type="checkbox" checked={isSel} onChange={() => toggle(r.id)} onClick={(e) => e.stopPropagation()} aria-label="Select row" />
                   </td>
                   <td className="tnum px-3 py-2 text-muted">{r.date}</td>
-                  <td className="px-3 py-2 text-[#E6E8E4]">{r.description || r.merchantName || "—"}</td>
-                  <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(r.amount)}</td>
+                  <td className="px-3 py-2 text-ink-text">{r.description || r.merchantName || "—"}</td>
+                  <td className="tnum px-4 py-2 text-right text-ink-text">{money(r.amount)}</td>
                 </tr>
               );
             })}
@@ -167,8 +167,8 @@ export function MiscReviewTable({ rows, categories }: { rows: MiscRow[]; categor
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <span className="min-w-0 flex-1 break-words text-[#E6E8E4]">{r.description || r.merchantName || "—"}</span>
-                    <span className="tnum shrink-0 text-[#E6E8E4]">{money(r.amount)}</span>
+                    <span className="min-w-0 flex-1 break-words text-ink-text">{r.description || r.merchantName || "—"}</span>
+                    <span className="tnum shrink-0 text-ink-text">{money(r.amount)}</span>
                   </div>
                   <span className="tnum mt-1 block text-xs text-muted">{r.date}</span>
                 </div>

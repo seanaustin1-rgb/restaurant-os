@@ -25,7 +25,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
             <p className="text-[11px] uppercase tracking-wider text-muted">Current stage</p>
             <h2 className="mt-1 font-display text-3xl text-copper-soft">{data.stageLabel}</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted">{data.stageNote}</p>
-            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[#CFD2CC]">
+            <p className="mt-2 max-w-2xl text-xs leading-relaxed text-ink-text-soft">
               Go-Live Coach is not a generic business coach. It is a virtual readiness check for Profit First money
               movement: it replays what would have been set aside, compares that to cash safety and bucket pressure,
               then recommends whether to observe, keep coaching, rehearse a pilot, or go live.
@@ -33,7 +33,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
           </div>
           <div className="rounded-lg border border-copper-dim/40 bg-copper-dim/10 px-4 py-3 text-right">
             <p className="text-[11px] uppercase tracking-wider text-muted">Net sales read</p>
-            <p className="tnum text-2xl text-[#E6E8E4]">{money(data.netSales)}</p>
+            <p className="tnum text-2xl text-ink-text">{money(data.netSales)}</p>
             <p className="mt-0.5 text-[11px] text-muted">
               {data.salesDays} sales day{data.salesDays === 1 ? "" : "s"} - {data.periodLabel}
             </p>
@@ -42,7 +42,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
 
         <div className="mt-5 rounded-lg border border-line bg-ink/40 px-4 py-3">
           <p className="text-xs uppercase tracking-wider text-muted">Recommendation</p>
-          <p className="mt-1 text-sm text-[#E6E8E4]">{data.recommendation}</p>
+          <p className="mt-1 text-sm text-ink-text">{data.recommendation}</p>
           <p className="mt-1 text-xs text-muted">{data.summary}</p>
         </div>
 
@@ -57,7 +57,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       <GoLiveAssumptionsForm assumptions={data.assumptions} />
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Readiness checks</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Readiness checks</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {data.checks.map((check) => (
             <div key={check.key} className="rounded-lg border border-line bg-surface px-3 py-3">
@@ -67,7 +67,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
                 ) : (
                   <CircleDashed size={14} className="text-health-yellow" />
                 )}
-                <span className="text-xs text-[#E6E8E4]">{check.label}</span>
+                <span className="text-xs text-ink-text">{check.label}</span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-muted">{check.detail}</p>
             </div>
@@ -77,24 +77,24 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
 
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div className="rounded-lg border border-line bg-surface px-4 py-3 lg:col-span-1">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Cash floor</h2>
+          <h2 className="font-display text-lg text-ink-text">Cash floor</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted">{data.cashSafety.detail}</p>
           <div className="mt-3 space-y-2 text-[11px] text-muted">
             <div className="flex justify-between gap-3">
               <span>Estimated cash</span>
-              <span className="tnum text-[#E6E8E4]">
+              <span className="tnum text-ink-text">
                 {data.cashSafety.currentCash != null ? money(data.cashSafety.currentCash) : "Needs anchor"}
               </span>
             </div>
             <div className="flex justify-between gap-3">
               <span>Operating floor</span>
-              <span className="tnum text-[#E6E8E4]">
+              <span className="tnum text-ink-text">
                 {data.cashSafety.minimumOperatingCash != null ? money(data.cashSafety.minimumOperatingCash) : "Unknown"}
               </span>
             </div>
             <div className="flex justify-between gap-3">
               <span>Virtual pilot set-aside</span>
-              <span className="tnum text-[#E6E8E4]">{money(data.cashSafety.pilotSetAside)}</span>
+              <span className="tnum text-ink-text">{money(data.cashSafety.pilotSetAside)}</span>
             </div>
             <div className="flex justify-between gap-3">
               <span>Remaining cushion</span>
@@ -106,12 +106,12 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
         </div>
 
         <div className="rounded-lg border border-line bg-surface px-4 py-3 lg:col-span-2">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Operator decisions</h2>
+          <h2 className="font-display text-lg text-ink-text">Operator decisions</h2>
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {data.decisions.map((decision) => (
               <div key={decision.key} className="rounded-md border border-line bg-ink/40 px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-[#E6E8E4]">{decision.label}</span>
+                  <span className="text-xs text-ink-text">{decision.label}</span>
                   <span className={"text-[10px] uppercase tracking-wider " + verdictClass(decision.verdict)}>
                     {decision.verdict}
                   </span>
@@ -136,7 +136,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
                 {data.shortfalls.map((b) => (
                   <div key={b.key} className="rounded-md border border-health-red/30 bg-ink/40 px-3 py-2">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-xs text-[#E6E8E4]">{b.label}</span>
+                      <span className="text-xs text-ink-text">{b.label}</span>
                       <span className="tnum text-sm text-health-red">{money(Math.abs(b.gap))} short</span>
                     </div>
                     <p className="mt-1 text-[11px] text-muted">{b.note}</p>
@@ -149,16 +149,16 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       )}
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Virtual pilot path</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Virtual pilot path</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
           {data.pilotPlan.map((step) => (
             <div key={step.key} className="rounded-lg border border-line bg-surface px-3 py-3">
-              <div className="text-xs text-[#E6E8E4]">{step.label}</div>
+              <div className="text-xs text-ink-text">{step.label}</div>
               <div className={"mt-1 text-[10px] uppercase tracking-wider " + pilotModeClass(step.mode)}>
                 {pilotModeLabel(step.mode)}
               </div>
               {step.amount != null && step.amount > 0 && (
-                <div className="tnum mt-1 text-sm text-[#E6E8E4]">{money(step.amount)}</div>
+                <div className="tnum mt-1 text-sm text-ink-text">{money(step.amount)}</div>
               )}
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{step.detail}</p>
             </div>
@@ -167,7 +167,7 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       </section>
 
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Virtual bucket pressure</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Virtual bucket pressure</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {data.buckets.map((bucket) => (
             <BucketCard key={bucket.key} bucket={bucket} />
@@ -204,7 +204,7 @@ function verdictClass(verdict: "go" | "wait" | "watch"): string {
 function StageExplainer({ label, text, active }: { label: string; text: string; active: boolean }) {
   return (
     <div className={"rounded-md border px-3 py-2 " + (active ? "border-copper-dim bg-copper/10" : "border-line bg-surface/60")}>
-      <div className={active ? "text-copper-soft" : "text-[#E6E8E4]"}>{label}</div>
+      <div className={active ? "text-copper-soft" : "text-ink-text"}>{label}</div>
       <p className="mt-1 leading-relaxed text-muted">{text}</p>
     </div>
   );
@@ -222,7 +222,7 @@ function BucketCard({ bucket }: { bucket: GoLiveBucket }) {
             ) : (
               <AlertTriangle size={14} className={SIGNAL_TEXT[bucket.signal]} />
             )}
-            <h3 className="text-sm text-[#E6E8E4]">{bucket.label}</h3>
+            <h3 className="text-sm text-ink-text">{bucket.label}</h3>
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-muted">{bucket.note}</p>
         </div>
@@ -234,11 +234,11 @@ function BucketCard({ bucket }: { bucket: GoLiveBucket }) {
       <div className="mt-3 grid grid-cols-3 gap-2 text-[11px] text-muted">
         <div>
           <div>Should hold</div>
-          <div className="tnum text-sm text-[#E6E8E4]">{money(bucket.target)}</div>
+          <div className="tnum text-sm text-ink-text">{money(bucket.target)}</div>
         </div>
         <div>
           <div>{bucket.kind === "accrue" ? "Cleared" : "Used"}</div>
-          <div className="tnum text-sm text-[#E6E8E4]">{money(bucket.actual)}</div>
+          <div className="tnum text-sm text-ink-text">{money(bucket.actual)}</div>
         </div>
         <div>
           <div>{over ? "Short" : "Room"}</div>

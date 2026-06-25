@@ -49,7 +49,7 @@ export default function RootLayout({
       }}
     >
       <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
-        <body className="min-h-screen bg-ink text-[#E6E8E4] antialiased">
+        <body className="min-h-screen bg-ink text-ink-text antialiased">
           <AppHeader />
           {children}
         </body>

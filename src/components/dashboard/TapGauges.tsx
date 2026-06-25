@@ -42,7 +42,7 @@ export function TapGauges({ gauges, base }: { gauges: TapGauge[]; base: number }
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-[#E6E8E4]">Profit First — TAP Allocations</h2>
+        <h2 className="font-display text-lg text-ink-text">Profit First — TAP Allocations</h2>
         <span className="tnum text-xs text-muted">
           Total Sales {money(base)} · target = Sales × TAP%
         </span>
@@ -87,7 +87,7 @@ function GaugeCard({ g }: { g: TapGauge }) {
     >
       <summary className="list-none [&::-webkit-details-marker]:hidden">
         <div className="flex items-baseline justify-between">
-          <span className="flex items-center gap-1 text-sm text-[#E6E8E4]">
+          <span className="flex items-center gap-1 text-sm text-ink-text">
             {hasDrill && (
               <ChevronRight
                 size={13}
@@ -98,7 +98,7 @@ function GaugeCard({ g }: { g: TapGauge }) {
           </span>
           <span className="tnum text-xs text-muted">{pct(g.tapPct, 0)}</span>
         </div>
-        <div className="tnum mt-1 text-lg text-[#E6E8E4]">
+        <div className="tnum mt-1 text-lg text-ink-text">
           {money(g.spent)} <span className="text-muted">/ {money(g.target)}</span>
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-ink">
@@ -141,10 +141,10 @@ function GaugeCard({ g }: { g: TapGauge }) {
           <ul className="space-y-1">
             {g.categories.map((c) => (
               <li key={c.name} className="flex items-center justify-between gap-2 text-xs">
-                <span className="truncate text-[#E6E8E4]">{c.name}</span>
+                <span className="truncate text-ink-text">{c.name}</span>
                 <span className="flex items-center gap-2 whitespace-nowrap">
                   <span className="tnum text-muted">{total > 0 ? pct((c.amount / total) * 100, 0) : "—"}</span>
-                  <span className="tnum w-20 text-right text-[#E6E8E4]">{money(c.amount)}</span>
+                  <span className="tnum w-20 text-right text-ink-text">{money(c.amount)}</span>
                 </span>
               </li>
             ))}
@@ -169,7 +169,7 @@ function SubGroupRow({ sg, total }: { sg: SubGroup; total: number }) {
           hasCats && "cursor-pointer",
         )}
       >
-        <span className="flex items-center gap-1 text-[#E6E8E4]">
+        <span className="flex items-center gap-1 text-ink-text">
           {hasCats && (
             <ChevronRight
               size={11}
@@ -180,7 +180,7 @@ function SubGroupRow({ sg, total }: { sg: SubGroup; total: number }) {
         </span>
         <span className="flex items-center gap-2 whitespace-nowrap">
           <span className="tnum text-muted">{total > 0 ? pct((sg.amount / total) * 100, 0) : "—"}</span>
-          <span className="tnum w-20 text-right text-[#E6E8E4]">{money(sg.amount)}</span>
+          <span className="tnum w-20 text-right text-ink-text">{money(sg.amount)}</span>
         </span>
       </summary>
       {hasCats && (
@@ -190,7 +190,7 @@ function SubGroupRow({ sg, total }: { sg: SubGroup; total: number }) {
               <span className="truncate text-muted">{c.name}</span>
               <span className="flex items-center gap-2 whitespace-nowrap">
                 <span className="tnum text-muted/70">{catTotal > 0 ? pct((c.amount / catTotal) * 100, 0) : "—"}</span>
-                <span className="tnum w-20 text-right text-[#E6E8E4]">{money(c.amount)}</span>
+                <span className="tnum w-20 text-right text-ink-text">{money(c.amount)}</span>
               </span>
             </li>
           ))}

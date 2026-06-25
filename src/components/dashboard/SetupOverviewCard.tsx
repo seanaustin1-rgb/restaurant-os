@@ -73,7 +73,7 @@ export function SetupOverviewCard({
           <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Building2 size={13} /> {setupLabel}
           </p>
-          <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">{template.label}</h2>
+          <h2 className="mt-1 font-display text-xl text-ink-text">{template.label}</h2>
           <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{description}</p>
         </div>
 
@@ -134,16 +134,16 @@ export function SetupOverviewCard({
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{minimumLabel}</p>
-          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-[#E6E8E4]">{minimumText}</p>
+          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink-text">{minimumText}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{progressLabel}</p>
-          <p className="mt-1 text-sm text-[#E6E8E4]">{statusLine}</p>
+          <p className="mt-1 text-sm text-ink-text">{statusLine}</p>
           <p className="mt-0.5 text-[11px] text-muted">{progressSubtext}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{missingLabel}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-[#E6E8E4]">
+          <p className="mt-1 line-clamp-2 text-sm text-ink-text">
             {missingText}
           </p>
           {!demoMode && setup.missingRequired.length > 3 && <p className="mt-0.5 text-[11px] text-muted">+{setup.missingRequired.length - 3} more</p>}

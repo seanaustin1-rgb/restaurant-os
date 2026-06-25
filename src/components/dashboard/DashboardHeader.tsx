@@ -44,7 +44,7 @@ export function DashboardHeader({
               onClick={() => setNavOpen((o) => !o)}
               aria-label={navOpen ? "Close menu" : "Open menu"}
               aria-expanded={navOpen}
-              className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
+              className="rounded-md border border-line bg-surface p-1.5 text-ink-text hover:border-copper-dim"
             >
               {navOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
@@ -81,7 +81,7 @@ export function DashboardHeader({
                 key={l.href}
                 href={l.href}
                 onClick={() => setNavOpen(false)}
-                className="block rounded-md px-2 py-2.5 text-sm text-[#E6E8E4] hover:bg-copper/10"
+                className="block rounded-md px-2 py-2.5 text-sm text-ink-text hover:bg-copper/10"
               >
                 {l.label}
               </Link>
@@ -120,7 +120,7 @@ function Dropdown({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex min-h-[36px] max-w-[40vw] items-center gap-1.5 truncate rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim focus-visible:border-copper-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft sm:max-w-none"
+        className="inline-flex min-h-[36px] max-w-[40vw] items-center gap-1.5 truncate rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink-text hover:border-copper-dim focus-visible:border-copper-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft sm:max-w-none"
       >
         <span className="truncate">{label}</span>
         <ChevronDown size={14} className="shrink-0 text-muted" />
@@ -137,7 +137,7 @@ function Dropdown({
                   onPick(it.key);
                   setOpen(false);
                 }}
-                className="block w-full px-3 py-2 text-left text-sm text-[#E6E8E4] hover:bg-copper/10 focus-visible:bg-copper/10 focus-visible:outline-none"
+                className="block w-full px-3 py-2 text-left text-sm text-ink-text hover:bg-copper/10 focus-visible:bg-copper/10 focus-visible:outline-none"
               >
                 {it.label}
               </button>

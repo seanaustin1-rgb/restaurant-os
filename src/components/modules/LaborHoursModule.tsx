@@ -18,10 +18,10 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">week of {d.weekStart}</div>
+      <div className="mb-1 text-ink-text">week of {d.weekStart}</div>
       <div className="tnum text-copper-soft">{hrs(d.hours)}</div>
       <div className="tnum text-muted">{money(d.salesPerLaborHour)}/labor hr</div>
-      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-[#E6E8E4]">{pct(d.laborPct)} of sales</div>
+      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-ink-text">{pct(d.laborPct)} of sales</div>
     </div>
   );
 }
@@ -68,13 +68,13 @@ export function LaborHoursModule({ data }: { data: LaborHoursData }) {
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <TrendingUp size={12} /> Sales / Labor Hour
           </span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{money(latest.salesPerLaborHour)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{money(latest.salesPerLaborHour)}</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Percent size={12} /> Labor % of Sales
           </span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{pct(latest.laborPct)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{pct(latest.laborPct)}</div>
         </div>
       </div>
 
@@ -116,7 +116,7 @@ export function LaborHoursModule({ data }: { data: LaborHoursData }) {
                   {w.partial ? <span className="ml-1 text-[10px]">(partial)</span> : null}
                 </td>
                 <td className="tnum px-4 py-2 text-right text-copper-soft">{hrs(w.hours)}</td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(w.laborCost)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{money(w.laborCost)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{money(w.salesPerLaborHour)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(w.laborPct)}</td>
               </tr>
@@ -127,7 +127,7 @@ export function LaborHoursModule({ data }: { data: LaborHoursData }) {
 
       {/* Honest footnotes */}
       <p className="text-[11px] leading-relaxed text-muted">
-        Actual worked hours from Toast. <span className="text-[#E6E8E4]">Scheduled-vs-actual variance</span> is
+        Actual worked hours from Toast. <span className="text-ink-text">Scheduled-vs-actual variance</span> is
         coming once Sling scheduling is connected.
         {data.hasYoY ? "" : " Year-over-year hidden until a matching prior-year week exists."}
       </p>

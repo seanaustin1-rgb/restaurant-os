@@ -59,7 +59,7 @@ export default function DemoTourSelectorPage() {
       <div className="mx-auto max-w-6xl">
         <header className="text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-copper-soft">OutFront Data tour</div>
-          <h1 className="mt-2 font-display text-4xl text-[#E6E8E4]">What kind of business do you want to see?</h1>
+          <h1 className="mt-2 font-display text-4xl text-ink-text">What kind of business do you want to see?</h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted">
             Pick a template and we will open a fictional company with realistic sample numbers already loaded.
           </p>
@@ -79,7 +79,7 @@ export default function DemoTourSelectorPage() {
                     <div className="flex items-center gap-2 text-sm text-copper-soft">
                       <Icon size={16} /> {option.template.label}
                     </div>
-                    <h2 className="mt-2 font-display text-2xl text-[#E6E8E4]">{option.company}</h2>
+                    <h2 className="mt-2 font-display text-2xl text-ink-text">{option.company}</h2>
                   </div>
                   <span className="rounded-md border border-copper-dim bg-copper/10 px-2 py-1 text-xs text-copper-soft group-hover:bg-copper/20">
                     Tour

@@ -207,7 +207,7 @@ export function DashboardView({
 
       <main className="mx-auto max-w-7xl space-y-8 px-6 py-6">
         <div className="flex items-baseline justify-between">
-          <h1 className="font-display text-2xl text-[#E6E8E4]">{displayActive.name}</h1>
+          <h1 className="font-display text-2xl text-ink-text">{displayActive.name}</h1>
           <span className="text-sm text-muted">{displayActive.periodLabel}</span>
         </div>
 
@@ -267,7 +267,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
   if (businessType === "REAL_ESTATE_BROKERAGE") {
     return (
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Brokerage heartbeat</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Brokerage heartbeat</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="Retained Company Dollar is the operating base. Practical target: about 25-30%+ of GCI after splits, referrals, and fees." />
           <PreviewCard icon={<Users size={15} />} title="Agent Performance" detail="Company Dollar yield, cap pressure, pipeline, and lead ROI by agent." />
@@ -284,7 +284,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
       return (
         <section>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-lg text-[#E6E8E4]">Property heartbeat</h2>
+            <h2 className="font-display text-lg text-ink-text">Property heartbeat</h2>
             <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
               Import rental data
             </Link>
@@ -317,7 +317,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
     return (
       <section>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Property heartbeat</h2>
+          <h2 className="font-display text-lg text-ink-text">Property heartbeat</h2>
           <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
             Import rental data
           </Link>
@@ -335,7 +335,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
   if (businessType === "CONTRACTOR") {
     return (
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Contractor heartbeat</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Contractor heartbeat</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <PreviewCard
             icon={<GaugeIcon />}
@@ -364,7 +364,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
 
   return (
     <section>
-      <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Industry heartbeat</h2>
+      <h2 className="mb-2 font-display text-lg text-ink-text">Industry heartbeat</h2>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <PreviewCard icon={<Building2 size={15} />} title="Cash Safety" detail="Runway, recurring spend, and source coverage for this business type." />
         <PreviewCard icon={<Users size={15} />} title="Operating Pressure" detail="Industry-specific pressure metrics replace restaurant food and cover metrics." />
@@ -381,7 +381,7 @@ function GaugeIcon() {
 function PreviewCard({ icon, title, detail }: { icon: React.ReactNode; title: string; detail: string }) {
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
-      <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+      <div className="flex items-center gap-1.5 text-sm text-ink-text">
         <span className="text-copper-soft">{icon}</span>
         {title}
       </div>

@@ -48,7 +48,7 @@ function MetricBar({ row }: { row: BenchmarkRow }) {
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-sm text-[#E6E8E4]">{row.label}</span>
+        <span className="text-sm text-ink-text">{row.label}</span>
         <span className={"tnum text-lg " + HEALTH_TEXT[row.status]}>{pct(row.value)}</span>
       </div>
 
@@ -62,7 +62,7 @@ function MetricBar({ row }: { row: BenchmarkRow }) {
       </div>
       <div className="relative h-0">
         <div
-          className="absolute top-[-13px] h-3 w-0.5 -translate-x-1/2 rounded bg-[#E6E8E4]"
+          className="absolute top-[-13px] h-3 w-0.5 -translate-x-1/2 rounded bg-ink-text"
           style={{ left: `${left}%` }}
           title={`${row.label} ${pct(row.value)}`}
         />
@@ -105,7 +105,7 @@ export function BenchmarksModule({ data }: { data: BenchmarksData }) {
 
       {/* Honest footnote */}
       <p className="text-[11px] leading-relaxed text-muted">
-        Ranges are <span className="text-[#E6E8E4]">static industry reference figures</span> for{" "}
+        Ranges are <span className="text-ink-text">static industry reference figures</span> for{" "}
         {data.cohort.toLowerCase()} (Prime ≤60%, COGS 28–32%, Labor 28–34%, Net Margin ≥6%) — not live peer data,
         so read them as guide-rails, not a leaderboard. They&apos;ll be replaced with real cohort percentiles
         once a peer dataset is connected. Your figures use the trailing 8-week window: net sales &amp; labor from

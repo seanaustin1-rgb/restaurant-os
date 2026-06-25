@@ -290,14 +290,14 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
         {row.isSystem ? (
           <span className="inline-flex items-center gap-1.5" title="Built-in rule — pattern locked">
             <Lock size={11} className="text-muted" />
-            <span className="font-mono text-xs text-[#E6E8E4]">{matchLabel(row)}</span>
+            <span className="font-mono text-xs text-ink-text">{matchLabel(row)}</span>
           </span>
         ) : (
           <input
             value={row.pattern}
             onChange={(e) => patchRow(row.id, { pattern: e.target.value })}
             onBlur={(e) => savePattern(row.id, e.target.value)}
-            className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 font-mono text-xs text-[#E6E8E4] outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 font-mono text-xs text-ink-text outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           />
         )}
         {row.matchType !== "KEYWORD" && (
@@ -315,7 +315,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
         value={row.categoryId}
         disabled={pending}
         onChange={(e) => changeCategory(row.id, e.target.value)}
-        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50 sm:max-w-[200px]"
+        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50 sm:max-w-[200px]"
       >
         {categories.map((c) => (
           <option key={c.id} value={c.id}>{c.name}</option>
@@ -332,7 +332,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
         min={0}
         onChange={(e) => patchRow(row.id, { priority: e.target.valueAsNumber })}
         onBlur={(e) => changePriority(row.id, e.target.valueAsNumber)}
-        className="tnum w-14 rounded border border-transparent bg-transparent px-1 py-0.5 text-right text-[#E6E8E4] outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+        className="tnum w-14 rounded border border-transparent bg-transparent px-1 py-0.5 text-right text-ink-text outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
       />
     );
   }
@@ -381,12 +381,12 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
             onChange={(e) => setSample(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && runTest()}
             placeholder="e.g. WILSBACH DISTRIBUTING 0608"
-            className="flex-1 min-w-[220px] rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="flex-1 min-w-[220px] rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           />
           <button
             onClick={runTest}
             disabled={testing || !sample.trim()}
-            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-ink px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-ink px-3 py-1.5 text-sm text-ink-text hover:border-copper-dim disabled:opacity-50"
           >
             <FlaskConical size={14} /> Test
           </button>
@@ -405,7 +405,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
             onChange={(e) => setNewPattern(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
             placeholder={newMatchType === "CHECK_MIN" ? "10000" : "e.g. MAILCHIMP"}
-            className="w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           />
         </div>
         <div>
@@ -413,7 +413,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
           <select
             value={newMatchType}
             onChange={(e) => setNewMatchType(e.target.value as RuleMatchType)}
-            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           >
             <option value="KEYWORD">Keyword</option>
             <option value="REGEX">Regex</option>
@@ -425,7 +425,7 @@ export function RulesManager({ rows, categories }: { rows: RuleRow[]; categories
           <select
             value={newCategoryId}
             onChange={(e) => setNewCategoryId(e.target.value)}
-            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>

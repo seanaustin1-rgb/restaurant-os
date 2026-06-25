@@ -65,7 +65,7 @@ export default async function RulesPage() {
         <h1 className="font-display text-2xl text-copper-soft">Categorization Rules</h1>
         <p className="mt-1 text-sm text-muted">
           {role?.restaurant?.name ?? "Your restaurant"} — rules tag imported transactions automatically. Add a keyword
-          (e.g. <span className="text-[#E6E8E4]">MAILCHIMP → Marketing</span>) and future imports self-categorize. Lower
+          (e.g. <span className="text-ink-text">MAILCHIMP → Marketing</span>) and future imports self-categorize. Lower
           priority runs first; your rules win over the built-in vendor list. Manual edits on a transaction always stick.
         </p>
       </div>

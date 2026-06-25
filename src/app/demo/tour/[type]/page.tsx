@@ -57,7 +57,7 @@ export default async function DemoTemplateTourPage({ params }: { params: { type:
     <div>
       <div className="border-b border-copper-dim/40 bg-copper-dim/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-2.5">
-          <p className="text-[13px] text-[#CFD2CC]">
+          <p className="text-[13px] text-ink-text-soft">
             <span className="font-medium text-copper-soft">{template.label} tour</span> - a fictional company with
             realistic sample numbers already loaded.
           </p>

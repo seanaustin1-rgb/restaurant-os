@@ -87,7 +87,7 @@ export default async function ConnectionsPage() {
                 <div className="flex items-center gap-3">
                   <Landmark size={18} className="text-copper" />
                   <div>
-                    <div className="text-sm text-[#E6E8E4]">{c.institution ?? "Bank"}</div>
+                    <div className="text-sm text-ink-text">{c.institution ?? "Bank"}</div>
                     <div className="text-xs text-muted">
                       {c._count.transactions} transactions ·{" "}
                       {c.lastSyncedAt ? `synced ${c.lastSyncedAt.toLocaleDateString()}` : "never synced"}

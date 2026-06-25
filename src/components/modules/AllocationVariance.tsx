@@ -21,13 +21,13 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       <p className="rounded-lg border border-line bg-surface/60 px-4 py-3 text-xs text-muted">
         Profit First says set aside a fixed share of every sales dollar. This compares what each operating bucket{" "}
         <em>should</em> have set aside against what actually cleared, over a{" "}
-        <span className="text-[#E6E8E4]">{data.windowLabel}</span>. We read the <strong>rolling week</strong>, not the
+        <span className="text-ink-text">{data.windowLabel}</span>. We read the <strong>rolling week</strong>, not the
         day — a Monday deposit batches the weekend, so any single day looks lumpy; the week tells the truth.
       </p>
 
       {/* Operating buckets — the variance line. */}
       <section>
-        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Operating buckets — 7-day variance</h2>
+        <h2 className="mb-2 font-display text-lg text-ink-text">Operating buckets — 7-day variance</h2>
         <div className="space-y-2">
           {data.variance.map((v) => (
             <VarianceRow key={v.key} v={v} />
@@ -38,19 +38,19 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {/* Accrue-only buckets. */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Set-aside buckets</h2>
+          <h2 className="font-display text-lg text-ink-text">Set-aside buckets</h2>
           <span className="text-xs text-muted">
-            next sweep <span className="text-[#E6E8E4]">{data.nextSweep}</span> ({data.daysToSweep}d)
+            next sweep <span className="text-ink-text">{data.nextSweep}</span> ({data.daysToSweep}d)
           </span>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {data.accrue.map((a) => (
             <div key={a.key} className="rounded-lg border border-line bg-surface px-4 py-3">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm text-[#E6E8E4]">{a.label}</span>
+                <span className="text-sm text-ink-text">{a.label}</span>
                 <span className="tnum text-xs text-muted">{pct(a.tapPct, 0)}</span>
               </div>
-              <div className="tnum mt-1 text-lg text-[#E6E8E4]">{money(a.accrued)}</div>
+              <div className="tnum mt-1 text-lg text-ink-text">{money(a.accrued)}</div>
               <div className="mt-1 text-[11px] text-muted">
                 {a.tapPct > 0 ? "accrued this period" : "no allocation set yet"}
               </div>
@@ -67,7 +67,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {data.ledger?.hasLedger && (
         <section>
           <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="font-display text-lg text-[#E6E8E4]">Bucket balances</h2>
+            <h2 className="font-display text-lg text-ink-text">Bucket balances</h2>
             <span className="text-xs text-muted">
               {data.ledger.allocationDays} day{data.ledger.allocationDays === 1 ? "" : "s"} allocated
               {data.ledger.lastAllocatedAt ? ` · through ${data.ledger.lastAllocatedAt}` : ""}
@@ -81,8 +81,8 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
             {data.ledger.balances.map((b) => (
               <div key={b.key} className="rounded-lg border border-line bg-surface px-3 py-2">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-xs text-[#E6E8E4]">{b.name}</span>
-                  <span className="tnum text-sm text-[#E6E8E4]">{money(b.balance)}</span>
+                  <span className="truncate text-xs text-ink-text">{b.name}</span>
+                  <span className="tnum text-sm text-ink-text">{money(b.balance)}</span>
                 </div>
                 <div className="mt-0.5 text-[10px] uppercase tracking-wider text-muted">
                   {b.kind}
@@ -97,7 +97,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
               {data.ledger.recentSweeps.map((s, i) => (
                 <span key={i}>
                   {i > 0 ? " · " : ""}
-                  <span className="text-[#E6E8E4]">{s.key === "owner_pay" ? "Owner's Pay" : "Profit"}</span>{" "}
+                  <span className="text-ink-text">{s.key === "owner_pay" ? "Owner's Pay" : "Profit"}</span>{" "}
                   {money(s.amount)} ({s.sweptAt})
                 </span>
               ))}
@@ -109,7 +109,7 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
       {/* Tax Reserve — binary OK / SHORT (top-priority alert). */}
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Tax Reserve</h2>
+          <h2 className="font-display text-lg text-ink-text">Tax Reserve</h2>
           <a href="/modules/tax-vault" className="text-xs text-copper-soft underline-offset-2 hover:underline">
             full Tax Vault →
           </a>
@@ -140,11 +140,11 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
                 <div className="mt-3 grid grid-cols-3 gap-3">
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted">Collected</div>
-                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCollected)}</div>
+                    <div className="tnum text-base text-ink-text">{money(data.tax.salesCollected)}</div>
                   </div>
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted">Pulled (Davo)</div>
-                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCleared)}</div>
+                    <div className="tnum text-base text-ink-text">{money(data.tax.salesCleared)}</div>
                   </div>
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted">Reserve</div>
@@ -164,11 +164,11 @@ export function AllocationVariance({ data }: { data: AllocationData }) {
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted">Sales tax pulled</div>
-                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.salesCleared)}</div>
+                    <div className="tnum text-base text-ink-text">{money(data.tax.salesCleared)}</div>
                   </div>
                   <div>
                     <div className="text-[11px] uppercase tracking-wider text-muted">Payroll tax pulled</div>
-                    <div className="tnum text-base text-[#E6E8E4]">{money(data.tax.payrollCleared)}</div>
+                    <div className="tnum text-base text-ink-text">{money(data.tax.payrollCleared)}</div>
                   </div>
                 </div>
               )}
@@ -191,7 +191,7 @@ function VarianceRow({ v }: { v: VarianceLine }) {
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
       <div className="flex items-baseline justify-between">
-        <span className="flex items-center gap-2 text-sm text-[#E6E8E4]">
+        <span className="flex items-center gap-2 text-sm text-ink-text">
           {v.label}
           <span className="tnum text-xs text-muted">{v.unbudgeted ? "no TAP %" : pct(v.tapPct, 0)}</span>
         </span>
@@ -204,8 +204,8 @@ function VarianceRow({ v }: { v: VarianceLine }) {
 
       <div className="mt-1 flex items-center justify-between text-[11px] text-muted">
         <span>
-          set aside <span className="tnum text-[#E6E8E4]">{money(v.allocated)}</span> · owed{" "}
-          <span className="tnum text-[#E6E8E4]">{money(v.obligations)}</span>
+          set aside <span className="tnum text-ink-text">{money(v.allocated)}</span> · owed{" "}
+          <span className="tnum text-ink-text">{money(v.obligations)}</span>
         </span>
         <span className={SIGNAL_TEXT[v.signal]}>{v.signal.toUpperCase()}</span>
       </div>

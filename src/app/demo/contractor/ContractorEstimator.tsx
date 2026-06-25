@@ -203,15 +203,15 @@ function Results({ f, r, aura, auraPending, onEdit }: {
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Instant estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your contracting business"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your contracting business"}</h2>
           {f.market && <div className="text-sm text-muted">{f.market}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]"><ArrowLeft size={14} /> Adjust numbers</button>
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text"><ArrowLeft size={14} /> Adjust numbers</button>
       </div>
 
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
         <Sparkles size={16} className="mt-0.5 shrink-0 text-copper-soft" />
-        <p className="text-[13px] leading-relaxed text-[#CFD2CC]">
+        <p className="text-[13px] leading-relaxed text-ink-text-soft">
           A 60-second read from a few averages. <span className="text-health-green">Lit tiles</span> are driven by what you entered; <span className="text-muted">faded tiles</span> need job-level data the full account connects. Tap any <Info size={12} className="inline" /> to see what a number means.
         </p>
       </div>
@@ -242,11 +242,11 @@ function Results({ f, r, aura, auraPending, onEdit }: {
       </div>
 
       <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
-        Source pipe: <span className="text-[#E6E8E4]">{r.softwareLabel}</span>. {r.softwareNote}
+        Source pipe: <span className="text-ink-text">{r.softwareLabel}</span>. {r.softwareNote}
       </div>
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5 text-center">
-        <div className="font-display text-xl text-[#E6E8E4]">Want the per-job picture?</div>
+        <div className="font-display text-xl text-ink-text">Want the per-job picture?</div>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted">The full account adds per-job profitability, change-order leakage, WIP, and AR aging — no connection needed to explore first.</p>
         <SignUpButton forceRedirectUrl="/onboarding">
           <button type="button" className="mt-4 inline-block rounded-lg bg-copper px-5 py-2.5 font-medium text-ink transition hover:bg-copper-soft">Get started</button>
@@ -273,7 +273,7 @@ function LeverCallout({ lever }: { lever: ContractorEstimateResult["biggestLever
         <div>
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">Biggest lever right now</div>
           <div className={"mt-0.5 font-display text-lg " + HEALTH_TEXT[lever.tone]}>{lever.title}</div>
-          <p className="mt-1 text-[13px] leading-relaxed text-[#CFD2CC]">{lever.detail}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-ink-text-soft">{lever.detail}</p>
         </div>
       </div>
     </div>
@@ -299,7 +299,7 @@ function Tile({ title, icon, badge, explainer, children }: {
       </div>
       <div className="mt-3">{children}</div>
       {open && explainer && (
-        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">{explainer}</div>
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
       )}
     </div>
   );
@@ -309,7 +309,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -321,7 +321,7 @@ function AuraTile({ aura, pending, name }: { aura: ReputationResult | null; pend
       {!pending && aura?.found && (
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+            <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
             <Stars rating={aura.rating ?? 0} />
           </div>
           <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
@@ -401,7 +401,7 @@ function BreakEvenTile({ r }: { r: ContractorEstimateResult }) {
   return (
     <Tile title="Overhead break-even" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{r.monthlyBreakEven != null ? money(r.monthlyBreakEven) : "—"}</span>
+        <span className="tnum text-3xl text-ink-text">{r.monthlyBreakEven != null ? money(r.monthlyBreakEven) : "—"}</span>
         <span className="text-sm text-muted">/ mo to cover overhead</span>
       </div>
       <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={`you bill ${money(r.monthlyRevenue)} · ${pct(Math.max(0, r.marginOfSafetyPct), 0)} margin of safety`} className="mt-2" />
@@ -424,13 +424,13 @@ function ZoneBar({ row }: { row: ContractorBenchRow }) {
   return (
     <div className="mt-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-[#E6E8E4]">{row.label}</span>
+        <span className="text-sm text-ink-text">{row.label}</span>
         <span className={"tnum text-base " + HEALTH_TEXT[row.status]}>{pct(row.value)}</span>
       </div>
       <div className="relative mt-1.5 h-2 w-full overflow-hidden rounded-full bg-ink">
         <div className="flex h-full w-full">{segs.map((z, i) => <div key={i} style={{ width: `${z.width}%`, backgroundColor: z.color, opacity: 0.35 }} />)}</div>
       </div>
-      <div className="relative h-0"><div className="absolute top-[-11px] h-3 w-0.5 -translate-x-1/2 rounded bg-[#E6E8E4]" style={{ left: `${left}%` }} /></div>
+      <div className="relative h-0"><div className="absolute top-[-11px] h-3 w-0.5 -translate-x-1/2 rounded bg-ink-text" style={{ left: `${left}%` }} /></div>
       <div className="mt-1.5 flex items-center justify-between text-[11px]">
         <span className="text-muted">typical {row.typicalLow}–{row.typicalHigh}%</span>
         <span className={HEALTH_TEXT[row.status]}>{row.note}</span>
@@ -456,7 +456,7 @@ function ProfitFirstTile({ r }: { r: ContractorEstimateResult }) {
       <div className="mt-3 space-y-2">
         {r.pf.map((p) => (
           <div key={p.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-            <span className="text-sm text-[#E6E8E4]">{p.label} <span className="text-muted">({p.pct}%)</span></span>
+            <span className="text-sm text-ink-text">{p.label} <span className="text-muted">({p.pct}%)</span></span>
             <span className="tnum text-base text-copper-soft">{money(p.amount)}</span>
           </div>
         ))}
@@ -469,8 +469,8 @@ function CashFlowTile({ r }: { r: ContractorEstimateResult }) {
   return (
     <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div><div className="text-[11px] text-muted">In / mo</div><div className="tnum text-base text-[#E6E8E4]">{money(r.cashIn)}</div></div>
-        <div><div className="text-[11px] text-muted">Out / mo</div><div className="tnum text-base text-[#E6E8E4]">{money(r.cashOut)}</div></div>
+        <div><div className="text-[11px] text-muted">In / mo</div><div className="tnum text-base text-ink-text">{money(r.cashIn)}</div></div>
+        <div><div className="text-[11px] text-muted">Out / mo</div><div className="tnum text-base text-ink-text">{money(r.cashOut)}</div></div>
         <div><div className="text-[11px] text-muted">Left / mo</div><div className={"tnum text-base " + (r.cashLeft >= 0 ? "text-health-green" : "text-health-red")}>{money(r.cashLeft)}</div></div>
       </div>
       <p className="mt-3 text-[11px] text-muted">Job costs + overhead out; before owner draws, taxes, and debt service.</p>
@@ -480,14 +480,14 @@ function CashFlowTile({ r }: { r: ContractorEstimateResult }) {
 
 // ---- Form primitives -------------------------------------------------------
 
-const inputCls = "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
-const selectCls = "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] outline-none focus:border-copper-soft";
+const inputCls = "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+const selectCls = "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text outline-none focus:border-copper-soft";
 
 function Legend({ n, title, hint }: { n: string; title: string; hint: string }) {
   return (
     <div className="flex flex-wrap items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">· {hint}</span>
     </div>
   );

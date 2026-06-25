@@ -65,7 +65,7 @@ export default async function RentalImportHistoryPage() {
               <div key={batch.id} className="rounded-lg border border-line bg-surface p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="text-sm text-[#E6E8E4]">{batch.sourceName}</div>
+                    <div className="text-sm text-ink-text">{batch.sourceName}</div>
                     <div className="mt-0.5 text-[11px] text-muted">
                       {batch.source?.kind ?? "CSV"} - {batch.fileName || "manual payload"} - {batch.createdAt.toLocaleString()}
                     </div>
@@ -96,7 +96,7 @@ export default async function RentalImportHistoryPage() {
   );
 }
 
-function Stat({ label, value, tone = "text-[#E6E8E4]" }: { label: string; value: number; tone?: string }) {
+function Stat({ label, value, tone = "text-ink-text" }: { label: string; value: number; tone?: string }) {
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>

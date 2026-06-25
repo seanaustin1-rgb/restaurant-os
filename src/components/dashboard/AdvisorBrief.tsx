@@ -142,7 +142,7 @@ export function AdvisorBrief({ data, demoMode = false }: { data: DashboardData; 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Advisor mode</p>
-          <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">Client conversation brief</h2>
+          <h2 className="mt-1 font-display text-xl text-ink-text">Client conversation brief</h2>
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
             A consultant/accountant view of what to celebrate, what to inspect, and what data is still missing.
           </p>
@@ -170,7 +170,7 @@ export function AdvisorBrief({ data, demoMode = false }: { data: DashboardData; 
           <MessageSquareText size={15} className="mt-0.5 shrink-0 text-copper-soft" />
           <div>
             <p className="text-xs uppercase tracking-wider text-muted">Suggested conversation</p>
-            <p className="mt-1 text-sm text-[#E6E8E4]">{prompt}</p>
+            <p className="mt-1 text-sm text-ink-text">{prompt}</p>
           </div>
         </div>
       </div>
@@ -203,7 +203,7 @@ function AdvisorCard({
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
         <Icon size={13} className={color} /> {label}
       </div>
-      <p className="mt-2 text-sm text-[#E6E8E4]">{item.label}</p>
+      <p className="mt-2 text-sm text-ink-text">{item.label}</p>
       <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-muted">{item.detail}</p>
     </>
   );

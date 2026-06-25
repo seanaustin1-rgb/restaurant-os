@@ -61,7 +61,7 @@ export function ModuleGrid({
     return (
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-[#E6E8E4]">Modules</h2>
+          <h2 className="font-display text-lg text-ink-text">Modules</h2>
           <span className="text-xs text-muted">
             {MODULES.filter((m) => m.status === "live").length} live · sign up to open
           </span>
@@ -85,7 +85,7 @@ export function ModuleGrid({
                     <Lock size={9} /> {m.blockedBy}
                   </span>
                 )}
-                <div className={"font-display text-base " + (live ? "text-[#E6E8E4]" : "text-muted")}>{m.name}</div>
+                <div className={"font-display text-base " + (live ? "text-ink-text" : "text-muted")}>{m.name}</div>
                 <div className="mt-1 flex items-start gap-1.5">
                   <button
                     type="button"
@@ -100,7 +100,7 @@ export function ModuleGrid({
                   <div className={"text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
                 </div>
                 {openInfo === m.key && (
-                  <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                  <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-ink-text-soft">
                     {moduleExplainer(m)}
                   </div>
                 )}
@@ -115,7 +115,7 @@ export function ModuleGrid({
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-[#E6E8E4]">Modules</h2>
+        <h2 className="font-display text-lg text-ink-text">Modules</h2>
         <span className="text-xs text-muted">
           drag to reorder · ★ to pin · {MODULES.filter((m) => m.status === "live").length} live
         </span>
@@ -196,7 +196,7 @@ function SortableTile({
 
       {live ? (
         <Link href={m.href!} className="block px-5">
-          <div className="font-display text-base text-[#E6E8E4]">{m.name}</div>
+          <div className="font-display text-base text-ink-text">{m.name}</div>
           <div className="mt-1 text-xs text-muted">{m.description}</div>
         </Link>
       ) : (

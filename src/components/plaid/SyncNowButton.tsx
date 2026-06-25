@@ -43,7 +43,7 @@ export function SyncNowButton() {
       <button
         onClick={sync}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-[#E6E8E4] hover:border-copper-dim disabled:opacity-40"
+        className="inline-flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm text-ink-text hover:border-copper-dim disabled:opacity-40"
       >
         <RefreshCw size={14} className={busy ? "animate-spin" : ""} />
         {busy ? "Syncing…" : "Sync now"}

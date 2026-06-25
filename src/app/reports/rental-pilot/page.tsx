@@ -99,7 +99,7 @@ export default async function RentalPilotReportsPage() {
 
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="text-[11px] uppercase tracking-wider text-copper-soft">Owner-facing sample</div>
-        <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">{ownerProperty.name}</h2>
+        <h2 className="mt-1 font-display text-xl text-ink-text">{ownerProperty.name}</h2>
         <p className="mt-1 text-sm text-muted">{ownerProperty.note}</p>
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
           <Stat label="Owner proceeds" value={money(ownerProperty.ownerProceeds)} />
@@ -112,7 +112,7 @@ export default async function RentalPilotReportsPage() {
 
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="text-[11px] uppercase tracking-wider text-copper-soft">Operator portfolio sample</div>
-        <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">Properties needing attention</h2>
+        <h2 className="mt-1 font-display text-xl text-ink-text">Properties needing attention</h2>
         <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
           <Stat label="Properties" value={samplePortfolio.propertyCount.toLocaleString()} />
           <Stat label="Booking revenue" value={money(samplePortfolio.monthlyBookingRevenue)} />
@@ -123,7 +123,7 @@ export default async function RentalPilotReportsPage() {
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
           {actions.map((action) => (
             <div key={`${action.propertyName}-${action.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
-              <div className="text-sm text-[#E6E8E4]">{action.title}</div>
+              <div className="text-sm text-ink-text">{action.title}</div>
               <div className="text-[11px] text-muted">{action.propertyName}</div>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{action.detail}</p>
             </div>
@@ -133,7 +133,7 @@ export default async function RentalPilotReportsPage() {
 
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="text-[11px] uppercase tracking-wider text-copper-soft">Import quality sample</div>
-        <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">{Math.round(readiness.overallCoveragePct)}% mapped</h2>
+        <h2 className="mt-1 font-display text-xl text-ink-text">{Math.round(readiness.overallCoveragePct)}% mapped</h2>
         <p className="mt-1 text-sm text-muted">
           Next best source: <span className="text-copper-soft">{readiness.nextBestSource}</span>
         </p>
@@ -141,7 +141,7 @@ export default async function RentalPilotReportsPage() {
           {readiness.layers.map((layer) => (
             <div key={layer.key} className="rounded-lg border border-line bg-ink/60 p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="text-sm text-[#E6E8E4]">{layer.label}</div>
+                <div className="text-sm text-ink-text">{layer.label}</div>
                 <div className="tnum text-sm text-copper-soft">{Math.round(layer.coveragePct)}%</div>
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{layer.note}</p>
@@ -157,7 +157,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className="tnum text-xl text-[#E6E8E4]">{value}</div>
+      <div className="tnum text-xl text-ink-text">{value}</div>
     </div>
   );
 }

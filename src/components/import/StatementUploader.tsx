@@ -96,7 +96,7 @@ export function StatementUploader() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted">
-              Found <span className="text-[#E6E8E4]">{candidates.length}</span> candidate transactions
+              Found <span className="text-ink-text">{candidates.length}</span> candidate transactions
               {candidates.length > 0 && ` · ${selectedCount} selected`}
               {method === "llm" && (
                 <span className="ml-2 rounded bg-copper/15 px-1.5 py-0.5 text-[10px] text-copper-soft">AI-extracted</span>
@@ -132,8 +132,8 @@ export function StatementUploader() {
                         <input type="checkbox" checked={!excluded.has(i)} onChange={() => toggle(i)} />
                       </td>
                       <td className="tnum px-3 py-1.5 text-muted">{c.date}</td>
-                      <td className="px-3 py-1.5 text-[#E6E8E4]">{c.description}</td>
-                      <td className="tnum px-3 py-1.5 text-right text-[#E6E8E4]">{money2(c.amount)}</td>
+                      <td className="px-3 py-1.5 text-ink-text">{c.description}</td>
+                      <td className="tnum px-3 py-1.5 text-right text-ink-text">{money2(c.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -152,8 +152,8 @@ export function StatementUploader() {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="min-w-0 flex-1 break-words text-[#E6E8E4]">{c.description}</span>
-                        <span className="tnum shrink-0 text-[#E6E8E4]">{money2(c.amount)}</span>
+                        <span className="min-w-0 flex-1 break-words text-ink-text">{c.description}</span>
+                        <span className="tnum shrink-0 text-ink-text">{money2(c.amount)}</span>
                       </div>
                       <span className="tnum mt-1 block text-xs text-muted">{c.date}</span>
                     </div>
@@ -163,7 +163,7 @@ export function StatementUploader() {
             </div>
           ) : (
             <div className="rounded-lg border border-line bg-surface p-4 text-sm text-muted">
-              <p className="mb-2 flex items-center gap-2 text-[#E6E8E4]">
+              <p className="mb-2 flex items-center gap-2 text-ink-text">
                 <FileText size={15} /> No transactions detected by the generic parser.
               </p>
               <p>Here&apos;s the raw text we extracted — share it (or the statement) so the parser can be tuned to your bank&apos;s format:</p>

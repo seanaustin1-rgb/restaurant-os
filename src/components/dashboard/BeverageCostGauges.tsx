@@ -30,7 +30,7 @@ export function BeverageCostGauges({ gauges, demoMode = false }: { gauges: CostR
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-[#E6E8E4]">Beverage Cost Ratios</h2>
+        <h2 className="font-display text-lg text-ink-text">Beverage Cost Ratios</h2>
         <span className="text-xs text-muted">cost ÷ alcohol sales · lower is better</span>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -60,13 +60,13 @@ function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-[#E6E8E4]">{g.label}</span>
+        <span className="text-sm text-ink-text">{g.label}</span>
         <span className="tnum text-xs text-muted">{hasTarget ? `target ≤ ${pct(g.target!, 0)}` : "no target"}</span>
       </div>
 
       {hasRatio ? (
         <>
-          <div className="tnum mt-1 text-lg text-[#E6E8E4]">
+          <div className="tnum mt-1 text-lg text-ink-text">
             {pct(g.costPct!, 1)}
             <span className="ml-2 text-xs text-muted">{money(g.cogs)} / {money(g.sales)}</span>
           </div>

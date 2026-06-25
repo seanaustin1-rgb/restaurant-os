@@ -30,7 +30,7 @@ function PieTip({ active, payload }: { active?: boolean; payload?: TipPayload[] 
   const s = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="text-[#E6E8E4]">{s.name}</div>
+      <div className="text-ink-text">{s.name}</div>
       <div className="tnum mt-0.5 text-muted">
         {money(s.value)} · {pct(s.share, 0)}
       </div>
@@ -123,7 +123,7 @@ export function SpendingByCategoryModule({ data }: { data: SpendingByCategoryDat
           {slices.map((s) => (
             <div key={s.name} className="flex items-center gap-2 text-sm">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: s.color }} />
-              <span className="min-w-0 flex-1 truncate text-[#E6E8E4]">{s.name}</span>
+              <span className="min-w-0 flex-1 truncate text-ink-text">{s.name}</span>
               <span className="tnum shrink-0 text-muted">{money(s.value)}</span>
               <span className="tnum w-10 shrink-0 text-right text-muted">{pct(s.share, 0)}</span>
             </div>
@@ -151,14 +151,14 @@ export function SpendingByCategoryModule({ data }: { data: SpendingByCategoryDat
           <tbody>
             {data.categories.map((c) => (
               <tr key={c.name} className="border-b border-line/60 last:border-0">
-                <td className="px-4 py-2 text-[#E6E8E4]">{c.name}</td>
+                <td className="px-4 py-2 text-ink-text">{c.name}</td>
                 <td className="px-4 py-2 text-xs text-muted">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: colorFor(c.group) }} />
                     {c.group}
                   </span>
                 </td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(c.total)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{money(c.total)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(c.share, 0)}</td>
               </tr>
             ))}
@@ -169,8 +169,8 @@ export function SpendingByCategoryModule({ data }: { data: SpendingByCategoryDat
           {data.categories.map((c) => (
             <div key={c.name} className="p-3">
               <div className="flex items-start justify-between gap-2">
-                <span className="min-w-0 flex-1 break-words text-[#E6E8E4]">{c.name}</span>
-                <span className="tnum shrink-0 text-[#E6E8E4]">{money(c.total)}</span>
+                <span className="min-w-0 flex-1 break-words text-ink-text">{c.name}</span>
+                <span className="tnum shrink-0 text-ink-text">{money(c.total)}</span>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-xs text-muted">
                 <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: colorFor(c.group) }} />

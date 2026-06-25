@@ -607,7 +607,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
               <div className={"tnum mt-2 text-xl " + STATUS_TEXT[lens.status]}>{lens.value}</div>
               <p className="mt-1 text-[11px] leading-relaxed text-muted">{lens.detail}</p>
               {openInfo === lens.key && (
-                <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-ink-text-soft">
                   {lens.explainer}
                 </div>
               )}

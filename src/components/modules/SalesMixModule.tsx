@@ -15,7 +15,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">{d.revenueCenter}</div>
+      <div className="mb-1 text-ink-text">{d.revenueCenter}</div>
       <div className="tnum text-copper-soft">{money(d.netSales)}</div>
       <div className="tnum text-muted">{pct(d.share)} · {count(d.orders)} orders</div>
     </div>
@@ -39,7 +39,7 @@ export function SalesMixModule({ data }: { data: SalesMixData }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Net Sales (window)</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{money(data.totalNet)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{money(data.totalNet)}</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Top Center</span>
@@ -50,7 +50,7 @@ export function SalesMixModule({ data }: { data: SalesMixData }) {
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Revenue Centers</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{count(data.centers.length)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{count(data.centers.length)}</div>
         </div>
       </div>
 
@@ -81,7 +81,7 @@ export function SalesMixModule({ data }: { data: SalesMixData }) {
           {chart.map((c) => (
             <div key={c.revenueCenter} className="flex items-center gap-2 text-sm">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: c.color }} />
-              <span className="text-[#E6E8E4]">{c.revenueCenter}</span>
+              <span className="text-ink-text">{c.revenueCenter}</span>
               <span className="tnum ml-auto text-muted">{pct(c.share)}</span>
               <span className="tnum w-20 text-right text-copper-soft">{money(c.netSales)}</span>
             </div>
@@ -104,7 +104,7 @@ export function SalesMixModule({ data }: { data: SalesMixData }) {
           <tbody>
             {data.centers.map((c) => (
               <tr key={c.revenueCenter} className="border-b border-line/60 last:border-0">
-                <td className="px-4 py-2 text-[#E6E8E4]">{c.revenueCenter}</td>
+                <td className="px-4 py-2 text-ink-text">{c.revenueCenter}</td>
                 <td className="tnum px-4 py-2 text-right text-copper-soft">{money(c.netSales)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(c.share)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{count(c.orders)}</td>

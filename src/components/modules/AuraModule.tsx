@@ -67,8 +67,8 @@ function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: Reputation
     <section className="rounded-lg border border-line bg-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg text-[#E6E8E4]">Market energy</h2>
-          <p className="mt-1 text-sm text-[#E6E8E4]">{headline}</p>
+          <h2 className="font-display text-lg text-ink-text">Market energy</h2>
+          <p className="mt-1 text-sm text-ink-text">{headline}</p>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">{detail}</p>
         </div>
         {readyTrend && (
@@ -101,7 +101,7 @@ function IntentCard({ metric }: { metric: AuraIntentMetric }) {
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
         <Icon size={12} /> {metric.label}
       </div>
-      <div className="tnum mt-1 text-xl text-[#E6E8E4]">{live && metric.value != null ? count(metric.value) : "Not connected"}</div>
+      <div className="tnum mt-1 text-xl text-ink-text">{live && metric.value != null ? count(metric.value) : "Not connected"}</div>
       <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted" title={metric.detail}>
         {metric.state === "waiting_history" ? "Waiting for performance sync" : metric.detail}
       </p>
@@ -122,7 +122,7 @@ function SourceCard({ card }: { card: AuraSourceCard }) {
           )}
         </div>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="tnum text-2xl text-[#E6E8E4]">{card.rating != null ? card.rating.toFixed(1) : "—"}</span>
+          <span className="tnum text-2xl text-ink-text">{card.rating != null ? card.rating.toFixed(1) : "—"}</span>
           <FractionalStars rating={card.rating} size={13} />
         </div>
         <div className="mt-0.5 text-[11px] text-muted">{count(card.reviewCount)} reviews</div>
@@ -182,7 +182,7 @@ export function AuraModule({ data, trend }: { data: AuraData; trend?: Reputation
       {/* Connect prompt when nothing is wired */}
       {data.configuredCount === 0 && (
         <div className="rounded-lg border border-dashed border-line p-6 text-center">
-          <p className="text-sm text-[#E6E8E4]">No review sources connected yet.</p>
+          <p className="text-sm text-ink-text">No review sources connected yet.</p>
           <p className="mx-auto mt-1 max-w-md text-[11px] leading-relaxed text-muted">
             Aura is wired and waiting — set a source&apos;s API keys in the environment and it appears here
             automatically. The cards below list exactly which variables each source needs.
@@ -208,7 +208,7 @@ export function AuraModule({ data, trend }: { data: AuraData; trend?: Reputation
               <div key={`${r.source}-${i}`} className="border-b border-line/60 pb-3 last:border-0 last:pb-0">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2 text-[11px] text-muted">
-                    <span className="text-[#E6E8E4]">{r.author}</span>
+                    <span className="text-ink-text">{r.author}</span>
                     <span className="rounded-full border border-line px-1.5 py-px text-[10px] capitalize">{r.source}</span>
                   </span>
                   <span className="flex items-center gap-2 text-[11px] text-muted">

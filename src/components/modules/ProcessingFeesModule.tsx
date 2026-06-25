@@ -26,7 +26,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">
+      <div className="mb-1 text-ink-text">
         {d.label}
         {d.partial ? <span className="ml-1 text-muted">(in progress)</span> : null}
       </div>
@@ -51,9 +51,9 @@ export function ProcessingFeesModule({ data }: { data: ProcessingFeesData }) {
             <AlertTriangle size={13} /> We may not be seeing all your fees
           </span>
           <p className="mt-1.5 text-[11px] leading-relaxed text-muted">
-            Detected fees come to just <span className="tnum text-[#E6E8E4]">{pct(data.ratePct, 2)}</span> of
+            Detected fees come to just <span className="tnum text-ink-text">{pct(data.ratePct, 2)}</span> of
             sales — well below the ~2.5–3% a card-accepting restaurant normally pays. That usually means your
-            processor (often Toast) <span className="text-[#E6E8E4]">settles net</span> — deducting fees before
+            processor (often Toast) <span className="text-ink-text">settles net</span> — deducting fees before
             the deposit — so they never appear as their own bank charge. To see the true rate, compare gross
             Toast sales against net bank deposits, or pull a processor statement. The figures below cover only
             fees billed as separate transactions.
@@ -74,7 +74,7 @@ export function ProcessingFeesModule({ data }: { data: ProcessingFeesData }) {
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Fees Paid</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{money(data.totalFees)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{money(data.totalFees)}</div>
           <div className="mt-0.5 text-[11px] text-muted">on {money(data.salesBase)} gross sales</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
@@ -140,7 +140,7 @@ export function ProcessingFeesModule({ data }: { data: ProcessingFeesData }) {
                   style={{ backgroundColor: FC_COLORS[i % FC_COLORS.length] }}
                 />
                 <span className="truncate text-[11px] text-muted">
-                  {p.processor} <span className="tnum text-[#E6E8E4]">{money(p.amount)}</span>
+                  {p.processor} <span className="tnum text-ink-text">{money(p.amount)}</span>
                 </span>
               </div>
             ))}
@@ -196,7 +196,7 @@ export function ProcessingFeesModule({ data }: { data: ProcessingFeesData }) {
                   <td className="tnum px-4 py-2 text-muted">{li.date}</td>
                   <td className="px-4 py-2 text-copper-soft">{li.processor}</td>
                   <td className="max-w-[16rem] truncate px-4 py-2 text-muted">{li.merchant}</td>
-                  <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money2(li.amount)}</td>
+                  <td className="tnum px-4 py-2 text-right text-ink-text">{money2(li.amount)}</td>
                 </tr>
               ))}
             </tbody>
@@ -209,7 +209,7 @@ export function ProcessingFeesModule({ data }: { data: ProcessingFeesData }) {
         Effective rate = detected card fees ÷ gross sales. Fees are matched from categorized bank transactions
         against known processors and card-fee descriptors — the table above is exactly what&apos;s counted, so
         you can audit it. Gross sales (incl. tax, excl. tips) is a proxy for card volume; true card volume is a
-        bit higher, so your real effective rate is modestly <span className="text-[#E6E8E4]">lower</span> than
+        bit higher, so your real effective rate is modestly <span className="text-ink-text">lower</span> than
         shown. If your processor settles net (deducts fees before deposit), those fees won&apos;t appear here —
         compare gross Toast sales to net bank deposits to see them.
       </p>

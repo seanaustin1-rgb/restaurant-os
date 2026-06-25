@@ -95,7 +95,7 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
         value={row.name}
         onChange={(e) => setList((l) => l.map((r) => (r.id === row.id ? { ...r, name: e.target.value } : r)))}
         onBlur={(e) => rename(row.id, e.target.value)}
-        className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-[#E6E8E4] outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+        className="w-full rounded border border-transparent bg-transparent px-1 py-0.5 text-ink-text outline-none hover:border-line focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
       />
     );
   }
@@ -106,7 +106,7 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
         value={row.tapBucket}
         disabled={pending}
         onChange={(e) => remap(row.id, e.target.value as TapBucket)}
-        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50 sm:w-auto"
+        className="w-full rounded-md border border-line bg-ink px-2 py-1 text-xs text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50 sm:w-auto"
       >
         {TAP_BUCKETS.map((b) => (
           <option key={b.value} value={b.value}>{b.label}</option>
@@ -143,7 +143,7 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && add()}
             placeholder="e.g. Live Music"
-            className="w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           />
         </div>
         <div>
@@ -151,7 +151,7 @@ export function CategoriesManager({ rows }: { rows: CategoryRow[] }) {
           <select
             value={newTap}
             onChange={(e) => setNewTap(e.target.value as TapBucket)}
-            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
           >
             {TAP_BUCKETS.map((b) => (
               <option key={b.value} value={b.value}>{b.label}</option>

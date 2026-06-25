@@ -46,7 +46,7 @@ export function VendorSetupWizard({
       {/* Coverage */}
       <div className="rounded-lg border border-line bg-surface px-4 py-3">
         <div className="flex items-baseline justify-between text-sm">
-          <span className="text-[#E6E8E4]">Spend already categorized</span>
+          <span className="text-ink-text">Spend already categorized</span>
           <span className="tnum text-copper-soft">{coveredPct.toFixed(0)}%</span>
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-ink">
@@ -62,7 +62,7 @@ export function VendorSetupWizard({
       {error && <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</div>}
 
       {result && (
-        <div className="rounded-md border border-health-green/30 bg-health-green/5 px-4 py-3 text-sm text-[#E6E8E4]">
+        <div className="rounded-md border border-health-green/30 bg-health-green/5 px-4 py-3 text-sm text-ink-text">
           <Check size={14} className="mr-1 inline text-health-green" />
           Mapped {result.vendorsMapped} vendor{result.vendorsMapped === 1 ? "" : "s"} ·{" "}
           {result.rulesCreated} rule{result.rulesCreated === 1 ? "" : "s"} created
@@ -79,13 +79,13 @@ export function VendorSetupWizard({
             <div key={r.signature} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
               <div className="min-w-[160px] flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-sm text-[#E6E8E4]" title={r.label}>{r.label}</span>
+                  <span className="truncate text-sm text-ink-text" title={r.label}>{r.label}</span>
                   {r.hasRule && (
                     <span className="rounded bg-copper/10 px-1.5 py-0.5 text-[10px] text-copper-soft">rule</span>
                   )}
                 </div>
                 <div className="mt-0.5 text-[11px] text-muted">
-                  <span className="tnum text-[#E6E8E4]">{money(r.total)}</span> · {r.count} txn
+                  <span className="tnum text-ink-text">{money(r.total)}</span> · {r.count} txn
                   {r.count === 1 ? "" : "s"} · keyword <span className="text-muted">{r.signature}</span>
                 </div>
               </div>
@@ -100,7 +100,7 @@ export function VendorSetupWizard({
                   value={sel[r.signature] ?? ""}
                   disabled={pending}
                   onChange={(e) => setSel((s) => ({ ...s, [r.signature]: e.target.value }))}
-                  className="w-52 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50"
+                  className="w-52 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft disabled:opacity-50"
                 >
                   <option value="">— choose category —</option>
                   {categories.map((c) => (

@@ -37,7 +37,7 @@ export function RecurringModule({ data }: { data: RecurringData }) {
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Repeat size={12} /> Recurring Vendors
           </span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{count(data.vendors.length)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{count(data.vendors.length)}</div>
           <div className="mt-0.5 text-[11px] text-muted">
             {count(data.subscriptionCount)} subscription-like (fixed price)
           </div>
@@ -72,7 +72,7 @@ export function RecurringModule({ data }: { data: RecurringData }) {
             {data.vendors.map((v) => (
               <tr key={v.vendor} className="border-b border-line/60 last:border-0">
                 <td className="px-4 py-2">
-                  <span className="text-[#E6E8E4]">{v.vendor}</span>
+                  <span className="text-ink-text">{v.vendor}</span>
                   {v.subscriptionLike ? (
                     <span className="ml-2 rounded bg-line/60 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
                       sub
@@ -90,7 +90,7 @@ export function RecurringModule({ data }: { data: RecurringData }) {
                 <td className="px-4 py-2 text-muted">{CADENCE_LABEL[v.cadence]}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{count(v.count)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{money2(v.avgAmount)}</td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money2(v.lastAmount)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{money2(v.lastAmount)}</td>
                 <td className="tnum px-4 py-2 text-right text-copper-soft">{money(v.estMonthly)}</td>
               </tr>
             ))}
@@ -102,7 +102,7 @@ export function RecurringModule({ data }: { data: RecurringData }) {
           {data.vendors.map((v) => (
             <div key={v.vendor} className="p-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-[#E6E8E4]">
+                <span className="text-sm text-ink-text">
                   {v.vendor}
                   {v.creepPct != null && v.creepPct > 0 ? (
                     <span className="tnum ml-2 text-[10px] text-health-red">▲ {v.creepPct.toFixed(0)}%</span>
@@ -124,7 +124,7 @@ export function RecurringModule({ data }: { data: RecurringData }) {
       <p className="text-[11px] leading-relaxed text-muted">
         Detected from repeating vendor charges (≥3 at a steady interval) plus known recurring vendors.
         &ldquo;Est / Mo&rdquo; projects the cadence to 30 days. Variable pulls (payroll, sales-tax, supplier
-        deliveries) are recurring but not subscriptions — the <span className="text-[#E6E8E4]">sub</span> badge marks
+        deliveries) are recurring but not subscriptions — the <span className="text-ink-text">sub</span> badge marks
         fixed-price charges, where price creep is meaningful.
         {data.shortHistory ? (
           <>

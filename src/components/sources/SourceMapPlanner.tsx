@@ -99,7 +99,7 @@ export function SourceMapPlanner({
         <section key={group.category + group.label} className="rounded-lg border border-line bg-surface p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-sm font-medium text-[#E6E8E4]">{group.label}</h2>
+              <h2 className="text-sm font-medium text-ink-text">{group.label}</h2>
               <p className="mt-1 text-xs leading-relaxed text-muted">{group.purpose}</p>
             </div>
             <span className="rounded-full border border-line px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted">
@@ -117,7 +117,7 @@ export function SourceMapPlanner({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm text-[#E6E8E4]">{option.name}</span>
+                        <span className="text-sm text-ink-text">{option.name}</span>
                         {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
                       </div>
                       <p className="mt-0.5 text-xs text-muted">{option.role}</p>
@@ -142,7 +142,7 @@ export function SourceMapPlanner({
                       value={draft.notes}
                       onChange={(e) => updateDraft(key, { notes: e.target.value })}
                       placeholder="Setup note, credential owner, blocker..."
-                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-[#E6E8E4] outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
                     />
                     <button
                       type="button"

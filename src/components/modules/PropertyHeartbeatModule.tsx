@@ -72,7 +72,7 @@ export function PropertyHeartbeatModule({ data }: { data: RentalPropertyRollupDa
               <div key={`${item.propertyName}-${item.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm text-[#E6E8E4]">{item.title}</div>
+                    <div className="text-sm text-ink-text">{item.title}</div>
                     <div className="text-[11px] text-muted">{item.propertyName}</div>
                   </div>
                   <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(item.priority)}>
@@ -91,7 +91,7 @@ export function PropertyHeartbeatModule({ data }: { data: RentalPropertyRollupDa
           <div key={property.name} className="rounded-lg border border-line bg-surface p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+                <div className="flex items-center gap-1.5 text-sm text-ink-text">
                   <Home size={14} className="text-copper-soft" /> {property.name}
                 </div>
                 <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[property.overallHealth]}>{property.note}</div>
@@ -127,7 +127,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }

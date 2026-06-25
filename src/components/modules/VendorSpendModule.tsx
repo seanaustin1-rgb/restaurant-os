@@ -19,11 +19,11 @@ export function VendorSpendModule({ data }: { data: VendorSpendData }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Total Spend</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{money(data.totalSpend)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{money(data.totalSpend)}</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Vendors</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{data.vendorCount}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{data.vendorCount}</div>
         </div>
       </div>
 
@@ -43,14 +43,14 @@ export function VendorSpendModule({ data }: { data: VendorSpendData }) {
             {data.vendors.map((v) => (
               <tr key={v.vendor} className="border-b border-line/60 last:border-0">
                 <td className="px-4 py-2">
-                  <div className="font-mono text-xs text-[#E6E8E4]">{v.vendor}</div>
+                  <div className="font-mono text-xs text-ink-text">{v.vendor}</div>
                   <div className="mt-1 h-1 w-28 overflow-hidden rounded-full bg-ink">
                     <div className="h-full rounded-full bg-copper" style={{ width: `${max > 0 ? (v.total / max) * 100 : 0}%` }} />
                   </div>
                 </td>
                 <td className="px-4 py-2 text-xs text-muted">{v.categoryName ?? "—"}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{v.count}</td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(v.total)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{money(v.total)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{pct(v.share, 0)}</td>
               </tr>
             ))}
@@ -61,8 +61,8 @@ export function VendorSpendModule({ data }: { data: VendorSpendData }) {
           {data.vendors.map((v) => (
             <div key={v.vendor} className="p-3">
               <div className="flex items-start justify-between gap-2">
-                <span className="min-w-0 flex-1 break-words font-mono text-xs text-[#E6E8E4]">{v.vendor}</span>
-                <span className="tnum shrink-0 text-[#E6E8E4]">{money(v.total)}</span>
+                <span className="min-w-0 flex-1 break-words font-mono text-xs text-ink-text">{v.vendor}</span>
+                <span className="tnum shrink-0 text-ink-text">{money(v.total)}</span>
               </div>
               <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-ink">
                 <div className="h-full rounded-full bg-copper" style={{ width: `${max > 0 ? (v.total / max) * 100 : 0}%` }} />

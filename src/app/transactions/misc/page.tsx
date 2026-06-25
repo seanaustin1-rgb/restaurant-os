@@ -56,7 +56,7 @@ export default async function MiscReviewPage() {
         <p className="mt-1 text-sm text-muted">
           {role?.restaurant?.name ?? "Your restaurant"} — everything still in Misc/Unassigned, biggest dollars first.
           Select rows and give them a category; your choice sticks and won&rsquo;t be re-swept by rules. Add a keyword{" "}
-          <span className="text-[#E6E8E4]">Rule</span> to auto-categorize these next time.
+          <span className="text-ink-text">Rule</span> to auto-categorize these next time.
         </p>
       </div>
       {role ? (

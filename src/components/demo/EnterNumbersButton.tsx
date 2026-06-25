@@ -32,7 +32,7 @@ export function EnterNumbersButton({
       )}
     >
       <span className="flex items-center justify-between gap-3">
-        <span className="flex items-center gap-2 text-sm font-medium text-[#E6E8E4] group-hover:text-ink group-focus-visible:text-ink">
+        <span className="flex items-center gap-2 text-sm font-medium text-ink-text group-hover:text-ink group-focus-visible:text-ink">
           <Pencil size={15} aria-hidden className="text-copper-soft group-hover:text-ink group-focus-visible:text-ink" />
           {label}
         </span>

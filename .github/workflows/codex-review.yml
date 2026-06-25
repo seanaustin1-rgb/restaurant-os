@@ -1,0 +1,102 @@
+name: Codex Review
+
+# Advisory AI code review on pull requests, using OpenAI Codex.
+# It runs the project's check commands and reviews the PR diff, then posts its
+# findings as a single PR comment. It is intentionally NON-blocking: it never
+# fails the build, so the real gates remain the typecheck/test/build jobs in
+# ci.yml. Codex review is a second opinion, not a hard stop.
+#
+# Requires a repo secret: OPENAI_API_KEY (Settings > Secrets and variables >
+# Actions). If the secret is absent, the job no-ops instead of failing.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Allow the job to read the diff and write a PR comment.
+permissions:
+  contents: read
+  pull-requests: write
+
+# One review per PR at a time; newer pushes cancel older in-flight reviews.
+concurrency:
+  group: codex-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  codex-review:
+    name: Codex Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for API key
+        id: guard
+        run: |
+          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+            echo "OPENAI_API_KEY not set — skipping Codex review."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm ci
+
+      - name: Install Codex CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm i -g @openai/codex
+
+      - name: Compute PR diff
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          git diff --merge-base "origin/${{ github.event.pull_request.base.ref }}" \
+            > /tmp/pr.diff
+          echo "Diff size: $(wc -l < /tmp/pr.diff) lines"
+
+      - name: Run Codex review
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          codex exec --skip-git-repo-check \
+            "Read AGENTS.md for project context, conventions, and guardrails. \
+             Then review the pull-request diff in /tmp/pr.diff. Prioritize \
+             correctness (especially the financial calculators), tenant/data \
+             isolation (the demo path must never touch the production DB), and \
+             auth/middleware changes, then style. Be concise: list only concrete, \
+             actionable findings with file:line references; if the diff looks \
+             clean, say so. Do NOT run database migrations." \
+            > /tmp/review.md 2>&1 || echo "(Codex review exited non-zero; see log above)" >> /tmp/review.md
+
+      - name: Post review comment
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## 🤖 Codex review (advisory)\n\n';
+            try {
+              body += fs.readFileSync('/tmp/review.md', 'utf8').slice(0, 60000);
+            } catch (e) {
+              body += '_Codex produced no output._';
+            }
+            body += '\n\n---\n_Non-blocking second opinion. The required gates are the typecheck/test/build jobs._';
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

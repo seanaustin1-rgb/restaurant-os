@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
@@ -103,27 +103,41 @@ function Dropdown({
   onPick: (key: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+
+  // Esc closes the menu — a keyboard user must be able to escape it.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   return (
     <div className="relative min-w-0">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex max-w-[40vw] items-center gap-1.5 truncate rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim sm:max-w-none"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="inline-flex min-h-[36px] max-w-[40vw] items-center gap-1.5 truncate rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim focus-visible:border-copper-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft sm:max-w-none"
       >
         <span className="truncate">{label}</span>
         <ChevronDown size={14} className="shrink-0 text-muted" />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 min-w-[180px] overflow-hidden rounded-md border border-line bg-surface shadow-lg">
+          <div className="fixed inset-0 z-10" aria-hidden onClick={() => setOpen(false)} />
+          <div role="menu" className="absolute right-0 z-20 mt-1 min-w-[180px] overflow-hidden rounded-md border border-line bg-surface shadow-lg">
             {items.map((it) => (
               <button
                 key={it.key}
+                role="menuitem"
                 onClick={() => {
                   onPick(it.key);
                   setOpen(false);
                 }}
-                className="block w-full px-3 py-2 text-left text-sm text-[#E6E8E4] hover:bg-copper/10"
+                className="block w-full px-3 py-2 text-left text-sm text-[#E6E8E4] hover:bg-copper/10 focus-visible:bg-copper/10 focus-visible:outline-none"
               >
                 {it.label}
               </button>

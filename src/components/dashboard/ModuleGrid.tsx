@@ -173,7 +173,7 @@ function SortableTile({
         {...attributes}
         {...listeners}
         aria-label={`Reorder ${m.name}`}
-        className="absolute left-2 top-2 cursor-grab touch-none rounded p-0.5 text-muted/50 hover:text-copper-soft active:cursor-grabbing"
+        className="absolute left-1.5 top-1.5 cursor-grab touch-none rounded p-1.5 text-muted/70 hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft active:cursor-grabbing"
       >
         <GripVertical size={13} />
       </button>
@@ -186,8 +186,8 @@ function SortableTile({
           aria-label={pinned ? `Unpin ${m.name}` : `Pin ${m.name} to Quick Access`}
           aria-pressed={pinned}
           className={
-            "absolute right-2 top-2 rounded p-0.5 " +
-            (pinned ? "text-copper-soft" : "text-muted/40 hover:text-copper-soft")
+            "absolute right-1.5 top-1.5 rounded p-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " +
+            (pinned ? "text-copper-soft" : "text-muted/70 hover:text-copper-soft")
           }
         >
           <Star size={14} className={pinned ? "fill-copper-soft" : ""} />

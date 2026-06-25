@@ -142,7 +142,7 @@ export function AdvisorBrief({ data, demoMode = false }: { data: DashboardData; 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Advisor mode</p>
-          <h2 className="mt-1 font-display text-xl text-copper-soft">Client conversation brief</h2>
+          <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">Client conversation brief</h2>
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
             A consultant/accountant view of what to celebrate, what to inspect, and what data is still missing.
           </p>

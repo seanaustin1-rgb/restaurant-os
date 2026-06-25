@@ -211,7 +211,22 @@ export function DashboardView({
           <span className="text-sm text-muted">{displayActive.periodLabel}</span>
         </div>
 
-        {/* Quick Access — pinned modules, one click away at the top. */}
+        {/* Heartbeat first (Principle #1): the at-a-glance read leads, before any
+            setup or source config — the owner should see the state on first scan. */}
+        <HeartbeatSummary data={displayActive} demoMode={demoMode} />
+        {isAdvisor && <AdvisorBrief data={displayActive} demoMode={demoMode} />}
+
+        {!displayActive.hasData && (
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
+            {emptyState.text}{" "}
+            <Link href={emptyState.href} className="text-copper-soft hover:underline">
+              {emptyState.cta}
+            </Link>{" "}
+            to populate these metrics.
+          </div>
+        )}
+
+        {/* Setup + industry preview switcher follow the heartbeat, not precede it. */}
         <SetupOverviewCard
           data={displayActive}
           previewType={previewType}
@@ -225,18 +240,6 @@ export function DashboardView({
           <QuickAccessStrip items={pinnedList} onReorder={handleReorderPinned} onUnpin={handleUnpin} />
         )}
 
-        {!displayActive.hasData && (
-          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
-            {emptyState.text}{" "}
-            <Link href={emptyState.href} className="text-copper-soft hover:underline">
-              {emptyState.cta}
-            </Link>{" "}
-            to populate these metrics.
-          </div>
-        )}
-
-        <HeartbeatSummary data={displayActive} demoMode={demoMode} />
-        {isAdvisor && <AdvisorBrief data={displayActive} demoMode={demoMode} />}
         {isRestaurantTemplate ? (
           <>
             <HeartbeatStrip data={displayActive.heartbeat} />
@@ -264,7 +267,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
   if (businessType === "REAL_ESTATE_BROKERAGE") {
     return (
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Brokerage heartbeat</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Brokerage heartbeat</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="Retained Company Dollar is the operating base. Practical target: about 25-30%+ of GCI after splits, referrals, and fees." />
           <PreviewCard icon={<Users size={15} />} title="Agent Performance" detail="Company Dollar yield, cap pressure, pipeline, and lead ROI by agent." />
@@ -281,7 +284,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
       return (
         <section>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="font-display text-lg text-copper-soft">Property heartbeat</h2>
+            <h2 className="font-display text-lg text-[#E6E8E4]">Property heartbeat</h2>
             <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
               Import rental data
             </Link>
@@ -314,7 +317,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
     return (
       <section>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-lg text-copper-soft">Property heartbeat</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Property heartbeat</h2>
           <Link href="/import/rentals" className="text-xs text-copper-soft hover:underline">
             Import rental data
           </Link>
@@ -332,7 +335,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
   if (businessType === "CONTRACTOR") {
     return (
       <section>
-        <h2 className="mb-2 font-display text-lg text-copper-soft">Contractor heartbeat</h2>
+        <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Contractor heartbeat</h2>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <PreviewCard
             icon={<GaugeIcon />}
@@ -361,7 +364,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
 
   return (
     <section>
-      <h2 className="mb-2 font-display text-lg text-copper-soft">Industry heartbeat</h2>
+      <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Industry heartbeat</h2>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <PreviewCard icon={<Building2 size={15} />} title="Cash Safety" detail="Runway, recurring spend, and source coverage for this business type." />
         <PreviewCard icon={<Users size={15} />} title="Operating Pressure" detail="Industry-specific pressure metrics replace restaurant food and cover metrics." />

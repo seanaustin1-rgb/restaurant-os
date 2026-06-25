@@ -61,7 +61,7 @@ export function ModuleGrid({
     return (
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-copper-soft">Modules</h2>
+          <h2 className="font-display text-lg text-[#E6E8E4]">Modules</h2>
           <span className="text-xs text-muted">
             {MODULES.filter((m) => m.status === "live").length} live · sign up to open
           </span>
@@ -115,7 +115,7 @@ export function ModuleGrid({
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-copper-soft">Modules</h2>
+        <h2 className="font-display text-lg text-[#E6E8E4]">Modules</h2>
         <span className="text-xs text-muted">
           drag to reorder · ★ to pin · {MODULES.filter((m) => m.status === "live").length} live
         </span>

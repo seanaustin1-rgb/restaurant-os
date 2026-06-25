@@ -53,7 +53,7 @@ export function HeartbeatStrip({ data }: { data: HeartbeatData }) {
 
   return (
     <section>
-      <h2 className="mb-2 font-display text-lg text-copper-soft">Heartbeat</h2>
+      <h2 className="mb-2 font-display text-lg text-[#E6E8E4]">Heartbeat</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <CostMetric label="Prime Cost" value={data.primeCostPct} target={60} />
         <CostMetric label="Labor Cost" value={data.laborPct} target={32} />

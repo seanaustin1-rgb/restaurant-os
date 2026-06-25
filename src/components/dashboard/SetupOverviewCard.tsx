@@ -73,7 +73,7 @@ export function SetupOverviewCard({
           <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Building2 size={13} /> {setupLabel}
           </p>
-          <h2 className="mt-1 font-display text-xl text-copper-soft">{template.label}</h2>
+          <h2 className="mt-1 font-display text-xl text-[#E6E8E4]">{template.label}</h2>
           <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{description}</p>
         </div>
 

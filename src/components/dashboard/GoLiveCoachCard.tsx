@@ -19,7 +19,7 @@ export function GoLiveCoachCard({ data, demoMode = false }: { data: GoLiveCoachD
           <Icon size={18} className={"mt-0.5 shrink-0 " + color} />
           <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-2">
-              <h2 className="font-display text-lg text-copper-soft">Go-Live Coach</h2>
+              <h2 className="font-display text-lg text-[#E6E8E4]">Go-Live Coach</h2>
               <span className={"text-xs uppercase tracking-wider " + color}>{data.stageLabel}</span>
             </div>
             <p className="mt-1 text-xs leading-relaxed text-muted">

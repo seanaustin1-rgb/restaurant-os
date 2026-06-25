@@ -42,7 +42,7 @@ export function TapGauges({ gauges, base }: { gauges: TapGauge[]; base: number }
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-copper-soft">Profit First — TAP Allocations</h2>
+        <h2 className="font-display text-lg text-[#E6E8E4]">Profit First — TAP Allocations</h2>
         <span className="tnum text-xs text-muted">
           Total Sales {money(base)} · target = Sales × TAP%
         </span>

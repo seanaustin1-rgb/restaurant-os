@@ -17,6 +17,7 @@ import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/T
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
+import { loadSourceConfigSnapshots } from "@/lib/source-status";
 
 export interface DashboardData {
   restaurantId: string;
@@ -292,10 +293,7 @@ async function loadSourceSetupSummary(
   let configs: { category: string; providerName: string; status: DataSourceStatus }[] = [];
 
   try {
-    configs = await db.dataSourceConfig.findMany({
-      where: { restaurantId },
-      select: { category: true, providerName: true, status: true },
-    });
+    configs = await loadSourceConfigSnapshots(restaurantId, db);
   } catch {
     // Older/demo DBs may not have the source-planning table until migrations run.
     configs = [];

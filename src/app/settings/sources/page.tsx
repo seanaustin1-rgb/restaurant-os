@@ -4,6 +4,7 @@ import { PlugZap } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
+import { loadSourceConfigSnapshots } from "@/lib/source-status";
 import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
@@ -21,10 +22,7 @@ export default async function SourceMapPage() {
 
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
-  const configs = await prisma.dataSourceConfig.findMany({
-    where: { restaurantId: role.restaurantId },
-    select: { category: true, providerName: true, status: true, notes: true },
-  });
+  const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">

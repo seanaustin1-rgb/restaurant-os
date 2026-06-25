@@ -232,6 +232,12 @@ export async function recomputeBalances(restaurantId: string): Promise<void> {
       cogsFood: true, cogsLiquor: true, cogsBeverage: true, labor: true, opex: true,
     },
   });
+  const firstAllocatedAt = allocs.length
+    ? allocs.reduce((mn, a) => (a.date < mn ? a.date : mn), allocs[0].date)
+    : null;
+  const lastAllocatedAt = allocs.length
+    ? allocs.reduce((mx, a) => (a.date > mx ? a.date : mx), allocs[0].date)
+    : null;
 
   const accounts = await prisma.virtualAccount.findMany({
     where: { restaurantId },
@@ -240,13 +246,21 @@ export async function recomputeBalances(restaurantId: string): Promise<void> {
   const lastSwept = new Map(accounts.map((a) => [a.key, a.lastSweptAt]));
 
   // Cleared spend per draw-down bucket + cleared sales tax (TAX_SALES), from txns.
+  // Keep the cleared side on the same date range as the allocation log. Otherwise
+  // old bank-import history can be charged against a newer allocation window and
+  // make live bucket balances look falsely short.
   const cats = await prisma.category.findMany({
     where: { restaurantId },
     select: { id: true, tapBucket: true },
   });
   const tapByCat = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
   const txns = await prisma.transaction.findMany({
-    where: { restaurantId },
+    where: {
+      restaurantId,
+      ...(firstAllocatedAt && lastAllocatedAt
+        ? { date: { gte: firstAllocatedAt, lte: lastAllocatedAt } }
+        : {}),
+    },
     select: { amount: true, categoryId: true },
   });
   const cleared: Record<string, number> = {};
@@ -265,10 +279,6 @@ export async function recomputeBalances(restaurantId: string): Promise<void> {
 
   const sum = (sel: (a: (typeof allocs)[number]) => unknown, after?: Date | null) =>
     allocs.reduce((s, a) => (after && a.date.getTime() <= after.getTime() ? s : s + num(sel(a))), 0);
-
-  const lastAllocatedAt = allocs.length
-    ? allocs.reduce((mx, a) => (a.date > mx ? a.date : mx), allocs[0].date)
-    : null;
 
   const balanceFor = (key: string): number => {
     switch (key) {

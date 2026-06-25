@@ -49,9 +49,9 @@ export function RuleSuggestions({ suggestions }: { suggestions: RuleSuggestion[]
             className="flex flex-col gap-2 rounded-md border border-line bg-surface p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="min-w-0 text-sm">
-              <span className="text-[#E6E8E4]">
+              <span className="text-ink-text">
                 Tag <span className="font-mono text-copper-soft">{s.signature}</span> →{" "}
-                <span className="text-[#E6E8E4]">{s.categoryName}</span>
+                <span className="text-ink-text">{s.categoryName}</span>
               </span>
               <div className="mt-0.5 truncate text-xs text-muted">
                 {s.count} categorized this way · e.g. {s.sample}
@@ -69,7 +69,7 @@ export function RuleSuggestions({ suggestions }: { suggestions: RuleSuggestion[]
                 onClick={() => act(s.key, () => dismissRuleSuggestion(s.key))}
                 disabled={busy === s.key}
                 title="Dismiss — don't suggest this again"
-                className="inline-flex items-center rounded-md border border-line px-2 py-1.5 text-muted hover:text-[#E6E8E4] disabled:opacity-50"
+                className="inline-flex items-center rounded-md border border-line px-2 py-1.5 text-muted hover:text-ink-text disabled:opacity-50"
               >
                 <X size={14} />
               </button>

@@ -54,7 +54,7 @@ export function OnboardingFlow() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Stone Grille & Taphouse"
-              className="w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-dim"
+              className="w-full rounded-md border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             />
           </Field>
           <Field label="Seat count / team size (optional)">
@@ -63,7 +63,7 @@ export function OnboardingFlow() {
               onChange={(e) => setSeatCount(e.target.value.replace(/[^0-9]/g, ""))}
               inputMode="numeric"
               placeholder="215"
-              className="tnum w-full rounded-md border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-dim"
+              className="tnum w-full rounded-md border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             />
           </Field>
           <button
@@ -93,7 +93,7 @@ export function OnboardingFlow() {
                 }
               >
                 <span>
-                  <span className="block text-sm text-[#E6E8E4]">{t.label}</span>
+                  <span className="block text-sm text-ink-text">{t.label}</span>
                   <span className="block text-xs text-muted">{t.description}</span>
                 </span>
                 <span className="ml-3 max-w-[120px] text-right text-[10px] text-copper-soft">{t.primarySetup}</span>
@@ -101,7 +101,7 @@ export function OnboardingFlow() {
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setStep(1)} className="rounded-md border border-line px-4 py-2.5 text-sm text-[#E6E8E4] hover:border-copper-dim">
+            <button onClick={() => setStep(1)} className="rounded-md border border-line px-4 py-2.5 text-sm text-ink-text hover:border-copper-dim">
               Back
             </button>
             <button onClick={() => setStep(3)} className="flex-1 rounded-md bg-copper px-4 py-2.5 font-medium text-ink hover:bg-copper-soft">
@@ -126,7 +126,7 @@ export function OnboardingFlow() {
                 }
               >
                 <span>
-                  <span className="block text-sm text-[#E6E8E4]">{t.name}</span>
+                  <span className="block text-sm text-ink-text">{t.name}</span>
                   <span className="block text-xs text-muted">{t.blurb}</span>
                 </span>
                 <span className="ml-3 rounded-full border border-copper-dim px-2 py-0.5 text-[10px] text-copper-soft">{t.tag}</span>
@@ -134,7 +134,7 @@ export function OnboardingFlow() {
             ))}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setStep(2)} className="rounded-md border border-line px-4 py-2.5 text-sm text-[#E6E8E4] hover:border-copper-dim">
+            <button onClick={() => setStep(2)} className="rounded-md border border-line px-4 py-2.5 text-sm text-ink-text hover:border-copper-dim">
               Back
             </button>
             <button

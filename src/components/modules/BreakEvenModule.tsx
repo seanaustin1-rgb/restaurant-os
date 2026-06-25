@@ -5,6 +5,15 @@ import { Scale, ShieldCheck, ShieldAlert, Target, TrendingUp } from "lucide-reac
 import type { BreakEvenData } from "@/lib/modules/break-even";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
+
+// Margin-of-Safety reads as a cushion, not a budget — so its words diverge from the
+// gauge vocabulary while the icon set stays constant.
+const MOS_WORD: Record<HealthStatus, string> = {
+  green: "Healthy",
+  yellow: "Thin",
+  red: "At risk",
+};
 
 const HEALTH_HEX: Record<HealthStatus, string> = {
   green: "#5FA777",
@@ -26,7 +35,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const over = d.netSales >= d.breakEven;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">
+      <div className="mb-1 text-ink-text">
         week of {d.weekStart}
         {d.partial ? <span className="ml-1 text-muted">(partial)</span> : null}
       </div>
@@ -57,7 +66,7 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-health-red">
             <ShieldAlert size={13} /> No break-even point
           </span>
-          <p className="mt-2 text-sm leading-relaxed text-[#E6E8E4]">
+          <p className="mt-2 text-sm leading-relaxed text-ink-text">
             Variable costs (COGS + labor) are running at{" "}
             <span className="tnum text-health-red">{pct(data.primeCostPct)}</span> of sales — at or above 100%.
             Every additional sale loses money before a dollar reaches fixed costs, so no level of sales breaks
@@ -93,7 +102,10 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
           <div className="mt-0.5 text-[11px] text-muted">≈ {money(data.monthlyBreakEven ?? 0)}/mo</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
-          <span className="text-[11px] uppercase tracking-wider text-muted">Margin of Safety</span>
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-muted">Margin of Safety</span>
+            <HealthSignal status={data.health} mode="badge" label={MOS_WORD[data.health]} />
+          </div>
           <div className={"tnum mt-1 text-2xl " + HEALTH_TEXT[data.health]}>{pct(data.marginOfSafety)}</div>
           <div className="mt-0.5 text-[11px] text-muted">
             sales can fall this far before a loss
@@ -101,7 +113,7 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="text-[11px] uppercase tracking-wider text-muted">Contribution Margin</span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{pct(data.cmRatio * 100)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{pct(data.cmRatio * 100)}</div>
           <div className="mt-0.5 text-[11px] text-muted">left after variable cost, per $1</div>
         </div>
       </div>
@@ -160,7 +172,7 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
                 style={{ backgroundColor: FC_COLORS[i % FC_COLORS.length] }}
               />
               <span className="truncate text-[11px] text-muted">
-                {c.name} <span className="tnum text-[#E6E8E4]">{money(c.amount)}</span>
+                {c.name} <span className="tnum text-ink-text">{money(c.amount)}</span>
               </span>
             </div>
           ))}
@@ -218,7 +230,7 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
                     {w.weekStart}
                     {w.partial ? <span className="ml-1 text-[10px]">(partial)</span> : null}
                   </td>
-                  <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{money(w.netSales)}</td>
+                  <td className="tnum px-4 py-2 text-right text-ink-text">{money(w.netSales)}</td>
                   <td className="tnum px-4 py-2 text-right text-muted">{pct(w.cmRatio * 100)}</td>
                   <td className="tnum px-4 py-2 text-right text-muted">{money(w.breakEven)}</td>
                   <td className={"tnum px-4 py-2 text-right " + (delta >= 0 ? "text-health-green" : "text-health-red")}>
@@ -237,7 +249,7 @@ export function BreakEvenModule({ data }: { data: BreakEvenData }) {
         <TrendingUp size={11} className="mr-1 inline" />
         Break-even = Fixed Costs ÷ Contribution Margin. Variable costs are COGS + labor (Prime Cost), so each
         sales dollar leaves {pct(data.cmRatio * 100, 0)} to cover fixed costs and profit. Net sales &amp; labor
-        come from Toast; COGS &amp; fixed costs are <span className="text-[#E6E8E4]">cash-basis</span> from
+        come from Toast; COGS &amp; fixed costs are <span className="text-ink-text">cash-basis</span> from
         categorized bank transactions. Labor is treated as fully variable — salaried labor is partly fixed, so
         your true break-even is modestly lower than shown.
       </p>

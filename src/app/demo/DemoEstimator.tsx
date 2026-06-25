@@ -6,6 +6,7 @@ import { SignUpButton } from "@clerk/nextjs";
 import {
   ArrowLeft,
   Gauge,
+  Info,
   Lock,
   PiggyBank,
   Scale,
@@ -14,6 +15,7 @@ import {
   Utensils,
   Wallet,
 } from "lucide-react";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import {
   computeEstimate,
   LOCKED_TILES,
@@ -41,6 +43,27 @@ const BENCH_OVERALL_LABEL: Record<Health, string> = {
   yellow: "Watch a few",
   red: "Off benchmark",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public guest rating, pulled live from Google. It is the outside-world signal that drives bookings — a strong rating lifts search ranking and lets you hold price. We read it next to the money because demand starts with reputation.",
+  bench:
+    "Where your prime cost, COGS, labor, and net margin sit against typical full-service ranges. Static reference figures, not live peer data — guide-rails, not a grade.",
+  prime:
+    "Prime cost = food + beverage + labor as a share of sales. It is the restaurant's master number, the biggest controllable cost. Full-service typically aims for 60% or below; above that, profit gets very hard.",
+  breakeven:
+    "The weekly sales you need just to cover variable costs plus the fixed bills you entered. Below it you lose money; the cushion above is what funds profit and owner pay.",
+  pf:
+    "A weekly starting split to set aside before you spend — Profit, Owner Pay, and Tax. Pay these first so profit is not 'whatever is left' (usually nothing).",
+  cash:
+    "Money in minus money out for a rough month. A quick read on whether the business breathes; before owner pay, taxes, and debt service.",
+  mix:
+    "How sales split between food/kitchen and bar/beverage. Beverage usually carries a higher margin, so the mix shifts your blended profitability.",
+  covers:
+    "Guests served. Covers per day and average check translate revenue into floor reality — how many tables you actually turn.",
+} as const;
 
 type FormState = Record<
   | "name" | "city" | "weeklySales" | "weeklyLabor" | "weeklyFood" | "weeklyAlcohol"
@@ -304,10 +327,10 @@ function Results({
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Instant estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your restaurant"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your restaurant"}</h2>
           {f.city && <div className="text-sm text-muted">{f.city}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]">
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text">
           <ArrowLeft size={14} /> Adjust numbers
         </button>
       </div>
@@ -315,7 +338,7 @@ function Results({
       {/* Honesty banner */}
       <div className="mt-4 flex items-start gap-2 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
         <Sparkles size={16} className="mt-0.5 shrink-0 text-copper-soft" />
-        <p className="text-[13px] leading-relaxed text-[#CFD2CC]">
+        <p className="text-[13px] leading-relaxed text-ink-text-soft">
           This is a 60-second estimate from a handful of numbers — a taste, not a diagnosis. The{" "}
           <span className="text-health-green">highlighted tiles</span> are driven by what you entered. The{" "}
           <span className="text-muted">faded tiles</span> are intentionally left out of this quick demo because they need deeper detail.
@@ -355,7 +378,7 @@ function Results({
 
       {/* CTA */}
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5 text-center">
-        <div className="font-display text-xl text-[#E6E8E4]">Want the full picture?</div>
+        <div className="font-display text-xl text-ink-text">Want the full picture?</div>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted">
           The full account adds leak detection, cash runway, vendor spend, and more. No connection is needed to explore the demo first.
         </p>
@@ -381,26 +404,38 @@ function Results({
 // ---- Lit tiles -------------------------------------------------------------
 
 function Tile({
-  title, icon, badge, children,
+  title, icon, badge, explainer, children,
 }: {
   title: string;
   icon: React.ReactNode;
   badge?: string;
+  explainer?: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
           {icon} {title}
         </div>
-        {badge && (
-          <span className="rounded-full border border-health-green/30 bg-health-green/10 px-2 py-0.5 text-[10px] text-health-green">
-            {badge}
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {badge && (
+            <span className="rounded-full border border-health-green/30 bg-health-green/10 px-2 py-0.5 text-[10px] text-health-green">
+              {badge}
+            </span>
+          )}
+          {explainer && (
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+              <Info size={13} />
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
+      )}
     </div>
   );
 }
@@ -411,12 +446,12 @@ const clampPct = (v: number, max: number) => Math.max(0, Math.min(100, (v / max)
 
 function AuraTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
   return (
-    <Tile title="Reputation (Aura)" icon={<Star size={12} className="text-copper-soft" />} badge={aura?.found ? "Live from Google" : undefined}>
+    <Tile title="Reputation (Aura)" icon={<Star size={12} className="text-copper-soft" />} badge={aura?.found ? "Live from Google" : undefined} explainer={EXPLAIN.aura}>
       {pending && <div className="text-sm text-muted">Looking up {name || "your restaurant"} on Google…</div>}
       {!pending && aura?.found && (
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="tnum text-4xl text-[#E6E8E4]">{aura.rating?.toFixed(1)}</span>
+            <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
             <Stars rating={aura.rating ?? 0} />
           </div>
           <div className="mt-1 text-sm text-muted">
@@ -473,7 +508,7 @@ function ZoneBar({ row }: { row: BenchRow }) {
   return (
     <div className="mt-1">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-[#E6E8E4]">{row.label}</span>
+        <span className="text-sm text-ink-text">{row.label}</span>
         <span className={"tnum text-base " + HEALTH_TEXT[row.status]}>{pct(row.value)}</span>
       </div>
       <div className="relative mt-1.5 h-2 w-full overflow-hidden rounded-full bg-ink">
@@ -484,7 +519,7 @@ function ZoneBar({ row }: { row: BenchRow }) {
         </div>
       </div>
       <div className="relative h-0">
-        <div className="absolute top-[-11px] h-3 w-0.5 -translate-x-1/2 rounded bg-[#E6E8E4]" style={{ left: `${left}%` }} />
+        <div className="absolute top-[-11px] h-3 w-0.5 -translate-x-1/2 rounded bg-ink-text" style={{ left: `${left}%` }} />
       </div>
       <div className="mt-1.5 flex items-center justify-between text-[11px]">
         <span className="text-muted">typical {row.typicalLow}–{row.typicalHigh}%</span>
@@ -496,7 +531,7 @@ function ZoneBar({ row }: { row: BenchRow }) {
 
 function BenchmarksTile({ r }: { r: EstimateResult }) {
   return (
-    <Tile title="You vs. industry" icon={<Gauge size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="You vs. industry" icon={<Gauge size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.bench}>
       <div className={"text-2xl " + HEALTH_TEXT[r.benchOverall]}>{BENCH_OVERALL_LABEL[r.benchOverall]}</div>
       <div className="text-[11px] text-muted">{r.benchGreenCount} of {r.bench.length} within range · full-service / casual dining</div>
       <div className="mt-3 space-y-3">
@@ -510,7 +545,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -520,11 +555,17 @@ function PrimeCostTile({ r }: { r: EstimateResult }) {
   const weeklyLabor = r.labor / WEEKS_PER_MONTH;
 
   return (
-    <Tile title="Prime cost" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Prime cost" icon={<Scale size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.prime}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.primeHealth]}>{pct(r.primeCostPct)}</span>
         <span className="text-sm text-muted">of sales</span>
       </div>
+      <HealthSignal
+        status={r.primeHealth}
+        label={word(r.primeHealth, "On track", "Watch", "Over")}
+        detail={Math.abs(r.primeCostPct - 60) < 0.5 ? "right at ≤60% target" : `${Math.abs(r.primeCostPct - 60).toFixed(1)} pts ${r.primeCostPct > 60 ? "over" : "under"} ≤60%`}
+        className="mt-2"
+      />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Food + bev / week" value={money(weeklyCogs)} />
         <Stat label="Labor / week" value={money(weeklyLabor)} />
@@ -541,9 +582,9 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
   const marginLeft = Math.max(0, r.cmRatio * 100);
 
   return (
-    <Tile title="Break-even number" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Break-even number" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
+        <span className="tnum text-3xl text-ink-text">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
         <span className="text-sm text-muted">/ week before profit starts</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
@@ -575,12 +616,12 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
 
 function ProfitFirstTile({ r }: { r: EstimateResult }) {
   return (
-    <Tile title="Profit First set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Profit First set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.pf}>
       <p className="text-[11px] text-muted">A weekly starting point for dollars to set aside before the business spends a cent:</p>
       <div className="mt-3 space-y-2">
         {r.pf.map((p) => (
           <div key={p.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-            <span className="text-sm text-[#E6E8E4]">{p.label} <span className="text-muted">({p.pct}%)</span></span>
+            <span className="text-sm text-ink-text">{p.label} <span className="text-muted">({p.pct}%)</span></span>
             <span className="tnum text-base text-copper-soft">{money(p.amount / WEEKS_PER_MONTH)}</span>
           </div>
         ))}
@@ -595,15 +636,15 @@ function CashFlowTile({ r }: { r: EstimateResult }) {
   const weeklyCashLeft = r.cashLeft / WEEKS_PER_MONTH;
 
   return (
-    <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
       <div className="grid grid-cols-3 gap-2 text-center">
         <div>
           <div className="text-[11px] text-muted">In / week</div>
-          <div className="tnum text-base text-[#E6E8E4]">{money(weeklyCashIn)}</div>
+          <div className="tnum text-base text-ink-text">{money(weeklyCashIn)}</div>
         </div>
         <div>
           <div className="text-[11px] text-muted">Out / week</div>
-          <div className="tnum text-base text-[#E6E8E4]">{money(weeklyCashOut)}</div>
+          <div className="tnum text-base text-ink-text">{money(weeklyCashOut)}</div>
         </div>
         <div>
           <div className="text-[11px] text-muted">Left / week</div>
@@ -618,7 +659,7 @@ function CashFlowTile({ r }: { r: EstimateResult }) {
 function SalesMixTile({ r }: { r: EstimateResult }) {
   const m = r.salesMix!;
   return (
-    <Tile title="Sales mix" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Sales mix" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.mix}>
       <div className="flex h-3 w-full overflow-hidden rounded-full bg-ink">
         <div style={{ width: `${m.foodPct}%`, backgroundColor: HEALTH_HEX.green, opacity: 0.5 }} />
         <div style={{ width: `${m.bevPct}%`, backgroundColor: "#D9A35E", opacity: 0.6 }} />
@@ -634,9 +675,9 @@ function SalesMixTile({ r }: { r: EstimateResult }) {
 function CoversTile({ r }: { r: EstimateResult }) {
   const c = r.covers!;
   return (
-    <Tile title="Covers" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS}>
+    <Tile title="Covers" icon={<Utensils size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.covers}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{Math.round(c.perDay).toLocaleString()}</span>
+        <span className="tnum text-3xl text-ink-text">{Math.round(c.perDay).toLocaleString()}</span>
         <span className="text-sm text-muted">covers / day</span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
@@ -650,13 +691,13 @@ function CoversTile({ r }: { r: EstimateResult }) {
 // ---- Small form primitives -------------------------------------------------
 
 const inputCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
 
 function Legend({ n, title, hint }: { n: string; title: string; hint: string }) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">· {hint}</span>
     </div>
   );

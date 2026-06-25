@@ -85,7 +85,7 @@ function PinnedChip({ m, onUnpin }: { m: ModuleDef; onUnpin: (key: string) => vo
     <div
       ref={setNodeRef}
       style={style}
-      className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-[#E6E8E4] hover:border-copper-dim"
+      className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-sm text-ink-text hover:border-copper-dim"
     >
       <button
         type="button"

@@ -16,10 +16,10 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">{d.date}</div>
+      <div className="mb-1 text-ink-text">{d.date}</div>
       <div className="tnum text-health-green">in {money(d.inflow)}</div>
       <div className="tnum text-health-red">out {money(d.outflow)}</div>
-      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-[#E6E8E4]">net {money(d.net)}</div>
+      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-ink-text">net {money(d.net)}</div>
     </div>
   );
 }
@@ -97,7 +97,7 @@ export function CashFlowModule({ data }: { data: CashFlowData }) {
                 <td className="tnum px-4 py-2 text-muted">{d.date}</td>
                 <td className="tnum px-4 py-2 text-right text-health-green">{d.inflow ? money(d.inflow) : "—"}</td>
                 <td className="tnum px-4 py-2 text-right text-health-red">{d.outflow ? money(d.outflow) : "—"}</td>
-                <td className={"tnum px-4 py-2 text-right " + (d.net >= 0 ? "text-[#E6E8E4]" : "text-health-red")}>{money(d.net)}</td>
+                <td className={"tnum px-4 py-2 text-right " + (d.net >= 0 ? "text-ink-text" : "text-health-red")}>{money(d.net)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{money(d.running)}</td>
               </tr>
             ))}
@@ -108,7 +108,7 @@ export function CashFlowModule({ data }: { data: CashFlowData }) {
           {data.days.map((d) => (
             <div key={d.date} className="p-3">
               <div className="flex items-center justify-between">
-                <span className="tnum text-sm text-[#E6E8E4]">{d.date}</span>
+                <span className="tnum text-sm text-ink-text">{d.date}</span>
                 <span className={"tnum text-sm " + (d.net >= 0 ? "text-health-green" : "text-health-red")}>
                   {d.net >= 0 ? "+" : "−"}
                   {money(Math.abs(d.net))}

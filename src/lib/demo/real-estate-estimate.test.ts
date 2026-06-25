@@ -4,6 +4,7 @@ import { computeRealEstateEstimate, type RealEstateEstimateInputs } from "./real
 const base: RealEstateEstimateInputs = {
   name: "Example Realty",
   market: "York, PA",
+  software: "followupboss",
   monthlyGci: 120_000,
   agentSplitPct: 70,
   franchiseFeePct: 6,

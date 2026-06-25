@@ -11,7 +11,7 @@ export interface RevenueData {
 export function RevenueRow({ data }: { data: RevenueData }) {
   return (
     <section>
-      <h2 className="mb-2 font-display text-lg text-copper-soft">Revenue</h2>
+      <h2 className="mb-2 font-display text-lg text-ink-text">Revenue</h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <MetricCard label="Revenue MTD" value={money(data.revenueMTD)} sub="total sales" />
         <MetricCard label="Real Revenue MTD" value={money(data.realRevenueMTD)} sub="sales − COGS" />

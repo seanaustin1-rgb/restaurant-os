@@ -61,7 +61,7 @@ export function ModuleGrid({
     return (
       <section>
         <div className="mb-2 flex items-baseline justify-between">
-          <h2 className="font-display text-lg text-copper-soft">Modules</h2>
+          <h2 className="font-display text-lg text-ink-text">Modules</h2>
           <span className="text-xs text-muted">
             {MODULES.filter((m) => m.status === "live").length} live · sign up to open
           </span>
@@ -85,7 +85,7 @@ export function ModuleGrid({
                     <Lock size={9} /> {m.blockedBy}
                   </span>
                 )}
-                <div className={"font-display text-base " + (live ? "text-[#E6E8E4]" : "text-muted")}>{m.name}</div>
+                <div className={"font-display text-base " + (live ? "text-ink-text" : "text-muted")}>{m.name}</div>
                 <div className="mt-1 flex items-start gap-1.5">
                   <button
                     type="button"
@@ -100,7 +100,7 @@ export function ModuleGrid({
                   <div className={"text-xs " + (live ? "text-muted" : "text-muted/70")}>{m.description}</div>
                 </div>
                 {openInfo === m.key && (
-                  <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                  <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-ink-text-soft">
                     {moduleExplainer(m)}
                   </div>
                 )}
@@ -115,7 +115,7 @@ export function ModuleGrid({
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-copper-soft">Modules</h2>
+        <h2 className="font-display text-lg text-ink-text">Modules</h2>
         <span className="text-xs text-muted">
           drag to reorder · ★ to pin · {MODULES.filter((m) => m.status === "live").length} live
         </span>
@@ -173,7 +173,7 @@ function SortableTile({
         {...attributes}
         {...listeners}
         aria-label={`Reorder ${m.name}`}
-        className="absolute left-2 top-2 cursor-grab touch-none rounded p-0.5 text-muted/50 hover:text-copper-soft active:cursor-grabbing"
+        className="absolute left-1.5 top-1.5 cursor-grab touch-none rounded p-1.5 text-muted/70 hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft active:cursor-grabbing"
       >
         <GripVertical size={13} />
       </button>
@@ -186,8 +186,8 @@ function SortableTile({
           aria-label={pinned ? `Unpin ${m.name}` : `Pin ${m.name} to Quick Access`}
           aria-pressed={pinned}
           className={
-            "absolute right-2 top-2 rounded p-0.5 " +
-            (pinned ? "text-copper-soft" : "text-muted/40 hover:text-copper-soft")
+            "absolute right-1.5 top-1.5 rounded p-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " +
+            (pinned ? "text-copper-soft" : "text-muted/70 hover:text-copper-soft")
           }
         >
           <Star size={14} className={pinned ? "fill-copper-soft" : ""} />
@@ -196,7 +196,7 @@ function SortableTile({
 
       {live ? (
         <Link href={m.href!} className="block px-5">
-          <div className="font-display text-base text-[#E6E8E4]">{m.name}</div>
+          <div className="font-display text-base text-ink-text">{m.name}</div>
           <div className="mt-1 text-xs text-muted">{m.description}</div>
         </Link>
       ) : (

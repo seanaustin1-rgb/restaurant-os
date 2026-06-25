@@ -2,6 +2,7 @@ import { clsx } from "clsx";
 import Link from "next/link";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
 
 // A beverage cost ratio = alcohol COGS ÷ matching alcohol sales (a "pour cost"),
 // judged against an operator-set target where lower is better. Split into liquor
@@ -29,7 +30,7 @@ export function BeverageCostGauges({ gauges, demoMode = false }: { gauges: CostR
   return (
     <section>
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-copper-soft">Beverage Cost Ratios</h2>
+        <h2 className="font-display text-lg text-ink-text">Beverage Cost Ratios</h2>
         <span className="text-xs text-muted">cost ÷ alcohol sales · lower is better</span>
       </div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -46,17 +47,26 @@ function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
   const hasTarget = g.target != null;
   // Fill = how much of target the ratio uses (lower is better). Capped for the bar.
   const fill = hasRatio && hasTarget && g.target! > 0 ? Math.min((g.costPct! / g.target!) * 100, 100) : 0;
+  // Honest read beside the colored bar: pour cost vs target, in points (lower is better).
+  const verdict = (() => {
+    if (!hasRatio || !hasTarget) return "";
+    const delta = g.costPct! - g.target!;
+    const mag = Math.abs(delta);
+    if (mag < 0.5) return delta > 0 ? `just over ≤${pct(g.target!, 0)}` : `just under ≤${pct(g.target!, 0)}`;
+    const pts = mag >= 10 ? mag.toFixed(0) : (Math.round(mag * 10) / 10).toString();
+    return `${pts} pt${pts === "1" ? "" : "s"} ${delta > 0 ? "over" : "under"} ≤${pct(g.target!, 0)}`;
+  })();
 
   return (
     <div className="rounded-lg border border-line bg-surface px-4 py-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-[#E6E8E4]">{g.label}</span>
+        <span className="text-sm text-ink-text">{g.label}</span>
         <span className="tnum text-xs text-muted">{hasTarget ? `target ≤ ${pct(g.target!, 0)}` : "no target"}</span>
       </div>
 
       {hasRatio ? (
         <>
-          <div className="tnum mt-1 text-lg text-[#E6E8E4]">
+          <div className="tnum mt-1 text-lg text-ink-text">
             {pct(g.costPct!, 1)}
             <span className="ml-2 text-xs text-muted">{money(g.cogs)} / {money(g.sales)}</span>
           </div>
@@ -66,6 +76,7 @@ function RatioCard({ g, demoMode }: { g: CostRatioGauge; demoMode: boolean }) {
               style={{ width: `${fill}%` }}
             />
           </div>
+          {hasTarget && <HealthSignal status={g.health} detail={verdict} className="mt-1.5" />}
           <div className="mt-1 text-[11px] text-muted">
             {g.basis === "actual"
               ? "of alcohol sales · from POS"

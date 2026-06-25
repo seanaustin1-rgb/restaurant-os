@@ -58,7 +58,7 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0"
-          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim"
+          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
         />
         <span className="text-sm text-muted">%</span>
       </div>
@@ -112,7 +112,7 @@ export function AllocationSettingsForm({ initial }: { initial: TapSettingsInput 
       )}
 
       <div className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="text-sm font-medium text-[#E6E8E4]">Target Allocation Percentages</h2>
+        <h2 className="text-sm font-medium text-ink-text">Target Allocation Percentages</h2>
         <p className="mt-1 text-xs text-muted">
           Each TAP is a share of total sales. Change a number and the dashboard gauge targets follow. The six must
           total 100%.
@@ -139,7 +139,7 @@ export function AllocationSettingsForm({ initial }: { initial: TapSettingsInput 
         </div>
 
         <p className="mt-3 text-[11px] text-muted">
-          <strong className="text-[#E6E8E4]">Beer</strong> and a dedicated <strong className="text-[#E6E8E4]">Spill</strong>{" "}
+          <strong className="text-ink-text">Beer</strong> and a dedicated <strong className="text-ink-text">Spill</strong>{" "}
           reserve get their own percentages when the Allocation &amp; Variance engine ships; for now Beer rolls up under
           COGS and Spill sits inside OpEx.
         </p>
@@ -148,7 +148,7 @@ export function AllocationSettingsForm({ initial }: { initial: TapSettingsInput 
       <div className="rounded-lg border border-line bg-surface p-4">
         <label className="flex items-center justify-between gap-3">
           <span>
-            <span className="block text-sm font-medium text-[#E6E8E4]">Simulation mode</span>
+            <span className="block text-sm font-medium text-ink-text">Simulation mode</span>
             <span className="mt-0.5 block text-xs text-muted">
               Allocations are virtual (no real money moves). Stays on until you go live with ACH.
             </span>

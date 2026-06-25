@@ -132,7 +132,7 @@ export function DemoModulePreview({ businessType }: { businessType: BusinessType
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Dashboard modules</div>
-          <h3 className="mt-1 font-display text-xl text-[#E6E8E4]">{template.label} module map</h3>
+          <h3 className="mt-1 font-display text-xl text-ink-text">{template.label} module map</h3>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">
             Your quick estimate lights up the first read. These are the modules the full dashboard uses as live sources are connected.
             Use the tour below to understand the tiles without losing the numbers you entered.
@@ -163,7 +163,7 @@ export function DemoModulePreview({ businessType }: { businessType: BusinessType
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
             {resultGuides.map((guide) => (
               <div key={guide.title} className="rounded-md border border-line bg-ink/50 p-3">
-                <div className="text-sm text-[#E6E8E4]">{guide.title}</div>
+                <div className="text-sm text-ink-text">{guide.title}</div>
                 <p className="mt-1 text-[11px] leading-relaxed text-muted">{guide.body}</p>
               </div>
             ))}
@@ -177,7 +177,7 @@ export function DemoModulePreview({ businessType }: { businessType: BusinessType
           return (
             <div key={module.key} className={"rounded-lg border px-3 py-3 " + (live ? "border-line bg-ink/50" : "border-line/70 bg-ink/30")}>
               <div className="flex items-start justify-between gap-2">
-                <div className={live ? "text-sm text-[#E6E8E4]" : "text-sm text-muted"}>{module.name}</div>
+                <div className={live ? "text-sm text-ink-text" : "text-sm text-muted"}>{module.name}</div>
                 <span className={"inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] " + (live ? "border-health-green/30 text-health-green" : "border-line text-muted")}>
                   {live ? <Info size={9} /> : <Lock size={9} />}
                   {live ? "live" : "needs data"}

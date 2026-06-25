@@ -39,7 +39,7 @@ export function CategoryTrendsModule({ data }: { data: CategoryTrendsData }) {
       )}
       <p className="rounded-lg border border-line bg-surface/60 px-4 py-3 text-xs text-muted">
         Each category&rsquo;s spend over the last {data.monthsLabels.length} months, newest on the right. MoM compares{" "}
-        <span className="text-[#E6E8E4]">{data.currentLabel}</span> to the prior month. Set a monthly budget to track
+        <span className="text-ink-text">{data.currentLabel}</span> to the prior month. Set a monthly budget to track
         budget-vs-actual — the bar turns yellow past 90% and red over 100%. Budgets are optional and OpEx sub-budgets
         are the common use.
       </p>
@@ -72,7 +72,7 @@ function Row({
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <div className="min-w-[140px] flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-[#E6E8E4]">{r.name}</span>
+            <span className="text-sm text-ink-text">{r.name}</span>
             <Mom pct={r.momPct} />
           </div>
           <div className="mt-0.5 text-[11px] text-muted">
@@ -107,7 +107,7 @@ function Row({
                 placeholder="—"
                 onBlur={(e) => onSaveBudget(r.categoryId, e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                className="w-20 bg-transparent py-1 text-sm text-[#E6E8E4] outline-none"
+                className="w-20 rounded bg-transparent py-1 text-sm text-ink-text outline-none focus-visible:ring-1 focus-visible:ring-copper-soft"
               />
             </div>
             {used != null && <span className={clsx("tnum text-xs", usedTone)}>{used.toFixed(0)}%</span>}

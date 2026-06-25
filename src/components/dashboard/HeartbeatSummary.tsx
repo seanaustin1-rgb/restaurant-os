@@ -555,7 +555,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Heartbeat summary</p>
-          <h2 className="mt-1 font-display text-xl text-copper-soft">{headline(lenses)}</h2>
+          <h2 className="mt-1 font-display text-2xl text-copper-soft">{headline(lenses)}</h2>
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
             {template.label} template: cash, Profit First discipline, operating pressure, sales momentum, and market energy in one read.
           </p>
@@ -607,7 +607,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
               <div className={"tnum mt-2 text-xl " + STATUS_TEXT[lens.status]}>{lens.value}</div>
               <p className="mt-1 text-[11px] leading-relaxed text-muted">{lens.detail}</p>
               {openInfo === lens.key && (
-                <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-[#CFD2CC]">
+                <div className="mt-2 rounded-md border border-line bg-ink/60 px-2 py-2 text-[11px] leading-relaxed text-ink-text-soft">
                   {lens.explainer}
                 </div>
               )}

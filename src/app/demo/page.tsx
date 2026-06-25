@@ -17,7 +17,7 @@ export default function DemoPage() {
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-copper-soft">OutFront Data</div>
-          <h1 className="mt-2 font-display text-4xl text-[#E6E8E4]">What would your dashboard say?</h1>
+          <h1 className="mt-2 font-display text-4xl text-ink-text">What would your dashboard say?</h1>
           <p className="mx-auto mt-2 max-w-lg text-muted">
             A 60-second, no-login estimate from a few numbers you already know.
           </p>
@@ -30,6 +30,12 @@ export default function DemoPage() {
             </Link>
             <Link href="/demo/retail" className="text-copper-soft hover:text-copper">
               Try the retail estimate
+            </Link>
+            <Link href="/demo/vacation-rental" className="text-copper-soft hover:text-copper">
+              Try the vacation rental estimate
+            </Link>
+            <Link href="/demo/contractor" className="text-copper-soft hover:text-copper">
+              Try the contractor estimate
             </Link>
           </div>
         </header>

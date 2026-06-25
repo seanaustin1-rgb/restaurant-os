@@ -68,7 +68,7 @@ export function PaymentWatchModule({ data }: { data: PaymentWatchData }) {
                   {data.duplicates.map((d, i) => (
                     <tr key={i} className="border-b border-line/60 last:border-0">
                       <td className="px-4 py-2">
-                        <span className="text-[#E6E8E4]">{d.vendor ?? d.description}</span>
+                        <span className="text-ink-text">{d.vendor ?? d.description}</span>
                         <span
                           className={
                             "ml-2 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide " +
@@ -89,7 +89,7 @@ export function PaymentWatchModule({ data }: { data: PaymentWatchData }) {
                       </td>
                       <td className="tnum px-4 py-2 text-right text-copper-soft">{money2(d.amount)}</td>
                       <td className="tnum px-4 py-2 text-right text-muted">{d.firstDate}</td>
-                      <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{d.secondDate}</td>
+                      <td className="tnum px-4 py-2 text-right text-ink-text">{d.secondDate}</td>
                       <td className="tnum px-4 py-2 text-right text-muted">{d.gapDays}d</td>
                     </tr>
                   ))}
@@ -115,12 +115,12 @@ export function PaymentWatchModule({ data }: { data: PaymentWatchData }) {
                   {data.unusual.map((u, i) => (
                     <tr key={i} className="border-b border-line/60 last:border-0">
                       <td className="px-4 py-2">
-                        <span className="text-[#E6E8E4]">{u.vendor}</span>
+                        <span className="text-ink-text">{u.vendor}</span>
                         <div className="text-[11px] text-muted">{u.description}</div>
                       </td>
                       <td className="tnum px-4 py-2 text-right text-health-yellow">{money2(u.amount)}</td>
                       <td className="tnum px-4 py-2 text-right text-muted">{money2(u.medianAmount)}</td>
-                      <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{u.ratio.toFixed(1)}×</td>
+                      <td className="tnum px-4 py-2 text-right text-ink-text">{u.ratio.toFixed(1)}×</td>
                       <td className="tnum px-4 py-2 text-right text-muted">{u.date}</td>
                     </tr>
                   ))}
@@ -134,8 +134,8 @@ export function PaymentWatchModule({ data }: { data: PaymentWatchData }) {
       {/* Honest footnote */}
       <p className="text-[11px] leading-relaxed text-muted">
         Review lists, not verdicts — same-amount repeats can be legitimate (two invoices, two register runs) and a
-        big charge can be a real one-off order. <span className="text-[#E6E8E4]">Likely</span> = same vendor &amp;
-        exact amount within 3 days. <span className="text-[#E6E8E4]">Look</span> = same amount ≥ $500 within 10 days
+        big charge can be a real one-off order. <span className="text-ink-text">Likely</span> = same vendor &amp;
+        exact amount within 3 days. <span className="text-ink-text">Look</span> = same amount ≥ $500 within 10 days
         (catches double-cashed checks, which carry no vendor name). Unusual = 3×+ the vendor&apos;s median across ≥4
         charges.
       </p>

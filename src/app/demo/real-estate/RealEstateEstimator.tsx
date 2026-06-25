@@ -1,10 +1,12 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Database, Gauge, Home, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Database, Gauge, Home, Info, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
+import { HealthSignal } from "@/components/health/HealthSignal";
+import { lookupReputation, type ReputationResult } from "../actions";
 import {
   computeAgentPerformanceList,
   type AgentPerformanceResult,
@@ -29,6 +31,7 @@ import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
+  type RealEstateSoftware,
 } from "@/lib/demo/real-estate-estimate";
 import {
   computeVacationRentalImportReadiness,
@@ -40,6 +43,7 @@ import { DemoModulePreview } from "../DemoModulePreview";
 type FormState = Record<
   | "name"
   | "market"
+  | "software"
   | "monthlyGci"
   | "agentSplitPct"
   | "franchiseFeePct"
@@ -58,6 +62,7 @@ type FormState = Record<
 const INITIAL: FormState = {
   name: "",
   market: "",
+  software: "followupboss",
   monthlyGci: "",
   agentSplitPct: "",
   franchiseFeePct: "",
@@ -78,8 +83,29 @@ const HEALTH_TEXT: Record<Health, string> = {
   red: "text-health-red",
 };
 
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public rating, pulled live from Google. A brokerage's reputation drives agent recruiting and client trust — it compounds into deal flow.",
+  companydollar:
+    "Company Dollar is what the brokerage keeps from GCI after agent payouts, franchise fees, and referral fees. GCI is vanity; Company Dollar is what pays the bills.",
+  split:
+    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). The real-estate version of prime cost; retained Company Dollar around 25–30% is a practical target.",
+  breakeven:
+    "The Company Dollar you need each month just to cover brokerage OpEx. Below it the brokerage loses money; the cushion above funds profit and owner pay.",
+  runway:
+    "Cash oxygen = days of operating cash at your current burn. Commissions are lumpy, so runway is the buffer that keeps payroll and rent covered between closings.",
+  pipeline:
+    "Pipeline momentum = expected Company Dollar from pending deals, weighted by close probability — a rough 45–90 day forward read before closings land.",
+  pf:
+    "Starting set-asides taken from Company Dollar (not GCI) — Profit, Owner Pay, and Tax — so profit is reserved first, not whatever is left.",
+} as const;
+
 const inputCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+const selectCls =
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text outline-none focus:border-copper-soft";
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -90,6 +116,7 @@ function buildInputs(f: FormState): RealEstateEstimateInputs {
   return {
     name: f.name.trim(),
     market: f.market.trim(),
+    software: (f.software as RealEstateSoftware) || "followupboss",
     monthlyGci: num(f.monthlyGci),
     agentSplitPct: num(f.agentSplitPct) || 70,
     franchiseFeePct: num(f.franchiseFeePct),
@@ -109,12 +136,38 @@ export function RealEstateEstimator() {
   const [f, setF] = useState<FormState>(INITIAL);
   const [view, setView] = useState<"form" | "results">("form");
   const [error, setError] = useState<string | null>(null);
+  const [aura, setAura] = useState<ReputationResult | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
 
   const inputs = useMemo(() => buildInputs(f), [f]);
   const result = useMemo(() => (view === "results" ? computeRealEstateEstimate(inputs) : null), [inputs, view]);
+
+  // Prefill from a shared link a consultant sends, e.g.
+  //   /demo/real-estate?name=...&monthlyGci=120000&agentSplitPct=70
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (![...sp.keys()].length) return;
+    const keys: (keyof FormState)[] = [
+      "name", "market", "software", "monthlyGci", "agentSplitPct", "franchiseFeePct", "referralFeePct",
+      "monthlyOpex", "currentCash", "pendingDeals", "avgSalePrice", "avgCommissionPct", "expectedCloseRatePct",
+      "avgBrokerageSharePct", "daysToClose",
+    ];
+    const next: Partial<FormState> = {};
+    for (const k of keys) { const v = sp.get(k); if (v != null) next[k] = v; }
+    if (!Object.keys(next).length) return;
+    const seeded = { ...INITIAL, ...next } as FormState;
+    setF(seeded);
+    const inp = buildInputs(seeded);
+    if (inp.monthlyGci > 0 && inp.monthlyOpex > 0) {
+      setView("results");
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,10 +176,12 @@ export function RealEstateEstimator() {
     if (next.monthlyOpex <= 0) return setError("Add monthly brokerage operating expenses.");
     setError(null);
     setView("results");
+    setAura(null);
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
   }
 
   if (view === "results" && result) {
-    return <Results f={f} r={result} onEdit={() => setView("form")} />;
+    return <Results f={f} r={result} aura={aura} auraPending={pending} onEdit={() => setView("form")} />;
   }
 
   return (
@@ -142,6 +197,18 @@ export function RealEstateEstimator() {
         </Field>
         <Field label="Market">
           <input className={inputCls} placeholder="York, PA" value={f.market} onChange={upd("market")} />
+        </Field>
+        <Field label="CRM / back office" hint="Tells the demo what would light this up live">
+          <select className={selectCls} value={f.software} onChange={upd("software")}>
+            <option value="followupboss">Follow Up Boss</option>
+            <option value="boldtrail">BoldTrail / kvCORE</option>
+            <option value="sierra">Sierra Interactive</option>
+            <option value="lofty">Lofty (Chime)</option>
+            <option value="brokermint">Brokermint</option>
+            <option value="quickbooks">QuickBooks</option>
+            <option value="spreadsheet">Spreadsheet / none</option>
+            <option value="other">Other</option>
+          </select>
         </Field>
       </fieldset>
 
@@ -214,7 +281,7 @@ export function RealEstateEstimator() {
   );
 }
 
-function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; onEdit: () => void }) {
+function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEstateEstimateResult; aura: ReputationResult | null; auraPending: boolean; onEdit: () => void }) {
   const agentRows = computeAgentPerformanceList([
     {
       name: "Top producer near cap",
@@ -346,15 +413,15 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Brokerage heartbeat estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your brokerage"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your brokerage"}</h2>
           {f.market && <div className="text-sm text-muted">{f.market}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]">
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text">
           <ArrowLeft size={14} /> Adjust numbers
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-[#CFD2CC]">
+      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-ink-text-soft">
         GCI is not the operating base. This estimate treats agent payouts, franchise fees, and referral fees as pass-through pressure,
         then runs Profit First and break-even from Company Dollar.
       </div>
@@ -362,6 +429,7 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <SetupLeversPanel />
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ReputationTile aura={aura} pending={auraPending} name={f.name} />
         <CompanyDollarTile r={r} />
         <SplitPressureTile r={r} />
         <BreakEvenTile r={r} />
@@ -376,10 +444,14 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
       <PropertyPortfolioPreview portfolio={propertyPortfolio} />
       <ImportReadinessPreview readiness={importReadiness} />
 
+      <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
+        Source pipe: <span className="text-ink-text">{r.softwareLabel}</span>. {r.softwareNote}
+      </div>
+
       <DemoModulePreview businessType="REAL_ESTATE_BROKERAGE" />
 
       <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
-        <div className="font-display text-xl text-[#E6E8E4]">Paid add-on lanes</div>
+        <div className="font-display text-xl text-ink-text">Paid add-on lanes</div>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <AddOn title="Agent Performance" text="Company Dollar yield, cap pressure, pipeline, close velocity, and coaching flags." />
           <AddOn title="Market Intelligence" text="MLS velocity, DOM, price drops, rates, showing demand, and local market Aura." />
@@ -393,13 +465,24 @@ function Results({ f, r, onEdit }: { f: FormState; r: RealEstateEstimateResult; 
   );
 }
 
-function Tile({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Tile({ title, icon, explainer, children }: { title: string; icon: React.ReactNode; explainer?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-        {icon} {title}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+          {icon} {title}
+        </div>
+        {explainer && (
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+            <Info size={13} />
+          </button>
+        )}
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
+      )}
     </div>
   );
 }
@@ -408,7 +491,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -436,7 +519,7 @@ function SetupLeversPanel() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-2xl">
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">What you can manipulate</div>
-          <h3 className="mt-1 font-display text-xl text-[#E6E8E4]">Setup levers change the dashboard outcomes.</h3>
+          <h3 className="mt-1 font-display text-xl text-ink-text">Setup levers change the dashboard outcomes.</h3>
           <p className="mt-1 text-xs leading-relaxed text-muted">
             During setup, a brokerage should be able to edit the agent economics and operating assumptions below. The dashboard then turns those choices into the color-coded outcomes.
           </p>
@@ -456,7 +539,7 @@ function SetupLeversPanel() {
 function LeverList({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="rounded-lg border border-line bg-ink/50 p-3">
-      <div className="text-sm text-[#E6E8E4]">{title}</div>
+      <div className="text-sm text-ink-text">{title}</div>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {items.map((item) => (
           <span key={item} className="rounded-full border border-line px-2 py-1 text-[11px] text-muted">
@@ -477,13 +560,44 @@ function WhatMovesThis({ items }: { items: string[] }) {
   );
 }
 
+function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
+  return (
+    <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
+      {pending && <div className="text-sm text-muted">Looking up {name || "your brokerage"} on Google…</div>}
+      {!pending && aura?.found && (
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
+            <Stars rating={aura.rating ?? 0} />
+          </div>
+          <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
+          {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` · ${aura.matchedAddress}` : ""}</div>}
+        </div>
+      )}
+      {!pending && aura && !aura.found && <div className="text-sm text-muted">We couldn&apos;t auto-match a Google listing. Market Aura below reads demand and intent; the full account adds review sources.</div>}
+      {!pending && !aura && <div className="text-sm text-muted">Add a brokerage name above to try a live Google rating match. Market Aura below reads demand even without it.</div>}
+    </Tile>
+  );
+}
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={16} className={i <= Math.round(rating) ? "text-copper-soft" : "text-line"} fill={i <= Math.round(rating) ? "#D9A35E" : "none"} />
+      ))}
+    </span>
+  );
+}
+
 function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Company Dollar" icon={<Building2 size={12} className="text-copper-soft" />}>
+    <Tile title="Company Dollar" icon={<Building2 size={12} className="text-copper-soft" />} explainer={EXPLAIN.companydollar}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.companyDollarHealth]}>{money(r.companyDollar)}</span>
         <span className="text-sm text-muted">/ month retained</span>
       </div>
+      <HealthSignal status={r.companyDollarHealth} label={word(r.companyDollarHealth, "Healthy", "Thin", "Low")} detail={`${pct(r.companyDollarPct)} of GCI retained · target ~25–30%`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Closed GCI" value={money(r.monthlyGci)} />
         <Stat label="Retained share" value={pct(r.companyDollarPct)} tone={r.companyDollarHealth} />
@@ -496,11 +610,12 @@ function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
 
 function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Split Pressure" icon={<Gauge size={12} className="text-copper-soft" />}>
+    <Tile title="Split Pressure" icon={<Gauge size={12} className="text-copper-soft" />} explainer={EXPLAIN.split}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.splitPressureHealth]}>{pct(r.splitPressurePct)}</span>
         <span className="text-sm text-muted">of GCI passes through</span>
       </div>
+      <HealthSignal status={r.splitPressureHealth} label={word(r.splitPressureHealth, "Lean", "Watch", "Heavy")} detail={`${pct(100 - r.splitPressurePct, 0)} kept as Company Dollar`} className="mt-2" />
       <div className="mt-3 grid grid-cols-3 gap-3">
         <Stat label="Agents" value={money(r.agentPayouts)} />
         <Stat label="Franchise" value={money(r.franchiseFees)} />
@@ -514,11 +629,12 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
 
 function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />}>
+    <Tile title="Break-even" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
       <div className="flex items-baseline gap-2">
-        <span className="tnum text-3xl text-[#E6E8E4]">{money(r.breakEvenCompanyDollar)}</span>
+        <span className="tnum text-3xl text-ink-text">{money(r.breakEvenCompanyDollar)}</span>
         <span className="text-sm text-muted">Company Dollar needed</span>
       </div>
+      <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={r.breakEvenCushion >= 0 ? `${money(r.breakEvenCushion)} over OpEx` : `${money(Math.abs(r.breakEvenCushion))} short of OpEx`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="GCI needed" value={r.gciNeededToBreakEven != null ? money(r.gciNeededToBreakEven) : "-"} />
         <Stat
@@ -535,13 +651,16 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
 
 function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Cash Oxygen" icon={<Wallet size={12} className="text-copper-soft" />}>
+    <Tile title="Cash Oxygen" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.runway}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.cashRunwayHealth]}>
           {r.cashRunwayDays != null ? Math.round(r.cashRunwayDays).toLocaleString() : "-"}
         </span>
         <span className="text-sm text-muted">days runway</span>
       </div>
+      {r.cashRunwayDays != null && (
+        <HealthSignal status={r.cashRunwayHealth} label={word(r.cashRunwayHealth, "Comfortable", "Watch", "Tight")} detail="60+ days is a healthy buffer" className="mt-2" />
+      )}
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Operating cash" value={money(r.currentCash)} />
         <Stat label="Monthly OpEx" value={money(r.monthlyOpex)} />
@@ -553,11 +672,12 @@ function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
 
 function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Pipeline Momentum" icon={<TrendingUp size={12} className="text-copper-soft" />}>
+    <Tile title="Pipeline Momentum" icon={<TrendingUp size={12} className="text-copper-soft" />} explainer={EXPLAIN.pipeline}>
       <div className="flex items-baseline gap-2">
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.pipelineHealth]}>{money(r.expectedPipelineCompanyDollar)}</span>
         <span className="text-sm text-muted">weighted Company Dollar</span>
       </div>
+      <HealthSignal status={r.pipelineHealth} label={word(r.pipelineHealth, "Ahead", "Building", "Thin")} detail={`${r.pipelineMonths.toFixed(1)} mo of forward coverage`} className="mt-2" />
       <div className="mt-3 grid grid-cols-2 gap-3">
         <Stat label="Weighted GCI" value={money(r.weightedPipelineGci)} />
         <Stat label="Pipeline span" value={`${r.pipelineMonths.toFixed(1)} mo`} />
@@ -570,12 +690,12 @@ function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
 
 function ProfitFirstTile({ r }: { r: RealEstateEstimateResult }) {
   return (
-    <Tile title="Profit First" icon={<PiggyBank size={12} className="text-copper-soft" />}>
+    <Tile title="Profit First" icon={<PiggyBank size={12} className="text-copper-soft" />} explainer={EXPLAIN.pf}>
       <p className="text-[11px] text-muted">Starting set-asides calculated from Company Dollar, not GCI:</p>
       <div className="mt-3 space-y-2">
         {r.pf.map((line) => (
           <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-            <span className="text-sm text-[#E6E8E4]">
+            <span className="text-sm text-ink-text">
               {line.label} <span className="text-muted">({line.pct}%)</span>
             </span>
             <span className="tnum text-base text-copper-soft">{money(line.amount)}</span>
@@ -593,7 +713,7 @@ function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Agent Performance</h3>
+          <h3 className="font-display text-xl text-ink-text">Agent Performance</h3>
         </div>
         <div className="text-[11px] text-muted">Sample rows generated from the brokerage estimate</div>
       </div>
@@ -614,7 +734,7 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
     <div className="rounded-lg border border-line bg-ink/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-sm text-[#E6E8E4]">{row.name}</div>
+          <div className="text-sm text-ink-text">{row.name}</div>
           <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[row.overallHealth]}>{row.note}</div>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(row.overallHealth)}>
@@ -638,7 +758,7 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Property Heartbeat</h3>
+          <h3 className="font-display text-xl text-ink-text">Property Heartbeat</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(property.overallHealth)}>
           {property.overallHealth === "green" ? "healthy property" : property.overallHealth === "yellow" ? "watch property" : "property pressure"}
@@ -647,7 +767,7 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Home size={14} className="text-copper-soft" /> {property.name}
             </div>
             <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[property.overallHealth]}>{property.note}</div>
@@ -686,7 +806,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Portfolio view</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Rental Property Rollup</h3>
+          <h3 className="font-display text-xl text-ink-text">Rental Property Rollup</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(portfolio.overallHealth)}>
           {portfolio.pressureCount > 0 ? `${portfolio.pressureCount} needs attention` : "portfolio healthy"}
@@ -705,7 +825,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
           {portfolio.properties.map((property) => (
             <div key={property.name} className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
               <div>
-                <div className="text-sm text-[#E6E8E4]">{property.name}</div>
+                <div className="text-sm text-ink-text">{property.name}</div>
                 <div className={"text-[11px] " + HEALTH_TEXT[property.overallHealth]}>
                   {portfolio.topPressure?.name === property.name ? "highest pressure" : "property heartbeat"}
                 </div>
@@ -732,7 +852,7 @@ function PropertyActionQueue({ items }: { items: PropertyActionItem[] }) {
           <div key={`${item.propertyName}-${item.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <div className="text-sm text-[#E6E8E4]">{item.title}</div>
+                <div className="text-sm text-ink-text">{item.title}</div>
                 <div className="text-[11px] text-muted">{item.propertyName}</div>
               </div>
               <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(item.priority)}>
@@ -753,7 +873,7 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Market Intelligence</h3>
+          <h3 className="font-display text-xl text-ink-text">Market Intelligence</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(market.marketAuraHealth)}>
           {market.marketAuraHealth === "green" ? "market tailwind" : market.marketAuraHealth === "yellow" ? "mixed market" : "market pressure"}
@@ -762,12 +882,12 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Search size={14} className="text-copper-soft" /> {market.market}
             </div>
             <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[market.marketAuraHealth]}>{market.note}</div>
           </div>
-          <div className="tnum text-3xl text-[#E6E8E4]">{Math.round(market.marketAuraScore)}</div>
+          <div className="tnum text-3xl text-ink-text">{Math.round(market.marketAuraScore)}</div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           <ScoreStat label="Contract velocity" value={market.contractVelocityScore} />
@@ -791,7 +911,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Pilot import preview</div>
-          <h3 className="font-display text-xl text-[#E6E8E4]">Vacation Rental Import Readiness</h3>
+          <h3 className="font-display text-xl text-ink-text">Vacation Rental Import Readiness</h3>
         </div>
         <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(readiness.overallHealth)}>
           {Math.round(readiness.overallCoveragePct)}% mapped
@@ -800,7 +920,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <div className="flex items-center gap-1.5 text-sm text-[#E6E8E4]">
+            <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Database size={14} className="text-copper-soft" /> Escapia-like PMS foundation
             </div>
             <div className="mt-0.5 text-[11px] text-muted">
@@ -816,7 +936,7 @@ function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImport
           {readiness.layers.map((layer) => (
             <div key={layer.key} className="rounded-lg border border-line bg-surface/80 p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="text-sm text-[#E6E8E4]">{layer.label}</div>
+                <div className="text-sm text-ink-text">{layer.label}</div>
                 <span className={"tnum text-sm " + HEALTH_TEXT[layer.health]}>{Math.round(layer.coveragePct)}%</span>
               </div>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{layer.note}</p>
@@ -846,7 +966,7 @@ function badgeCls(health: Health): string {
 function AddOn({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-lg border border-line bg-ink/50 p-3">
-      <div className="text-sm text-[#E6E8E4]">{title}</div>
+      <div className="text-sm text-ink-text">{title}</div>
       <p className="mt-1 text-[11px] leading-relaxed text-muted">{text}</p>
     </div>
   );
@@ -856,7 +976,7 @@ function Legend({ n, title, hint }: { n: string; title: string; hint: string }) 
   return (
     <div className="flex items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">- {hint}</span>
     </div>
   );
@@ -868,18 +988,21 @@ function Field({
   required,
   prefix,
   suffix,
+  hint,
 }: {
   label: string;
   children: React.ReactNode;
   required?: boolean;
   prefix?: string;
   suffix?: string;
+  hint?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] text-muted">
         {label}
         {required && <span className="text-copper-soft"> *</span>}
+        {hint && <span className="block text-[10px] text-muted/80">{hint}</span>}
       </span>
       <span className="relative block">
         {prefix && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">{prefix}</span>}

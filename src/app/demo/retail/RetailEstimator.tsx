@@ -1,23 +1,28 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Barcode, Gauge, PiggyBank, ShoppingBag, Wallet } from "lucide-react";
+import { ArrowLeft, Barcode, Gauge, Info, Lock, PiggyBank, ShoppingBag, Star, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import type { Health } from "@/lib/demo/estimate";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import {
   computeRetailEstimate,
+  RETAIL_LOCKED_TILES,
   type RetailEstimateInputs,
   type RetailEstimateResult,
   type RetailPosProvider,
+  type RetailSeason,
 } from "@/lib/demo/retail-estimate";
+import { lookupReputation, type ReputationResult } from "../actions";
 import { DemoModulePreview } from "../DemoModulePreview";
 
 type FormState = Record<
   | "name"
   | "market"
   | "posProvider"
+  | "season"
   | "weeklySales"
   | "weeklyInventoryPurchases"
   | "weeklyPayroll"
@@ -37,6 +42,7 @@ const INITIAL: FormState = {
   name: "",
   market: "",
   posProvider: "square",
+  season: "typical",
   weeklySales: "",
   weeklyInventoryPurchases: "",
   weeklyPayroll: "",
@@ -63,13 +69,30 @@ const POS_OPTIONS: { value: RetailPosProvider; label: string }[] = [
 ];
 
 const inputCls =
-  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-[#E6E8E4] placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
+  "w-full rounded-lg border border-line bg-ink px-3 py-2.5 text-ink-text placeholder:text-muted/50 outline-none focus:border-copper-soft tnum";
 
 const HEALTH_TEXT: Record<Health, string> = {
   green: "text-health-green",
   yellow: "text-health-yellow",
   red: "text-health-red",
 };
+
+const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
+
+const EXPLAIN = {
+  aura:
+    "Your public rating, pulled live from Google. Reviews drive foot traffic and online conversion — a strong rating is cheaper than ads.",
+  margin:
+    "Gross margin = what is left of each sales dollar after product cost, returns, and markdowns. It is the retailer's core number; thin margin means volume cannot save you. Healthy specialty retail often runs 45% or better.",
+  breakeven:
+    "The weekly sales you need just to cover product cost, payroll, and the fixed bills you entered. Below it you lose money; the cushion above funds profit and owner pay.",
+  inventory:
+    "Weeks of inventory on hand = current stock value divided by weekly purchases. Too high ties up cash and invites markdowns; too low risks stockouts. About 8–12 weeks is a common comfort zone.",
+  pos:
+    "What your POS choice means for the live dashboard — which sales, tender, refund, and inventory data would flow in once connected.",
+  pf:
+    "A starting split to set aside before you spend — Profit, Owner Pay, and Tax — so profit is not 'whatever is left.'",
+} as const;
 
 const num = (s: string): number => {
   const v = parseFloat(s.replace(/[^0-9.\-]/g, ""));
@@ -86,6 +109,7 @@ function buildInputs(f: FormState): RetailEstimateInputs {
     name: f.name.trim(),
     market: f.market.trim(),
     posProvider: f.posProvider as RetailPosProvider,
+    season: (f.season as RetailSeason) || "typical",
     weeklySales: num(f.weeklySales),
     weeklyInventoryPurchases: num(f.weeklyInventoryPurchases),
     weeklyPayroll: num(f.weeklyPayroll),
@@ -106,11 +130,37 @@ export function RetailEstimator() {
   const [f, setF] = useState<FormState>(INITIAL);
   const [view, setView] = useState<"form" | "results">("form");
   const [error, setError] = useState<string | null>(null);
+  const [aura, setAura] = useState<ReputationResult | null>(null);
+  const [pending, startTransition] = useTransition();
 
   const upd = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((prev) => ({ ...prev, [k]: e.target.value }));
   const inputs = useMemo(() => buildInputs(f), [f]);
   const result = useMemo(() => (view === "results" ? computeRetailEstimate(inputs) : null), [inputs, view]);
+
+  // Prefill from a shared link a consultant sends, e.g.
+  //   /demo/retail?name=...&weeklySales=52000&weeklyPayroll=9000
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    if (![...sp.keys()].length) return;
+    const keys: (keyof FormState)[] = [
+      "name", "market", "posProvider", "season", "weeklySales", "weeklyInventoryPurchases", "weeklyPayroll",
+      "weeklyReturnsMarkdowns", "monthlyRent", "monthlyUtilities", "monthlyInsurance", "monthlySoftware",
+      "monthlyDebt", "monthlyOther", "currentInventoryValue", "ecommerceSharePct",
+    ];
+    const next: Partial<FormState> = {};
+    for (const k of keys) { const v = sp.get(k); if (v != null) next[k] = v; }
+    if (!Object.keys(next).length) return;
+    const seeded = { ...INITIAL, ...next } as FormState;
+    setF(seeded);
+    const inp = buildInputs(seeded);
+    if (inp.weeklySales > 0) {
+      setView("results");
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -118,10 +168,12 @@ export function RetailEstimator() {
     if (next.weeklySales <= 0) return setError("Add average weekly sales.");
     setError(null);
     setView("results");
+    setAura(null);
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
   }
 
   if (view === "results" && result) {
-    return <Results f={f} r={result} onEdit={() => setView("form")} />;
+    return <Results f={f} r={result} aura={aura} auraPending={pending} onEdit={() => setView("form")} />;
   }
 
   return (
@@ -145,6 +197,13 @@ export function RetailEstimator() {
                 {option.label}
               </option>
             ))}
+          </select>
+        </Field>
+        <Field label="This month is…" hint="Labels the read; we don't scale your numbers">
+          <select className={inputCls} value={f.season} onChange={upd("season")}>
+            <option value="typical">Typical</option>
+            <option value="peak">Peak (holiday / busy)</option>
+            <option value="slow">Slow season</option>
           </select>
         </Field>
       </fieldset>
@@ -221,39 +280,63 @@ export function RetailEstimator() {
   );
 }
 
-function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEdit: () => void }) {
+function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailEstimateResult; aura: ReputationResult | null; auraPending: boolean; onEdit: () => void }) {
+  const seasonNote = r.season === "peak" ? "You marked this a peak month — annual margins will run lower." : r.season === "slow" ? "You marked this a slow month — annual margins will run higher." : null;
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Retail heartbeat estimate</div>
-          <h2 className="font-display text-3xl text-[#E6E8E4]">{f.name || "Your retail business"}</h2>
+          <h2 className="font-display text-3xl text-ink-text">{f.name || "Your retail business"}</h2>
           {f.market && <div className="text-sm text-muted">{f.market}</div>}
         </div>
-        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-[#E6E8E4]">
+        <button onClick={onEdit} className="flex items-center gap-1.5 text-sm text-muted hover:text-ink-text">
           <ArrowLeft size={14} /> Adjust numbers
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-[#CFD2CC]">
+      <div className="mt-4 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-[13px] leading-relaxed text-ink-text-soft">
         Retail pressure starts with product cost, returns/markdowns, payroll, and fixed bills. POS and inventory data turn this from a rough read into a live dashboard.
+        {seasonNote && <span className="mt-1 block text-muted">{seasonNote}</span>}
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Tile title="Gross Margin" icon={<Gauge size={12} className="text-copper-soft" />}>
+        <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
+          {auraPending && <div className="text-sm text-muted">Looking up {f.name || "your store"} on Google…</div>}
+          {!auraPending && aura?.found && (
+            <div>
+              <div className="flex items-baseline gap-2">
+                <span className="tnum text-4xl text-ink-text">{aura.rating?.toFixed(1)}</span>
+                <Stars rating={aura.rating ?? 0} />
+              </div>
+              <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
+              {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` · ${aura.matchedAddress}` : ""}</div>}
+            </div>
+          )}
+          {!auraPending && aura && !aura.found && <div className="text-sm text-muted">We couldn&apos;t auto-match a Google listing. In the full account, review sources fill this alongside the money read.</div>}
+          {!auraPending && !aura && <div className="text-sm text-muted">Add a store name above to try a live Google rating match.</div>}
+        </Tile>
+
+        <Tile title="Gross Margin" icon={<Gauge size={12} className="text-copper-soft" />} explainer={EXPLAIN.margin}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.marginHealth]}>{pct(r.grossMarginPct)}</span>
             <span className="text-sm text-muted">after COGS, returns, markdowns</span>
           </div>
+          <HealthSignal
+            status={r.marginHealth}
+            label={word(r.marginHealth, "Healthy", "Thin", "Low")}
+            detail={`${Math.abs(r.grossMarginPct - 45).toFixed(0)} pts ${r.grossMarginPct >= 45 ? "above" : "below"} ~45% target`}
+            className="mt-2"
+          />
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Stat label="Inventory / COGS" value={money(r.monthlyInventoryPurchases)} />
             <Stat label="Returns / markdowns" value={money(r.monthlyReturnsMarkdowns)} />
           </div>
         </Tile>
 
-        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />}>
+        <Tile title="Break-even Number" icon={<Wallet size={12} className="text-copper-soft" />} explainer={EXPLAIN.breakeven}>
           <div className="flex items-baseline gap-2">
-            <span className="tnum text-4xl text-[#E6E8E4]">{money(r.weeklyBreakEven)}</span>
+            <span className="tnum text-4xl text-ink-text">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-3">
@@ -266,32 +349,40 @@ function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEd
           </div>
         </Tile>
 
-        <Tile title="Inventory Position" icon={<Barcode size={12} className="text-copper-soft" />}>
+        <Tile title="Inventory Position" icon={<Barcode size={12} className="text-copper-soft" />} explainer={EXPLAIN.inventory}>
           <div className="flex items-baseline gap-2">
             <span className={"tnum text-4xl " + HEALTH_TEXT[r.inventoryHealth]}>
               {r.inventoryWeeksOnHand != null ? r.inventoryWeeksOnHand.toFixed(1) : "-"}
             </span>
             <span className="text-sm text-muted">weeks on hand</span>
           </div>
+          {r.inventoryWeeksOnHand != null && (
+            <HealthSignal
+              status={r.inventoryHealth}
+              label={word(r.inventoryHealth, "Balanced", "Watch", "Heavy")}
+              detail="~8–12 weeks is the comfort zone"
+              className="mt-2"
+            />
+          )}
           <div className="mt-3 grid grid-cols-2 gap-3">
             <Stat label="Payroll load" value={pct(r.payrollPct)} tone={r.payrollHealth} />
             <Stat label="Online share" value={r.ecommerceSharePct != null ? pct(r.ecommerceSharePct, 0) : "-"} />
           </div>
         </Tile>
 
-        <Tile title="POS Readiness" icon={<ShoppingBag size={12} className="text-copper-soft" />}>
-          <div className="tnum text-3xl text-[#E6E8E4]">{r.posLabel}</div>
+        <Tile title="POS Readiness" icon={<ShoppingBag size={12} className="text-copper-soft" />} explainer={EXPLAIN.pos}>
+          <div className="tnum text-3xl text-ink-text">{r.posLabel}</div>
           <p className="mt-3 text-[12px] leading-relaxed text-muted">{r.posNote}</p>
           <p className="mt-3 text-[11px] leading-relaxed text-copper-soft">
             First import: sales, tenders, refunds, item/category sales, taxes, and inventory where available.
           </p>
         </Tile>
 
-        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />}>
+        <Tile title="Profit First Set-asides" icon={<PiggyBank size={12} className="text-copper-soft" />} explainer={EXPLAIN.pf}>
           <div className="space-y-2">
             {r.pf.map((line) => (
               <div key={line.key} className="flex items-center justify-between rounded-lg border border-line bg-ink/50 px-3 py-2">
-                <span className="text-sm text-[#E6E8E4]">
+                <span className="text-sm text-ink-text">
                   {line.label} <span className="text-muted">({line.pct}%)</span>
                 </span>
                 <span className="tnum text-base text-copper-soft">{money(line.amount)}</span>
@@ -299,6 +390,18 @@ function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEd
             ))}
           </div>
         </Tile>
+      </div>
+
+      <div className="mt-8">
+        <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {RETAIL_LOCKED_TILES.map((t) => (
+            <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
+              <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>
+              <div className="mt-1 text-[11px] text-muted/80">needs {t.needs}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <DemoModulePreview businessType="RETAIL" />
@@ -312,13 +415,34 @@ function Results({ f, r, onEdit }: { f: FormState; r: RetailEstimateResult; onEd
   );
 }
 
-function Tile({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Stars({ rating }: { rating: number }) {
+  return (
+    <span className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star key={i} size={16} className={i <= Math.round(rating) ? "text-copper-soft" : "text-line"} fill={i <= Math.round(rating) ? "#D9A35E" : "none"} />
+      ))}
+    </span>
+  );
+}
+
+function Tile({ title, icon, explainer, children }: { title: string; icon: React.ReactNode; explainer?: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
-        {icon} {title}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+          {icon} {title}
+        </div>
+        {explainer && (
+          <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label={`What ${title} means`} className="rounded-full text-muted hover:text-copper-soft focus-visible:text-copper-soft focus-visible:outline-none">
+            <Info size={13} />
+          </button>
+        )}
       </div>
       <div className="mt-3">{children}</div>
+      {open && explainer && (
+        <div className="mt-3 rounded-md border border-line bg-ink/60 px-3 py-2 text-[11px] leading-relaxed text-ink-text-soft">{explainer}</div>
+      )}
     </div>
   );
 }
@@ -327,7 +451,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: Hea
   return (
     <div>
       <div className="text-[11px] text-muted">{label}</div>
-      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-[#E6E8E4]")}>{value}</div>
+      <div className={"tnum text-xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
     </div>
   );
 }
@@ -336,7 +460,7 @@ function Legend({ n, title, hint }: { n: string; title: string; hint: string }) 
   return (
     <div className="flex items-baseline gap-2">
       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-copper-dim/40 text-[11px] text-copper-soft">{n}</span>
-      <span className="text-sm font-medium text-[#E6E8E4]">{title}</span>
+      <span className="text-sm font-medium text-ink-text">{title}</span>
       <span className="text-[11px] text-muted">- {hint}</span>
     </div>
   );
@@ -348,18 +472,21 @@ function Field({
   required,
   prefix,
   suffix,
+  hint,
 }: {
   label: string;
   children: React.ReactNode;
   required?: boolean;
   prefix?: string;
   suffix?: string;
+  hint?: string;
 }) {
   return (
     <label className="block">
       <span className="mb-1 block text-[12px] text-muted">
         {label}
         {required && <span className="text-copper-soft"> *</span>}
+        {hint && <span className="block text-[10px] text-muted/80">{hint}</span>}
       </span>
       <span className="relative block">
         {prefix && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted">{prefix}</span>}

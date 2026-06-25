@@ -5,6 +5,7 @@ import { Building2, ChevronDown, PlugZap, Settings2 } from "lucide-react";
 import type { BusinessType } from "@prisma/client";
 import type { DashboardData } from "@/lib/dashboard/data";
 import { INDUSTRY_TEMPLATES, industryTemplateFor } from "@/lib/industry-templates";
+import { EnterNumbersButton } from "@/components/demo/EnterNumbersButton";
 
 const TEMPLATE_OPTIONS = [
   INDUSTRY_TEMPLATES.RESTAURANT,
@@ -20,6 +21,8 @@ function demoEstimateFor(type: BusinessType): { href: string; label: string } | 
   if (type === "SERVICE") return { href: "/demo/service", label: "Enter service numbers" };
   if (type === "REAL_ESTATE_BROKERAGE") return { href: "/demo/real-estate", label: "Enter brokerage numbers" };
   if (type === "RETAIL") return { href: "/demo/retail", label: "Enter retail numbers" };
+  if (type === "VACATION_RENTAL") return { href: "/demo/vacation-rental", label: "Enter rental numbers" };
+  if (type === "CONTRACTOR") return { href: "/demo/contractor", label: "Enter contractor numbers" };
   return null;
 }
 
@@ -70,7 +73,7 @@ export function SetupOverviewCard({
           <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Building2 size={13} /> {setupLabel}
           </p>
-          <h2 className="mt-1 font-display text-xl text-copper-soft">{template.label}</h2>
+          <h2 className="mt-1 font-display text-xl text-ink-text">{template.label}</h2>
           <p className="mt-1 max-w-4xl text-xs leading-relaxed text-muted">{description}</p>
         </div>
 
@@ -82,7 +85,7 @@ export function SetupOverviewCard({
             <select
               value={previewType}
               onChange={(e) => onPreviewTypeChange(e.target.value as BusinessType)}
-              className="w-full rounded-md border border-line bg-surface px-2 py-2 text-sm text-copper-soft outline-none focus:border-copper-dim"
+              className="w-full rounded-md border border-line bg-surface px-2 py-2 text-sm text-copper-soft outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             >
               {TEMPLATE_OPTIONS.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -108,12 +111,11 @@ export function SetupOverviewCard({
             </>
           )}
           {demoMode && demoEstimate && (
-            <Link
+            <EnterNumbersButton
               href={demoEstimate.href}
-              className="inline-flex items-center justify-center rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs font-medium text-copper-soft hover:bg-copper/20"
-            >
-              {demoEstimate.label}
-            </Link>
+              label={demoEstimate.label}
+              helper="See this dashboard with your own figures"
+            />
           )}
           {demoMode && !demoEstimate && (
             <span className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2 text-xs text-muted">
@@ -132,16 +134,16 @@ export function SetupOverviewCard({
       <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{minimumLabel}</p>
-          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-[#E6E8E4]">{minimumText}</p>
+          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-ink-text">{minimumText}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{progressLabel}</p>
-          <p className="mt-1 text-sm text-[#E6E8E4]">{statusLine}</p>
+          <p className="mt-1 text-sm text-ink-text">{statusLine}</p>
           <p className="mt-0.5 text-[11px] text-muted">{progressSubtext}</p>
         </div>
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">{missingLabel}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-[#E6E8E4]">
+          <p className="mt-1 line-clamp-2 text-sm text-ink-text">
             {missingText}
           </p>
           {!demoMode && setup.missingRequired.length > 3 && <p className="mt-0.5 text-[11px] text-muted">+{setup.missingRequired.length - 3} more</p>}

@@ -8,6 +8,7 @@ import { demoPrisma } from "@/lib/demo/demo-prisma";
 import { loadDashboardData } from "@/lib/dashboard/data";
 import { buildDemoTourData } from "@/lib/demo/tour-data";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import { EnterNumbersButton } from "@/components/demo/EnterNumbersButton";
 import { industryTemplateFor } from "@/lib/industry-templates";
 
 const ROUTES: Record<string, BusinessType> = {
@@ -24,6 +25,8 @@ const ESTIMATE_HREF: Partial<Record<BusinessType, string>> = {
   SERVICE: "/demo/service",
   REAL_ESTATE_BROKERAGE: "/demo/real-estate",
   RETAIL: "/demo/retail",
+  VACATION_RENTAL: "/demo/vacation-rental",
+  CONTRACTOR: "/demo/contractor",
 };
 
 export const dynamic = "force-dynamic";
@@ -54,7 +57,7 @@ export default async function DemoTemplateTourPage({ params }: { params: { type:
     <div>
       <div className="border-b border-copper-dim/40 bg-copper-dim/10">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-2.5">
-          <p className="text-[13px] text-[#CFD2CC]">
+          <p className="text-[13px] text-ink-text-soft">
             <span className="font-medium text-copper-soft">{template.label} tour</span> - a fictional company with
             realistic sample numbers already loaded.
           </p>
@@ -62,11 +65,7 @@ export default async function DemoTemplateTourPage({ params }: { params: { type:
             <Link href="/demo/tour" className="rounded-md border border-line px-3 py-1.5 font-medium text-copper-soft hover:border-copper">
               Change business type
             </Link>
-            {estimateHref && (
-              <Link href={estimateHref} className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 font-medium text-copper-soft hover:bg-copper/20">
-                Enter your numbers
-              </Link>
-            )}
+            {estimateHref && <EnterNumbersButton href={estimateHref} />}
             <SignUpButton forceRedirectUrl="/onboarding">
               <button
                 type="button"

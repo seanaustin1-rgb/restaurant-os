@@ -33,7 +33,7 @@ export function AppHeader() {
             onClick={() => setOpen((o) => !o)}
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
-            className="rounded-md border border-line bg-surface p-1.5 text-[#E6E8E4] hover:border-copper-dim"
+            className="rounded-md border border-line bg-surface p-1.5 text-ink-text hover:border-copper-dim"
           >
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -59,7 +59,7 @@ export function AppHeader() {
                 onClick={() => setOpen(false)}
                 className={
                   "block rounded-md px-2 py-2.5 text-sm hover:bg-copper/10 " +
-                  (isActive(l.href) ? "text-copper-soft" : "text-[#E6E8E4]")
+                  (isActive(l.href) ? "text-copper-soft" : "text-ink-text")
                 }
               >
                 {l.label}

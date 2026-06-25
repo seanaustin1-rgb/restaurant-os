@@ -28,7 +28,7 @@ export default function ProfitFirstPage() {
 
       <section className="space-y-4">
         <p className="text-[11px] uppercase tracking-[0.24em] text-copper-soft">OutFront Data method</p>
-        <h1 className="font-display text-4xl text-[#E6E8E4]">Profit First, in plain English</h1>
+        <h1 className="font-display text-4xl text-ink-text">Profit First, in plain English</h1>
         <p className="max-w-3xl text-base leading-relaxed text-muted">
           Most businesses treat profit and owner pay as whatever is left over. Profit First reverses that. A healthy
           business protects profit, owner pay, and taxes first, then runs the company on the remaining operating cash.
@@ -65,7 +65,7 @@ export default function ProfitFirstPage() {
         <div className="flex items-start gap-3">
           <Landmark size={19} className="mt-1 shrink-0 text-copper-soft" />
           <div>
-            <h2 className="font-display text-xl text-[#E6E8E4]">The separate account idea</h2>
+            <h2 className="font-display text-xl text-ink-text">The separate account idea</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted">
               In a live setup, the owner can use separate bank accounts or sub-accounts so every deposit has a job.
               OutFront does not need to force every transfer on day one. It can show the virtual plan first, then help
@@ -73,7 +73,7 @@ export default function ProfitFirstPage() {
             </p>
             <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
               {accounts.map((account) => (
-                <div key={account} className="rounded-md border border-line bg-[#0B0F0D] px-3 py-2 text-sm text-[#E6E8E4]">
+                <div key={account} className="rounded-md border border-line bg-[#0B0F0D] px-3 py-2 text-sm text-ink-text">
                   {account}
                 </div>
               ))}
@@ -83,7 +83,7 @@ export default function ProfitFirstPage() {
       </section>
 
       <section className="rounded-lg border border-copper-dim/40 bg-copper/10 p-5">
-        <h2 className="font-display text-xl text-[#E6E8E4]">The benefit</h2>
+        <h2 className="font-display text-xl text-ink-text">The benefit</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
           The owner stops guessing. Taxes stop becoming accidental spending money. Profit is not postponed until some
           perfect future month. The company learns what it can truly afford, and the dashboard gives the owner a clear
@@ -93,7 +93,7 @@ export default function ProfitFirstPage() {
           <Link href="/demo/tour" className="rounded-md bg-copper px-4 py-2 text-sm font-medium text-ink hover:bg-copper-soft">
             Tour a sample dashboard
           </Link>
-          <Link href="/demo" className="rounded-md border border-line px-4 py-2 text-sm font-medium text-[#E6E8E4] hover:border-copper-dim">
+          <Link href="/demo" className="rounded-md border border-line px-4 py-2 text-sm font-medium text-ink-text hover:border-copper-dim">
             Try your numbers
           </Link>
         </div>
@@ -108,7 +108,7 @@ function InfoBlock({ icon, title, body }: { icon: React.ReactNode; title: string
       <div className="flex items-start gap-3">
         <span className="mt-1 text-copper-soft">{icon}</span>
         <div>
-          <h2 className="font-display text-lg text-[#E6E8E4]">{title}</h2>
+          <h2 className="font-display text-lg text-ink-text">{title}</h2>
           <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
         </div>
       </div>

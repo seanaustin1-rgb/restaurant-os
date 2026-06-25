@@ -48,7 +48,7 @@ function AnchorForm({
 
   return (
     <div className="rounded-lg border border-line bg-surface p-5">
-      <h2 className="text-sm text-[#E6E8E4]">Anchor your cash position</h2>
+      <h2 className="text-sm text-ink-text">Anchor your cash position</h2>
       <p className="mt-1 text-xs leading-relaxed text-muted">
         Runway needs one real number to start from: your bank balance on a known date — both are on
         any bank statement. Everything after that date is computed from imported transactions.
@@ -62,7 +62,7 @@ function AnchorForm({
             value={balance}
             onChange={(e) => setBalance(e.target.value)}
             placeholder="e.g. 48250.17"
-            className="mt-1 block w-40 rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper"
+            className="mt-1 block w-40 rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-ink-text outline-none focus:border-copper"
           />
         </label>
         <label className="block">
@@ -71,7 +71,7 @@ function AnchorForm({
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="mt-1 block rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper"
+            className="mt-1 block rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-ink-text outline-none focus:border-copper"
           />
         </label>
         <button
@@ -95,7 +95,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">
+      <div className="mb-1 text-ink-text">
         {d.date}
         {d.projected ? <span className="ml-1 text-muted">(projected)</span> : null}
       </div>

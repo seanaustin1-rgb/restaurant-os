@@ -9,6 +9,8 @@ const config: Config = {
         surface: "#141614", // card / panel surface
         line: "#232623", // hairline borders
         muted: "#8A8F89", // secondary text
+        "ink-text": "#E6E8E4", // primary off-white text on ink
+        "ink-text-soft": "#CFD2CC", // secondary off-white (explainer/banners)
         copper: {
           DEFAULT: "#C8873A",
           soft: "#D9A35E",

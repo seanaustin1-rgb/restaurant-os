@@ -41,7 +41,7 @@ export function GoLiveAssumptionsForm({ assumptions }: { assumptions: GoLiveAssu
     <section className="rounded-lg border border-line bg-surface px-4 py-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="flex items-center gap-1.5 font-display text-lg text-copper-soft">
+          <h2 className="flex items-center gap-1.5 font-display text-lg text-ink-text">
             <SlidersHorizontal size={16} /> Go-Live assumptions
           </h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted">
@@ -63,7 +63,7 @@ export function GoLiveAssumptionsForm({ assumptions }: { assumptions: GoLiveAssu
             value={floor}
             onChange={(e) => setFloor(e.target.value)}
             placeholder="Auto"
-            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper"
+            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-ink-text outline-none focus:border-copper"
           />
         </label>
         <label className="block">
@@ -75,7 +75,7 @@ export function GoLiveAssumptionsForm({ assumptions }: { assumptions: GoLiveAssu
             step="0.25"
             value={profitPct}
             onChange={(e) => setProfitPct(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper"
+            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-ink-text outline-none focus:border-copper"
           />
         </label>
         <label className="block">
@@ -87,7 +87,7 @@ export function GoLiveAssumptionsForm({ assumptions }: { assumptions: GoLiveAssu
             step="0.25"
             value={investorPct}
             onChange={(e) => setInvestorPct(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper"
+            className="mt-1 w-full rounded-md border border-line bg-transparent px-3 py-1.5 text-sm text-ink-text outline-none focus:border-copper"
           />
         </label>
       </div>

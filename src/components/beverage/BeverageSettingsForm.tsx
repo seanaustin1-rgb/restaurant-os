@@ -43,7 +43,7 @@ function Field({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="—"
-          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-[#E6E8E4] outline-none focus:border-copper-dim"
+          className="tnum w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
         />
         <span className="text-sm text-muted">%</span>
       </div>
@@ -86,7 +86,7 @@ export function BeverageSettingsForm({ initial }: { initial: BeverageSettings })
       )}
 
       <div className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="text-sm font-medium text-[#E6E8E4]">Sales mix (manual fallback)</h2>
+        <h2 className="text-sm font-medium text-ink-text">Sales mix (manual fallback)</h2>
         <p className="mt-1 text-xs text-muted">
           What share of net sales is alcohol. Used as the denominator for the cost ratios until Toast supplies the
           per-day split — then your real numbers take over automatically. Leave blank if you don&rsquo;t track it yet.
@@ -98,7 +98,7 @@ export function BeverageSettingsForm({ initial }: { initial: BeverageSettings })
       </div>
 
       <div className="rounded-lg border border-line bg-surface p-4">
-        <h2 className="text-sm font-medium text-[#E6E8E4]">Cost targets</h2>
+        <h2 className="text-sm font-medium text-ink-text">Cost targets</h2>
         <p className="mt-1 text-xs text-muted">
           Your goal pour cost — cost as a % of that category&rsquo;s <strong>own</strong> sales (not total revenue). The
           gauge turns yellow near the target and red over it.

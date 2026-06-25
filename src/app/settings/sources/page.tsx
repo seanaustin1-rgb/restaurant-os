@@ -46,7 +46,7 @@ export default async function SourceMapPage() {
         <div className="flex items-start gap-2">
           <PlugZap size={18} className="mt-0.5 text-copper-soft" />
           <div>
-            <h2 className="text-sm font-medium text-[#E6E8E4]">Minimum auto-input path</h2>
+            <h2 className="text-sm font-medium text-ink-text">Minimum auto-input path</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted">{sourceMap.minimumAutoInput}</p>
           </div>
         </div>

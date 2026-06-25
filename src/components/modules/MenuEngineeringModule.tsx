@@ -30,7 +30,7 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">{d.name}</div>
+      <div className="mb-1 text-ink-text">{d.name}</div>
       <div className="tnum text-copper-soft">{money(d.netSales)} · {count(d.quantity)} sold</div>
       <div className="tnum text-muted">{money2(d.avgPrice)} avg · {QUADRANTS[d.quadrant].label.replace(/s$/, "")}</div>
     </div>
@@ -130,7 +130,7 @@ export function MenuEngineeringModule({ data }: { data: MenuEngineeringData }) {
           <tbody>
             {visible.slice(0, 25).map((i) => (
               <tr key={i.menuItemGuid} className="border-b border-line/60 last:border-0">
-                <td className="flex items-center gap-2 px-4 py-2 text-[#E6E8E4]">
+                <td className="flex items-center gap-2 px-4 py-2 text-ink-text">
                   <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: QUADRANTS[i.quadrant].color }} />
                   {i.name}
                 </td>
@@ -145,9 +145,9 @@ export function MenuEngineeringModule({ data }: { data: MenuEngineeringData }) {
 
       {/* Honest footnote */}
       <p className="text-[11px] leading-relaxed text-muted">
-        Quadrants split on <span className="text-[#E6E8E4]">median quantity ({count(data.medianQuantity)})</span> and{" "}
-        <span className="text-[#E6E8E4]">median net revenue ({money(data.medianNetSales)})</span>. Classic menu
-        engineering uses contribution <span className="text-[#E6E8E4]">margin</span>; item costs aren&apos;t available
+        Quadrants split on <span className="text-ink-text">median quantity ({count(data.medianQuantity)})</span> and{" "}
+        <span className="text-ink-text">median net revenue ({money(data.medianNetSales)})</span>. Classic menu
+        engineering uses contribution <span className="text-ink-text">margin</span>; item costs aren&apos;t available
         from Toast Analytics, so this is popularity × revenue — directional, not a margin verdict. $0-revenue items
         (water, comps) are excluded.
       </p>

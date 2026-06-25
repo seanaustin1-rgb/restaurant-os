@@ -194,7 +194,7 @@ export function RentalImportPilot() {
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
       <section className="space-y-4 rounded-lg border border-line bg-surface p-4">
-        <div className="flex items-center gap-2 text-sm text-[#E6E8E4]">
+        <div className="flex items-center gap-2 text-sm text-ink-text">
           <FileJson size={16} className="text-copper-soft" />
           Rental export payload
         </div>
@@ -205,7 +205,7 @@ export function RentalImportPilot() {
             <input
               value={sourceName}
               onChange={(e) => setSourceName(e.target.value)}
-              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-soft"
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft"
             />
           </label>
           <label className="block">
@@ -213,7 +213,7 @@ export function RentalImportPilot() {
             <select
               value={sourceKind}
               onChange={(e) => setSourceKind(e.target.value as SourceKind)}
-              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none focus:border-copper-soft"
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft"
             >
               <option value="ESCAPIA">Escapia</option>
               <option value="PMS">Other PMS</option>
@@ -230,7 +230,7 @@ export function RentalImportPilot() {
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="July export"
-              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-[#E6E8E4] outline-none placeholder:text-muted/50 focus:border-copper-soft"
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-ink-text outline-none placeholder:text-muted/50 focus:border-copper-soft"
             />
           </label>
         </div>
@@ -244,7 +244,7 @@ export function RentalImportPilot() {
             setStatus("idle");
           }}
           spellCheck={false}
-          className="min-h-[520px] w-full rounded-lg border border-line bg-ink p-3 font-mono text-xs leading-relaxed text-[#E6E8E4] outline-none focus:border-copper-soft"
+          className="min-h-[520px] w-full rounded-lg border border-line bg-ink p-3 font-mono text-xs leading-relaxed text-ink-text outline-none focus:border-copper-soft"
         />
 
         <div className="flex flex-wrap items-center gap-2">
@@ -264,7 +264,7 @@ export function RentalImportPilot() {
               setStatus("idle");
               setError(null);
             }}
-            className="rounded-md border border-line px-4 py-2 text-sm text-muted hover:border-copper-dim hover:text-[#E6E8E4]"
+            className="rounded-md border border-line px-4 py-2 text-sm text-muted hover:border-copper-dim hover:text-ink-text"
           >
             Load sample
           </button>
@@ -276,7 +276,7 @@ export function RentalImportPilot() {
       <aside className="space-y-4">
         <section className="rounded-lg border border-line bg-surface p-4">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-sm text-[#E6E8E4]">Import review</div>
+            <div className="text-sm text-ink-text">Import review</div>
             {status === "done" && (
               <span className="inline-flex items-center gap-1 rounded-full border border-health-green/30 bg-health-green/10 px-2 py-0.5 text-[11px] text-health-green">
                 <CheckCircle2 size={12} /> Saved
@@ -339,7 +339,7 @@ export function RentalImportPilot() {
 
         {preview && (
           <section className="rounded-lg border border-line bg-surface p-4">
-            <div className="text-sm text-[#E6E8E4]">Sample recognized rows</div>
+            <div className="text-sm text-ink-text">Sample recognized rows</div>
             <div className="mt-3 space-y-3">
               {Object.entries(preview.preview).map(([key, rows]) => (
                 <div key={key} className="rounded-lg border border-line bg-ink/60 p-3">
@@ -361,7 +361,7 @@ function SummaryTile({ label, value }: { label: string; value: number | string[]
   return (
     <div className="rounded-lg border border-line bg-ink/60 p-3">
       <div className="text-[11px] text-muted">{label}</div>
-      <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{Array.isArray(value) ? value.length : value}</div>
+      <div className="tnum mt-1 text-2xl text-ink-text">{Array.isArray(value) ? value.length : value}</div>
     </div>
   );
 }

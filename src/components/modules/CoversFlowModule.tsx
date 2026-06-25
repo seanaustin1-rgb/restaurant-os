@@ -16,10 +16,10 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   const d = payload[0].payload;
   return (
     <div className="rounded-md border border-line bg-surface px-3 py-2 text-xs shadow-lg">
-      <div className="mb-1 text-[#E6E8E4]">{d.date}</div>
+      <div className="mb-1 text-ink-text">{d.date}</div>
       <div className="tnum text-copper-soft">{count(d.covers)} covers</div>
       <div className="tnum text-muted">{count(d.orders)} orders</div>
-      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-[#E6E8E4]">{money2(d.avgCheck)} avg check</div>
+      <div className="tnum mt-0.5 border-t border-line/60 pt-0.5 text-ink-text">{money2(d.avgCheck)} avg check</div>
     </div>
   );
 }
@@ -50,13 +50,13 @@ export function CoversFlowModule({ data }: { data: CoversFlowData }) {
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <Receipt size={12} /> Avg Check
           </span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{money2(data.avgCheck)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{money2(data.avgCheck)}</div>
         </div>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
             <TrendingUp size={12} /> Total Covers
           </span>
-          <div className="tnum mt-1 text-2xl text-[#E6E8E4]">{count(data.totalCovers)}</div>
+          <div className="tnum mt-1 text-2xl text-ink-text">{count(data.totalCovers)}</div>
           {data.busiest ? (
             <div className="mt-0.5 text-[11px] text-muted">
               busiest {data.busiest.date} · {count(data.busiest.covers)}
@@ -105,7 +105,7 @@ export function CoversFlowModule({ data }: { data: CoversFlowData }) {
               <tr key={d.date} className="border-b border-line/60 last:border-0">
                 <td className="tnum px-4 py-2 text-muted">{d.date}</td>
                 <td className="tnum px-4 py-2 text-right text-copper-soft">{count(d.covers)}</td>
-                <td className="tnum px-4 py-2 text-right text-[#E6E8E4]">{count(d.orders)}</td>
+                <td className="tnum px-4 py-2 text-right text-ink-text">{count(d.orders)}</td>
                 <td className="tnum px-4 py-2 text-right text-muted">{d.avgCheck ? money2(d.avgCheck) : "—"}</td>
               </tr>
             ))}
@@ -116,7 +116,7 @@ export function CoversFlowModule({ data }: { data: CoversFlowData }) {
           {data.days.map((d) => (
             <div key={d.date} className="p-3">
               <div className="flex items-center justify-between">
-                <span className="tnum text-sm text-[#E6E8E4]">{d.date}</span>
+                <span className="tnum text-sm text-ink-text">{d.date}</span>
                 <span className="tnum text-sm text-copper-soft">{count(d.covers)} covers</span>
               </div>
               <div className="mt-1 flex items-center gap-4 text-xs text-muted">

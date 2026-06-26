@@ -82,7 +82,13 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          codex exec --skip-git-repo-check \
+          # --dangerously-bypass-approvals-and-sandbox disables Codex's internal
+          # bubblewrap sandbox, which cannot set up a loopback network namespace
+          # on GitHub-hosted runners ("bwrap: loopback: Failed RTM_NEWADDR") and
+          # otherwise blocks every shell command Codex runs to read the diff.
+          # Safe here: the runner is already an isolated, ephemeral VM and this
+          # review is read-only. See openai/codex#15957, #16334.
+          codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox \
             "Read AGENTS.md for project context, conventions, and guardrails. \
              Then review the pull-request diff in /tmp/pr.diff. Prioritize \
              correctness (especially the financial calculators), tenant/data \

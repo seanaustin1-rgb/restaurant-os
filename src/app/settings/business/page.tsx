@@ -9,7 +9,7 @@ export default async function BusinessSettingsPage() {
 
   const role = await prisma.userRestaurantRole.findFirst({
     where: { clerkUserId: userId, role: { in: ["OPERATOR", "CONSULTANT", "MANAGER"] } },
-    select: { restaurantId: true, role: true, restaurant: { select: { name: true, businessType: true } } },
+    select: { restaurantId: true, role: true, restaurant: { select: { name: true, businessType: true, seatCount: true, profile: true } } },
   });
 
   return (
@@ -23,7 +23,12 @@ export default async function BusinessSettingsPage() {
       </div>
 
       {role ? (
-        <BusinessTemplateForm initialBusinessType={role.restaurant.businessType} actorRole={role.role} />
+        <BusinessTemplateForm
+          initialBusinessType={role.restaurant.businessType}
+          initialProfile={role.restaurant.profile}
+          initialSeatCount={role.restaurant.seatCount}
+          actorRole={role.role}
+        />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           You need an owner, consultant, or manager role on a restaurant to manage its business template.

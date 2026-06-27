@@ -99,15 +99,21 @@ export function DashboardView({
   pinnedModules,
   demoMode = false,
   initialPreviewType,
+  roleAssignments,
 }: {
   dashboards: DashboardData[];
   moduleOrder: string[] | null;
   pinnedModules: string[];
   demoMode?: boolean;
   initialPreviewType?: BusinessType;
+  roleAssignments?: { restaurantId: string; role: RoleKey }[];
 }) {
   const [activeId, setActiveId] = useState(dashboards[0]?.restaurantId ?? "");
-  const [role, setRole] = useState<RoleKey>("OPERATOR");
+  const roleByRestaurant = useMemo(() => {
+    return new Map((roleAssignments ?? []).map((assignment) => [assignment.restaurantId, assignment.role]));
+  }, [roleAssignments]);
+  const initialRole = demoMode ? "OPERATOR" : (dashboards[0] ? roleByRestaurant.get(dashboards[0].restaurantId) : undefined) ?? "OPERATOR";
+  const [role, setRole] = useState<RoleKey>(initialRole);
 
   // Per-user module layout (persisted to the account). Order is the grid order;
   // pinned is the Quick Access strip. Both update optimistically and persist.
@@ -120,6 +126,11 @@ export function DashboardView({
   useEffect(() => {
     setPreviewType(initialPreviewType ?? active?.businessType ?? "RESTAURANT");
   }, [active?.restaurantId, active?.businessType, initialPreviewType]);
+
+  useEffect(() => {
+    if (demoMode || !active) return;
+    setRole(roleByRestaurant.get(active.restaurantId) ?? "OPERATOR");
+  }, [active, demoMode, roleByRestaurant]);
 
   const isTemplatePreview = Boolean(active && previewType !== active.businessType);
   const displayName = active ? (isTemplatePreview ? previewBusinessName(previewType, active.name) : active.name) : "";
@@ -211,6 +222,7 @@ export function DashboardView({
         onSelectRestaurant={setActiveId}
         role={role}
         onSelectRole={setRole}
+        roleOptions={demoMode ? undefined : [roleByRestaurant.get(displayActive.restaurantId) ?? role]}
         demoMode={demoMode}
       />
 
@@ -225,7 +237,13 @@ export function DashboardView({
         <HeartbeatSummary data={displayActive} demoMode={demoMode} />
         {isAdvisor && <AdvisorBrief data={displayActive} demoMode={demoMode} />}
 
-        {!displayActive.hasData && (
+        {!displayActive.hasData && isInvestor && (
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
+            The investor matrix is available, but live operating data has not been loaded for this period yet.
+          </div>
+        )}
+
+        {!displayActive.hasData && !isInvestor && (
           <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
             {emptyState.text}{" "}
             <Link href={emptyState.href} className="text-copper-soft hover:underline">
@@ -236,13 +254,15 @@ export function DashboardView({
         )}
 
         {/* Setup + industry preview switcher follow the heartbeat, not precede it. */}
-        <SetupOverviewCard
-          data={displayActive}
-          previewType={previewType}
-          onPreviewTypeChange={setPreviewType}
-          isPreview={isTemplatePreview}
-          demoMode={demoMode}
-        />
+        {!isInvestor && (
+          <SetupOverviewCard
+            data={displayActive}
+            previewType={previewType}
+            onPreviewTypeChange={setPreviewType}
+            isPreview={isTemplatePreview}
+            demoMode={demoMode}
+          />
+        )}
 
         {/* Public demo stays read-only: no pinned shortcuts into protected app pages. */}
         {!demoMode && !isInvestor && (
@@ -258,7 +278,7 @@ export function DashboardView({
           <IndustryHeartbeatPreview data={displayActive} />
         )}
         <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
-        <ProfitFirstExplainer />
+        {!isInvestor && <ProfitFirstExplainer />}
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
         {!isInvestor && isRestaurantTemplate && <TapGauges gauges={displayActive.gauges} base={displayActive.revenue.revenueMTD} />}

@@ -20,6 +20,7 @@ export function DashboardHeader({
   onSelectRestaurant,
   role,
   onSelectRole,
+  roleOptions = ROLES,
   demoMode = false,
 }: {
   restaurants: RestaurantOption[];
@@ -27,6 +28,7 @@ export function DashboardHeader({
   onSelectRestaurant: (id: string) => void;
   role: RoleKey;
   onSelectRole: (r: RoleKey) => void;
+  roleOptions?: RoleKey[];
   demoMode?: boolean;
 }) {
   const active = restaurants.find((r) => r.id === activeId) ?? restaurants[0];
@@ -65,7 +67,7 @@ export function DashboardHeader({
           </span>
           <Dropdown
             label={titleCase(role)}
-            items={ROLES.map((r) => ({ key: r, label: titleCase(r) }))}
+            items={roleOptions.map((r) => ({ key: r, label: titleCase(r) }))}
             onPick={(k) => onSelectRole(k as RoleKey)}
           />
           {!demoMode && <UserButton afterSignOutUrl="/" />}

@@ -14,6 +14,7 @@ export default async function DashboardPage() {
     where: { clerkUserId: userId },
     select: {
       restaurantId: true,
+      role: true,
       createdAt: true,
       restaurant: {
         select: {
@@ -47,5 +48,14 @@ export default async function DashboardPage() {
 
   const layout = await loadDashboardLayout(userId);
 
-  return <DashboardView dashboards={dashboards} moduleOrder={layout.order} pinnedModules={layout.pinned} />;
+  const roleAssignments = roles.map((role) => ({ restaurantId: role.restaurantId, role: role.role }));
+
+  return (
+    <DashboardView
+      dashboards={dashboards}
+      moduleOrder={layout.order}
+      pinnedModules={layout.pinned}
+      roleAssignments={roleAssignments}
+    />
+  );
 }

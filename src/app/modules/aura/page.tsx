@@ -15,10 +15,10 @@ export default async function AuraPage() {
 
   const role = await prisma.userRestaurantRole.findFirst({
     where: { clerkUserId: userId },
-    select: { restaurant: { select: { name: true } } },
+    select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
-  const [data, trend] = await Promise.all([loadAura(), loadReputationTrend()]);
+  const [data, trend] = await Promise.all([loadAura(role?.restaurantId), loadReputationTrend()]);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">

@@ -9,7 +9,11 @@ import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
 
-export default async function SourceMapPage() {
+export default async function SourceMapPage({
+  searchParams,
+}: {
+  searchParams?: { google?: string; reason?: string };
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -62,6 +66,23 @@ export default async function SourceMapPage() {
           </div>
         </div>
       </section>
+
+      {searchParams?.google && (
+        <section
+          className={
+            "rounded-lg border px-4 py-3 text-sm " +
+            (searchParams.google === "connected"
+              ? "border-health-green/40 bg-health-green/5 text-health-green"
+              : "border-health-yellow/40 bg-health-yellow/5 text-health-yellow")
+          }
+        >
+          {searchParams.google === "connected"
+            ? "Google Business Profile is authorized. We found a location and saved it for Aura."
+            : searchParams.google === "needs_location"
+              ? "Google authorized successfully, but no Business Profile location was found. Support should confirm the account."
+              : `Google authorization needs attention${searchParams.reason ? `: ${searchParams.reason}` : "."}`}
+        </section>
+      )}
 
       <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} />
     </main>

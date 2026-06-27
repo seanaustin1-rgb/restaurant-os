@@ -130,14 +130,14 @@ function configuredFallback(detail: string, state: AuraIntentState = "waiting_hi
   }));
 }
 
-export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS): Promise<{ points: number }> {
-  const points = await fetchGoogleBusinessProfilePerformance(days);
+export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS, restaurantId?: string | null): Promise<{ points: number }> {
+  const points = await fetchGoogleBusinessProfilePerformance(days, restaurantId);
   await persistPoints(points);
   return { points: points.length };
 }
 
-export async function loadAuraIntentMetrics(): Promise<AuraIntentMetric[]> {
-  if (!isGoogleBusinessProfileConfigured()) {
+export async function loadAuraIntentMetrics(restaurantId?: string | null): Promise<AuraIntentMetric[]> {
+  if (!restaurantId && !isGoogleBusinessProfileConfigured()) {
     return configuredFallback(
       `Connect Google Business Profile performance data: ${missingGoogleBusinessProfileEnv().join(", ")}`,
       "not_configured",
@@ -148,7 +148,7 @@ export async function loadAuraIntentMetrics(): Promise<AuraIntentMetric[]> {
   if (stored.length > 0) return rollup(stored);
 
   try {
-    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS);
+    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS, restaurantId);
     await persistPoints(live);
     return rollup(live);
   } catch (error) {

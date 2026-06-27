@@ -65,9 +65,9 @@ function bandRating(rating: number | null): HealthStatus {
 
 const RECENT_CAP = 8;
 
-export async function loadAura(): Promise<AuraData> {
+export async function loadAura(restaurantId?: string | null): Promise<AuraData> {
   const configured = configuredAuraSources();
-  const intentMetricsPromise = loadAuraIntentMetrics();
+  const intentMetricsPromise = loadAuraIntentMetrics(restaurantId);
 
   // Fetch every configured source in parallel; capture failures per source.
   const summaries = new Map<AuraSourceKey, AuraSourceSummary>();

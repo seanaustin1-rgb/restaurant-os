@@ -63,6 +63,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
       headline: "Customer authorizes Google",
       detail: "They sign in with Google, then confirm the business/location the app discovers.",
       primaryLabel: "Authorize Google",
+      href: "/api/google-business-profile/oauth/start",
     };
   }
   if (name === "toast") {

@@ -263,7 +263,7 @@ export async function loadDashboardData(
   const hasData = revenue > 0 || byCat.length > 0;
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
-  const aura = await loadDashboardAura();
+  const aura = await loadDashboardAura(restaurantId);
 
   return {
     restaurantId,
@@ -296,9 +296,9 @@ export async function loadDashboardData(
   };
 }
 
-async function loadDashboardAura(): Promise<DashboardAuraSummary> {
+async function loadDashboardAura(restaurantId: string): Promise<DashboardAuraSummary> {
   try {
-    const aura = await loadAura();
+    const aura = await loadAura(restaurantId);
     return {
       configuredCount: aura.configuredCount,
       liveCount: aura.sources.filter((source) => source.state === "live").length,

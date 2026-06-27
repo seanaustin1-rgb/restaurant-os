@@ -92,5 +92,20 @@ export async function loadSourceConfigSnapshots(
     });
   }
 
+  const googleBusinessProfile = await db.integrationConnection.findFirst({
+    where: { restaurantId, provider: "GOOGLE_BUSINESS_PROFILE", isActive: true },
+    select: { displayName: true, externalLocationId: true },
+  });
+  if (googleBusinessProfile) {
+    actual.push({
+      category: "aura",
+      providerName: "Google Business Profile",
+      status: googleBusinessProfile.externalLocationId === "unselected" ? "BLOCKED" : "CONNECTED",
+      notes: googleBusinessProfile.displayName
+        ? `Detected Google Business Profile connection: ${googleBusinessProfile.displayName}.`
+        : "Detected Google Business Profile connection.",
+    });
+  }
+
   return mergeSourceConfigs(saved, actual);
 }

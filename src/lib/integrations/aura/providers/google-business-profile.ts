@@ -1,3 +1,6 @@
+import { accessTokenForGoogleBusinessProfile } from "@/lib/integrations/google-business-profile/oauth";
+import { prisma } from "@/lib/prisma";
+
 export const GOOGLE_BUSINESS_PROFILE_ENV = [
   "GOOGLE_BUSINESS_PROFILE_ACCOUNT_ID",
   "GOOGLE_BUSINESS_PROFILE_LOCATION_ID",
@@ -67,7 +70,9 @@ export function isGoogleBusinessProfileConfigured(): boolean {
   return missingGoogleBusinessProfileEnv().length === 0;
 }
 
-async function getGoogleBusinessProfileAccessToken(): Promise<string> {
+async function getGoogleBusinessProfileAccessToken(restaurantId?: string | null): Promise<string> {
+  if (restaurantId) return accessTokenForGoogleBusinessProfile(restaurantId);
+
   const clientId = process.env.GOOGLE_BUSINESS_PROFILE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_BUSINESS_PROFILE_CLIENT_SECRET?.trim();
   const refreshToken = process.env.GOOGLE_BUSINESS_PROFILE_REFRESH_TOKEN?.trim();
@@ -110,14 +115,24 @@ function googleDateToIso(date: GoogleDate | undefined): string | null {
   return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 }
 
-export async function fetchGoogleBusinessProfilePerformance(days = 30): Promise<GoogleBusinessProfilePoint[]> {
+export async function fetchGoogleBusinessProfilePerformance(days = 30, restaurantId?: string | null): Promise<GoogleBusinessProfilePoint[]> {
   const missing = missingGoogleBusinessProfileEnv();
-  if (missing.length > 0) {
+  if (!restaurantId && missing.length > 0) {
     throw new Error(`Google Business Profile is not configured: ${missing.join(", ")}`);
   }
 
-  const locationId = process.env.GOOGLE_BUSINESS_PROFILE_LOCATION_ID!.trim();
-  const accessToken = await getGoogleBusinessProfileAccessToken();
+  const locationId = process.env.GOOGLE_BUSINESS_PROFILE_LOCATION_ID?.trim() ?? "";
+  const accessToken = await getGoogleBusinessProfileAccessToken(restaurantId);
+  let resolvedLocationId = locationId;
+  if (restaurantId) {
+    const connection = await prisma.integrationConnection.findFirst({
+      where: { restaurantId, provider: "GOOGLE_BUSINESS_PROFILE", isActive: true },
+      orderBy: { updatedAt: "desc" },
+      select: { externalLocationId: true },
+    });
+    resolvedLocationId = connection?.externalLocationId ?? locationId;
+  }
+  if (!resolvedLocationId) throw new Error("Google Business Profile location is missing.");
   const end = new Date();
   end.setUTCHours(0, 0, 0, 0);
   end.setUTCDate(end.getUTCDate() - 1);
@@ -134,7 +149,7 @@ export async function fetchGoogleBusinessProfilePerformance(days = 30): Promise<
     "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
   ];
 
-  const url = new URL(`${PERFORMANCE_URL}/locations/${encodeURIComponent(locationId)}:fetchMultiDailyMetricsTimeSeries`);
+  const url = new URL(`${PERFORMANCE_URL}/locations/${encodeURIComponent(resolvedLocationId)}:fetchMultiDailyMetricsTimeSeries`);
   for (const metric of metrics) url.searchParams.append("dailyMetrics", metric);
   addDateParams(url, "dailyRange.startDate", start);
   addDateParams(url, "dailyRange.endDate", end);

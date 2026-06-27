@@ -26,9 +26,9 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
             <h2 className="mt-1 font-display text-3xl text-copper-soft">{data.stageLabel}</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted">{data.stageNote}</p>
             <p className="mt-2 max-w-2xl text-xs leading-relaxed text-ink-text-soft">
-              Go-Live Coach is not a generic business coach. It is a virtual readiness check for Profit First money
-              movement: it replays what would have been set aside, compares that to cash safety and bucket pressure,
-              then recommends whether to observe, keep coaching, rehearse a pilot, or go live.
+              Go-Live Coach is a readiness check for Profit First money movement. It stays virtual first: it replays
+              what would have been set aside, compares that to cash safety and bucket pressure, then recommends
+              whether the business should keep observing, clean up the model, rehearse a pilot, or prepare real routing.
             </p>
           </div>
           <div className="rounded-lg border border-copper-dim/40 bg-copper-dim/10 px-4 py-3 text-right">
@@ -49,8 +49,8 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
         <div className="mt-3 grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-4">
           <StageExplainer label="Observe" text="Collect enough clean sales, cash, and spend data to trust the heartbeat." active={data.stage === "observe"} />
           <StageExplainer label="Coach" text="Find the bucket, category, tax, or cash issue that would break if transfers started today." active={data.stage === "coach" || data.stage === "simulate"} />
-          <StageExplainer label="Pilot" text="Run a narrow real-world rehearsal after the virtual model shows enough cushion." active={data.stage === "pilot_ready"} />
-          <StageExplainer label="Go live" text="Turn on the operating rhythm once cash safety, categorization, and bucket pressure are stable." active={data.stage === "enforce_ready"} />
+          <StageExplainer label="Pilot" text="Rehearse a narrow transfer plan only after the virtual model shows enough cash cushion." active={data.stage === "pilot_ready"} />
+          <StageExplainer label="Go live" text="Prepare real account routing once cash safety, category coverage, and bucket pressure are stable." active={data.stage === "enforce_ready"} />
         </div>
       </section>
 
@@ -77,27 +77,27 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
 
       <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         <div className="rounded-lg border border-line bg-surface px-4 py-3 lg:col-span-1">
-          <h2 className="font-display text-lg text-ink-text">Cash floor</h2>
+          <h2 className="font-display text-lg text-ink-text">Cash safety</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted">{data.cashSafety.detail}</p>
           <div className="mt-3 space-y-2 text-[11px] text-muted">
             <div className="flex justify-between gap-3">
-              <span>Estimated cash</span>
+              <span>Estimated operating cash</span>
               <span className="tnum text-ink-text">
-                {data.cashSafety.currentCash != null ? money(data.cashSafety.currentCash) : "Needs anchor"}
+                {data.cashSafety.currentCash != null ? money(data.cashSafety.currentCash) : "Set starting balance"}
               </span>
             </div>
             <div className="flex justify-between gap-3">
-              <span>Operating floor</span>
+              <span>Minimum cash floor</span>
               <span className="tnum text-ink-text">
                 {data.cashSafety.minimumOperatingCash != null ? money(data.cashSafety.minimumOperatingCash) : "Unknown"}
               </span>
             </div>
             <div className="flex justify-between gap-3">
-              <span>Virtual pilot set-aside</span>
+              <span>Virtual pilot holdback</span>
               <span className="tnum text-ink-text">{money(data.cashSafety.pilotSetAside)}</span>
             </div>
             <div className="flex justify-between gap-3">
-              <span>Remaining cushion</span>
+              <span>Cushion after pilot</span>
               <span className={"tnum " + (data.cashSafety.ready ? "text-health-green" : "text-health-red")}>
                 {data.cashSafety.cushionAfterPilot != null ? money(data.cashSafety.cushionAfterPilot) : "Unknown"}
               </span>
@@ -176,8 +176,9 @@ export function GoLiveCoachModule({ data }: { data: GoLiveCoachData }) {
       </section>
 
       <p className="rounded-lg border border-line bg-surface/60 px-4 py-3 text-xs leading-relaxed text-muted">
-        Virtual-only: this coach does not move money. It replays what Profit First would have done, compares that
-        against actual cleared activity, and recommends when the operator can safely start a narrow pilot.
+        Virtual-only: this coach does not move money. It shows what Profit First would have done, compares that
+        against actual cleared activity, and recommends when the operator can safely start a narrow pilot before any
+        real transfer automation is approved.
       </p>
     </div>
   );

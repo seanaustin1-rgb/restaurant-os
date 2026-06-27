@@ -58,6 +58,7 @@ function worstStatus(statuses: HealthStatus[]): HealthStatus {
 function cashLens(data: DashboardData): HeartbeatLens {
   const cash = data.goLiveCoach.cashSafety;
   const status: HealthStatus = cash.ready ? "green" : cash.hasAnchor ? "red" : "yellow";
+  const hasBankActivity = data.goLiveCoach.transactionCount > 0;
   const cushionRatio =
     cash.currentCash != null && cash.minimumOperatingCash != null && cash.minimumOperatingCash > 0
       ? cash.currentCash / cash.minimumOperatingCash
@@ -67,14 +68,16 @@ function cashLens(data: DashboardData): HeartbeatLens {
     label: "Cash oxygen",
     status,
     statusLabel: cash.ready ? "breathing room" : cash.hasAnchor ? "below floor" : "needs anchor",
-    value: cushionRatio != null ? `${cushionRatio.toFixed(1)}x floor` : cash.currentCash != null ? money(cash.currentCash) : "Unknown",
+    value: cushionRatio != null ? `${cushionRatio.toFixed(1)}x floor` : cash.currentCash != null ? money(cash.currentCash) : "Set anchor",
     detail:
       cash.currentCash != null && cash.minimumOperatingCash != null && cushionRatio != null
         ? `${money(cash.currentCash)} cash vs. ${money(cash.minimumOperatingCash)} floor. ${cushionRatio >= 1.5 ? "Healthy demo cushion." : cushionRatio >= 1 ? "Thin cushion." : "Below the floor."}`
-        : "Set a cash anchor so the heartbeat can judge runway and pilot safety.",
-    explainer: "Cash oxygen compares available operating cash to a minimum cash floor. There is no single industry standard, but many operators use 1-3 months of core operating costs as the safety range; the demo treats 1.5x the floor as healthy.",
-    action: "open Go-Live Coach",
-    href: "/modules/go-live",
+        : hasBankActivity
+          ? "Bank activity is connected. Add one starting cash balance/date so the app can estimate runway from the imported flow."
+          : "Connect bank activity, then add one starting cash balance/date so the app can estimate runway.",
+    explainer: "Cash oxygen is not a live bank-balance read. It starts with one known cash balance on one date, then adds and subtracts imported bank activity to estimate current operating cash and runway.",
+    action: "set cash anchor",
+    href: "/modules/cash-runway",
   };
 }
 
@@ -517,6 +520,7 @@ function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
   if (data.aura.hasAnyData && data.aura.overallRating != null) {
     const liveIntent = data.aura.intentMetrics.filter((metric) => metric.state === "live");
     const intentTotal = liveIntent.reduce((sum, metric) => sum + (metric.value ?? 0), 0);
+    const intentError = data.aura.intentMetrics.some((metric) => metric.state === "error");
     return {
       key: "aura",
       label: "Aura",
@@ -526,7 +530,9 @@ function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
       detail:
         liveIntent.length > 0
           ? `${data.aura.totalReviews.toLocaleString()} reviews and ${intentTotal.toLocaleString()} Google intent actions in the last 30 days.`
-          : `${data.aura.totalReviews.toLocaleString()} reviews across ${data.aura.liveCount} live source${data.aura.liveCount === 1 ? "" : "s"}. Connect Google Business Profile intent for calls, directions, clicks, and profile views.`,
+          : intentError
+            ? `${data.aura.totalReviews.toLocaleString()} reviews are live. Google Business Profile actions need authorization before calls, directions, clicks, and views can show.`
+            : `${data.aura.totalReviews.toLocaleString()} reviews are live. Google Business Profile actions will add calls, directions, clicks, and profile views once authorized.`,
       explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
       action: "open Aura",
       href: "/modules/aura",

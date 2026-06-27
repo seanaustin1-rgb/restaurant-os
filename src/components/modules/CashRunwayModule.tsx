@@ -48,7 +48,7 @@ function AnchorForm({
 
   return (
     <div className="rounded-lg border border-line bg-surface p-5">
-      <h2 className="text-sm text-ink-text">Anchor your cash position</h2>
+      <h2 className="text-sm text-ink-text">Set starting cash balance</h2>
       <p className="mt-1 text-xs leading-relaxed text-muted">
         Runway needs one real number to start from: your bank balance on a known date — both are on
         any bank statement. Everything after that date is computed from imported transactions.
@@ -79,7 +79,7 @@ function AnchorForm({
           disabled={pending}
           className="rounded-md border border-copper bg-copper/10 px-4 py-1.5 text-sm text-copper-soft transition-colors hover:bg-copper/20 disabled:opacity-50"
         >
-          {pending ? "Saving…" : "Set anchor"}
+          {pending ? "Saving..." : "Save starting balance"}
         </button>
       </div>
       {error ? <p className="mt-2 text-xs text-health-red">{error}</p> : null}
@@ -113,6 +113,10 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
         {!data.hasData ? (
           <p className="rounded-lg border border-dashed border-line p-4 text-center text-xs text-muted">
             No transactions imported yet — runway will be flat until bank data lands.
+          </p>
+        ) : !data.hasAnchor ? (
+          <p className="rounded-lg border border-copper-dim/40 bg-copper-dim/10 p-4 text-xs leading-relaxed text-muted">
+            Bank activity is connected. One starting balance unlocks Cash Oxygen, runway, and Go-Live cash safety.
           </p>
         ) : null}
         <AnchorForm

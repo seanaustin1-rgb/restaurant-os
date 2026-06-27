@@ -48,6 +48,7 @@ function fmtDate(iso: string | null): string {
 function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: ReputationTrend }) {
   const readyTrend = trend?.state === "ready";
   const intentReady = data.intentMetrics.some((m) => m.state === "live");
+  const intentError = data.intentMetrics.some((m) => m.state === "error");
   const direction =
     readyTrend && trend.direction !== "flat" ? trend.direction : intentReady ? "flat" : "gathering";
   const headline =
@@ -57,10 +58,14 @@ function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: Reputation
         ? "Market energy is weakening"
         : direction === "flat"
           ? "Market energy is holding steady"
-          : "Market energy is waiting on intent data";
+          : intentError
+            ? "Reviews are live; actions need authorization"
+            : "Market energy is waiting on intent data";
   const detail =
-    direction === "gathering"
-      ? "Aura has reputation signals now. Google Business Profile intent will show here once calls, directions, website clicks, or profile views are available."
+    intentError
+      ? "Google reviews are connected. Calls, directions, website clicks, and profile views need a valid Google Business Profile authorization before they can sync."
+      : direction === "gathering"
+        ? "Aura has reputation signals now. Google Business Profile intent will show here once calls, directions, website clicks, or profile views are available."
       : "Aura combines reputation trend with customer-intent signals so the outside-world heartbeat is visible before sales fully move.";
 
   return (
@@ -96,17 +101,23 @@ function IntentCard({ metric }: { metric: AuraIntentMetric }) {
           ? MousePointerClick
           : Eye;
   const live = metric.state === "live";
+  const waitingLabel =
+    metric.state === "error"
+      ? "Needs authorization"
+      : metric.state === "waiting_history"
+        ? "Waiting for sync"
+        : "Not connected";
   return (
-    <div className="rounded-lg border border-dashed border-line bg-ink/30 px-3 py-3">
+    <div className={"rounded-lg border border-dashed px-3 py-3 " + (metric.state === "error" ? "border-health-yellow/40 bg-health-yellow/5" : "border-line bg-ink/30")}>
       <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
         <Icon size={12} /> {metric.label}
       </div>
-      <div className="tnum mt-1 text-xl text-ink-text">{live && metric.value != null ? count(metric.value) : "Not connected"}</div>
+      <div className="tnum mt-1 text-xl text-ink-text">{live && metric.value != null ? count(metric.value) : waitingLabel}</div>
       <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted" title={metric.detail}>
         {metric.state === "waiting_history"
           ? "Waiting for performance sync"
           : metric.state === "error"
-            ? "Sync needs attention"
+            ? "Google authorization needed"
             : metric.detail}
       </p>
     </div>

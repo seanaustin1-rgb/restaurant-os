@@ -136,9 +136,9 @@ function stageNote(stage: GoLiveStage): string {
     case "coach":
       return "The model is useful now: fix the shortfalls before any real account setup.";
     case "pilot_ready":
-      return "The business can model a narrow pilot before the second onboarding.";
+      return "The virtual model is stable enough to rehearse a narrow pilot before any real transfers are enabled.";
     case "enforce_ready":
-      return "The virtual model looks stable enough to design the second onboarding.";
+      return "The model is stable enough to design the second onboarding for real account routing.";
   }
 }
 
@@ -252,7 +252,7 @@ function assessCashSafety(currentCash: number | null | undefined, minimumOperati
       pilotSetAside: r2(pilotSetAside),
       cushionAfterPilot: null,
       ready: false,
-      detail: "Set a cash balance anchor before Go-Live Coach can judge whether a pilot leaves enough operating cash.",
+      detail: "Set one starting cash balance/date so Go-Live Coach can judge whether a pilot leaves enough operating cash.",
     };
   }
 
@@ -356,25 +356,25 @@ export function assessGoLiveReadiness(input: GoLiveCoachInput): GoLiveCoachData 
       key: "sales-history",
       label: "Sales history",
       ready: historyReady,
-      detail: `${input.salesDays} day${input.salesDays === 1 ? "" : "s"} of sales in this period`,
+      detail: `${input.salesDays} day${input.salesDays === 1 ? "" : "s"} of POS sales in this period`,
     },
     {
       key: "bank-activity",
-      label: "Bank activity",
+      label: "Bank feed",
       ready: bankReady,
       detail: bankReady ? `${input.transactionCount} outflow transaction${input.transactionCount === 1 ? "" : "s"} reviewed` : "No bank outflows in this period yet",
     },
     {
       key: "categorization",
-      label: "Named dollars",
+      label: "Category coverage",
       ready: coverageReady,
       detail: `${r2(categorizationCoveragePct)}% of outflow transactions have a category`,
     },
     {
       key: "tax-source",
-      label: "Tax source",
+      label: "Sales tax source",
       ready: taxBucket.ready,
-      detail: taxSourced ? "Collected sales tax is synced" : "Sync collected sales tax before piloting Tax Reserve",
+      detail: taxSourced ? "Collected sales tax is synced from POS; DAVO pulls draw the reserve down." : "Sync collected sales tax before piloting Tax Reserve",
     },
     {
       key: "bucket-pressure",
@@ -425,7 +425,7 @@ export function assessGoLiveReadiness(input: GoLiveCoachInput): GoLiveCoachData 
   const cashSafety = assessCashSafety(input.currentCash, input.minimumOperatingCash, pilotSetAside);
   checks.push({
     key: "cash-floor",
-    label: "Cash floor",
+    label: "Cash anchor",
     ready: cashSafety.ready,
     detail: cashSafety.detail,
   });

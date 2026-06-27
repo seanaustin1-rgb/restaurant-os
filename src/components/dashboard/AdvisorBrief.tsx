@@ -16,7 +16,7 @@ function topWatchout(data: DashboardData): BriefItem {
     return {
       label: cash.hasAnchor ? "Cash floor is tight" : "Cash anchor is missing",
       detail: cash.detail,
-      href: "/modules/go-live",
+      href: cash.hasAnchor ? "/modules/go-live" : "/modules/cash-runway",
     };
   }
 
@@ -75,9 +75,9 @@ function missingData(data: DashboardData): BriefItem {
   const cash = data.goLiveCoach.cashSafety;
   if (!cash.hasAnchor) {
     return {
-      label: "Cash balance anchor",
-      detail: "Needed before the coach can judge pilot safety and runway.",
-      href: "/modules/go-live",
+      label: "Starting cash balance",
+      detail: "Bank activity is connected, but Cash Oxygen needs one balance/date before runway and pilot safety can be judged.",
+      href: "/modules/cash-runway",
     };
   }
 
@@ -99,11 +99,21 @@ function missingData(data: DashboardData): BriefItem {
     };
   }
 
-  return {
-    label: "Aura intent data",
-    detail: "Google calls, directions, website clicks, and profile views are the next market-energy signals to wire.",
-    href: "/modules/aura",
-  };
+  const intentError = data.aura.intentMetrics.some((metric) => metric.state === "error");
+  const intentLive = data.aura.intentMetrics.some((metric) => metric.state === "live");
+  return intentLive
+    ? {
+        label: "No priority data gap",
+        detail: "Core cash, tax, categorization, and Aura intent signals are visible.",
+        href: "/dashboard",
+      }
+    : {
+        label: "GBP action authorization",
+        detail: intentError
+          ? "Reviews are live; calls, directions, website clicks, and profile views need valid Google Business Profile authorization."
+          : "Google calls, directions, website clicks, and profile views are the next market-energy signals to authorize.",
+        href: "/modules/aura",
+      };
 }
 
 function goLiveStatus(data: DashboardData): BriefItem {

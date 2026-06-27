@@ -351,6 +351,36 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
 
 ---
 
+## Caveat: the allocation engine is still restaurant-shaped (phase 2)
+
+`VirtualAccount` is flexible (`key`/`name`/`targetPct`), but the **daily Profit
+First waterfall is not**. Confirmed in code:
+
+- `TapSettings` has six fixed columns: `profitPct`, `ownerPayPct`, `cogsFoodPct`,
+  `cogsLiquorPct`, `laborPct`, `opexPct`.
+- `src/lib/profit-first/calculator.ts` + `allocation.ts` read those columns and
+  emit a fixed `byBucket` shape (`cogsFood`, `cogsLiquor`, `labor`, `opex`, …).
+- `BucketAllocation` (the auditable daily ledger) stores those same fixed columns.
+
+So `seedAccounts` give each sector the correct **account identities and target
+percentages** — enough for the allocation tile's target lines, onboarding, the
+module list, and any module that doesn't read the daily TAP ledger. But the
+actual daily accrual would still compute *restaurant* buckets for everyone. A
+contractor's `cogs_materials` / `agent_splits` VirtualAccount would show a target
+but never get funded by the waterfall.
+
+Treat this as two phases:
+
+- **Phase 1 (this proposal):** sector-correct VirtualAccounts, targets, modules,
+  and profile questions. Ship-able on its own; fixes the "asked seat count, seeded
+  liquor COGS" problem and powers targets/benchmarks.
+- **Phase 2 (financial core, larger lift):** generalize the engine so allocation
+  is **keyed by `VirtualAccount.key`** instead of the six hardcoded columns —
+  `TapSettings` → per-bucket rows/JSON, `BucketAllocation` → keyed amounts, and
+  `calculator.ts`/`allocation.ts` → bucket-agnostic. Must keep restaurant output
+  byte-for-byte identical (extend `calculator.test.ts` first) since this touches
+  money math under the AGENTS.md "financial logic stays covered by Vitest" rule.
+
 ## Storage (the one schema change)
 
 Sector profile answers (the `scaleAnchor` value + `profileQuestions`) need a home.

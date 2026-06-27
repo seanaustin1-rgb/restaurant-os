@@ -84,3 +84,19 @@ Prioritize, in order:
 4. **Server/client boundary** — `next build` catches some; flag risky `"use
    client"` / server-only imports.
 5. Then style/simplicity. Run the three checks above and report any failures.
+
+## Design Context
+
+Front-end/design work is anchored by two root docs — read them before any UI change:
+
+- **`PRODUCT.md`** (strategic): register (`product`), users, purpose, brand
+  personality, anti-references, and the 5 design principles. The "why/who".
+- **`DESIGN.md`** (visual): dark "operator's instrument panel" system — Ink
+  ground, rationed copper accent, separate green/yellow/red health vocabulary,
+  Cormorant serif headings + DM Sans body + Space Mono figures, flat line-drawn
+  elevation. The "how it looks".
+
+The **impeccable** design skill drives this work (`/impeccable <command>`,
+e.g. `document`, `critique`, `audit`, `layout`, `live`); it's vendored at
+`.agents/skills/impeccable/` with config in `.impeccable/`. Honor PRODUCT.md's
+accessibility bar (WCAG 2.1 AA; status never by color alone) on every surface.

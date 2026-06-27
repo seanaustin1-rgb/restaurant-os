@@ -172,6 +172,23 @@ export function applyRules(
   return null;
 }
 
+export function keywordMatchesText(
+  pattern: string,
+  merchantName: string | null | undefined,
+  description: string | null | undefined,
+): boolean {
+  const compiled = compileRule({
+    id: "operator-keyword-preview",
+    matchType: "KEYWORD",
+    pattern,
+    categoryId: "preview",
+    priority: 5,
+    confidence: 0.9,
+  });
+  if (!compiled) return false;
+  return applyRules([compiled], merchantName, description) !== null;
+}
+
 // ─────────────────────────────────────────────────────────────
 // Unified categorization decision (shared by every ingest path)
 // ─────────────────────────────────────────────────────────────

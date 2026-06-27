@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import type { RuleMatchType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { loadRules, applyRules } from "@/lib/categorization/rules";
 import { getDismissedKeys, SUGGESTIONS_MODULE } from "@/lib/categorization/suggestions";
 
@@ -19,7 +20,7 @@ async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");
@@ -36,7 +37,7 @@ async function requireOwnedRule(ruleId: string) {
   });
   if (!rule) throw new Error("rule not found");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurantId: rule.restaurantId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, restaurantId: rule.restaurantId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { id: true },
   });
   if (!role) throw new Error("forbidden");

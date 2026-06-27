@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
 import { TransactionsTable, type TxnRow } from "@/components/transactions/TransactionsTable";
 
 export default async function TransactionsPage() {
@@ -8,7 +9,7 @@ export default async function TransactionsPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
@@ -41,7 +42,13 @@ export default async function TransactionsPage() {
           automatic mapping; your choice sticks across future syncs.
         </p>
       </div>
-      <TransactionsTable rows={rows} />
+      {role ? (
+        <TransactionsTable rows={rows} />
+      ) : (
+        <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
+          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a business to review transactions.
+        </p>
+      )}
     </main>
   );
 }

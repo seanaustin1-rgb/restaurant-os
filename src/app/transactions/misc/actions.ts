@@ -3,12 +3,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
 
 // Bulk-assign a category to many transactions at once (the Misc cleanup flow).
 // Marks each as a manual override so future imports/syncs won't re-sweep them.
-// Only OPERATOR/MANAGER of the owning restaurant may do this; the updateMany is
-// scoped to that restaurant so foreign ids can't be touched.
+// The updateMany is scoped to that restaurant so foreign ids can't be touched.
 export async function assignCategoryBulk(
   transactionIds: string[],
   categoryId: string,
@@ -25,7 +25,7 @@ export async function assignCategoryBulk(
   if (!cat) throw new Error("category not found");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurantId: cat.restaurantId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, restaurantId: cat.restaurantId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { id: true },
   });
   if (!role) throw new Error("forbidden");

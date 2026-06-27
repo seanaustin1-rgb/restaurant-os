@@ -3,9 +3,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
 
-// Operator-created rules win over seeded vendor rules (10+) but run after the
+// User-created rules win over seeded vendor rules (10+) but run after the
 // payroll CHECK_MIN (0) — same band the rules screen uses.
 const OPERATOR_RULE_PRIORITY = 5;
 
@@ -13,7 +14,7 @@ async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");

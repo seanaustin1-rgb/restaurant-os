@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import type { UserRole } from "@prisma/client";
 import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
 import type { RoleKey } from "@/lib/mock/dashboard";
-import { NAV_LINKS } from "@/lib/nav";
+import { navLinksForRoles } from "@/lib/nav";
 
 interface RestaurantOption {
   id: string;
@@ -33,6 +34,7 @@ export function DashboardHeader({
 }) {
   const active = restaurants.find((r) => r.id === activeId) ?? restaurants[0];
   const [navOpen, setNavOpen] = useState(false);
+  const navLinks = navLinksForRoles([role as UserRole]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-ink/90 backdrop-blur">
@@ -78,7 +80,7 @@ export function DashboardHeader({
       {navOpen && (
         <nav className="border-t border-line bg-ink/95 px-4 py-2 sm:px-6">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
-            {NAV_LINKS.map((l) => (
+            {navLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
 import { MISC_CATEGORY_NAME } from "@/lib/categorization/categories";
 import { MiscReviewTable, type MiscRow, type CategoryOption } from "@/components/transactions/MiscReviewTable";
 
@@ -11,7 +12,7 @@ export default async function MiscReviewPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
@@ -63,7 +64,7 @@ export default async function MiscReviewPage() {
         <MiscReviewTable rows={rows} categories={categories} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need an operator/manager role on a restaurant to review transactions.
+          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a business to review transactions.
         </p>
       )}
     </main>

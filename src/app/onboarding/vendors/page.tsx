@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { loadVendorSetup } from "@/lib/onboarding/vendor-setup";
 import { VendorSetupWizard } from "@/components/onboarding/VendorSetupWizard";
 
@@ -9,7 +10,7 @@ export default async function VendorSetupPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import type { TapBucket } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { TAP_BUCKET_LABEL, MISC_CATEGORY_NAME } from "@/lib/categorization/categories";
 
 const PATH = "/settings/categories";
@@ -13,7 +14,7 @@ async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");
@@ -30,7 +31,7 @@ async function requireOwnedCategory(categoryId: string) {
   });
   if (!cat) throw new Error("category not found");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurantId: cat.restaurantId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, restaurantId: cat.restaurantId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { id: true },
   });
   if (!role) throw new Error("forbidden");
@@ -94,7 +95,7 @@ export async function archiveCategory(categoryId: string): Promise<void> {
   revalidatePath(PATH);
 }
 
-// Set (null/0 clears) a category's monthly spend budget. OPERATOR/MANAGER only.
+// Set (null/0 clears) a category's monthly spend budget.
 export async function setCategoryBudget(categoryId: string, monthlyBudget: number | null): Promise<void> {
   await requireOwnedCategory(categoryId);
   const value =

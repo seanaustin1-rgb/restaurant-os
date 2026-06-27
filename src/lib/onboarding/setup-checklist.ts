@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { BusinessType, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { sourceMapFor } from "@/lib/source-map";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
@@ -31,6 +31,84 @@ function statusFromDone(done: boolean, blocked = false): SetupStepStatus {
   return blocked ? "blocked" : "next";
 }
 
+type StepText = {
+  cashAnchorLabel: string;
+  cashAnchorTodo: string;
+  cashAnchorDone: string;
+  mappingLabel: string;
+  mappingTodo: string;
+  mappingDone: string;
+  mappingHref: string;
+  liveSourceTodo: string;
+};
+
+const DEFAULT_TEXT: StepText = {
+  cashAnchorLabel: "Set cash anchor",
+  cashAnchorTodo: "Enter a known cash balance and date so runway can be judged.",
+  cashAnchorDone: "Cash anchor is set for runway and go-live safety.",
+  mappingLabel: "Review vendor mappings",
+  mappingTodo: "Confirm where recurring vendors belong so the dashboard can trust costs.",
+  mappingDone: "Vendor/category rules exist for future cleanup.",
+  mappingHref: "/onboarding/vendors",
+  liveSourceTodo: "Owner/operator authorizes bank, POS, Google, accounting, or booking sources.",
+};
+
+const TEXT_BY_TYPE: Partial<Record<BusinessType, Partial<StepText>>> = {
+  RESTAURANT: {
+    mappingLabel: "Review vendor and food-cost mappings",
+    mappingTodo: "Map recurring vendors, food, beverage, payroll, tax, and OpEx so prime cost can be trusted.",
+    mappingDone: "Vendor/category rules exist for restaurant spend cleanup.",
+    liveSourceTodo: "Owner/operator authorizes bank, POS, Google, payroll, or food-cost sources.",
+  },
+  SERVICE: {
+    mappingLabel: "Review client and vendor mappings",
+    mappingTodo: "Map recurring vendors, payroll, software, contractors, and client-payment activity.",
+    mappingDone: "Rules exist for service-business spend cleanup.",
+    liveSourceTodo: "Owner/operator authorizes bank, accounting, CRM, payment, or reputation sources.",
+  },
+  CONTRACTOR: {
+    cashAnchorLabel: "Set cash and job-float anchor",
+    cashAnchorTodo: "Enter known cash so runway can be judged against materials, payroll, deposits, and receivables.",
+    cashAnchorDone: "Cash anchor is set for job-float and runway checks.",
+    mappingLabel: "Review job-cost mappings",
+    mappingTodo: "Map materials, subcontractors, equipment, payroll, fuel, insurance, and OpEx.",
+    mappingDone: "Rules exist for contractor spend and job-cost cleanup.",
+    liveSourceTodo: "Owner/operator authorizes bank, accounting, job-management, payroll, or reputation sources.",
+  },
+  REAL_ESTATE_BROKERAGE: {
+    cashAnchorLabel: "Set operating cash anchor",
+    cashAnchorTodo: "Enter known cash so runway can be judged between closings and commission cycles.",
+    cashAnchorDone: "Operating cash anchor is set for brokerage runway checks.",
+    mappingLabel: "Review commission and lead-cost mappings",
+    mappingTodo: "Map agent payouts, referral fees, franchise fees, lead spend, staff payroll, and OpEx.",
+    mappingDone: "Rules exist for brokerage spend and commission cleanup.",
+    liveSourceTodo: "Owner/operator authorizes bank, accounting, CRM, transaction, listing, or reputation sources.",
+  },
+  VACATION_RENTAL: {
+    cashAnchorLabel: "Set owner-payout cash anchor",
+    cashAnchorTodo: "Enter known cash so runway can be judged against owner payouts, turns, repairs, and lodging-tax timing.",
+    cashAnchorDone: "Cash anchor is set for property-services runway checks.",
+    mappingLabel: "Import and map properties",
+    mappingTodo: "Import properties, bookings, owner statements, maintenance, reviews, or property-level costs.",
+    mappingDone: "Property or category data exists for vacation-rental cleanup.",
+    mappingHref: "/import/rentals",
+    liveSourceTodo: "Owner/operator authorizes bank, booking platform, PMS, accounting, maintenance, or review sources.",
+  },
+  RETAIL: {
+    cashAnchorLabel: "Set cash and inventory anchor",
+    cashAnchorTodo: "Enter known cash so runway can be judged against inventory buys, payroll, and tax timing.",
+    cashAnchorDone: "Cash anchor is set for cash and inventory pressure checks.",
+    mappingLabel: "Review inventory and vendor mappings",
+    mappingTodo: "Map inventory purchases, merchant fees, payroll, rent, returns, supplies, and OpEx.",
+    mappingDone: "Rules exist for retail spend and inventory cleanup.",
+    liveSourceTodo: "Owner/operator authorizes bank, POS, ecommerce, inventory, accounting, or review sources.",
+  },
+};
+
+function copyFor(type: BusinessType): StepText {
+  return { ...DEFAULT_TEXT, ...(TEXT_BY_TYPE[type] ?? {}) };
+}
+
 export async function loadOwnerSetupChecklist(
   restaurantId: string,
   db: PrismaClient = prisma,
@@ -59,6 +137,7 @@ export async function loadOwnerSetupChecklist(
   });
   if (!restaurant) return null;
 
+  const copy = copyFor(restaurant.businessType);
   const sourceMap = sourceMapFor(restaurant.businessType);
   const sourceConfigs = await loadSourceConfigSnapshots(restaurantId, db);
   const statusByKey = new Map(sourceConfigs.map((config) => [`${config.category}::${config.providerName}`, config.status]));
@@ -110,26 +189,22 @@ export async function loadOwnerSetupChecklist(
         ? "Minimum live sources are connected for a useful heartbeat."
         : hasAnyLiveAuthorization
           ? "At least one live source authorization is present."
-        : "Owner/operator authorizes bank, POS, Google, accounting, or booking sources.",
+        : copy.liveSourceTodo,
       "/settings/sources?intro=1",
     ),
     step(
       statusFromDone(hasCashAnchor),
       "cash-anchor",
-      "Set cash anchor",
-      hasCashAnchor
-        ? "Cash anchor is set for runway and go-live safety."
-        : "Enter a known cash balance and date so runway can be judged.",
+      copy.cashAnchorLabel,
+      hasCashAnchor ? copy.cashAnchorDone : copy.cashAnchorTodo,
       "/modules/cash-runway",
     ),
     step(
       statusFromDone(hasVendorRules),
       "vendor-mapping",
-      "Review vendor mappings",
-      hasVendorRules
-        ? "Vendor/category rules exist for future cleanup."
-        : "Confirm where recurring vendors belong so the dashboard can trust costs.",
-      "/onboarding/vendors",
+      copy.mappingLabel,
+      hasVendorRules ? copy.mappingDone : copy.mappingTodo,
+      copy.mappingHref,
     ),
     step(
       statusFromDone(hasSharedAccess),

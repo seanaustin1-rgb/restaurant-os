@@ -111,7 +111,7 @@ function ownerCopy(owner: SetupOwner): { label: string; detail: string; classNam
   if (owner === "owner") {
     return {
       label: "owner-approved",
-      detail: "Owner/operator should authorize or disconnect this source.",
+      detail: "Only the owner/operator should authorize, confirm, or disconnect this source.",
       className: "border-copper-dim text-copper-soft",
     };
   }
@@ -284,7 +284,11 @@ export function SourceMapPlanner({
                           onClick={() =>
                             updateDraft(key, {
                               status: nextStatus(draft.status, guide),
-                              notes: draft.notes || (guide.owner === "owner" ? "Owner/operator authorization needed." : guide.headline),
+                              notes:
+                                draft.notes ||
+                                (guide.owner === "owner"
+                                  ? `${option.name}: owner/operator authorization needed.`
+                                  : guide.headline),
                             })
                           }
                           className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"

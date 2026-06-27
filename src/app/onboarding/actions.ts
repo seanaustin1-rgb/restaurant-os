@@ -36,6 +36,30 @@ function targetData(template: ReturnType<typeof industryTemplateFor>) {
   };
 }
 
+function firstRunPath(input: OnboardingInput): string {
+  if (input.tier === "TIER_3") {
+    return input.businessType === "VACATION_RENTAL" ? "/import/rentals" : "/import";
+  }
+  if (input.tier === "TIER_4") {
+    switch (input.businessType) {
+      case "CONTRACTOR":
+        return "/demo/contractor?from=onboarding";
+      case "REAL_ESTATE_BROKERAGE":
+        return "/demo/real-estate?from=onboarding";
+      case "VACATION_RENTAL":
+        return "/demo/vacation-rental?from=onboarding";
+      case "RETAIL":
+        return "/demo/retail?from=onboarding";
+      case "SERVICE":
+        return "/demo/service?from=onboarding";
+      case "RESTAURANT":
+      default:
+        return "/demo?from=onboarding";
+    }
+  }
+  return "/settings/sources?intro=1";
+}
+
 export async function createRestaurant(input: OnboardingInput): Promise<void> {
   const { userId } = await auth();
   if (!userId) {
@@ -78,5 +102,5 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
     },
   });
 
-  redirect(input.tier === "TIER_3" ? "/import" : "/settings/sources?intro=1");
+  redirect(firstRunPath(input));
 }

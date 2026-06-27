@@ -16,6 +16,10 @@ import { DisconnectGoogleBusinessProfileButton } from "@/components/sources/Disc
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
 
+function keyOf(category: string, providerName: string): string {
+  return `${category}::${providerName}`;
+}
+
 function googleLocationsFromMetadata(metadata: unknown): GoogleBusinessProfileLocation[] {
   if (!metadata || typeof metadata !== "object" || !("locations" in metadata)) return [];
   const locations = (metadata as { locations?: unknown }).locations;
@@ -45,6 +49,24 @@ export default async function SourceMapPage({
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
   const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
+  const statusByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config.status]));
+  const ownerApprovalSources = sourceMap.groups.flatMap((group) =>
+    group.options
+      .filter((option) => {
+        const name = option.name.toLowerCase();
+        return (
+          name === "plaid" ||
+          name.includes("google business profile") ||
+          name.includes("square") ||
+          name.includes("clover") ||
+          name.includes("shopify") ||
+          name.includes("quickbooks") ||
+          name.includes("xero")
+        );
+      })
+      .filter((option) => statusByKey.get(keyOf(group.category, option.name)) !== "CONNECTED")
+      .map((option) => option.name),
+  );
   const pendingGoogleConnection = await prisma.integrationConnection.findFirst({
     where: {
       restaurantId: role.restaurantId,
@@ -108,6 +130,36 @@ export default async function SourceMapPage({
         </div>
       </section>
 
+      {ownerApprovalSources.length > 0 && (
+        <section className="rounded-lg border border-copper-dim/40 bg-copper/5 p-4">
+          <div className="flex items-start gap-2">
+            <ShieldCheck size={18} className="mt-0.5 text-copper-soft" />
+            <div>
+              <h2 className="text-sm font-medium text-ink-text">
+                {role.role === "OPERATOR" ? "Owner approvals to finish" : "Owner approval handoff"}
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted">
+                {role.role === "OPERATOR"
+                  ? "These sources should be authorized by the owner/operator when you are ready:"
+                  : "Plan these sources here, then ask the owner/operator to authorize them:"}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {ownerApprovalSources.slice(0, 6).map((name) => (
+                  <span key={name} className="rounded-full border border-copper-dim px-2 py-1 text-[11px] text-copper-soft">
+                    {name}
+                  </span>
+                ))}
+                {ownerApprovalSources.length > 6 && (
+                  <span className="rounded-full border border-line px-2 py-1 text-[11px] text-muted">
+                    +{ownerApprovalSources.length - 6} more
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="rounded-lg border border-line bg-surface p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -135,9 +187,13 @@ export default async function SourceMapPage({
                     ? `${bankConnectionCount} active bank connection${bankConnectionCount === 1 ? "" : "s"}.`
                     : "No active bank authorization yet."}
                 </p>
-                <Link href="/connections" className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper">
-                  Manage bank connections
-                </Link>
+                {role.role === "OPERATOR" ? (
+                  <Link href="/connections" className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper">
+                    Manage bank connections
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-xs text-muted">An owner/operator should manage bank authorization.</p>
+                )}
               </div>
             </div>
           </div>

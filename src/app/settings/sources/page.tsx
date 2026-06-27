@@ -68,6 +68,15 @@ function FinancialDataSafetyPanel({ health }: { health: FinancialSyncHealth }) {
 
       <p className="mt-3 text-xs leading-relaxed text-muted">{status.detail}</p>
 
+      <div className="mt-3">
+        <Link
+          href="/settings/sources/review"
+          className="inline-flex items-center justify-center rounded-md border border-copper-dim px-3 py-2 text-xs text-copper-soft hover:border-copper"
+        >
+          Review mappings
+        </Link>
+      </div>
+
       <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
         <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
           <p className="text-[10px] uppercase tracking-wider text-muted">Raw imports</p>

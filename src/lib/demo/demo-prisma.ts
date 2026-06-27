@@ -14,6 +14,10 @@ const globalForDemoPrisma = globalThis as unknown as {
 function createDemoPrisma(): PrismaClient | null {
   const url = process.env.DEMO_DATABASE_URL?.trim();
   if (!url) return null;
+  const productionUrl = process.env.DATABASE_URL?.trim();
+  if (productionUrl && url === productionUrl) {
+    throw new Error("DEMO_DATABASE_URL must point to a separate demo database.");
+  }
   return new PrismaClient({
     datasourceUrl: url,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],

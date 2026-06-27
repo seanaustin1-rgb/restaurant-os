@@ -11,7 +11,7 @@ export async function GET() {
   if (!userId) return NextResponse.redirect(new URL("/sign-in", process.env.NEXT_PUBLIC_APP_URL));
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "CONSULTANT", "MANAGER"] } },
+    where: { clerkUserId: userId, role: "OPERATOR" },
     select: { restaurantId: true },
   });
   if (!role) return NextResponse.redirect(new URL("/dashboard", process.env.NEXT_PUBLIC_APP_URL));

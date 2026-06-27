@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   }
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurantId: state.restaurantId, role: { in: ["OPERATOR", "CONSULTANT", "MANAGER"] } },
+    where: { clerkUserId: userId, restaurantId: state.restaurantId, role: "OPERATOR" },
     select: { restaurantId: true },
   });
   if (!role) return NextResponse.redirect(appUrl("/dashboard"));

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { PlugZap, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { Landmark, PlugZap, ShieldCheck, Unplug } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
@@ -11,6 +12,7 @@ import {
   GOOGLE_BUSINESS_PROFILE_PROVIDER,
   type GoogleBusinessProfileLocation,
 } from "@/lib/integrations/google-business-profile/oauth";
+import { DisconnectGoogleBusinessProfileButton } from "@/components/sources/DisconnectGoogleBusinessProfileButton";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
 
@@ -53,6 +55,19 @@ export default async function SourceMapPage({
     select: { id: true, metadata: true },
   });
   const googleLocationChoices = googleLocationsFromMetadata(pendingGoogleConnection?.metadata);
+  const activeGoogleConnection = await prisma.integrationConnection.findFirst({
+    where: {
+      restaurantId: role.restaurantId,
+      provider: GOOGLE_BUSINESS_PROFILE_PROVIDER,
+      isActive: true,
+      externalLocationId: { notIn: ["pending", "unselected"] },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, displayName: true, updatedAt: true },
+  });
+  const bankConnectionCount = await prisma.plaidConnection.count({
+    where: { restaurantId: role.restaurantId, isActive: true },
+  });
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
@@ -93,6 +108,75 @@ export default async function SourceMapPage({
         </div>
       </section>
 
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink-text">
+              <Unplug size={16} /> Live authorizations
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Owner-approved connections can be turned off here. Advisors can plan setup and leave notes, but sensitive
+              bank and Google authorization should stay visible to the operator.
+            </p>
+          </div>
+          <span className="rounded-full border border-line px-2 py-1 text-[10px] uppercase tracking-wider text-muted">
+            {role.role === "OPERATOR" ? "owner controls" : "advisor view"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-md border border-line bg-ink/40 px-3 py-3">
+            <div className="flex items-start gap-2">
+              <Landmark size={16} className="mt-0.5 text-copper-soft" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-ink-text">Bank authorization</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {bankConnectionCount > 0
+                    ? `${bankConnectionCount} active bank connection${bankConnectionCount === 1 ? "" : "s"}.`
+                    : "No active bank authorization yet."}
+                </p>
+                <Link href="/connections" className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper">
+                  Manage bank connections
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-line bg-ink/40 px-3 py-3">
+            <div className="flex items-start gap-2">
+              <PlugZap size={16} className="mt-0.5 text-copper-soft" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-ink-text">Google Business Profile</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  {activeGoogleConnection
+                    ? `${activeGoogleConnection.displayName ?? "Google Business Profile"} is authorized.`
+                    : "No active Google authorization yet."}
+                </p>
+                {activeGoogleConnection && role.role === "OPERATOR" ? (
+                  <div className="mt-2">
+                    <DisconnectGoogleBusinessProfileButton
+                      connectionId={activeGoogleConnection.id}
+                      label={activeGoogleConnection.displayName ?? "this business"}
+                    />
+                  </div>
+                ) : activeGoogleConnection ? (
+                  <p className="mt-2 text-xs text-muted">An owner/operator can disconnect this authorization.</p>
+                ) : role.role === "OPERATOR" ? (
+                  <Link
+                    href="/api/google-business-profile/oauth/start"
+                    className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper"
+                  >
+                    Authorize Google
+                  </Link>
+                ) : (
+                  <p className="mt-2 text-xs text-muted">An owner/operator should authorize this Google connection.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {searchParams?.google && (
         <section
           className={
@@ -112,11 +196,17 @@ export default async function SourceMapPage({
         </section>
       )}
 
-      {pendingGoogleConnection && googleLocationChoices.length > 1 && (
+      {pendingGoogleConnection && googleLocationChoices.length > 1 && role.role === "OPERATOR" && (
         <GoogleBusinessProfileLocationPicker connectionId={pendingGoogleConnection.id} locations={googleLocationChoices} />
       )}
 
-      <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} />
+      {pendingGoogleConnection && googleLocationChoices.length > 1 && role.role !== "OPERATOR" && (
+        <section className="rounded-lg border border-health-yellow/40 bg-health-yellow/5 px-4 py-3 text-sm text-health-yellow">
+          Google is authorized, but the owner/operator needs to choose which Business Profile location should feed Aura.
+        </section>
+      )}
+
+      <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} actorRole={role.role} />
     </main>
   );
 }

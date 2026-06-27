@@ -29,9 +29,11 @@ const STATUS_STYLE: Record<DataSourceStatus, string> = {
 };
 
 type ConnectMode = "oauth" | "admin" | "upload" | "planned";
+type SetupOwner = "owner" | "advisor" | "support";
 
 interface OnboardingGuide {
   mode: ConnectMode;
+  owner: SetupOwner;
   headline: string;
   detail: string;
   primaryLabel: string;
@@ -51,6 +53,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   if (name === "plaid") {
     return {
       mode: "oauth",
+      owner: "owner",
       headline: "Customer connects bank",
       detail: "They choose their bank and sign in through Plaid. No routing numbers or API keys needed.",
       primaryLabel: "Connect bank",
@@ -60,6 +63,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   if (name.includes("google business profile")) {
     return {
       mode: "oauth",
+      owner: "owner",
       headline: "Customer authorizes Google",
       detail: "They sign in with Google, then confirm the business/location the app discovers.",
       primaryLabel: "Authorize Google",
@@ -69,6 +73,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   if (name === "toast") {
     return {
       mode: "admin",
+      owner: "support",
       headline: "Support-assisted POS setup",
       detail: "Toast usually needs partner/API credentials. The customer should not be asked to find restaurant GUIDs.",
       primaryLabel: "Request setup help",
@@ -77,6 +82,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   if (name.includes("square") || name.includes("clover") || name.includes("shopify") || name.includes("quickbooks") || name.includes("xero")) {
     return {
       mode: "oauth",
+      owner: "owner",
       headline: "Connect with provider login",
       detail: "Use OAuth when enabled, then let the customer confirm the company, store, or location.",
       primaryLabel: "Connect account",
@@ -85,6 +91,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   if (name.includes("statement") || name.includes("csv") || name.includes("mls export")) {
     return {
       mode: "upload",
+      owner: "advisor",
       headline: "Upload or forward a file",
       detail: "Use this as the fallback path when a direct integration is not available yet.",
       primaryLabel: category === "cash" ? "Open import" : "Plan upload",
@@ -93,9 +100,32 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   }
   return {
     mode: "admin",
+    owner: "support",
     headline: "Support confirms setup path",
     detail: "Collect the provider name and account owner. Support decides whether this is OAuth, file import, or custom API work.",
     primaryLabel: "Mark for support",
+  };
+}
+
+function ownerCopy(owner: SetupOwner): { label: string; detail: string; className: string } {
+  if (owner === "owner") {
+    return {
+      label: "owner-approved",
+      detail: "Owner/operator should authorize or disconnect this source.",
+      className: "border-copper-dim text-copper-soft",
+    };
+  }
+  if (owner === "advisor") {
+    return {
+      label: "advisor-ready",
+      detail: "Consultant/accountant can prepare this path and upload or confirm files.",
+      className: "border-health-green/40 text-health-green",
+    };
+  }
+  return {
+    label: "support-assisted",
+    detail: "Support handles credentials, partner/API setup, or provider coordination.",
+    className: "border-line text-muted",
   };
 }
 
@@ -125,9 +155,11 @@ function nextStatus(status: DataSourceStatus, guide: OnboardingGuide): DataSourc
 export function SourceMapPlanner({
   sourceMap,
   initialConfigs,
+  actorRole,
 }: {
   sourceMap: BusinessSourceMap;
   initialConfigs: SourceConfigSnapshot[];
+  actorRole: string;
 }) {
   const initialByKey = useMemo(() => {
     return new Map(initialConfigs.map((config) => [configKey(config.category, config.providerName), config]));
@@ -201,6 +233,8 @@ export function SourceMapPlanner({
               const isSaving = pending && savingKey === key;
               const guide = providerGuide(group.category, option);
               const copy = statusCopy(draft.status, guide);
+              const owner = ownerCopy(guide.owner);
+              const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
               const Icon = draft.status === "CONNECTED" ? ShieldCheck : draft.status === "PLANNED" ? modeIcon(guide.mode) : draft.status === "BLOCKED" ? LifeBuoy : SearchCheck;
               return (
                 <div key={option.name} className="rounded-md border border-line bg-ink/40 px-3 py-3">
@@ -209,6 +243,9 @@ export function SourceMapPlanner({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm text-ink-text">{option.name}</span>
                         {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
+                        <span className={"rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider " + owner.className}>
+                          {owner.label}
+                        </span>
                       </div>
                       <p className="mt-0.5 text-xs text-muted">{option.role}</p>
                     </div>
@@ -225,6 +262,7 @@ export function SourceMapPlanner({
                         <p className="mt-1 text-[11px] leading-relaxed text-muted">
                           {draft.status === "PLANNED" ? guide.detail : `Unlocks: ${option.unlocks.join(", ")}`}
                         </p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-muted">{owner.detail}</p>
                       </div>
                     </div>
                   </div>
@@ -233,7 +271,7 @@ export function SourceMapPlanner({
 
                   <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                     <div className="flex flex-wrap gap-2 sm:w-auto">
-                      {guide.href ? (
+                      {guide.href && canStartAuthorization ? (
                         <Link
                           href={guide.href}
                           className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
@@ -243,10 +281,15 @@ export function SourceMapPlanner({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => updateDraft(key, { status: nextStatus(draft.status, guide), notes: draft.notes || guide.headline })}
+                          onClick={() =>
+                            updateDraft(key, {
+                              status: nextStatus(draft.status, guide),
+                              notes: draft.notes || (guide.owner === "owner" ? "Owner/operator authorization needed." : guide.headline),
+                            })
+                          }
                           className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
                         >
-                          <PlugZap size={13} /> {guide.primaryLabel}
+                          <PlugZap size={13} /> {guide.owner === "owner" && !canStartAuthorization ? "Request owner authorization" : guide.primaryLabel}
                         </button>
                       )}
                     </div>

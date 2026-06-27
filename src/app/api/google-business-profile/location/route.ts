@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     where: {
       clerkUserId: userId,
       restaurantId: connection.restaurantId,
-      role: { in: ["OPERATOR", "CONSULTANT", "MANAGER"] },
+      role: "OPERATOR",
     },
     select: { restaurantId: true },
   });

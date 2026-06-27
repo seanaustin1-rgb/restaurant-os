@@ -42,6 +42,17 @@ export default async function AccessSettingsPage() {
       createdAt: true,
     },
   });
+  const invites = await prisma.businessAccessInvite.findMany({
+    where: { restaurantId: operatorRole.restaurantId, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      token: true,
+      createdAt: true,
+    },
+  });
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
@@ -61,6 +72,11 @@ export default async function AccessSettingsPage() {
         rows={rows.map((row) => ({
           ...row,
           createdAt: row.createdAt.toLocaleDateString(),
+        }))}
+        invites={invites.map((invite) => ({
+          ...invite,
+          inviteUrl: `${(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}/access/accept?token=${invite.token}`,
+          createdAt: invite.createdAt.toLocaleDateString(),
         }))}
       />
     </main>

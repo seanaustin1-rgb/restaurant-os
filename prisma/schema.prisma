@@ -165,6 +165,7 @@ model Restaurant {
   updatedAt             DateTime     @updatedAt
 
   userRoles                   UserRestaurantRole[]
+  accessInvites               BusinessAccessInvite[]
   posConnections              PosConnection[]
   dailySales                  DailySales[]
   menuItemSales               MenuItemSales[]
@@ -215,6 +216,27 @@ model UserRestaurantRole {
 // ─────────────────────────────────────────────────────────────
 // Data sources — POS (Tier 1) and bank (Tier 2)
 // ─────────────────────────────────────────────────────────────
+
+model BusinessAccessInvite {
+  id           String    @id @default(cuid())
+  restaurantId String
+  email        String
+  role         UserRole
+  token        String    @unique
+  status       String    @default("PENDING")
+  invitedBy    String
+  acceptedBy   String?
+  acceptedAt   DateTime?
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([email])
+  @@index([status])
+}
 
 model PosConnection {
   id           String      @id @default(cuid())

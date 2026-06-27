@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { PlugZap } from "lucide-react";
+import { PlugZap, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
@@ -29,10 +29,10 @@ export default async function SourceMapPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Setup</p>
-          <h1 className="mt-1 font-display text-2xl text-copper-soft">Source map</h1>
+          <h1 className="mt-1 font-display text-2xl text-copper-soft">Source Onboarding</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-            {role.restaurant.name} is using the {template.label.toLowerCase()} template. This map shows the minimum
-            automatic inputs and the services that unlock a stronger heartbeat.
+            {role.restaurant.name} is using the {template.label.toLowerCase()} template. Pick the systems the business
+            uses; the app handles OAuth where possible and support/admin setup where a provider still requires technical credentials.
           </p>
         </div>
         <span className="rounded-full border border-copper-dim px-3 py-1 text-xs text-copper-soft">
@@ -44,8 +44,21 @@ export default async function SourceMapPage() {
         <div className="flex items-start gap-2">
           <PlugZap size={18} className="mt-0.5 text-copper-soft" />
           <div>
-            <h2 className="text-sm font-medium text-ink-text">Minimum auto-input path</h2>
+            <h2 className="text-sm font-medium text-ink-text">Minimum useful path</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted">{sourceMap.minimumAutoInput}</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <div className="flex items-start gap-2">
+          <ShieldCheck size={18} className="mt-0.5 text-health-green" />
+          <div>
+            <h2 className="text-sm font-medium text-ink-text">Customer promise</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Customers should not hunt for API keys, account IDs, or location IDs. They connect accounts, confirm the
+              business we found, and support handles anything that still requires provider credentials.
+            </p>
           </div>
         </div>
       </section>

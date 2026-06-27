@@ -2,9 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react";
 import type { DataSourceStatus } from "@prisma/client";
-import { Check, Save } from "lucide-react";
+import Link from "next/link";
+import { Check, ExternalLink, LifeBuoy, LockKeyhole, PlugZap, Save, SearchCheck, ShieldCheck } from "lucide-react";
 import { updateSourceConfig } from "@/app/settings/sources/actions";
-import type { BusinessSourceMap, SourceCategory } from "@/lib/source-map";
+import type { BusinessSourceMap, SourceCategory, SourceOption } from "@/lib/source-map";
 
 type SourceConfigSnapshot = {
   category: string;
@@ -27,12 +28,97 @@ const STATUS_STYLE: Record<DataSourceStatus, string> = {
   NOT_NEEDED: "border-line text-muted",
 };
 
+type ConnectMode = "oauth" | "admin" | "upload" | "planned";
+
+interface OnboardingGuide {
+  mode: ConnectMode;
+  headline: string;
+  detail: string;
+  primaryLabel: string;
+  href?: string;
+}
+
 function configKey(category: string, providerName: string) {
   return `${category}::${providerName}`;
 }
 
 function errMsg(error: unknown) {
   return error instanceof Error ? error.message : "Could not save source setup.";
+}
+
+function providerGuide(category: SourceCategory, option: SourceOption): OnboardingGuide {
+  const name = option.name.toLowerCase();
+  if (name === "plaid") {
+    return {
+      mode: "oauth",
+      headline: "Customer connects bank",
+      detail: "They choose their bank and sign in through Plaid. No routing numbers or API keys needed.",
+      primaryLabel: "Connect bank",
+      href: "/connections",
+    };
+  }
+  if (name.includes("google business profile")) {
+    return {
+      mode: "oauth",
+      headline: "Customer authorizes Google",
+      detail: "They sign in with Google, then confirm the business/location the app discovers.",
+      primaryLabel: "Authorize Google",
+    };
+  }
+  if (name === "toast") {
+    return {
+      mode: "admin",
+      headline: "Support-assisted POS setup",
+      detail: "Toast usually needs partner/API credentials. The customer should not be asked to find restaurant GUIDs.",
+      primaryLabel: "Request setup help",
+    };
+  }
+  if (name.includes("square") || name.includes("clover") || name.includes("shopify") || name.includes("quickbooks") || name.includes("xero")) {
+    return {
+      mode: "oauth",
+      headline: "Connect with provider login",
+      detail: "Use OAuth when enabled, then let the customer confirm the company, store, or location.",
+      primaryLabel: "Connect account",
+    };
+  }
+  if (name.includes("statement") || name.includes("csv") || name.includes("mls export")) {
+    return {
+      mode: "upload",
+      headline: "Upload or forward a file",
+      detail: "Use this as the fallback path when a direct integration is not available yet.",
+      primaryLabel: category === "cash" ? "Open import" : "Plan upload",
+      href: category === "cash" ? "/import" : undefined,
+    };
+  }
+  return {
+    mode: "admin",
+    headline: "Support confirms setup path",
+    detail: "Collect the provider name and account owner. Support decides whether this is OAuth, file import, or custom API work.",
+    primaryLabel: "Mark for support",
+  };
+}
+
+function statusCopy(status: DataSourceStatus, guide: OnboardingGuide): { label: string; detail: string } {
+  if (status === "CONNECTED") return { label: "Live", detail: "This source is connected or detected from live data." };
+  if (status === "BLOCKED") return { label: "Needs help", detail: "Something is blocking setup; support or the account owner needs to resolve it." };
+  if (status === "NOT_NEEDED") return { label: "Skip for now", detail: "Not needed for the current onboarding path." };
+  if (guide.mode === "oauth") return { label: "Ready to connect", detail: "Customer can start this with a provider login." };
+  if (guide.mode === "upload") return { label: "Upload path", detail: "Use a file/import path until a direct connector exists." };
+  return { label: "Support setup", detail: "Support should handle technical credentials and IDs." };
+}
+
+function modeIcon(mode: ConnectMode) {
+  if (mode === "oauth") return PlugZap;
+  if (mode === "upload") return ExternalLink;
+  if (mode === "admin") return LifeBuoy;
+  return LockKeyhole;
+}
+
+function nextStatus(status: DataSourceStatus, guide: OnboardingGuide): DataSourceStatus {
+  if (status === "CONNECTED") return "CONNECTED";
+  if (guide.mode === "admin") return "BLOCKED";
+  if (guide.mode === "upload") return "PLANNED";
+  return "PLANNED";
 }
 
 export function SourceMapPlanner({
@@ -112,20 +198,67 @@ export function SourceMapPlanner({
               const key = configKey(group.category, option.name);
               const draft = drafts[key] ?? { status: option.minimum ? "PLANNED" : "NOT_NEEDED", notes: "" };
               const isSaving = pending && savingKey === key;
+              const guide = providerGuide(group.category, option);
+              const copy = statusCopy(draft.status, guide);
+              const Icon = draft.status === "CONNECTED" ? ShieldCheck : draft.status === "PLANNED" ? modeIcon(guide.mode) : draft.status === "BLOCKED" ? LifeBuoy : SearchCheck;
               return (
                 <div key={option.name} className="rounded-md border border-line bg-ink/40 px-3 py-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm text-ink-text">{option.name}</span>
                         {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
                       </div>
                       <p className="mt-0.5 text-xs text-muted">{option.role}</p>
                     </div>
+                    <span className={"rounded-full border px-2 py-1 text-[10px] uppercase tracking-wider " + STATUS_STYLE[draft.status]}>
+                      {copy.label}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 rounded-md border border-line bg-surface/70 px-3 py-3">
+                    <div className="flex items-start gap-2">
+                      <Icon size={15} className={draft.status === "CONNECTED" ? "mt-0.5 shrink-0 text-health-green" : "mt-0.5 shrink-0 text-copper-soft"} />
+                      <div>
+                        <p className="text-xs text-ink-text">{draft.status === "PLANNED" ? guide.headline : copy.detail}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-muted">
+                          {draft.status === "PLANNED" ? guide.detail : `Unlocks: ${option.unlocks.join(", ")}`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-[11px] leading-relaxed text-muted">Unlocks: {option.unlocks.join(", ")}</p>
+
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                    <div className="flex flex-wrap gap-2 sm:w-auto">
+                      {guide.href ? (
+                        <Link
+                          href={guide.href}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
+                        >
+                          <PlugZap size={13} /> {guide.primaryLabel}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updateDraft(key, { status: nextStatus(draft.status, guide), notes: draft.notes || guide.headline })}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"
+                        >
+                          <PlugZap size={13} /> {guide.primaryLabel}
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      value={draft.notes}
+                      onChange={(e) => updateDraft(key, { notes: e.target.value })}
+                      placeholder="Support note, account owner, blocker, confirmed location..."
+                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
+                    />
                     <select
                       value={draft.status}
                       onChange={(e) => updateDraft(key, { status: e.target.value as DataSourceStatus })}
-                      className={"rounded-md border bg-surface px-2 py-1 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " + STATUS_STYLE[draft.status]}
+                      className={"rounded-md border bg-surface px-2 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " + STATUS_STYLE[draft.status]}
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status.value} value={status.value}>
@@ -133,17 +266,6 @@ export function SourceMapPlanner({
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <p className="mt-2 text-[11px] leading-relaxed text-muted">Unlocks: {option.unlocks.join(", ")}</p>
-
-                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                    <input
-                      value={draft.notes}
-                      onChange={(e) => updateDraft(key, { notes: e.target.value })}
-                      placeholder="Setup note, credential owner, blocker..."
-                      className="min-w-0 flex-1 rounded-md border border-line bg-surface px-3 py-2 text-xs text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
-                    />
                     <button
                       type="button"
                       onClick={() => save(group.category, option.name)}

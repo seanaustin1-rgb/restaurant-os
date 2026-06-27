@@ -105,12 +105,31 @@ async function loadRoles(): Promise<{ role: UserRole; restaurantId: string; busi
 }
 
 // New users land here after sign-up. Existing users get a role-specific launch path.
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams?: { new?: string };
+}) {
   const roles = await loadRoles();
-  if (roles.length === 0) {
+  const addingBusiness = searchParams?.new === "1";
+  if (roles.length === 0 || addingBusiness) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-ink p-6">
-        <OnboardingFlow />
+      <main className="min-h-screen bg-ink px-4 py-8 text-ink-text sm:px-6">
+        <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center gap-5">
+          {addingBusiness && (
+            <section className="w-full max-w-lg rounded-lg border border-line bg-surface p-4">
+              <p className="text-[11px] uppercase tracking-wider text-muted">New company</p>
+              <h1 className="mt-1 font-display text-2xl text-copper-soft">Add another business</h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted">
+                This creates a separate dashboard, source map, access list, and setup checklist.
+              </p>
+              <Link href="/onboarding" className="mt-3 inline-flex text-sm text-copper-soft hover:text-copper">
+                Back to setup launch
+              </Link>
+            </section>
+          )}
+          <OnboardingFlow />
+        </div>
       </main>
     );
   }
@@ -209,8 +228,8 @@ export default async function OnboardingPage() {
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Use the owner path when you are creating a new business that should have its own dashboard and source map.
           </p>
-          <Link href="/access" className="mt-3 inline-flex rounded-md border border-line px-4 py-2 text-sm text-ink-text hover:border-copper-dim">
-            Review access paths
+          <Link href="/onboarding?new=1" className="mt-3 inline-flex rounded-md border border-line px-4 py-2 text-sm text-ink-text hover:border-copper-dim">
+            Add another business
           </Link>
         </section>
       </div>

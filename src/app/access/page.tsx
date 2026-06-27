@@ -51,7 +51,8 @@ export default function AccessPathsPage() {
         <h1 className="mt-2 font-display text-3xl text-copper-soft">Who is setting up the heartbeat?</h1>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
           The business owns the data. Advisors can help prepare the setup, and investors can request visibility after
-          approval. This page is the lightweight role-entry story for demos; full invites and approvals are flagged for a later phase.
+          approval. Owners can invite people by email, assign the right role, and keep sensitive source authorization under
+          owner/operator control.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           <SignUpButton forceRedirectUrl="/onboarding">

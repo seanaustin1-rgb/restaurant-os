@@ -8,6 +8,7 @@ export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/onboarding/vendors", label: "Vendor Setup" },
   { href: "/settings/categories", label: "Categories" },
   { href: "/settings/rules", label: "Rules" },
+  { href: "/settings/access", label: "Access" },
   { href: "/settings/business", label: "Business Template" },
   { href: "/settings/sources", label: "Source Map" },
   { href: "/settings/allocation", label: "Allocation" },

@@ -158,7 +158,12 @@ export async function discoverGoogleBusinessProfileLocations(accessToken: string
 export async function accessTokenForGoogleBusinessProfile(restaurantId?: string | null): Promise<string> {
   if (restaurantId) {
     const connection = await prisma.integrationConnection.findFirst({
-      where: { restaurantId, provider: GOOGLE_BUSINESS_PROFILE_PROVIDER, isActive: true },
+      where: {
+        restaurantId,
+        provider: GOOGLE_BUSINESS_PROFILE_PROVIDER,
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
       orderBy: { updatedAt: "desc" },
       select: { id: true, accessToken: true, refreshToken: true },
     });

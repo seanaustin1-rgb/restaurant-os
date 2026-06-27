@@ -126,7 +126,12 @@ export async function fetchGoogleBusinessProfilePerformance(days = 30, restauran
   let resolvedLocationId = locationId;
   if (restaurantId) {
     const connection = await prisma.integrationConnection.findFirst({
-      where: { restaurantId, provider: "GOOGLE_BUSINESS_PROFILE", isActive: true },
+      where: {
+        restaurantId,
+        provider: "GOOGLE_BUSINESS_PROFILE",
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
       orderBy: { updatedAt: "desc" },
       select: { externalLocationId: true },
     });

@@ -52,20 +52,29 @@ export async function GET(req: NextRequest) {
   try {
     const token = await exchangeGoogleCode(code);
     const locations = await discoverGoogleBusinessProfileLocations(token.access_token!);
-    const location = locations[0];
+    const location = locations.length === 1 ? locations[0] : null;
+    const pendingLocationId = locations.length > 1 ? "pending" : "unselected";
+    const connectionLocationId = location?.locationId ?? pendingLocationId;
+    const status = location ? "CONNECTED" : "BLOCKED";
+    const notes = location
+      ? `Authorized Google Business Profile: ${location.title}${location.address ? ` (${location.address})` : ""}`
+      : locations.length > 1
+        ? `Google authorized. Choose one of ${locations.length} Business Profile locations.`
+        : "Google authorized, but no Business Profile location was found.";
 
     await prisma.integrationConnection.upsert({
       where: {
         restaurantId_provider_externalLocationId: {
           restaurantId: role.restaurantId,
           provider: GOOGLE_BUSINESS_PROFILE_PROVIDER,
-          externalLocationId: location?.locationId ?? "unselected",
+          externalLocationId: connectionLocationId,
         },
       },
       update: {
         category: GOOGLE_BUSINESS_PROFILE_CATEGORY,
         externalAccountId: location?.accountId ?? null,
         displayName: location?.title ?? "Google Business Profile",
+        externalLocationId: connectionLocationId,
         accessToken: encrypt(token.access_token!),
         refreshToken: token.refresh_token ? encrypt(token.refresh_token) : undefined,
         expiresAt: token.expires_in ? new Date(Date.now() + token.expires_in * 1000) : null,
@@ -78,7 +87,7 @@ export async function GET(req: NextRequest) {
         provider: GOOGLE_BUSINESS_PROFILE_PROVIDER,
         category: GOOGLE_BUSINESS_PROFILE_CATEGORY,
         externalAccountId: location?.accountId ?? null,
-        externalLocationId: location?.locationId ?? "unselected",
+        externalLocationId: connectionLocationId,
         displayName: location?.title ?? "Google Business Profile",
         accessToken: encrypt(token.access_token!),
         refreshToken: token.refresh_token ? encrypt(token.refresh_token) : null,
@@ -97,25 +106,22 @@ export async function GET(req: NextRequest) {
         },
       },
       update: {
-        status: location ? "CONNECTED" : "BLOCKED",
-        notes: location
-          ? `Authorized Google Business Profile: ${location.title}${location.address ? ` (${location.address})` : ""}`
-          : "Google authorized, but no Business Profile location was found.",
+        status,
+        notes,
         updatedBy: userId,
       },
       create: {
         restaurantId: role.restaurantId,
         category: "aura",
         providerName: "Google Business Profile",
-        status: location ? "CONNECTED" : "BLOCKED",
-        notes: location
-          ? `Authorized Google Business Profile: ${location.title}${location.address ? ` (${location.address})` : ""}`
-          : "Google authorized, but no Business Profile location was found.",
+        status,
+        notes,
         updatedBy: userId,
       },
     });
 
-    const res = NextResponse.redirect(appUrl(location ? "/settings/sources?google=connected" : "/settings/sources?google=needs_location"));
+    const googleStatus = location ? "connected" : locations.length > 1 ? "choose_location" : "needs_location";
+    const res = NextResponse.redirect(appUrl(`/settings/sources?google=${googleStatus}`));
     res.cookies.delete(STATE_COOKIE);
     return res;
   } catch (err) {

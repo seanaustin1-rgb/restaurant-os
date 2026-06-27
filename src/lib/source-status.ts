@@ -92,16 +92,36 @@ export async function loadSourceConfigSnapshots(
     });
   }
 
-  const googleBusinessProfile = await db.integrationConnection.findFirst({
-    where: { restaurantId, provider: "GOOGLE_BUSINESS_PROFILE", isActive: true },
+  const pendingGoogleBusinessProfile = await db.integrationConnection.findFirst({
+    where: {
+      restaurantId,
+      provider: "GOOGLE_BUSINESS_PROFILE",
+      isActive: true,
+      externalLocationId: { in: ["pending", "unselected"] },
+    },
     select: { displayName: true, externalLocationId: true },
   });
+  const googleBusinessProfile =
+    pendingGoogleBusinessProfile ??
+    (await db.integrationConnection.findFirst({
+      where: {
+        restaurantId,
+        provider: "GOOGLE_BUSINESS_PROFILE",
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
+      select: { displayName: true, externalLocationId: true },
+    }));
   if (googleBusinessProfile) {
+    const needsLocation =
+      googleBusinessProfile.externalLocationId === "pending" || googleBusinessProfile.externalLocationId === "unselected";
     actual.push({
       category: "aura",
       providerName: "Google Business Profile",
-      status: googleBusinessProfile.externalLocationId === "unselected" ? "BLOCKED" : "CONNECTED",
-      notes: googleBusinessProfile.displayName
+      status: needsLocation ? "BLOCKED" : "CONNECTED",
+      notes: needsLocation
+        ? "Google is authorized. Choose the correct Business Profile location."
+        : googleBusinessProfile.displayName
         ? `Detected Google Business Profile connection: ${googleBusinessProfile.displayName}.`
         : "Detected Google Business Profile connection.",
     });

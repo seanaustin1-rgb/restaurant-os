@@ -6,8 +6,24 @@ import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
 import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
+import { GoogleBusinessProfileLocationPicker } from "@/components/sources/GoogleBusinessProfileLocationPicker";
+import {
+  GOOGLE_BUSINESS_PROFILE_PROVIDER,
+  type GoogleBusinessProfileLocation,
+} from "@/lib/integrations/google-business-profile/oauth";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
+
+function googleLocationsFromMetadata(metadata: unknown): GoogleBusinessProfileLocation[] {
+  if (!metadata || typeof metadata !== "object" || !("locations" in metadata)) return [];
+  const locations = (metadata as { locations?: unknown }).locations;
+  if (!Array.isArray(locations)) return [];
+  return locations.filter((location): location is GoogleBusinessProfileLocation => {
+    if (!location || typeof location !== "object") return false;
+    const value = location as Partial<GoogleBusinessProfileLocation>;
+    return typeof value.accountId === "string" && typeof value.locationId === "string" && typeof value.title === "string";
+  });
+}
 
 export default async function SourceMapPage({
   searchParams,
@@ -27,6 +43,16 @@ export default async function SourceMapPage({
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
   const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
+  const pendingGoogleConnection = await prisma.integrationConnection.findFirst({
+    where: {
+      restaurantId: role.restaurantId,
+      provider: GOOGLE_BUSINESS_PROFILE_PROVIDER,
+      externalLocationId: { in: ["pending", "unselected"] },
+    },
+    orderBy: { updatedAt: "desc" },
+    select: { id: true, metadata: true },
+  });
+  const googleLocationChoices = googleLocationsFromMetadata(pendingGoogleConnection?.metadata);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
@@ -78,10 +104,16 @@ export default async function SourceMapPage({
         >
           {searchParams.google === "connected"
             ? "Google Business Profile is authorized. We found a location and saved it for Aura."
-            : searchParams.google === "needs_location"
+            : searchParams.google === "choose_location"
+              ? "Google authorization worked. Choose the correct Business Profile location below."
+              : searchParams.google === "needs_location"
               ? "Google authorized successfully, but no Business Profile location was found. Support should confirm the account."
               : `Google authorization needs attention${searchParams.reason ? `: ${searchParams.reason}` : "."}`}
         </section>
+      )}
+
+      {pendingGoogleConnection && googleLocationChoices.length > 1 && (
+        <GoogleBusinessProfileLocationPicker connectionId={pendingGoogleConnection.id} locations={googleLocationChoices} />
       )}
 
       <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} />

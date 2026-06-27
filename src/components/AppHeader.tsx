@@ -4,8 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
+import type { UserRole } from "@prisma/client";
 import { Menu, X } from "lucide-react";
-import { NAV_LINKS } from "@/lib/nav";
+import { navLinksForRoles } from "@/lib/nav";
 
 // Routes that render their own chrome or shouldn't show app nav at all. The
 // dashboard has its own (richer) header with the restaurant/role switchers, so
@@ -17,11 +18,12 @@ function isHidden(path: string): boolean {
   return path.startsWith("/sign-in") || path.startsWith("/sign-up");
 }
 
-export function AppHeader() {
+export function AppHeader({ roles = [] }: { roles?: UserRole[] }) {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
   if (isHidden(pathname)) return null;
 
+  const navLinks = navLinksForRoles(roles);
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
 
@@ -52,7 +54,7 @@ export function AppHeader() {
       {open && (
         <nav className="border-t border-line bg-ink/95 px-4 py-2 sm:px-6">
           <div className="mx-auto grid max-w-7xl grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-4">
-            {NAV_LINKS.map((l) => (
+            {navLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}

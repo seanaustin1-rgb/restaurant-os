@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import { dark } from "@clerk/themes";
+import type { UserRole } from "@prisma/client";
 import { Cormorant_Garamond, DM_Sans, Space_Mono } from "next/font/google";
 import { AppHeader } from "@/components/AppHeader";
+import { prisma } from "@/lib/prisma";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -28,11 +31,25 @@ export const metadata: Metadata = {
   description: "Financial insights for operators — know your numbers, decide now.",
 };
 
-export default function RootLayout({
+async function loadSignedInRoles(): Promise<UserRole[]> {
+  const { userId } = await auth();
+  if (!userId) return [];
+
+  const rows = await prisma.userRestaurantRole.findMany({
+    where: { clerkUserId: userId },
+    select: { role: true },
+    distinct: ["role"],
+  });
+  return rows.map((row) => row.role);
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const roles = await loadSignedInRoles();
+
   return (
     <ClerkProvider
       appearance={{
@@ -50,7 +67,7 @@ export default function RootLayout({
     >
       <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <body className="min-h-screen bg-ink text-ink-text antialiased">
-          <AppHeader />
+          <AppHeader roles={roles} />
           {children}
         </body>
       </html>

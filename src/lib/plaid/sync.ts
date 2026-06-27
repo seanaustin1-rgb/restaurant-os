@@ -1,9 +1,12 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { plaidClient } from "@/lib/plaid";
 import { decrypt } from "@/lib/crypto";
 import { ensureDefaultCategories, categoryTapById, MISC_CATEGORY_NAME, categoryIdByName } from "@/lib/categorization/categories";
 import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
+import {
+  mirrorBankTransactionToLedger,
+  removeMirroredBankTransactionsFromLedger,
+} from "@/lib/financial-ledger/bank-transactions";
 
 // Minimal shape of the Plaid transaction fields we consume.
 interface PlaidTxn {
@@ -95,40 +98,63 @@ export async function runPlaidSync(
         : [],
     );
 
-    const ops: Prisma.PrismaPromise<unknown>[] = upserts.map((t) => {
-      const common = {
-        restaurantId: connection.restaurantId,
-        plaidConnectionId: connection.id,
-        date: new Date(t.date),
-        amount: t.amount,
-        merchantName: t.merchant_name ?? null,
-        description: t.name ?? null,
-      };
-      // Inflows (amount < 0) are REVENUE by sign; outflows go through the rules.
-      const categorization = categorize(catCtx, t.merchant_name, t.name, t.amount);
+    await prisma.$transaction(async (tx) => {
+      for (const t of upserts) {
+        const common = {
+          restaurantId: connection.restaurantId,
+          plaidConnectionId: connection.id,
+          date: new Date(t.date),
+          amount: t.amount,
+          merchantName: t.merchant_name ?? null,
+          description: t.name ?? null,
+        };
+        // Inflows (amount < 0) are REVENUE by sign; outflows go through the rules.
+        const categorization = categorize(catCtx, t.merchant_name, t.name, t.amount);
+        const transaction = await tx.transaction.upsert({
+          where: { plaidTxnId: t.transaction_id },
+          create: { ...common, plaidTxnId: t.transaction_id, ...categorization },
+          // Don't clobber a human's manual recategorization.
+          update: overridden.has(t.transaction_id) ? common : { ...common, ...categorization },
+          select: { categoryId: true, bucket: true, confidence: true },
+        });
 
-      return prisma.transaction.upsert({
-        where: { plaidTxnId: t.transaction_id },
-        create: { ...common, plaidTxnId: t.transaction_id, ...categorization },
-        // Don't clobber a human's manual recategorization.
-        update: overridden.has(t.transaction_id) ? common : { ...common, ...categorization },
-      });
-    });
+        await mirrorBankTransactionToLedger(tx, {
+          restaurantId: connection.restaurantId,
+          sourceSystem: "plaid",
+          sourceObjectId: t.transaction_id,
+          payload: {
+            transaction_id: t.transaction_id,
+            date: t.date,
+            amount: t.amount,
+            name: t.name,
+            merchant_name: t.merchant_name,
+          },
+          date: new Date(t.date),
+          amount: t.amount,
+          merchantName: t.merchant_name ?? null,
+          description: t.name ?? null,
+          categoryId: transaction.categoryId,
+          bucket: transaction.bucket,
+          confidence: transaction.confidence,
+        });
+      }
 
-    if (removedIds.length > 0) {
-      ops.push(prisma.transaction.deleteMany({ where: { plaidTxnId: { in: removedIds } } }));
-    }
+      if (removedIds.length > 0) {
+        await tx.transaction.deleteMany({ where: { plaidTxnId: { in: removedIds } } });
+        await removeMirroredBankTransactionsFromLedger(tx, {
+          restaurantId: connection.restaurantId,
+          sourceSystem: "plaid",
+          sourceObjectIds: removedIds,
+        });
+      }
 
-    // Advance the cursor in the SAME transaction as this page's writes, so the
-    // cursor never gets ahead of the data that's actually persisted.
-    ops.push(
-      prisma.plaidConnection.update({
+      // Advance the cursor in the SAME transaction as this page's writes, so the
+      // cursor never gets ahead of the data that's actually persisted.
+      await tx.plaidConnection.update({
         where: { id: connection.id },
         data: { cursor: data.next_cursor, lastSyncedAt: new Date() },
-      }),
-    );
-
-    await prisma.$transaction(ops);
+      });
+    });
 
     totalAdded += added.length;
     totalModified += modified.length;

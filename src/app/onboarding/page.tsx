@@ -167,6 +167,14 @@ export default async function OnboardingPage({
           </div>
         </section>
 
+        <section className="rounded-lg border border-line bg-surface p-4 sm:hidden">
+          <p className="text-[11px] uppercase tracking-wider text-muted">Mobile setup note</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">
+            You can review setup and accept invites on your phone. Use a computer when you are ready to authorize
+            accounts, upload files, or clean up many transactions.
+          </p>
+        </section>
+
         {ownerChecklists.length > 0 && (
           <section className="space-y-3">
             <div>

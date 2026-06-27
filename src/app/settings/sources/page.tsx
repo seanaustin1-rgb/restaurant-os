@@ -92,7 +92,7 @@ export default async function SourceMapPage({
   });
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 px-6 py-8">
+    <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Setup</p>
@@ -128,6 +128,14 @@ export default async function SourceMapPage({
             </p>
           </div>
         </div>
+      </section>
+
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <p className="text-[11px] uppercase tracking-wider text-muted">Device guidance</p>
+        <p className="mt-1 text-sm leading-relaxed text-muted">
+          A phone is fine for planning and owner approval notes. A computer is recommended for bank/POS authorization,
+          file uploads, location confirmation, and bulk cleanup.
+        </p>
       </section>
 
       {ownerApprovalSources.length > 0 && (

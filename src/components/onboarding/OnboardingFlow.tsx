@@ -108,8 +108,8 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="w-full max-w-lg rounded-xl border border-line bg-surface p-8">
-      <div className="mb-6 flex items-center gap-2 text-xs text-muted">
+    <div className="w-full max-w-lg rounded-xl border border-line bg-surface p-4 sm:p-8">
+      <div className="mb-6 flex flex-wrap items-center gap-2 text-xs text-muted">
         <Dot on={step >= 1} /> Details
         <span className="h-px w-6 bg-line" />
         <Dot on={step >= 2} /> Template
@@ -120,6 +120,10 @@ export function OnboardingFlow() {
       {step === 1 && (
         <div className="space-y-5">
           <h1 className="font-display text-2xl text-copper-soft">Add your business</h1>
+          <p className="rounded-md border border-line bg-ink/60 px-3 py-2 text-xs leading-relaxed text-muted">
+            A phone is fine for this first pass. Full source authorization, file imports, and cleanup are easier on a
+            computer.
+          </p>
           <Field label="Business name">
             <input
               value={name}
@@ -154,7 +158,7 @@ export function OnboardingFlow() {
                   setSizeSignal("");
                 }}
                 className={
-                  "flex w-full items-start justify-between rounded-md border px-3 py-2.5 text-left " +
+                  "flex w-full flex-col gap-2 rounded-md border px-3 py-2.5 text-left sm:flex-row sm:items-start sm:justify-between " +
                   (businessType === t.key ? "border-copper bg-copper/10" : "border-line bg-ink hover:border-copper-dim")
                 }
               >
@@ -162,7 +166,7 @@ export function OnboardingFlow() {
                   <span className="block text-sm text-ink-text">{t.label}</span>
                   <span className="block text-xs text-muted">{t.description}</span>
                 </span>
-                <span className="ml-3 max-w-[120px] text-right text-[10px] text-copper-soft">{t.primarySetup}</span>
+                <span className="max-w-none text-left text-[10px] text-copper-soft sm:ml-3 sm:max-w-[120px] sm:text-right">{t.primarySetup}</span>
               </button>
             ))}
           </div>
@@ -210,7 +214,7 @@ export function OnboardingFlow() {
                 key={t.key}
                 onClick={() => setTier(t.key)}
                 className={
-                  "flex w-full items-start justify-between rounded-md border px-3 py-2.5 text-left " +
+                  "flex w-full flex-col gap-2 rounded-md border px-3 py-2.5 text-left sm:flex-row sm:items-start sm:justify-between " +
                   (tier === t.key ? "border-copper bg-copper/10" : "border-line bg-ink hover:border-copper-dim")
                 }
               >
@@ -218,7 +222,7 @@ export function OnboardingFlow() {
                   <span className="block text-sm text-ink-text">{t.name}</span>
                   <span className="block text-xs text-muted">{t.blurb}</span>
                 </span>
-                <span className="ml-3 rounded-full border border-copper-dim px-2 py-0.5 text-[10px] text-copper-soft">{t.tag}</span>
+                <span className="w-fit rounded-full border border-copper-dim px-2 py-0.5 text-[10px] text-copper-soft sm:ml-3">{t.tag}</span>
               </button>
             ))}
           </div>

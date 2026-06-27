@@ -306,7 +306,7 @@ export function SourceMapPlanner({
                     <select
                       value={draft.status}
                       onChange={(e) => updateDraft(key, { status: e.target.value as DataSourceStatus })}
-                      className={"rounded-md border bg-surface px-2 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft " + STATUS_STYLE[draft.status]}
+                      className={"w-full rounded-md border bg-surface px-2 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft sm:w-auto " + STATUS_STYLE[draft.status]}
                     >
                       {STATUS_OPTIONS.map((status) => (
                         <option key={status.value} value={status.value}>
@@ -318,7 +318,7 @@ export function SourceMapPlanner({
                       type="button"
                       onClick={() => save(group.category, option.name)}
                       disabled={isSaving}
-                      className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50 sm:w-auto"
                     >
                       {savedKey === key ? <Check size={13} /> : <Save size={13} />}
                       {isSaving ? "Saving..." : savedKey === key ? "Saved" : "Save"}

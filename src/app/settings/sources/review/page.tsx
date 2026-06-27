@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Database, XCircle } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { loadPendingFinancialEvents } from "@/lib/financial-ledger/review";
+import { groupPendingFinancialEvents, loadPendingFinancialEvents } from "@/lib/financial-ledger/review";
 import { approveFinancialEventAction, excludeFinancialEventAction } from "./actions";
 
 const ACCESS_ROLES = ["OPERATOR", "CONSULTANT", "MANAGER"] as const;
@@ -28,6 +28,7 @@ export default async function FinancialMappingReviewPage() {
   if (!role) redirect("/dashboard");
 
   const pending = await loadPendingFinancialEvents(prisma, role.restaurantId);
+  const groups = groupPendingFinancialEvents(pending).slice(0, 5);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -67,6 +68,39 @@ export default async function FinancialMappingReviewPage() {
         </section>
       ) : (
         <section className="space-y-3">
+          <div className="rounded-lg border border-line bg-surface p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted">Review patterns</p>
+                <h2 className="mt-1 text-base font-medium text-ink-text">Largest mapping groups</h2>
+              </div>
+              <p className="max-w-md text-xs leading-relaxed text-muted">
+                Start with repeated vendors or sources. Fixing one pattern usually clears the most dashboard noise.
+              </p>
+            </div>
+            <div className="mt-4 grid gap-2 md:grid-cols-2">
+              {groups.map((group) => (
+                <div key={group.key} className="rounded-md border border-line/80 bg-ink/30 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-ink-text">{group.label}</p>
+                      <p className="mt-1 text-[11px] uppercase tracking-wider text-muted">{group.sourceSystem}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="tnum text-sm text-copper-soft">{group.count}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-muted">items</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">{group.issueMessage}</p>
+                  <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+                    <span className="tnum text-muted">{money(group.totalAmount)}</span>
+                    <span className="tnum text-muted">{group.latestEventDate.toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {pending.map((event) => (
             <article key={event.id} className="rounded-lg border border-line bg-surface p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">

@@ -23,6 +23,48 @@ export interface PendingFinancialEventRow {
   issueMessage: string | null;
 }
 
+export interface PendingFinancialEventGroup {
+  key: string;
+  sourceSystem: string;
+  issueMessage: string;
+  label: string;
+  count: number;
+  totalAmount: number;
+  latestEventDate: Date;
+}
+
+function reviewLabel(event: Pick<PendingFinancialEventRow, "counterparty" | "description" | "sourceObjectId">): string {
+  return event.counterparty || event.description || event.sourceObjectId;
+}
+
+export function groupPendingFinancialEvents(events: PendingFinancialEventRow[]): PendingFinancialEventGroup[] {
+  const groups = new Map<string, PendingFinancialEventGroup>();
+  for (const event of events) {
+    const issueMessage = event.issueMessage ?? "Needs mapping review";
+    const label = reviewLabel(event);
+    const key = `${event.sourceSystem}::${issueMessage}::${label}`.toLowerCase();
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count++;
+      existing.totalAmount += event.amount;
+      if (event.eventDate > existing.latestEventDate) existing.latestEventDate = event.eventDate;
+    } else {
+      groups.set(key, {
+        key,
+        sourceSystem: event.sourceSystem,
+        issueMessage,
+        label,
+        count: 1,
+        totalAmount: event.amount,
+        latestEventDate: event.eventDate,
+      });
+    }
+  }
+  return [...groups.values()].sort(
+    (a, b) => b.count - a.count || Math.abs(b.totalAmount) - Math.abs(a.totalAmount) || b.latestEventDate.getTime() - a.latestEventDate.getTime(),
+  );
+}
+
 function ledgerAccountForEventType(eventType: FinancialEventType): LedgerAccount {
   switch (eventType) {
     case "REVENUE":

@@ -41,6 +41,10 @@ export default async function DashboardPage() {
     return a.createdAt.getTime() - b.createdAt.getTime();
   });
 
+  if (roles.length > 0 && roles.every((role) => role.role === "INVESTOR")) {
+    redirect("/investor");
+  }
+
   const dashboards: DashboardData[] = [];
   for (const r of roles) {
     dashboards.push(await loadDashboardData(r.restaurantId));

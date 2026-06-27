@@ -2,6 +2,7 @@
 // the dashboard's own header, so the link set never drifts between them.
 export const NAV_LINKS: { href: string; label: string }[] = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/investor", label: "Investor Matrix" },
   { href: "/access", label: "Access Paths" },
   { href: "/transactions", label: "Transactions" },
   { href: "/transactions/misc", label: "Review" },

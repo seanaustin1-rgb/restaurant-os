@@ -1,11 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Landmark, PlugZap, ShieldCheck, Unplug } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Database, Landmark, PlugZap, ShieldCheck, Unplug } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
+import {
+  financialSyncHealthStatus,
+  loadFinancialSyncHealth,
+  type FinancialSyncHealth,
+} from "@/lib/financial-ledger/sync-health";
 import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
 import { GoogleBusinessProfileLocationPicker } from "@/components/sources/GoogleBusinessProfileLocationPicker";
 import {
@@ -31,6 +36,75 @@ function googleLocationsFromMetadata(metadata: unknown): GoogleBusinessProfileLo
   });
 }
 
+function FinancialDataSafetyPanel({ health }: { health: FinancialSyncHealth }) {
+  const status = financialSyncHealthStatus(health);
+  const toneClass =
+    status.tone === "green"
+      ? "border-health-green/40 bg-health-green/5 text-health-green"
+      : status.tone === "red"
+      ? "border-health-red/40 bg-health-red/5 text-health-red"
+      : status.tone === "yellow"
+      ? "border-health-yellow/40 bg-health-yellow/5 text-health-yellow"
+      : "border-line bg-ink/30 text-muted";
+  const StatusIcon = status.tone === "green" ? CheckCircle2 : status.tone === "muted" ? Database : AlertTriangle;
+
+  return (
+    <section className="rounded-lg border border-line bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <Database size={18} className="mt-0.5 text-copper-soft" />
+          <div>
+            <h2 className="text-sm font-medium text-ink-text">Financial data safety</h2>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">
+              Imported records are quarantined first, then mapped into reviewed financial events before they can feed the
+              clean ledger used by Cash Oxygen, Tax Vault, Go-Live Coach, and investor reads.
+            </p>
+          </div>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${toneClass}`}>
+          <StatusIcon size={13} /> {status.label}
+        </span>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-muted">{status.detail}</p>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Raw imports</p>
+          <p className="mt-1 text-lg text-ink-text">{health.rawEventCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Pending review</p>
+          <p className="mt-1 text-lg text-ink-text">{health.pendingMappingCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Ledger entries</p>
+          <p className="mt-1 text-lg text-ink-text">{health.ledgerEntryCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Open issues</p>
+          <p className="mt-1 text-lg text-ink-text">{health.unresolvedExceptionCount.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {health.recentIssues.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {health.recentIssues.map((issue) => (
+            <div key={issue.id} className="rounded-md border border-health-yellow/30 bg-health-yellow/5 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-medium text-health-yellow">{issue.severity}</span>
+                <span className="text-muted">{issue.sourceSystem}</span>
+                <span className="text-muted">{issue.issueType}</span>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-ink-text">{issue.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default async function SourceMapPage({
   searchParams,
 }: {
@@ -49,6 +123,7 @@ export default async function SourceMapPage({
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
   const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
+  const syncHealth = await loadFinancialSyncHealth(role.restaurantId, prisma);
   const statusByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config.status]));
   const ownerApprovalSources = sourceMap.groups.flatMap((group) =>
     group.options
@@ -129,6 +204,8 @@ export default async function SourceMapPage({
           </div>
         </div>
       </section>
+
+      <FinancialDataSafetyPanel health={syncHealth} />
 
       <section className="rounded-lg border border-line bg-surface p-4">
         <p className="text-[11px] uppercase tracking-wider text-muted">Device guidance</p>

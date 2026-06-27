@@ -143,6 +143,66 @@ enum RuleMatchType {
   CHECK_MIN
 }
 
+enum FinancialEventType {
+  REVENUE
+  REAL_REVENUE
+  PASS_THROUGH
+  AGENT_SPLIT
+  FRANCHISE_FEE
+  COGS
+  LABOR
+  FIXED_OPEX
+  TAX_LIABILITY
+  OWNER_PAY
+  PROFIT
+  DEBT_SERVICE
+  INTERNAL_TRANSFER
+  EXCLUDED
+}
+
+enum FinancialMappingStatus {
+  RAW
+  NORMALIZED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXCLUDED
+}
+
+enum LedgerAccount {
+  OPERATING_CASH
+  REVENUE
+  REAL_REVENUE
+  PASS_THROUGH_PAYABLE
+  AGENT_PAYABLE
+  COGS
+  LABOR
+  FIXED_OPEX
+  TAX_VAULT
+  PROFIT
+  OWNER_PAY
+  DEBT_SERVICE
+  INTERNAL_TRANSFER
+  SUSPENSE
+}
+
+enum SyncExceptionSeverity {
+  INFO
+  WARNING
+  BLOCKING
+}
+
+enum SyncExceptionType {
+  MISSING_MAPPING
+  DUPLICATE_SOURCE_EVENT
+  STALE_SOURCE
+  UNBALANCED_LEDGER
+  INVALID_AMOUNT
+  MISSING_REQUIRED_FIELD
+  API_ERROR
+  UNKNOWN
+}
+
 // ─────────────────────────────────────────────────────────────
 // Core tenancy
 // ─────────────────────────────────────────────────────────────
@@ -195,6 +255,11 @@ model Restaurant {
   brokerageDeals              BrokerageDeal[]
   brokerageLeadSpend          BrokerageLeadSpend[]
   brokerageMarketMetrics      BrokerageMarketMetric[]
+  rawSourceEvents             RawSourceEvent[]
+  normalizedFinancialEvents   NormalizedFinancialEvent[]
+  ledgerEntries               LedgerEntry[]
+  sourceMappingRules          SourceMappingRule[]
+  syncExceptions              SyncException[]
   aiActionLogs                AiActionLog[]
 }
 
@@ -939,6 +1004,145 @@ model BrokerageMarketMetric {
   @@index([restaurantId])
   @@index([market])
   @@index([date])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Source quarantine → normalized financial events → clean ledger
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RawSourceEvent {
+  id               String                 @id @default(cuid())
+  restaurantId     String
+  sourceSystem     String // toast, qbo, plaid, dotloop, skyslope, escapia, etc.
+  sourceObjectType String // order, payment, expense, deal, booking, agent, etc.
+  sourceObjectId   String
+  syncBatchId      String?
+  payload          Json
+  payloadHash      String?
+  mappingStatus    FinancialMappingStatus @default(RAW)
+  receivedAt       DateTime               @default(now())
+  processedAt      DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  restaurant       Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  normalizedEvents NormalizedFinancialEvent[]
+  syncExceptions   SyncException[]
+
+  @@unique([restaurantId, sourceSystem, sourceObjectType, sourceObjectId])
+  @@index([restaurantId])
+  @@index([sourceSystem, sourceObjectType])
+  @@index([syncBatchId])
+  @@index([mappingStatus])
+  @@index([receivedAt])
+}
+
+model NormalizedFinancialEvent {
+  id               String                 @id @default(cuid())
+  restaurantId     String
+  rawSourceEventId String?
+  eventDate        DateTime               @db.Date
+  eventType        FinancialEventType
+  amount           Decimal                @db.Decimal(14, 2)
+  counterparty     String?
+  description      String?
+  confidence       Float                  @default(0)
+  mappingStatus    FinancialMappingStatus @default(PENDING_REVIEW)
+  approvedBy       String?
+  approvedAt       DateTime?
+  metadata         Json?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rawSourceEvent RawSourceEvent? @relation(fields: [rawSourceEventId], references: [id], onDelete: SetNull)
+  ledgerEntries  LedgerEntry[]
+  syncExceptions SyncException[]
+
+  @@index([restaurantId])
+  @@index([rawSourceEventId])
+  @@index([eventDate])
+  @@index([eventType])
+  @@index([mappingStatus])
+}
+
+model LedgerEntry {
+  id                         String    @id @default(cuid())
+  restaurantId               String
+  normalizedFinancialEventId String?
+  ledgerDate                 DateTime  @db.Date
+  ledgerAccount              LedgerAccount
+  debit                      Decimal   @default(0) @db.Decimal(14, 2)
+  credit                     Decimal   @default(0) @db.Decimal(14, 2)
+  cashEffect                 Decimal   @default(0) @db.Decimal(14, 2)
+  taxEffect                  Decimal   @default(0) @db.Decimal(14, 2)
+  allocationBucket           TapBucket?
+  memo                       String?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([normalizedFinancialEventId])
+  @@index([ledgerDate])
+  @@index([ledgerAccount])
+  @@index([allocationBucket])
+}
+
+model SourceMappingRule {
+  id                  String             @id @default(cuid())
+  restaurantId        String
+  sourceSystem        String
+  sourceObjectType    String?
+  sourceField         String?
+  matchType           RuleMatchType      @default(KEYWORD)
+  matchPattern        String
+  mapsToEventType     FinancialEventType
+  mapsToLedgerAccount LedgerAccount
+  mapsToTapBucket     TapBucket?
+  confidence          Float              @default(0.9)
+  requiresReview      Boolean            @default(false)
+  enabled             Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
+  @@index([sourceSystem, sourceObjectType])
+  @@index([mapsToEventType])
+  @@index([mapsToLedgerAccount])
+  @@index([enabled])
+}
+
+model SyncException {
+  id                         String                @id @default(cuid())
+  restaurantId               String
+  rawSourceEventId           String?
+  normalizedFinancialEventId String?
+  sourceSystem               String
+  severity                   SyncExceptionSeverity @default(WARNING)
+  issueType                  SyncExceptionType
+  message                    String
+  detail                     Json?
+  resolvedAt                 DateTime?
+  resolvedBy                 String?
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+
+  restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rawSourceEvent           RawSourceEvent?           @relation(fields: [rawSourceEventId], references: [id], onDelete: SetNull)
+  normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([rawSourceEventId])
+  @@index([normalizedFinancialEventId])
+  @@index([sourceSystem])
+  @@index([severity])
+  @@index([issueType])
+  @@index([resolvedAt])
 }
 
 model ReviewCache {

@@ -1,0 +1,8 @@
+# Python dependencies for Claude Code skills.
+# Installed automatically each Claude Code on the web session by
+# .claude/hooks/session-start.sh (python3 -m pip install -r requirements.txt).
+#
+# Add one package per line, ideally pinned, e.g.:
+#   pandas==2.2.2
+#   openpyxl==3.1.5
+#   requests==2.32.3

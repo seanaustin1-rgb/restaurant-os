@@ -152,12 +152,12 @@ export function VacationRentalEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">Enter a typical month for the portfolio. Doors, rate, and occupancy are enough for the first read.</p>
 
       <fieldset className="mt-6 space-y-4">
         <Legend n="1" title="Portfolio & demand" hint="The revenue engine: occupancy × ADR × doors" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Group / company name"><input className={inputCls} placeholder="Shoreline Stay Group" value={f.name} onChange={updText("name")} /></Field>
           <Field label="Market"><input className={inputCls} placeholder="York, PA" value={f.market} onChange={updText("market")} /></Field>
         </div>
@@ -172,12 +172,12 @@ export function VacationRentalEstimator() {
             <option value="other">Other</option>
           </select>
         </Field>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Properties (doors)" required><input className={inputCls} inputMode="numeric" placeholder="6" value={f.properties} onChange={updText("properties")} /></Field>
           <Field label="Avg nightly rate" required prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="250" value={f.adr} onChange={updText("adr")} /></Field>
           <Field label="Occupancy" required suffix="%"><input className={inputCls + " pr-7"} inputMode="numeric" placeholder="70" value={f.occupancy} onChange={updText("occupancy")} /></Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Is that rate gross or net?" hint="Gross = guest pays; net = hits your account">
             <select className={selectCls} value={f.adrBasis} onChange={updText("adrBasis")}>
               <option value="gross">Gross (what the guest pays)</option>
@@ -196,7 +196,7 @@ export function VacationRentalEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="2" title="The cost stack" hint="What stands between bookings and owner proceeds" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Platform fee (Airbnb/VRBO)" suffix="%"><input className={inputCls + " pr-7"} inputMode="numeric" placeholder="3" value={f.platformFee} onChange={updText("platformFee")} /></Field>
           <Field label="Management fee" suffix="%" hint="0 if you self-manage"><input className={inputCls + " pr-7"} inputMode="numeric" placeholder="20" value={f.managementFee} onChange={updText("managementFee")} /></Field>
           <Field label="Cleaning / turns / mo" prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="4,000" value={f.cleaning} onChange={updText("cleaning")} /></Field>
@@ -260,7 +260,7 @@ function Results({ f, r, aura, auraPending, onEdit }: {
 
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {VR_LOCKED_TILES.map((t) => (
             <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
               <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>
@@ -364,7 +364,7 @@ function BookingPaceTile({ r }: { r: VacationRentalEstimateResult }) {
         <span className="text-sm text-muted">RevPAR / night</span>
       </div>
       <HealthSignal status={r.occupancyHealth} label={word(r.occupancyHealth, "Strong demand", "Soft", "Low")} detail={`${pct(r.occupancyPct, 0)} occupancy · ${money(r.adrGross)} ADR`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Booked nights / mo" value={Math.round(r.bookedNightsPerMonth).toLocaleString()} />
         <Stat label="Gross bookings / mo" value={money(r.grossBookingRevenue)} />
       </div>
@@ -380,7 +380,7 @@ function OwnerProceedsTile({ r }: { r: VacationRentalEstimateResult }) {
         <span className="text-sm text-muted">of bookings kept</span>
       </div>
       <HealthSignal status={r.ownerProceedsHealth} label={word(r.ownerProceedsHealth, "Healthy", "Thin", "Low")} detail={`${money(r.ownerProceeds)}/mo · typical 25–40%`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Per property / mo" value={money(r.ownerProceedsPerProperty)} />
         <Stat label="After platform fee" value={money(r.revenueAfterPlatform)} />
       </div>
@@ -486,7 +486,7 @@ function ProfitFirstTile({ r }: { r: VacationRentalEstimateResult }) {
 function CashFlowTile({ r }: { r: VacationRentalEstimateResult }) {
   return (
     <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
         <div><div className="text-[11px] text-muted">In / mo</div><div className="tnum text-base text-ink-text">{money(r.cashIn)}</div></div>
         <div><div className="text-[11px] text-muted">Out / mo</div><div className="tnum text-base text-ink-text">{money(r.cashOut)}</div></div>
         <div><div className="text-[11px] text-muted">Left / mo</div><div className={"tnum text-base " + (r.cashLeft >= 0 ? "text-health-green" : "text-health-red")}>{money(r.cashLeft)}</div></div>

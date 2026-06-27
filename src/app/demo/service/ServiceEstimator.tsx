@@ -165,7 +165,7 @@ export function ServiceEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">
         Enter the rough weekly numbers you already know. Ballparks are fine, and blank fields are treated as unknown.
       </p>
@@ -196,7 +196,7 @@ export function ServiceEstimator() {
         <Field label="Average weekly revenue" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="45,000" value={f.weeklyRevenue} onChange={upd("weeklyRevenue")} />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Weekly payroll + taxes" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="14,000" value={f.weeklyLabor} onChange={upd("weeklyLabor")} />
           </Field>
@@ -214,7 +214,7 @@ export function ServiceEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Monthly fixed bills" hint="Use the bills you know; leave the rest blank" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Rent / lease" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="6,000" value={f.monthlyRent} onChange={upd("monthlyRent")} />
           </Field>
@@ -241,7 +241,7 @@ export function ServiceEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="4" title="Job detail" hint="Optional, used to translate break-even into job count" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Average job value" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="2,500" value={f.avgJobValue} onChange={upd("avgJobValue")} />
           </Field>
@@ -312,7 +312,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
             detail={Math.abs(r.deliveryPressurePct - 60) < 0.5 ? "right at ≤60% target" : `${Math.abs(r.deliveryPressurePct - 60).toFixed(1)} pts ${r.deliveryPressurePct > 60 ? "over" : "under"} ≤60%`}
             className="mt-2"
           />
-          <div className="mt-3 grid grid-cols-3 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Stat label="Labor" value={money(r.monthlyLabor)} />
             <Stat label="Materials" value={money(r.monthlyMaterials)} />
             <Stat label="Subs" value={money(r.monthlySubcontractors)} />
@@ -325,7 +325,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
             <span className="tnum text-4xl text-ink-text">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat label="Your weekly revenue" value={money(r.weeklyRevenue)} />
             <Stat
               label={r.dollarsAboveBreakEven >= 0 ? "Monthly cushion" : "Monthly shortfall"}
@@ -337,7 +337,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
         </Tile>
 
         <Tile title="Cash Flow (rough)" icon={<BriefcaseBusiness size={12} className="text-copper-soft" />} explainer={EXPLAIN.cash}>
-          <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 text-center">
             <Stat label="In" value={money(r.cashIn)} />
             <Stat label="Out" value={money(r.cashOut)} />
             <Stat label="Left" value={money(r.cashLeft)} tone={r.marginHealth} />
@@ -372,7 +372,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: Service
 
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {SERVICE_LOCKED_TILES.map((t) => (
             <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
               <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>

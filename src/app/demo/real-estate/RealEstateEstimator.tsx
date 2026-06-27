@@ -185,7 +185,7 @@ export function RealEstateEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">
         Enter rough brokerage numbers. The estimate separates pass-through commission money from Company Dollar.
       </p>
@@ -217,7 +217,7 @@ export function RealEstateEstimator() {
         <Field label="Monthly closed GCI" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="120,000" value={f.monthlyGci} onChange={upd("monthlyGci")} />
         </Field>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Avg agent split" suffix="%">
             <input className={inputCls + " pr-8"} inputMode="numeric" placeholder="70" value={f.agentSplitPct} onChange={upd("agentSplitPct")} />
           </Field>
@@ -232,7 +232,7 @@ export function RealEstateEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Brokerage safety" hint="Used for break-even and runway" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Monthly fixed OpEx" required prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="22,000" value={f.monthlyOpex} onChange={upd("monthlyOpex")} />
           </Field>
@@ -244,7 +244,7 @@ export function RealEstateEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="4" title="45-90 day pipeline" hint="A rough forward read before closings land" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Pending deals">
             <input className={inputCls} inputMode="numeric" placeholder="12" value={f.pendingDeals} onChange={upd("pendingDeals")} />
           </Field>
@@ -598,7 +598,7 @@ function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">/ month retained</span>
       </div>
       <HealthSignal status={r.companyDollarHealth} label={word(r.companyDollarHealth, "Healthy", "Thin", "Low")} detail={`${pct(r.companyDollarPct)} of GCI retained · target ~25–30%`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Closed GCI" value={money(r.monthlyGci)} />
         <Stat label="Retained share" value={pct(r.companyDollarPct)} tone={r.companyDollarHealth} />
       </div>
@@ -616,7 +616,7 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">of GCI passes through</span>
       </div>
       <HealthSignal status={r.splitPressureHealth} label={word(r.splitPressureHealth, "Lean", "Watch", "Heavy")} detail={`${pct(100 - r.splitPressurePct, 0)} kept as Company Dollar`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label="Agents" value={money(r.agentPayouts)} />
         <Stat label="Franchise" value={money(r.franchiseFees)} />
         <Stat label="Referral" value={money(r.referralFees)} />
@@ -635,7 +635,7 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">Company Dollar needed</span>
       </div>
       <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={r.breakEvenCushion >= 0 ? `${money(r.breakEvenCushion)} over OpEx` : `${money(Math.abs(r.breakEvenCushion))} short of OpEx`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="GCI needed" value={r.gciNeededToBreakEven != null ? money(r.gciNeededToBreakEven) : "-"} />
         <Stat
           label={r.breakEvenCushion >= 0 ? "Cushion" : "Shortfall"}
@@ -661,7 +661,7 @@ function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
       {r.cashRunwayDays != null && (
         <HealthSignal status={r.cashRunwayHealth} label={word(r.cashRunwayHealth, "Comfortable", "Watch", "Tight")} detail="60+ days is a healthy buffer" className="mt-2" />
       )}
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Operating cash" value={money(r.currentCash)} />
         <Stat label="Monthly OpEx" value={money(r.monthlyOpex)} />
       </div>
@@ -678,7 +678,7 @@ function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">weighted Company Dollar</span>
       </div>
       <HealthSignal status={r.pipelineHealth} label={word(r.pipelineHealth, "Ahead", "Building", "Thin")} detail={`${r.pipelineMonths.toFixed(1)} mo of forward coverage`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Weighted GCI" value={money(r.weightedPipelineGci)} />
         <Stat label="Pipeline span" value={`${r.pipelineMonths.toFixed(1)} mo`} />
       </div>
@@ -741,7 +741,7 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
           {row.overallHealth === "green" ? "healthy" : row.overallHealth === "yellow" ? "watch" : "pressure"}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
         <Stat label="Company Dollar" value={money(row.companyDollar)} tone={row.companyDollarYieldPct >= 25 ? "green" : row.companyDollarYieldPct >= 18 ? "yellow" : "red"} />
         <Stat label="Retained yield" value={pct(row.companyDollarYieldPct)} />
         <Stat label="Cap remaining" value={money(row.capRemaining)} tone={row.capPressureHealth} />
@@ -776,7 +776,7 @@ function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatRes
             <Star size={12} className="text-copper-soft" /> Mini Aura {Math.round(property.guestAuraScore)}
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
           <Stat label="Owner proceeds" value={money(property.ownerProceeds)} tone={property.ownerProceedsHealth} />
           <Stat label="Maintenance drag" value={pct(property.maintenancePressurePct)} tone={property.maintenanceHealth} />
           <Stat label="Booking pace" value={pct(property.bookingPacePct, 0)} tone={property.bookingMomentumHealth} />
@@ -813,7 +813,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
         </span>
       </div>
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
           <Stat label="Properties" value={portfolio.propertyCount.toLocaleString()} />
           <Stat label="Booking revenue" value={money(portfolio.monthlyBookingRevenue)} />
           <Stat label="Owner proceeds" value={money(portfolio.ownerProceeds)} tone={portfolio.ownerProceedsPct >= 45 ? "green" : portfolio.ownerProceedsPct >= 30 ? "yellow" : "red"} />
@@ -823,7 +823,7 @@ function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioR
         <p className={"mt-3 text-[11px] leading-relaxed " + HEALTH_TEXT[portfolio.overallHealth]}>{portfolio.note}</p>
         <div className="mt-4 space-y-2">
           {portfolio.properties.map((property) => (
-            <div key={property.name} className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
+            <div key={property.name} className="grid grid-cols-1 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
               <div>
                 <div className="text-sm text-ink-text">{property.name}</div>
                 <div className={"text-[11px] " + HEALTH_TEXT[property.overallHealth]}>
@@ -889,7 +889,7 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
           </div>
           <div className="tnum text-3xl text-ink-text">{Math.round(market.marketAuraScore)}</div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <ScoreStat label="Contract velocity" value={market.contractVelocityScore} />
           <ScoreStat label="DOM pressure" value={market.domPressureScore} />
           <ScoreStat label="Price drop pressure" value={market.priceDropPressureScore} />

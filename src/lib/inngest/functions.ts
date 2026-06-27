@@ -13,6 +13,7 @@ import { runLedger } from "@/lib/profit-first/ledger";
 import { seedDemoBistro } from "@/lib/demo/demo-tenant";
 import { demoPrisma } from "@/lib/demo/demo-prisma";
 import { snapshotReputation } from "@/lib/modules/reputation-trend";
+import { syncAuraIntentSnapshots } from "@/lib/modules/aura-intent";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -150,6 +151,20 @@ export const weeklyReputationSnapshot = inngest.createFunction(
   },
 );
 
+/**
+ * Daily Aura intent snapshot — imports Google Business Profile performance
+ * actions (calls, directions, website clicks, profile impressions) so Aura can
+ * show current market intent without calling Google on every dashboard render.
+ */
+export const dailyAuraIntentSnapshot = inngest.createFunction(
+  { id: "daily-aura-intent-snapshot", retries: 2 },
+  { cron: "TZ=America/New_York 20 7 * * *" }, // 7:20am ET daily
+  async ({ step }) => {
+    const synced = await step.run("sync-aura-intent", () => syncAuraIntentSnapshots());
+    return synced;
+  },
+);
+
 export const functions = [
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
@@ -157,4 +172,5 @@ export const functions = [
   syncToastMetrics,
   monthlyDemoReseed,
   weeklyReputationSnapshot,
+  dailyAuraIntentSnapshot,
 ];

@@ -73,6 +73,12 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
       totalReviews: 3827,
       health: "green",
       hasAnyData: true,
+      intentMetrics: [
+        { key: "calls", label: "Phone calls", state: "live", value: 186, detail: "Last 30 days from Google Business Profile." },
+        { key: "directions", label: "Direction requests", state: "live", value: 912, detail: "Last 30 days from Google Business Profile." },
+        { key: "website", label: "Website clicks", state: "live", value: 428, detail: "Last 30 days from Google Business Profile." },
+        { key: "views", label: "Profile views", state: "live", value: 18420, detail: "Last 30 days from Google Business Profile." },
+      ],
     },
     rentalPropertyRollup: null,
     goLiveCoach: assessGoLiveReadiness({

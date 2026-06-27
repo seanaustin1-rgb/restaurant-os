@@ -44,6 +44,7 @@ export interface DashboardAuraSummary {
   totalReviews: number;
   health: AuraData["health"];
   hasAnyData: boolean;
+  intentMetrics: AuraData["intentMetrics"];
 }
 
 export interface SourceSetupSummary {
@@ -305,6 +306,7 @@ async function loadDashboardAura(): Promise<DashboardAuraSummary> {
       totalReviews: aura.totalReviews,
       health: aura.health,
       hasAnyData: aura.hasAnyData,
+      intentMetrics: aura.intentMetrics,
     };
   } catch {
     return {
@@ -314,6 +316,7 @@ async function loadDashboardAura(): Promise<DashboardAuraSummary> {
       totalReviews: 0,
       health: "yellow",
       hasAnyData: false,
+      intentMetrics: [],
     };
   }
 }

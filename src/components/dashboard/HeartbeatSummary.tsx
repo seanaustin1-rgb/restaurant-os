@@ -515,13 +515,18 @@ function auraLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
   if (demo) return demo;
 
   if (data.aura.hasAnyData && data.aura.overallRating != null) {
+    const liveIntent = data.aura.intentMetrics.filter((metric) => metric.state === "live");
+    const intentTotal = liveIntent.reduce((sum, metric) => sum + (metric.value ?? 0), 0);
     return {
       key: "aura",
       label: "Aura",
       status: data.aura.health,
       statusLabel: data.aura.health === "green" ? "live" : data.aura.health === "red" ? "weak" : "watch",
       value: data.aura.overallRating.toFixed(1),
-      detail: `${data.aura.totalReviews.toLocaleString()} reviews across ${data.aura.liveCount} live source${data.aura.liveCount === 1 ? "" : "s"}. Connect Google Business Profile intent for calls, directions, clicks, and profile views.`,
+      detail:
+        liveIntent.length > 0
+          ? `${data.aura.totalReviews.toLocaleString()} reviews and ${intentTotal.toLocaleString()} Google intent actions in the last 30 days.`
+          : `${data.aura.totalReviews.toLocaleString()} reviews across ${data.aura.liveCount} live source${data.aura.liveCount === 1 ? "" : "s"}. Connect Google Business Profile intent for calls, directions, clicks, and profile views.`,
       explainer: "Aura is the outside-world signal: reviews, calls, searches, referrals, and other demand intent.",
       action: "open Aura",
       href: "/modules/aura",

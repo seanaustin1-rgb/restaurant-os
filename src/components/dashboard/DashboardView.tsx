@@ -138,6 +138,7 @@ export function DashboardView({
         totalReviews: 0,
         health: "yellow",
         hasAnyData: false,
+        intentMetrics: [],
       },
     };
   }, [active, displayName, isTemplatePreview, previewType]);

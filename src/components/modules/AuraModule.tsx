@@ -60,7 +60,7 @@ function MarketEnergyPanel({ data, trend }: { data: AuraData; trend?: Reputation
           : "Market energy is waiting on intent data";
   const detail =
     direction === "gathering"
-      ? "Aura has reputation signals now. Connect Google Business Profile performance data to add calls, directions, website clicks, and profile views."
+      ? "Aura has reputation signals now. Google Business Profile intent will show here once calls, directions, website clicks, or profile views are available."
       : "Aura combines reputation trend with customer-intent signals so the outside-world heartbeat is visible before sales fully move.";
 
   return (
@@ -103,7 +103,11 @@ function IntentCard({ metric }: { metric: AuraIntentMetric }) {
       </div>
       <div className="tnum mt-1 text-xl text-ink-text">{live && metric.value != null ? count(metric.value) : "Not connected"}</div>
       <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-muted" title={metric.detail}>
-        {metric.state === "waiting_history" ? "Waiting for performance sync" : metric.detail}
+        {metric.state === "waiting_history"
+          ? "Waiting for performance sync"
+          : metric.state === "error"
+            ? "Sync needs attention"
+            : metric.detail}
       </p>
     </div>
   );

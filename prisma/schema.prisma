@@ -949,3 +949,18 @@ model ReputationSnapshot {
 
   @@index([source, capturedAt])
 }
+
+// Daily Google Business Profile performance metrics behind Aura's intent read.
+// Values are imported by day so the dashboard can compare recent customer intent
+// without calling Google on every page load.
+model AuraIntentSnapshot {
+  id         String   @id @default(cuid())
+  source     String   @default("google_business_profile")
+  metric     String
+  date       DateTime @db.Date
+  value      Int
+  capturedAt DateTime @default(now())
+
+  @@unique([source, metric, date])
+  @@index([source, metric, date])
+}

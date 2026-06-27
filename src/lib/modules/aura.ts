@@ -9,6 +9,7 @@ import {
 } from "@/lib/integrations/aura";
 import type { AuraReview, AuraSourceSummary } from "@/lib/integrations/aura";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
+import { loadAuraIntentMetrics } from "@/lib/modules/aura-intent";
 
 // Aura (Reputation) module loader. Fans out to every CONFIGURED review source,
 // fetches each summary independently (one bad/un-wired source never sinks the
@@ -41,7 +42,7 @@ export interface AuraData {
   hasAnyData: boolean; // at least one live source returned a rating/reviews
 }
 
-export type AuraIntentState = "live" | "not_configured" | "waiting_history";
+export type AuraIntentState = "live" | "not_configured" | "waiting_history" | "error";
 
 export interface AuraIntentMetric {
   key: string;
@@ -64,30 +65,9 @@ function bandRating(rating: number | null): HealthStatus {
 
 const RECENT_CAP = 8;
 
-const GOOGLE_BUSINESS_PROFILE_ENV = [
-  "GOOGLE_BUSINESS_PROFILE_ACCOUNT_ID",
-  "GOOGLE_BUSINESS_PROFILE_LOCATION_ID",
-  "GOOGLE_BUSINESS_PROFILE_ACCESS_TOKEN",
-];
-
-function loadIntentMetrics(): AuraIntentMetric[] {
-  const missing = GOOGLE_BUSINESS_PROFILE_ENV.filter((name) => !process.env[name]?.trim());
-  const configured = missing.length === 0;
-  const state: AuraIntentState = configured ? "waiting_history" : "not_configured";
-  const detail = configured
-    ? "Google Business Profile access is configured; performance sync is the next Aura step."
-    : `Connect Google Business Profile performance data: ${missing.join(", ")}`;
-
-  return [
-    { key: "calls", label: "Phone calls", state, value: null, detail },
-    { key: "directions", label: "Direction requests", state, value: null, detail },
-    { key: "website", label: "Website clicks", state, value: null, detail },
-    { key: "views", label: "Profile views", state, value: null, detail },
-  ];
-}
-
 export async function loadAura(): Promise<AuraData> {
   const configured = configuredAuraSources();
+  const intentMetricsPromise = loadAuraIntentMetrics();
 
   // Fetch every configured source in parallel; capture failures per source.
   const summaries = new Map<AuraSourceKey, AuraSourceSummary>();
@@ -157,7 +137,7 @@ export async function loadAura(): Promise<AuraData> {
     totalReviews,
     health: bandRating(overallRating),
     sources,
-    intentMetrics: loadIntentMetrics(),
+    intentMetrics: await intentMetricsPromise,
     recent,
     hasAnyData: weight > 0 || recent.length > 0,
   };

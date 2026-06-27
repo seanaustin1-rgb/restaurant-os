@@ -17,6 +17,13 @@ import { money, count } from "@/lib/format";
 
 const STATUS_COLOR = { green: "#5FA777", yellow: "#D9A35E", red: "#C8643A", unknown: "#8A8F89" };
 
+const CASH_OXYGEN_SOURCE_LABEL = {
+  clean_ledger: "Ledger-backed",
+  anchor_plus_transactions: "Bank estimate",
+  live_balance: "Live balance",
+  none: "Needs setup",
+};
+
 function AnchorForm({
   initialBalance,
   initialDate,
@@ -180,6 +187,9 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
             <div className="tnum mt-1 text-3xl" style={{ color: STATUS_COLOR[data.cashOxygen.status] }}>
               {data.cashOxygen.oxygenDays != null ? `${count(Math.floor(data.cashOxygen.oxygenDays))} days` : "unknown"}
             </div>
+            <div className="mt-1 inline-flex rounded-full border border-line px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted">
+              {CASH_OXYGEN_SOURCE_LABEL[data.cashOxygen.source]}
+            </div>
           </div>
           <div className="min-w-[220px] rounded-md border border-line bg-ink/50 px-3 py-2 text-xs text-muted">
             <div className="flex justify-between gap-4">
@@ -198,8 +208,8 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-muted">
           Cash Oxygen divides estimated liquid cash by the rolling {data.cashOxygen.windowDays}-day average of fixed
-          operating expenses. Today this uses mapped bank/QBO-style transactions; QuickBooks fixed-expense sync can feed
-          the same category map.
+          operating expenses. Reviewed clean-ledger entries are used first; mapped bank/QBO-style transactions remain the
+          fallback until imports are reviewed.
         </p>
         {data.cashOxygen.mappedCategories.length > 0 ? (
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">

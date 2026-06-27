@@ -36,7 +36,7 @@ export interface CashOxygenExpenseLine {
 export interface CashOxygenFloor {
   hasCash: boolean;
   hasFixedBurn: boolean;
-  source: "anchor_plus_transactions" | "live_balance" | "none";
+  source: "clean_ledger" | "anchor_plus_transactions" | "live_balance" | "none";
   asOfDate: string | null;
   windowDays: number;
   currentCash: number | null;
@@ -94,11 +94,104 @@ function isFixedOperationalExpense(categoryName: string | null, tapBucket: strin
   return FIXED_CATEGORY_PATTERNS.some((pattern) => pattern.test(name));
 }
 
+async function loadLedgerCashOxygenFloor(
+  restaurantId: string,
+  db: PrismaClient,
+  windowDays: number,
+): Promise<CashOxygenFloor | null> {
+  const restaurant = await db.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { cashBalanceAnchor: true, cashBalanceAnchorDate: true },
+  });
+
+  const latestLedgerEntry = await db.ledgerEntry.findFirst({
+    where: { restaurantId },
+    orderBy: { ledgerDate: "desc" },
+    select: { ledgerDate: true },
+  });
+  if (!latestLedgerEntry) return null;
+
+  const asOf = latestLedgerEntry.ledgerDate;
+  const windowStart = new Date(asOf.getTime() - (windowDays - 1) * DAY_MS);
+
+  let currentCash: number | null = null;
+  if (restaurant?.cashBalanceAnchor != null && restaurant.cashBalanceAnchorDate != null) {
+    const cashFlowSinceAnchor = await db.ledgerEntry.aggregate({
+      where: {
+        restaurantId,
+        ledgerDate: { gt: restaurant.cashBalanceAnchorDate },
+      },
+      _sum: { cashEffect: true },
+    });
+    currentCash = n(restaurant.cashBalanceAnchor) + n(cashFlowSinceAnchor._sum.cashEffect);
+  }
+
+  const fixedLines = await db.ledgerEntry.findMany({
+    where: {
+      restaurantId,
+      ledgerDate: { gte: windowStart, lte: asOf },
+      debit: { gt: 0 },
+      ledgerAccount: { in: ["FIXED_OPEX", "DEBT_SERVICE"] },
+    },
+    select: {
+      ledgerAccount: true,
+      memo: true,
+      debit: true,
+      allocationBucket: true,
+    },
+  });
+
+  if (fixedLines.length === 0) {
+    return calculateCashOxygenFloor({
+      currentCash,
+      fixedBurnTotal: 0,
+      windowDays,
+      asOfDate: iso(asOf),
+      source: currentCash == null ? "none" : "clean_ledger",
+      mappedCategories: [],
+    });
+  }
+
+  const grouped = new Map<string, CashOxygenExpenseLine>();
+  for (const line of fixedLines) {
+    const categoryName = line.memo || line.ledgerAccount.replace(/_/g, " ");
+    const key = `${line.ledgerAccount}:${categoryName}`;
+    const existing =
+      grouped.get(key) ??
+      ({
+        categoryId: null,
+        categoryName,
+        tapBucket: line.allocationBucket ?? null,
+        amount: 0,
+        transactionCount: 0,
+      } satisfies CashOxygenExpenseLine);
+    existing.amount += n(line.debit);
+    existing.transactionCount += 1;
+    grouped.set(key, existing);
+  }
+
+  const mappedCategories = [...grouped.values()]
+    .map((line) => ({ ...line, amount: r2(line.amount) }))
+    .sort((a, b) => b.amount - a.amount);
+
+  return calculateCashOxygenFloor({
+    currentCash,
+    fixedBurnTotal: mappedCategories.reduce((sum, line) => sum + line.amount, 0),
+    windowDays,
+    asOfDate: iso(asOf),
+    source: currentCash == null ? "none" : "clean_ledger",
+    mappedCategories,
+  });
+}
+
 export async function loadCashOxygenFloor(
   restaurantId: string,
   db: PrismaClient = prisma,
   windowDays = DEFAULT_WINDOW_DAYS,
 ): Promise<CashOxygenFloor> {
+  const ledgerOxygen = await loadLedgerCashOxygenFloor(restaurantId, db, windowDays);
+  if (ledgerOxygen?.hasFixedBurn) return ledgerOxygen;
+
   const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
     select: { cashBalanceAnchor: true, cashBalanceAnchorDate: true },

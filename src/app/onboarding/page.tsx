@@ -1,8 +1,20 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import type { UserRole } from "@prisma/client";
-import { ArrowRight, Banknote, Eye, Handshake, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Banknote,
+  CheckCircle2,
+  CircleDot,
+  Eye,
+  Handshake,
+  ShieldCheck,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { loadOwnerSetupChecklist, type OwnerSetupChecklist, type OwnerSetupStep } from "@/lib/onboarding/setup-checklist";
 import { prisma } from "@/lib/prisma";
 
 interface RoleStarter {
@@ -77,18 +89,18 @@ function priority(role: UserRole): number {
   return ["OPERATOR", "CONSULTANT", "MANAGER", "INVESTOR"].indexOf(role);
 }
 
-async function loadRoles(): Promise<{ role: UserRole; businessName: string }[]> {
+async function loadRoles(): Promise<{ role: UserRole; restaurantId: string; businessName: string }[]> {
   const { userId } = await auth();
   if (!userId) return [];
 
   const roles = await prisma.userRestaurantRole.findMany({
     where: { clerkUserId: userId },
-    select: { role: true, restaurant: { select: { name: true } } },
+    select: { role: true, restaurantId: true, restaurant: { select: { name: true } } },
     distinct: ["restaurantId"],
   });
 
   return roles
-    .map((row) => ({ role: row.role, businessName: row.restaurant.name }))
+    .map((row) => ({ role: row.role, restaurantId: row.restaurantId, businessName: row.restaurant.name }))
     .sort((a, b) => priority(a.role) - priority(b.role));
 }
 
@@ -106,6 +118,13 @@ export default async function OnboardingPage() {
   const uniqueRoles = [...new Set(roles.map((row) => row.role))];
   const starters = STARTERS.filter((starter) => uniqueRoles.includes(starter.role));
   const businessNames = [...new Set(roles.map((row) => row.businessName))];
+  const ownerChecklists = (
+    await Promise.all(
+      roles
+        .filter((row) => row.role === "OPERATOR")
+        .map((row) => loadOwnerSetupChecklist(row.restaurantId)),
+    )
+  ).filter((checklist): checklist is OwnerSetupChecklist => checklist != null);
 
   return (
     <main className="min-h-screen bg-ink px-4 py-8 text-ink-text sm:px-6">
@@ -128,6 +147,20 @@ export default async function OnboardingPage() {
             </Link>
           </div>
         </section>
+
+        {ownerChecklists.length > 0 && (
+          <section className="space-y-3">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-muted">Owner setup checklist</p>
+              <h2 className="mt-1 font-display text-2xl text-copper-soft">Finish the setup backbone</h2>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {ownerChecklists.map((checklist) => (
+                <OwnerChecklistCard key={checklist.restaurantId} checklist={checklist} />
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-2">
           {starters.map((starter) => {
@@ -182,5 +215,52 @@ export default async function OnboardingPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function OwnerChecklistCard({ checklist }: { checklist: OwnerSetupChecklist }) {
+  return (
+    <section className="rounded-lg border border-line bg-surface p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-wider text-muted">{checklist.businessName}</p>
+          <h3 className="mt-1 font-display text-2xl text-copper-soft">{checklist.percent}% setup complete</h3>
+          <p className="mt-1 text-sm text-muted">
+            {checklist.completed} of {checklist.total} setup steps are complete.
+          </p>
+        </div>
+        <Link href="/settings/sources?intro=1" className="w-fit rounded-md border border-copper-dim px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
+          Continue setup
+        </Link>
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-ink">
+        <div className="h-full rounded-full bg-copper" style={{ width: `${checklist.percent}%` }} />
+      </div>
+      <div className="mt-4 space-y-2">
+        {checklist.steps.map((item) => (
+          <OwnerChecklistStep key={item.key} step={item} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function OwnerChecklistStep({ step }: { step: OwnerSetupStep }) {
+  const Icon = step.status === "done" ? CheckCircle2 : step.status === "blocked" ? AlertTriangle : CircleDot;
+  const tone =
+    step.status === "done"
+      ? "border-emerald-500/30 text-emerald-200"
+      : step.status === "blocked"
+        ? "border-orange-500/40 text-orange-200"
+        : "border-line text-ink-text";
+
+  return (
+    <Link href={step.href} className={`flex gap-3 rounded-md border bg-ink/60 px-3 py-3 hover:border-copper-dim ${tone}`}>
+      <Icon size={17} className="mt-0.5 shrink-0" />
+      <span>
+        <span className="block text-sm">{step.label}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-muted">{step.detail}</span>
+      </span>
+    </Link>
   );
 }

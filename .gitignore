@@ -13,10 +13,12 @@
 # misc
 .DS_Store
 *.pem
-# Claude Code: ignore local/personal config, but track the shared session hook + settings
+# Claude Code: ignore local/personal config, but track the shared session hook,
+# settings, and vendored skills (e.g. impeccable, symlinked into .agents/skills)
 .claude/*
 !.claude/settings.json
 !.claude/hooks/
+!.claude/skills/
 .claude/settings.local.json
 
 # debug

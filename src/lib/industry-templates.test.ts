@@ -22,13 +22,29 @@ describe("industry templates", () => {
       const sourceMap = SOURCE_MAPS[type];
 
       expect(template.label).toBeTruthy();
+      expect(template.scaleAnchor.label).toBeTruthy();
       expect(template.defaultModuleKeys.length).toBeGreaterThan(0);
+      expect(template.seedAccounts.length).toBeGreaterThan(0);
       expect(sourceMap.minimumAutoInput).toBeTruthy();
       expect(sourceMap.groups.length).toBeGreaterThan(0);
 
       for (const key of template.defaultModuleKeys) {
         expect(moduleKeys.has(key), `${type} references missing module "${key}"`).toBe(true);
       }
+    }
+  });
+
+  it("seeds every sector with allocation accounts that sum to 100", () => {
+    for (const type of BUSINESS_TYPES) {
+      const total = INDUSTRY_TEMPLATES[type].seedAccounts.reduce((sum, account) => sum + account.targetPct, 0);
+      expect(total, `${type} seed accounts must sum to 100`).toBe(100);
+    }
+  });
+
+  it("keeps profile question keys unique per sector", () => {
+    for (const type of BUSINESS_TYPES) {
+      const keys = INDUSTRY_TEMPLATES[type].profileQuestions.map((question) => question.key);
+      expect(new Set(keys).size, `${type} has duplicate profile question keys`).toBe(keys.length);
     }
   });
 

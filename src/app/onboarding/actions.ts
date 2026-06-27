@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import type { BusinessType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 
@@ -11,27 +12,29 @@ function slugify(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-  // Append a short suffix to keep slugs unique without a DB round-trip.
   const suffix = Math.random().toString(36).slice(2, 6);
-  return `${base || "restaurant"}-${suffix}`;
+  return `${base || "business"}-${suffix}`;
 }
 
 export interface OnboardingInput {
   name: string;
   businessType: BusinessType;
-  seatCount: number;
+  scaleValue?: number;
+  profile?: Record<string, string | number | boolean | null>;
   tier: "TIER_1" | "TIER_2" | "TIER_3" | "TIER_4";
 }
 
-// The 6 Profit First virtual accounts every restaurant starts with.
-const SEED_ACCOUNTS: { key: string; name: string; targetPct: number }[] = [
-  { key: "profit", name: "Profit", targetPct: 5 },
-  { key: "owner_pay", name: "Owner Pay", targetPct: 5 },
-  { key: "cogs_food", name: "COGS — Food", targetPct: 18 },
-  { key: "cogs_liquor", name: "COGS — Liquor", targetPct: 12 },
-  { key: "labor", name: "Labor", targetPct: 32 },
-  { key: "opex", name: "OpEx + Spill", targetPct: 28 },
-];
+function targetData(template: ReturnType<typeof industryTemplateFor>) {
+  const t = template.defaultTargets;
+  return {
+    targetPrimeCost: t.targetPrimeCost ?? null,
+    targetFoodCost: t.targetFoodCost ?? null,
+    targetLiquorCost: t.targetLiquorCost ?? null,
+    targetLaborCost: t.targetLaborCost ?? null,
+    targetLiquorPourPct: t.targetLiquorPourPct ?? null,
+    targetBeveragePourPct: t.targetBeveragePourPct ?? null,
+  };
+}
 
 export async function createRestaurant(input: OnboardingInput): Promise<void> {
   const { userId } = await auth();
@@ -40,41 +43,40 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
   }
 
   const template = industryTemplateFor(input.businessType);
+  const scaleValue = input.scaleValue || null;
+  const profile = {
+    ...(input.profile ?? {}),
+    [template.scaleAnchor.key]: scaleValue,
+  };
 
   await prisma.restaurant.create({
     data: {
       name: input.name,
       slug: slugify(input.name),
       businessType: template.key,
-      seatCount: input.seatCount || null,
+      seatCount: template.scaleAnchor.key === "seatCount" ? scaleValue : null,
+      profile: profile as Prisma.InputJsonValue,
       userRoles: {
         create: { clerkUserId: userId, role: "OPERATOR" },
       },
       tapSettings: {
-        create: {}, // schema defaults: 5/5/18/12/32/28, simulationMode = true
+        create: {},
       },
       targetSettings: {
-        // Pour-cost targets default to common industry benchmarks (liquor ≤20%,
-        // beer/bev ≤24% of their respective sales); sales-mix left null until the
-        // operator sets it or Toast supplies the per-day split.
-        create: {
-          targetPrimeCost: 60,
-          targetFoodCost: 18,
-          targetLiquorCost: 12,
-          targetLaborCost: 32,
-          targetLiquorPourPct: 20,
-          targetBeveragePourPct: 24,
-        },
+        create: targetData(template),
       },
       moduleConfigs: {
         create: template.defaultModuleKeys.map((moduleKey, i) => ({ moduleKey, position: i })),
       },
       virtualAccounts: {
-        create: SEED_ACCOUNTS.map((a) => ({ key: a.key, name: a.name, targetPct: a.targetPct })),
+        create: template.seedAccounts.map((account) => ({
+          key: account.key,
+          name: account.name,
+          targetPct: account.targetPct,
+        })),
       },
     },
   });
 
-  // Tier 3 (statement upload) sends them to import their history first.
-  redirect(input.tier === "TIER_3" ? "/import" : "/dashboard");
+  redirect(input.tier === "TIER_3" ? "/import" : "/settings/sources?intro=1");
 }

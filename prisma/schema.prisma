@@ -154,6 +154,7 @@ model Restaurant {
   slug                  String       @unique
   businessType          BusinessType @default(RESTAURANT)
   seatCount             Int?
+  profile               Json?
   timezone              String       @default("America/New_York")
   // Cash Runway anchor: operator-entered bank balance on a known date (from any
   // statement). Runway = anchor + net transactions since. No live balance feed

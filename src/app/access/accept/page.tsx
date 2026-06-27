@@ -2,6 +2,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { landingPathForRole } from "@/lib/access/landing";
 import { acceptAccessInvite } from "@/app/settings/access/actions";
 
 function userEmail(user: Awaited<ReturnType<Awaited<ReturnType<typeof clerkClient>>["users"]["getUser"]>>): string | null {
@@ -31,6 +32,8 @@ export default async function AcceptAccessInvitePage({
         },
       })
     : null;
+  const landingPath = invite ? landingPathForRole(invite.role) : "/dashboard";
+  const landingLabel = invite?.role === "INVESTOR" ? "Investor Matrix" : invite ? "setup launch" : "dashboard";
 
   async function accept() {
     "use server";
@@ -64,6 +67,9 @@ export default async function AcceptAccessInvitePage({
               <p className="mt-1 text-xs text-muted">
                 Invited as {invite.role.toLowerCase()} for {invite.email}.
               </p>
+              <p className="mt-2 text-xs text-muted">
+                After accepting, you will land on the {landingLabel}.
+              </p>
             </div>
 
             {email !== invite.email.toLowerCase() ? (
@@ -83,8 +89,8 @@ export default async function AcceptAccessInvitePage({
           </div>
         )}
 
-        <Link href="/dashboard" className="mt-5 inline-flex text-sm text-copper-soft hover:text-copper">
-          Go to dashboard
+        <Link href={landingPath} className="mt-5 inline-flex text-sm text-copper-soft hover:text-copper">
+          Go to {landingLabel}
         </Link>
       </section>
     </main>

@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { landingPathForRole } from "@/lib/access/landing";
 import { sendAccessInviteEmail } from "@/lib/email/access-invite";
 
 const PATH = "/settings/access";
@@ -176,7 +177,9 @@ export async function acceptAccessInvite(token: string): Promise<void> {
   ]);
 
   revalidatePath("/dashboard");
-  redirect("/dashboard");
+  revalidatePath("/onboarding");
+  revalidatePath("/investor");
+  redirect(landingPathForRole(invite.role));
 }
 
 export async function removeAccessRole(input: { roleId: string }): Promise<void> {

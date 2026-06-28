@@ -69,6 +69,15 @@ function setupTiers(type: BusinessType) {
   return (["TIER_1", "TIER_2", "TIER_3", "TIER_4"] as const).map((key) => ({ key, ...copy[key], tag: TIER_TAGS[key] }));
 }
 
+function businessNamePlaceholder(type: BusinessType): string {
+  if (type === "REAL_ESTATE_BROKERAGE") return "Harbor & Main Realty";
+  if (type === "VACATION_RENTAL") return "Shoreline Stay Group";
+  if (type === "CONTRACTOR") return "Iron Ridge Field Services";
+  if (type === "SERVICE") return "Keystone Service Co.";
+  if (type === "RETAIL") return "Copper Lane Goods";
+  return "Stone Grille & Taphouse";
+}
+
 export function OnboardingFlow() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
@@ -128,7 +137,7 @@ export function OnboardingFlow() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Stone Grille & Taphouse"
+              placeholder={businessNamePlaceholder(businessType)}
               className="w-full rounded-md border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft focus-visible:ring-1 focus-visible:ring-copper-soft"
             />
           </Field>
@@ -199,7 +208,7 @@ export function OnboardingFlow() {
             />
           </Field>
           <div className="grid gap-3">
-            {selectedTemplate.profileQuestions.slice(0, 3).map((question) => (
+            {selectedTemplate.profileQuestions.map((question) => (
               <ProfileField
                 key={question.key}
                 question={question}

@@ -45,7 +45,7 @@ function firstRunPath(input: OnboardingInput): string {
       case "CONTRACTOR":
         return "/demo/contractor?from=onboarding";
       case "REAL_ESTATE_BROKERAGE":
-        return "/demo/real-estate?from=onboarding";
+        return realEstateKnownNumbersPath(input);
       case "VACATION_RENTAL":
         return "/demo/vacation-rental?from=onboarding";
       case "RETAIL":
@@ -58,6 +58,30 @@ function firstRunPath(input: OnboardingInput): string {
     }
   }
   return "/settings/sources?intro=1";
+}
+
+function valueNumber(profile: OnboardingInput["profile"], key: string): number | null {
+  const value = profile?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function realEstateKnownNumbersPath(input: OnboardingInput): string {
+  const params = new URLSearchParams({ from: "onboarding" });
+  params.set("name", input.name);
+
+  const split = valueNumber(input.profile, "avgCommissionSplit");
+  const avgGci = valueNumber(input.profile, "avgGci");
+  const dealsPerYear = valueNumber(input.profile, "dealsPerYear");
+  const leadSpend = valueNumber(input.profile, "monthlyLeadSpend");
+
+  if (split != null) params.set("agentSplitPct", String(split));
+  if (avgGci != null && dealsPerYear != null && dealsPerYear > 0) {
+    params.set("monthlyGci", String(Math.round((avgGci * dealsPerYear) / 12)));
+    params.set("pendingDeals", String(Math.max(1, Math.round(dealsPerYear / 8))));
+  }
+  if (leadSpend != null) params.set("leadSpend", String(leadSpend));
+
+  return `/demo/real-estate?${params.toString()}`;
 }
 
 export async function createRestaurant(input: OnboardingInput): Promise<void> {

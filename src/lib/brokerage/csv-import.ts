@@ -1,9 +1,4 @@
-import type {
-  BrokerageImportPayload,
-  RawBrokerageAgent,
-  RawBrokerageDeal,
-  RawBrokerageLeadSpend,
-} from "./normalized-import";
+import type { BrokerageImportPayload } from "./normalized-import";
 
 // Converts a pasted spreadsheet/back-office CSV export into the brokerage import
 // payload by matching column headers to known field aliases — the "generic
@@ -114,7 +109,8 @@ export function parseCsv(text: string): { headers: string[]; rows: string[][] } 
 }
 
 export interface CsvMapResult {
-  rows: Array<RawBrokerageAgent | RawBrokerageDeal | RawBrokerageLeadSpend>;
+  /** Loosely-typed mapped rows; fed straight into the normalizer for validation. */
+  rows: Record<string, unknown>[];
   /** field -> the header it matched, for surfacing what was recognized. */
   mapped: Record<string, string>;
   /** headers in the CSV that matched no known field. */
@@ -152,7 +148,7 @@ export function csvToBrokerageRows(entity: BrokerageEntity, csv: string): CsvMap
         record[spec.field] = raw;
       }
     });
-    return record as RawBrokerageAgent | RawBrokerageDeal | RawBrokerageLeadSpend;
+    return record;
   });
 
   return { rows: out, mapped, unmappedHeaders };
@@ -161,5 +157,5 @@ export function csvToBrokerageRows(entity: BrokerageEntity, csv: string): CsvMap
 /** Convenience: build a full payload from one entity's CSV (the UI does one entity at a time). */
 export function csvToBrokeragePayload(entity: BrokerageEntity, csv: string): BrokerageImportPayload {
   const { rows } = csvToBrokerageRows(entity, csv);
-  return { [entity]: rows } as BrokerageImportPayload;
+  return { [entity]: rows } as unknown as BrokerageImportPayload;
 }

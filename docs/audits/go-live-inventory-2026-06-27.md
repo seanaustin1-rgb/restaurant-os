@@ -190,12 +190,39 @@ Interpretation:
 
 ## Recommended Next Work Queue
 
+### P0 - Real Estate Brokerage Demo Readiness
+
+Target: meeting demo in roughly 1.5 weeks. Prioritize the end-user and consultant/accountant story before deeper live API work.
+
+1. Finalize the real estate dashboard modules:
+   - Company Dollar
+   - Split / cap pressure
+   - Commission pipeline
+   - Agent performance
+   - Lead ROI
+   - Market Aura / market energy
+   - Break-even Company Dollar before profit starts
+2. Make every real estate tile explain:
+   - what the number means
+   - what changes it
+   - what a user, consultant, or accountant can adjust
+   - what source data would make it live
+3. Add realistic fictional brokerage data for the no-login tour and keep restaurant language out of real estate screens.
+4. Add consultant/accountant adjustment paths where appropriate:
+   - agent split/cap assumptions
+   - brokerage fixed OpEx
+   - referral/franchise fees
+   - pipeline probability and expected close date
+5. Confirm the real estate demo can be shown cleanly on mobile and desktop.
+
 ### P0 - Make Stone's Ledger Trustworthy
 
 1. Add a mapping exception summary grouped by source, category, merchant, and event type.
 2. Extend `/settings/sources/review` so each pending item can be approved with a chosen ledger account/event type.
 3. Add "apply to similar future imports" from the review flow.
 4. Review Stone's 373 warning items and reduce open exceptions.
+5. Add the actual QuickBooks import/OAuth path for checks, payroll, bill payments, and vendors so QBO can explain Plaid `CHECK` rows.
+6. Run `scripts/match-qbo-checks-to-bank.ts` after QBO check/payroll records are imported; most Stone checks are expected to match payroll or QBO vendor detail.
 
 ### P0 - Tax Vault / DAVO Accuracy
 
@@ -243,4 +270,3 @@ Interpretation:
 - When a source fails or maps poorly, show the issue clearly. Silent sync failure is not acceptable.
 - Consultants/accountants need adjustment power, but owner/operator controls sensitive authorizations.
 - Investor access should be guaranteed and clean, but limited to the matrix/read-only view.
-

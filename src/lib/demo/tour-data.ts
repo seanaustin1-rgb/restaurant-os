@@ -48,14 +48,16 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
   const sample = SAMPLE[type];
   const revenue = sample.revenue;
   const cogs = sample.food + sample.liquor + sample.beverage;
-  const realRevenue = calculateRealRevenue(revenue, sample.food, sample.liquor + sample.beverage);
+  const companyDollar = type === "REAL_ESTATE_BROKERAGE" ? revenue * 0.284 : null;
+  const allocationBase = companyDollar ?? revenue;
+  const realRevenue = companyDollar ?? calculateRealRevenue(revenue, sample.food, sample.liquor + sample.beverage);
   const taps = { profitPct: 5, ownerPayPct: 8, cogsFoodPct: 18, cogsLiquorPct: 12, laborPct: 32, opexPct: 28 };
   const gauges = [
-    gauge("profit", "Profit", 5, revenue * 0.05, revenue * 0.04),
-    gauge("ownerPay", "Owner Pay", 8, revenue * 0.08, revenue * 0.07),
+    gauge("profit", "Profit", 5, allocationBase * 0.05, allocationBase * 0.04),
+    gauge("ownerPay", "Owner Pay", 8, allocationBase * 0.08, allocationBase * 0.07),
     gauge("cogs", type === "RESTAURANT" ? "COGS" : "Direct Costs", 30, revenue * 0.3, cogs, [{ name: type === "RETAIL" ? "Inventory purchases" : "Job costs", amount: cogs }]),
-    gauge("labor", "Labor", 32, revenue * 0.32, sample.labor, [{ name: "Payroll", amount: sample.labor }]),
-    gauge("opex", "OpEx + Spill", 28, revenue * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
+    gauge("labor", "Labor", 32, allocationBase * 0.32, sample.labor, [{ name: "Payroll", amount: sample.labor }]),
+    gauge("opex", "OpEx + Spill", 28, allocationBase * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
   ];
 
   return {
@@ -84,15 +86,15 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     goLiveCoach: assessGoLiveReadiness({
       periodLabel: MONTH,
       salesDays: 21,
-      netSales: revenue,
+      netSales: allocationBase,
       transactionCount: 420,
       categorizedTransactionCount: 392,
-      salesTaxCollected: revenue * 0.06,
-      salesTaxCleared: revenue * 0.045,
+      salesTaxCollected: type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.06 : 0,
+      salesTaxCleared: type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.045 : 0,
       taps,
       spendByTap: {
-        PROFIT: revenue * 0.04,
-        OWNER_PAY: revenue * 0.07,
+        PROFIT: allocationBase * 0.04,
+        OWNER_PAY: allocationBase * 0.07,
         COGS_FOOD: sample.food,
         COGS_LIQUOR: sample.liquor + sample.beverage,
         LABOR: sample.labor,

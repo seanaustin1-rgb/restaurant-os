@@ -46,7 +46,7 @@ export default async function DemoTemplateTourPage({ params }: { params: { type:
   if (!businessType) notFound();
 
   const db = demoPrisma;
-  const restaurantId = db ? await getDemoBistroId(db).catch(() => null) : null;
+  const restaurantId = businessType === "RESTAURANT" && db ? await getDemoBistroId(db).catch(() => null) : null;
   const template = industryTemplateFor(businessType);
   const estimateHref = ESTIMATE_HREF[businessType];
 

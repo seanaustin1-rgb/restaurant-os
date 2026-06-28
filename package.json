@@ -12,7 +12,10 @@
     "check:launch": "tsx scripts/check-launch.ts",
     "smoke:demo": "tsx scripts/smoke-demo.ts",
     "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:brokerage": "tsx scripts/seed-demo-brokerage.ts",
     "seed:rental-pilot": "tsx scripts/generate-rental-pilot-payload.ts",
+    "agent:cash": "tsx scripts/agents/cash-analyst.ts",
+    "agent:menu": "tsx scripts/agents/menu-pricer.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
@@ -20,6 +23,7 @@
     "db:studio": "dotenv -e .env.local -- prisma studio"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.195",
     "@anthropic-ai/sdk": "^0.100.1",
     "@clerk/nextjs": "^6.12.0",
     "@clerk/themes": "^2.4.57",

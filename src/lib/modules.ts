@@ -44,7 +44,7 @@ export const MODULES: ModuleDef[] = [
   { key: "company-dollar", name: "Company Dollar", description: "GCI retained after splits, caps, referrals & fees", status: "live", href: "/modules/brokerage#company-dollar" },
   { key: "commission-pipeline", name: "Commission Pipeline", description: "Pending deals, probability, splits & close timing", status: "live", href: "/modules/brokerage#commission-pipeline" },
   { key: "agent-performance", name: "Agent Performance", description: "Company Dollar yield, cap pressure, pipeline & lead ROI", status: "live", href: "/modules/brokerage#agent-performance" },
-  { key: "market-intelligence", name: "Market Intelligence", description: "MLS velocity, DOM, price drops, rates & showing demand", status: "live", href: "/modules/brokerage#market-intelligence" },
+  { key: "market-intelligence", name: "Market Intelligence", description: "MLS velocity, DOM, price drops, rates & showing demand", status: "soon", blockedBy: "MLS/RESO + rate feed" },
   { key: "lead-roi", name: "Lead ROI", description: "Lead source spend to retained Company Dollar", status: "live", href: "/modules/brokerage#lead-roi" },
   { key: "property-heartbeat", name: "Property Heartbeat", description: "Owner proceeds, maintenance drag, booking pace & guest Aura", status: "live", href: "/modules/property-heartbeat" },
   { key: "property-profit", name: "Property Profit", description: "Profit by unit after payouts & turns", status: "soon", blockedBy: "booking/property feed" },

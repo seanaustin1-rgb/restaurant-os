@@ -43,22 +43,26 @@ type FormState = Record<
   string
 >;
 
+// Believable sample brokerage so the demo opens to a live, coherent story
+// (a ~12-agent independent shop that is profitable but tightening: split
+// pressure and Company Dollar both land "yellow"). Prospects overwrite these
+// with their own numbers; the placeholders mirror the same values.
 const INITIAL: FormState = {
-  name: "",
-  market: "",
-  software: "followupboss",
-  monthlyGci: "",
-  agentSplitPct: "",
-  franchiseFeePct: "",
-  referralFeePct: "",
-  monthlyOpex: "",
-  currentCash: "",
-  pendingDeals: "",
-  avgSalePrice: "",
-  avgCommissionPct: "",
-  expectedCloseRatePct: "",
-  avgBrokerageSharePct: "",
-  daysToClose: "",
+  name: "Keystone Ridge Realty",
+  market: "York, PA",
+  software: "brokermint",
+  monthlyGci: "120000",
+  agentSplitPct: "70",
+  franchiseFeePct: "6",
+  referralFeePct: "4",
+  monthlyOpex: "22000",
+  currentCash: "80000",
+  pendingDeals: "12",
+  avgSalePrice: "350000",
+  avgCommissionPct: "2.5",
+  expectedCloseRatePct: "80",
+  avgBrokerageSharePct: "24",
+  daysToClose: "60",
 };
 
 const HEALTH_TEXT: Record<Health, string> = {

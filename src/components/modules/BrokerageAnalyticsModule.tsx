@@ -17,9 +17,9 @@ const SOURCE_TEXT: Record<BrokerageSourceState, string> = {
 };
 
 function stateLabel(state: BrokerageSourceState): string {
-  if (state === "connected") return "connected";
-  if (state === "planned") return "planned";
-  return "not mapped";
+  if (state === "connected") return "Live feed connected";
+  if (state === "planned") return "Planned";
+  return "Live feed missing";
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: Health }) {
@@ -69,7 +69,7 @@ export function BrokerageAnalyticsModule({ data }: { data: BrokerageAnalyticsDat
     <div className="space-y-5">
       {!data.hasImportedBrokerageData && (
         <div className="rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3 text-sm leading-relaxed text-ink-text-soft">
-          This is using onboarding/profile assumptions until CRM, transaction, lead-spend, or MLS data is imported. It is still useful for setup, but the live feeds will replace assumptions row by row.
+          Using setup assumptions. As you connect bank, accounting, CRM, and lead data, each one replaces the assumptions row by row — nothing here is a guess once a live feed lands.
         </div>
       )}
 

@@ -127,26 +127,26 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   REAL_ESTATE_BROKERAGE: {
     businessType: "REAL_ESTATE_BROKERAGE",
-    minimumAutoInput: "Plaid + QuickBooks/Xero. CRM or transaction data is the premium unlock for commission pipeline and lead ROI.",
+    minimumAutoInput: "Start with bank (Plaid) + QuickBooks/Xero — that alone gives Company Dollar, runway, break-even, and Profit First. CRM and market data are upgrades, not requirements.",
     groups: [
       commonCash,
       commonAccounting,
       {
         category: "pipeline",
-        label: "Commission pipeline",
-        purpose: "Shows pending closings, expected commission, splits, referral fees, and close timing.",
+        label: "Commission pipeline (useful upgrade)",
+        purpose: "Optional upgrade. Add a CRM or transaction system to unlock the pending pipeline, expected commission, agent splits and caps, and lead ROI. You do not need this to start.",
         options: [
-          { name: "Follow Up Boss / Lofty / kvCORE", role: "CRM pipeline and lead source", unlocks: ["commission pipeline", "lead ROI"], minimum: true },
+          { name: "Follow Up Boss / Lofty / kvCORE", role: "CRM pipeline and lead source", unlocks: ["commission pipeline", "lead ROI"] },
           { name: "Brokermint / Dotloop / SkySlope", role: "Transaction management", unlocks: ["pending closings", "deal margin"] },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],
       },
       {
         category: "aura",
-        label: "Agent/team Aura",
-        purpose: "Tracks whether the market is leaning in before commissions land.",
+        label: "Market & reputation (premium layer)",
+        purpose: "Optional premium layer. Market and reputation signals — referral demand, portal/ad ROI, and local momentum before commissions land.",
         options: [
-          { name: "Google Business Profile", role: "Calls, website clicks, search impressions, reviews", unlocks: ["referral momentum", "local demand"], minimum: true },
+          { name: "Google Business Profile", role: "Calls, website clicks, search impressions, reviews", unlocks: ["referral momentum", "local demand"] },
           { name: "Zillow / Realtor.com", role: "Lead and profile activity", unlocks: ["portal ROI", "listing attention"] },
           { name: "Meta / Google Ads", role: "Ad spend and leads", unlocks: ["lead ROI", "campaign pressure"] },
         ],

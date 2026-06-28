@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { csvToBrokerageRows, type BrokerageEntity } from "@/lib/brokerage/csv-import";
 
 const SAMPLE = `{
   "agents": [
@@ -37,6 +38,39 @@ export function BrokerageImportPilot() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PreviewResponse | null>(null);
   const [committed, setCommitted] = useState<CommitResponse | null>(null);
+  const [csvEntity, setCsvEntity] = useState<BrokerageEntity>("deals");
+  const [csvText, setCsvText] = useState("");
+  const [csvNote, setCsvNote] = useState<string | null>(null);
+
+  // Convert a pasted CSV (one entity at a time) into rows and merge them into
+  // the JSON payload below, so an operator can build the import from spreadsheet
+  // exports without hand-writing JSON.
+  function convertCsv() {
+    setCsvNote(null);
+    setError(null);
+    if (!csvText.trim()) return;
+    const { rows, mapped, unmappedHeaders } = csvToBrokerageRows(csvEntity, csvText);
+    if (rows.length === 0) {
+      setError("No rows parsed from that CSV — check the header row.");
+      return;
+    }
+    let base: Record<string, unknown> = {};
+    try {
+      const current = JSON.parse(text);
+      if (current && typeof current === "object" && !Array.isArray(current)) base = current as Record<string, unknown>;
+    } catch {
+      // current box wasn't valid JSON; start fresh from the converted entity.
+    }
+    base[csvEntity] = rows;
+    setText(JSON.stringify(base, null, 2));
+    const mappedFields = Object.keys(mapped);
+    setCsvNote(
+      `Converted ${rows.length} ${csvEntity} row${rows.length === 1 ? "" : "s"} → mapped ${mappedFields.length} column${
+        mappedFields.length === 1 ? "" : "s"
+      }${unmappedHeaders.length ? `; ignored: ${unmappedHeaders.join(", ")}` : ""}. Review the JSON, then Preview.`,
+    );
+    setCsvText("");
+  }
 
   function parsed(): unknown | null {
     try {
@@ -77,6 +111,41 @@ export function BrokerageImportPilot() {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-lg border border-line bg-surface px-4 py-3">
+        <div className="text-[11px] uppercase tracking-wider text-muted">Have a spreadsheet? Convert CSV → JSON</div>
+        <p className="mt-1 text-[11px] text-muted">
+          Paste one export at a time. Columns are matched by header name (e.g. &ldquo;GCI&rdquo;, &ldquo;Agent Split %&rdquo;,
+          &ldquo;Closed Date&rdquo;); unrecognized columns are ignored.
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <select
+            value={csvEntity}
+            onChange={(e) => setCsvEntity(e.target.value as BrokerageEntity)}
+            className="rounded-lg border border-line bg-ink px-3 py-2 text-sm text-ink-text outline-none focus:border-copper-soft"
+          >
+            <option value="agents">Agents</option>
+            <option value="deals">Deals</option>
+            <option value="leadSpend">Lead spend</option>
+          </select>
+          <button
+            onClick={convertCsv}
+            disabled={!csvText.trim()}
+            className="rounded-lg border border-line bg-surface px-4 py-2 text-sm text-ink-text hover:border-copper-dim disabled:opacity-50"
+          >
+            Convert into JSON
+          </button>
+        </div>
+        <textarea
+          value={csvText}
+          onChange={(e) => setCsvText(e.target.value)}
+          spellCheck={false}
+          rows={5}
+          placeholder={"Deal ID,Agent,Property Address,GCI,Agent Split %,Closed Date\nD1,A-1,412 Oak St,8750,70,2026-05-20"}
+          className="tnum mt-2 w-full rounded-lg border border-line bg-ink px-3 py-2.5 font-mono text-[12px] text-ink-text placeholder:text-muted/40 outline-none focus:border-copper-soft"
+        />
+        {csvNote && <p className="mt-2 text-[11px] text-health-green">{csvNote}</p>}
+      </div>
+
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}

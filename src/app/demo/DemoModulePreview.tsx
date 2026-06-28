@@ -116,6 +116,22 @@ const RESULT_GUIDES: Partial<Record<BusinessType, { title: string; body: string 
       title: "Profit First",
       body: "Applies Profit First to Company Dollar, not GCI, so owner pay, tax reserve, and profit are calculated from money the brokerage actually keeps.",
     },
+    {
+      title: "Agent Performance",
+      body: "Shows Company Dollar yield, cap remaining, weighted pipeline, and lead return by agent. These are setup levers a broker, consultant, or accountant can adjust per agent.",
+    },
+    {
+      title: "Lead ROI",
+      body: "Compares lead spend with expected retained Company Dollar so the owner can see which sources are producing profit and which sources are just creating activity.",
+    },
+    {
+      title: "Market Intelligence",
+      body: "Combines contract velocity, days on market, price reductions, showing demand, mortgage-rate pressure, and digital intent into a forward market read.",
+    },
+    {
+      title: "Source Readiness",
+      body: "Shows what needs to connect for the live dashboard: accounting, commission/back-office data, CRM pipeline, and market signals. Owners authorize sources while advisors can review mappings.",
+    },
   ],
 };
 

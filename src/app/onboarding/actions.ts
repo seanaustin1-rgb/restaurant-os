@@ -38,7 +38,9 @@ function targetData(template: ReturnType<typeof industryTemplateFor>) {
 
 function firstRunPath(input: OnboardingInput): string {
   if (input.tier === "TIER_3") {
-    return input.businessType === "VACATION_RENTAL" ? "/import/rentals" : "/import";
+    if (input.businessType === "VACATION_RENTAL") return "/import/rentals";
+    if (input.businessType === "REAL_ESTATE_BROKERAGE") return "/import/brokerage";
+    return "/import";
   }
   if (input.tier === "TIER_4") {
     switch (input.businessType) {

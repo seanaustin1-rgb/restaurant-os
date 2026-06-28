@@ -1,5 +1,36 @@
 # CODEX_HANDOFF
 
+## ⏱️ LATEST — 2026-06-28 (from Claude) — go-live staged
+
+State of `feat/heartbeat-landing` and the open PRs. **Read this block first; everything below it is older/historical.**
+
+### Branch state
+`feat/heartbeat-landing` now contains two squash-merges from Claude:
+- `#45` (`ee4584c`) — RE demo prefilled with a sample brokerage ("Keystone Ridge Realty").
+- `#46` (`6b493ca`) — brokerage data import (JSON + CSV column mapper, Company Dollar derivation, preview→commit, onboarding Tier-3 wiring) + Market Intelligence set to `soon`.
+
+### Open PRs
+- **`#47` — go-live (`feat → main`), DRAFT, green.** Held until the operator applies the prod migration `20260627183000_add_financial_ledger_isolation`. **Do not merge `feat → main`** before that migration runs. After it: mark ready → merge → deploys to `outfrontdata.com`.
+- **`#48` — `claude/final-design-pass → feat`, DRAFT, green.** Copy/data only (RE source tiers + assumptions-vs-live language). **Merge after #47.** Carries `docs/specs/final-design-pass.md`.
+
+### Handed to you (specced in `docs/specs/final-design-pass.md`, not coded)
+1. **Collapse the 5 brokerage module registry entries → one `Brokerage Analytics`** — `modules.ts` + `industry-templates.ts` + its test (contained 3-file ripple). Add per-subtile source badges.
+2. **Cash Oxygen pending-review footnote** — wire `FinancialSyncHealth.pendingMappingCount` onto `CashRunwayData`; copy is in the doc. (Cash Oxygen reads only *approved* costs, so it can read too-safe.)
+3. **`/heartbeat`** — decision is "ship it, don't hide it"; no code needed.
+
+### Bugs + YAGNI (verified by Claude review — for you to action)
+- 🔴 **Bug** `src/lib/financial-ledger/bank-transactions.ts:78` — `categoryNameLooksFixed(x) ? "FIXED_OPEX" : "FIXED_OPEX"` (both branches identical → the hint logic is a dead no-op). Confirm intent; it may be mis-classifying expenses.
+- 🔴 **Bug** `optNum` drifted across the 6 demo estimators — retail/service return `null` for `≤ 0`, so a user can't enter `0` (0% online share / 0 jobs).
+- 🟠 **YAGNI** `src/lib/financial-ledger/ingest.ts` (~195 LOC) has **zero callers**; `SourceMappingRule` model is written nowhere (read only by the dead `ingest.ts`). **It ships in the not-yet-applied migration** — cheapest to trim *now* if the generic multi-source layer is speculative. Decide before the migration is applied to prod.
+- 🟡 `src/lib/mock/dashboard.ts` is dead except the `RoleKey` type (~90 LOC); orphan scripts `demo-db.cjs`, `reapply-categorization-ledger.ts` (0 refs); ~700–850 LOC of duplicated UI primitives across the 6 estimators.
+
+### Time-sensitive decision
+`SourceMappingRule` (+ `RawSourceEvent.syncBatchId`/`payloadHash`) ship in the **pending** prod migration. Trim-or-keep should be decided **before** the operator applies it.
+
+---
+
+_Older handoff below — historical context, superseded by the LATEST block above._
+
 ## Project
 **Restaurant OS / OutFront Data** — a multi-tenant SaaS that gives restaurant operators financial intelligence (a Profit First allocation layer, leak-detection tiles, reputation/"Aura", and a public prospect demo) on top of their bank (Plaid) and POS (Toast) data.
 

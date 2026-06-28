@@ -51,6 +51,8 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
   const companyDollar = type === "REAL_ESTATE_BROKERAGE" ? revenue * 0.284 : null;
   const allocationBase = companyDollar ?? revenue;
   const realRevenue = companyDollar ?? calculateRealRevenue(revenue, sample.food, sample.liquor + sample.beverage);
+  const taxReserveModel = type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.06 : allocationBase * 0.06;
+  const taxReserveCleared = type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.045 : allocationBase * 0.05;
   const taps = { profitPct: 5, ownerPayPct: 8, cogsFoodPct: 18, cogsLiquorPct: 12, laborPct: 32, opexPct: 28 };
   const gauges = [
     gauge("profit", "Profit", 5, allocationBase * 0.05, allocationBase * 0.04),
@@ -89,8 +91,8 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
       netSales: allocationBase,
       transactionCount: 420,
       categorizedTransactionCount: 392,
-      salesTaxCollected: type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.06 : 0,
-      salesTaxCleared: type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.045 : 0,
+      salesTaxCollected: taxReserveModel,
+      salesTaxCleared: taxReserveCleared,
       taps,
       spendByTap: {
         PROFIT: allocationBase * 0.04,

@@ -65,8 +65,11 @@ function topWin(data: DashboardData): BriefItem {
   }
 
   return {
-    label: "Sales read is available",
-    detail: `${money(data.revenue.revenueMTD)} revenue MTD with ${money(data.revenue.realRevenueMTD)} real revenue.`,
+    label: data.businessType === "REAL_ESTATE_BROKERAGE" ? "Company Dollar read is available" : "Revenue read is available",
+    detail:
+      data.businessType === "REAL_ESTATE_BROKERAGE"
+        ? `${money(data.revenue.revenueMTD)} GCI MTD with ${money(data.revenue.realRevenueMTD)} retained Company Dollar.`
+        : `${money(data.revenue.revenueMTD)} revenue MTD with ${money(data.revenue.realRevenueMTD)} real revenue.`,
     href: "/dashboard",
   };
 }
@@ -81,7 +84,8 @@ function missingData(data: DashboardData): BriefItem {
     };
   }
 
-  const tax = data.goLiveCoach.checks.find((c) => c.key === "tax-source");
+  const usesCollectedSalesTax = data.businessType === "RESTAURANT" || data.businessType === "RETAIL";
+  const tax = usesCollectedSalesTax ? data.goLiveCoach.checks.find((c) => c.key === "tax-source") : null;
   if (tax && !tax.ready) {
     return {
       label: "Collected sales tax",

@@ -11,6 +11,19 @@ function virtualReadLabel(businessType?: BusinessType): string {
   return "virtual revenue read";
 }
 
+function displayRecommendation(text: string, businessType?: BusinessType): string {
+  if (businessType !== "REAL_ESTATE_BROKERAGE") return text;
+  return text
+    .replace(/collected sales tax is synced and the Tax Reserve can be trusted/i, "tax reserve assumptions and Company Dollar routing are trusted")
+    .replace(/Tax Reserve and skim Profit/i, "Tax Reserve and Profit")
+    .replace(/tax and a small profit skim/i, "tax reserve and a small profit skim");
+}
+
+function displaySummary(text: string, businessType?: BusinessType): string {
+  if (businessType !== "REAL_ESTATE_BROKERAGE") return text;
+  return text.replace(/collected tax/i, "tax reserve");
+}
+
 export function GoLiveCoachCard({
   data,
   demoMode = false,
@@ -42,8 +55,8 @@ export function GoLiveCoachCard({
               Readiness coach for Profit First automation. It runs the money-movement plan virtually first, then tells
               you what must be fixed before real transfers should begin.
             </p>
-            <p className="mt-1 text-sm text-ink-text">{data.recommendation}</p>
-            <p className="mt-1 text-xs text-muted">{data.summary}</p>
+            <p className="mt-1 text-sm text-ink-text">{displayRecommendation(data.recommendation, businessType)}</p>
+            <p className="mt-1 text-xs text-muted">{displaySummary(data.summary, businessType)}</p>
           </div>
         </div>
         <div className="text-right">

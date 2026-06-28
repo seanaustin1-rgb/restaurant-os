@@ -61,8 +61,8 @@ function noDataMessage(type: BusinessType): { text: string; href: string; cta: s
   if (type === "REAL_ESTATE_BROKERAGE") {
     return {
       text: "No brokerage data imported yet.",
-      href: "/reports/rental-pilot",
-      cta: "Review pilot reports",
+      href: "/settings/sources",
+      cta: "Plan brokerage sources",
     };
   }
   if (type === "CONTRACTOR") {

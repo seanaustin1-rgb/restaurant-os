@@ -212,8 +212,8 @@ function pressureLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
       value: "Waiting",
       detail: "Import agents, deals, splits, caps, and brokerage expenses to read Company Dollar pressure.",
       explainer: "Split pressure shows how much gross commission income leaves before the brokerage keeps Company Dollar. There is no universal industry standard because teams, caps, franchises, and agent mix vary, but retained Company Dollar around 25-30% or better is a practical starting benchmark.",
-      action: "review pilot plan",
-      href: "/reports/rental-pilot",
+      action: "plan brokerage sources",
+      href: "/settings/sources",
     };
   }
 
@@ -376,8 +376,8 @@ function momentumLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
       value: "Waiting",
       detail: "Import pending deals and expected close dates to see forward Company Dollar.",
       explainer: "Pipeline momentum converts pending deals into expected retained Company Dollar after splits and close probability.",
-      action: "review pilot plan",
-      href: "/reports/rental-pilot",
+      action: "plan brokerage sources",
+      href: "/settings/sources",
     };
   }
 

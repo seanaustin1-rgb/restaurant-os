@@ -36,6 +36,11 @@ const STOPWORDS = new Set([
   "INC", "LLC", "LLP", "LTD", "CORP", "CO", "COMPANY", "GROUP", "USA", "US", "WWW", "COM",
 ]);
 
+export function isWeakSignature(signature: string): boolean {
+  const value = signature.trim().toUpperCase();
+  return !value || STOPWORDS.has(value);
+}
+
 /**
  * Pick a meaningful keyword from a transaction: the first 3+ letter word that
  * isn't a generic banking/filler/locale token (see STOPWORDS). Returns null when
@@ -46,7 +51,7 @@ export function signatureOf(merchant: string | null, description: string | null)
   const text = `${merchant ?? ""} ${description ?? ""}`.toUpperCase();
   const words = text.match(/[A-Z][A-Z&'-]{2,}/g) ?? [];
   for (const w of words) {
-    if (!STOPWORDS.has(w)) return w;
+    if (!isWeakSignature(w)) return w;
   }
   return null;
 }

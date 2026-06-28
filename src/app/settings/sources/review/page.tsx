@@ -27,8 +27,9 @@ export default async function FinancialMappingReviewPage() {
   });
   if (!role) redirect("/dashboard");
 
-  const pending = await loadPendingFinancialEvents(prisma, role.restaurantId);
-  const groups = groupPendingFinancialEvents(pending).slice(0, 5);
+  const pending = await loadPendingFinancialEvents(prisma, role.restaurantId, 25);
+  const groupedPending = await loadPendingFinancialEvents(prisma, role.restaurantId, 500);
+  const groups = groupPendingFinancialEvents(groupedPending).slice(0, 5);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">

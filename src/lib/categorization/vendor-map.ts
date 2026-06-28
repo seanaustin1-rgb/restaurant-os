@@ -58,7 +58,7 @@ export const VENDOR_PATTERNS: VendorPattern[] = [
   { pattern: /\bgiant\b(?!\s*fuel)/i, label: "Giant", bucket: "COGS_FOOD", isRecurring: false, confidence: 0.8, scope: "default" },
 
   // ── Liquor → COGS_LIQUOR (PLCB = PA state stores, operator-local) ──
-  { pattern: /\bplcb\b|pa\s*liquor|pennsylvania\s*liquor/i, label: "PLCB", bucket: "COGS_LIQUOR", isRecurring: false, confidence: 0.95, scope: "operator" },
+  { pattern: /\bplcb\b|pa\s*liquor|pennsylvania\s*liquor|wine\s+and\s+spirits/i, label: "PLCB / PA Wine & Spirits", bucket: "COGS_LIQUOR", isRecurring: false, confidence: 0.95, scope: "operator" },
   { pattern: /republic\s*national|\brndc\b/i, label: "Republic National", bucket: "COGS_LIQUOR", isRecurring: false, confidence: 0.95, scope: "default" },
   { pattern: /breakthru\s*beverage/i, label: "Breakthru Beverage", bucket: "COGS_LIQUOR", isRecurring: false, confidence: 0.95, scope: "default" },
 
@@ -72,6 +72,7 @@ export const VENDOR_PATTERNS: VendorPattern[] = [
 
   // ── Sales tax → TAX_SALES ──
   { pattern: /\bdavo\b/i, label: "Davo", bucket: "TAX_SALES", isRecurring: true, confidence: 0.95, scope: "default" },
+  { pattern: /commwlthofpapath.*sls|past\s*sale\s*tx|pa\s*sales?\s*tax/i, label: "PA Sales Tax", bucket: "TAX_SALES", isRecurring: true, confidence: 0.95, scope: "operator" },
 
   // ── Utilities → OPEX_UTILITIES (regional carriers are operator-local) ──
   { pattern: /\bppl\b|ppl\s*electric/i, label: "PPL Electric", bucket: "OPEX_UTILITIES", isRecurring: true, confidence: 0.93, scope: "operator" },

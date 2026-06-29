@@ -1,5 +1,83 @@
 # CODEX_HANDOFF
 
+## 🚧 CODEX PHASE 1 BUILD ORDER — 2026-06-29 (operator-approved, concrete-first)
+
+Operator approved **Option A — concrete-first**: build the **hospitality** investor/owner
+dashboard *additively* on the existing `DashboardData` now; defer the polymorphic `IndustryManifest`
+to Phase 2 (once a 2nd industry has live data). Full plan: `docs/specs/investor-owner-dashboard-plan.md`.
+
+**Claude lane — `signals.ts` is COMMITTED + FROZEN; CLAUDE IS OUT.** Added
+`src/lib/dashboard/signals.ts` — pure helpers `deriveAttention` / `deriveTopPressure` /
+`deriveSourceTrust` on the current contract (read-only; no data-layer math changed), verified
+rendering against the demo DB, and **committed** (see latest Claude commit on this branch). **Claude
+will not edit `signals.ts` further — it is yours.** Per your review item 6, treat it as a starting
+draft: keep it as the shared helper, harden it, or **relocate the derivations into the data layer** as
+you see fit. Claude will only *consume* it read-only from the view components (`AttentionZone`,
+`InvestorMatrix`). If you move/rename it, tell Claude the new import path. Go ahead and move — there is
+no Claude/Codex overlap on this file anymore.
+
+**Codex lane — Phase 1, in order:**
+
+1. **Land #47 / go-live.** Finish + merge PR #47 (ledger isolation, brokerage, `cash-oxygen.ts`) to
+   `main`; apply `20260627183000` to prod; resolve the `SourceMappingRule` trim. This is the gate for
+   items 2 and 5.
+2. **Cash contract (after `cash-oxygen.ts` hits `main`):** expose on `DashboardData`
+   `currentCash`, `oxygenDays`, `avgDailyFixedBurn`, and a **new `netCashChangePeriod`** (period bank
+   delta / cash velocity). Claude's `<CashTile>` consumes these read-only.
+3. **Interim "Known monthly commitments"** (replaces fixed/variable breakeven — operator shelved the
+   full model this cycle): expose a conservative figure from **reviewed/known recurring spend** plus a
+   `pendingReviewCount`/confidence flag so the view can label it *estimated*. **Do NOT** expose a
+   confident fixed/variable split or breakeven.
+4. **Net-margin / return-signal components:** *blocked on operator's definition call* (relabel
+   "Contribution after COGS" vs computed "Operating margin after COGS/labor/OpEx" vs a
+   "Distributable Profit Pool" $). Whichever needs cost components → Codex exposes the raw numbers;
+   Claude renders + states inclusions/exclusions.
+5. **`MetricNote` — AFTER #47 ONLY**, with the **mandatory** visibility model (no exception):
+   ```prisma
+   enum MetricNoteVisibility { INTERNAL INVESTOR }
+   model MetricNote {
+     id String @id @default(cuid())
+     restaurantId String
+     metricKey String           // gauge-* | bucket-* | ratio-*  (centralize the constants)
+     eventDate DateTime
+     body String
+     authorId String            // clerkUserId
+     visibility MetricNoteVisibility @default(INTERNAL)
+     periodKey String?
+     resolvedAt DateTime?
+     createdAt DateTime @default(now())
+     updatedAt DateTime @updatedAt
+     restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+     @@index([restaurantId, metricKey, eventDate])
+   }
+   ```
+   Server action create/list/update/resolve with **restaurant-scoped role enforcement**: write =
+   OPERATOR/MANAGER/CONSULTANT; investor = read-only AND only `visibility = INVESTOR` rows. Migration
+   sequenced **separately, after** `20260627183000`.
+6. **Review `signals.ts`** — confirm the field assumptions (`gauges.health`, `costRatios`,
+   `buckets.signal`, `sourceSetup`) and whether `attention`/`topPressure` should stay a shared helper
+   or move into the data layer. Add tie-break/null rules if you'd compute them differently.
+7. **Confirm `cash-oxygen.ts` timeline to `main`** so Claude can un-gate `<CashTile>`.
+
+**Open operator decision blocking item 4:** net-margin definition. Everything else can start now.
+
+---
+
+## 🔭 REVIEW REQUEST — 2026-06-29 (from Claude) — architecture sign-off before build
+
+**Action for Codex:** review **`docs/specs/investor-owner-dashboard-plan.md`** and give
+**architectural feedback before any building starts.** It's the full investor + owner dashboard
+plan (matrix fixes, Attention zone + contextual notes, owner de-bloat, cash clarity, trend) with a
+proposed Claude↔Codex lane split. The operator's explicit ask: get Codex's architecture feedback
+*first*, then lock lanes and build in tandem, then swap for cross-review.
+
+Please answer the 6 "Questions for Codex" at the bottom of that doc — especially: (1) derived-metric
+placement (data layer vs view), (2) the `MetricNote` model shape, (3) migration ordering vs
+`20260627183000`, (4) whether `FIXED_OPEX` classification is stable enough to expose, (5) lane-boundary
+check, (6) `cash-oxygen.ts` timeline to `main`. Nothing is built yet.
+
+---
+
 ## ⏱️ LATEST — 2026-06-28 (from Claude) — go-live staged
 
 State of `feat/heartbeat-landing` and the open PRs. **Read this block first; everything below it is older/historical.**

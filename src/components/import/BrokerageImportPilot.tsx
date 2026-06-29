@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { BusinessType } from "@prisma/client";
 import { csvToBrokerageRows, type BrokerageEntity } from "@/lib/brokerage/csv-import";
 
 const SAMPLE = `{
@@ -31,9 +32,13 @@ type Summary = {
 
 type PreviewResponse = { summary: Summary; rejected: string[] };
 type CommitResponse = { imported: number; summary: Summary; rejected: string[] };
+type ImportBusiness = { id: string; name: string; businessType: BusinessType };
 
-export function BrokerageImportPilot() {
+export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportBusiness[] }) {
+  const brokerageBusinesses = businesses.filter((business) => business.businessType === "REAL_ESTATE_BROKERAGE");
+  const importBusinesses = brokerageBusinesses.length > 0 ? brokerageBusinesses : businesses;
   const [text, setText] = useState(SAMPLE);
+  const [restaurantId, setRestaurantId] = useState(importBusinesses[0]?.id ?? "");
   const [busy, setBusy] = useState<null | "preview" | "commit">(null);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PreviewResponse | null>(null);
@@ -91,7 +96,7 @@ export function BrokerageImportPilot() {
       const res = await fetch(`/api/brokerage/import/${path}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ payload }),
+        body: JSON.stringify({ restaurantId: restaurantId || undefined, payload }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -111,6 +116,28 @@ export function BrokerageImportPilot() {
 
   return (
     <div className="space-y-4">
+      {importBusinesses.length > 1 ? (
+        <div className="rounded-lg border border-line bg-surface px-4 py-3">
+          <label className="block">
+            <span className="text-[11px] uppercase tracking-wider text-muted">Import into</span>
+            <select
+              value={restaurantId}
+              onChange={(e) => setRestaurantId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-line bg-ink px-3 py-2 text-sm text-ink-text outline-none focus:border-copper-soft"
+            >
+              {importBusinesses.map((business) => (
+                <option key={business.id} value={business.id}>
+                  {business.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="mt-2 text-[11px] text-muted">
+            Consultants and accountants can import for any brokerage they have access to.
+          </p>
+        </div>
+      ) : null}
+
       <div className="rounded-lg border border-line bg-surface px-4 py-3">
         <div className="text-[11px] uppercase tracking-wider text-muted">Have a spreadsheet? Convert CSV → JSON</div>
         <p className="mt-1 text-[11px] text-muted">

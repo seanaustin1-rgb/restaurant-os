@@ -46,7 +46,7 @@ function categoryNameLooksFixed(categoryName: string | null | undefined): boolea
   return FIXED_OPEX_CATEGORY_HINTS.some((hint) => value.includes(hint));
 }
 
-function ledgerMappingForTap(input: {
+export function ledgerMappingForTap(input: {
   tapBucket: TapBucket | null;
   categoryName?: string | null;
   bucket: TransactionBucket;
@@ -74,10 +74,9 @@ function ledgerMappingForTap(input: {
       return { eventType: "EXCLUDED", ledgerAccount: "SUSPENSE" };
     case "OPEX":
     default:
-      return {
-        eventType: categoryNameLooksFixed(input.categoryName) ? "FIXED_OPEX" : "FIXED_OPEX",
-        ledgerAccount: "FIXED_OPEX",
-      };
+      return categoryNameLooksFixed(input.categoryName)
+        ? { eventType: "FIXED_OPEX", ledgerAccount: "FIXED_OPEX" }
+        : { eventType: "OPEX", ledgerAccount: "OPEX" };
   }
 }
 

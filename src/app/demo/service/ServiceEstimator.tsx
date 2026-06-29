@@ -88,8 +88,10 @@ const num = (s: string): number => {
 };
 
 const optNum = (s: string): number | null => {
-  const v = num(s);
-  return v > 0 ? v : null;
+  const t = s.trim();
+  if (!t) return null;
+  const v = parseFloat(t.replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(v) ? v : null;
 };
 
 function buildInputs(f: FormState): ServiceEstimateInputs {

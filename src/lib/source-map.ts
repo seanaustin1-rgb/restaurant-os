@@ -127,7 +127,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   REAL_ESTATE_BROKERAGE: {
     businessType: "REAL_ESTATE_BROKERAGE",
-    minimumAutoInput: "Plaid + QuickBooks/Xero. CRM or transaction data is the premium unlock for commission pipeline and lead ROI.",
+    minimumAutoInput: "Plaid + QuickBooks/Xero. That is enough to establish cash truth, fixed burn, and the first Company Dollar read; CRM, transaction, Aura, and MLS feeds are upgrade layers.",
     groups: [
       commonCash,
       commonAccounting,
@@ -136,7 +136,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Commission pipeline",
         purpose: "Shows pending closings, expected commission, splits, referral fees, and close timing.",
         options: [
-          { name: "Follow Up Boss / Lofty / kvCORE", role: "CRM pipeline and lead source", unlocks: ["commission pipeline", "lead ROI"], minimum: true },
+          { name: "Follow Up Boss / Lofty / kvCORE", role: "CRM pipeline and lead source", unlocks: ["commission pipeline", "lead ROI"] },
           { name: "Brokermint / Dotloop / SkySlope", role: "Transaction management", unlocks: ["pending closings", "deal margin"] },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],
@@ -146,7 +146,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Agent/team Aura",
         purpose: "Tracks whether the market is leaning in before commissions land.",
         options: [
-          { name: "Google Business Profile", role: "Calls, website clicks, search impressions, reviews", unlocks: ["referral momentum", "local demand"], minimum: true },
+          { name: "Google Business Profile", role: "Calls, website clicks, search impressions, reviews", unlocks: ["referral momentum", "local demand"] },
           { name: "Zillow / Realtor.com", role: "Lead and profile activity", unlocks: ["portal ROI", "listing attention"] },
           { name: "Meta / Google Ads", role: "Ad spend and leads", unlocks: ["lead ROI", "campaign pressure"] },
         ],

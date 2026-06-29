@@ -46,6 +46,7 @@ export interface CashOxygenFloor {
   goLiveFloorCash: number | null;
   status: CashOxygenStatus;
   mappedCategories: CashOxygenExpenseLine[];
+  pendingFixedEventCount: number;
 }
 
 export interface CashOxygenCalculationInput {
@@ -55,6 +56,7 @@ export interface CashOxygenCalculationInput {
   asOfDate?: string | null;
   source?: CashOxygenFloor["source"];
   mappedCategories?: CashOxygenExpenseLine[];
+  pendingFixedEventCount?: number;
 }
 
 export function calculateCashOxygenFloor(input: CashOxygenCalculationInput): CashOxygenFloor {
@@ -80,6 +82,7 @@ export function calculateCashOxygenFloor(input: CashOxygenCalculationInput): Cas
     goLiveFloorCash: avgDailyFixedBurn == null ? null : r2(avgDailyFixedBurn * DEFAULT_GO_LIVE_FLOOR_DAYS),
     status,
     mappedCategories: input.mappedCategories ?? [],
+    pendingFixedEventCount: input.pendingFixedEventCount ?? 0,
   };
 }
 
@@ -92,6 +95,26 @@ function isFixedOperationalExpense(categoryName: string | null, tapBucket: strin
   if (isRecurring) return true;
   const name = categoryName ?? "";
   return FIXED_CATEGORY_PATTERNS.some((pattern) => pattern.test(name));
+}
+
+async function countPendingFixedEvents(
+  restaurantId: string,
+  db: PrismaClient,
+  windowStart: Date,
+  asOf: Date,
+): Promise<number> {
+  try {
+    return await db.normalizedFinancialEvent.count({
+      where: {
+        restaurantId,
+        eventDate: { gte: windowStart, lte: asOf },
+        eventType: "FIXED_OPEX",
+        mappingStatus: "PENDING_REVIEW",
+      },
+    });
+  } catch {
+    return 0;
+  }
 }
 
 async function loadLedgerCashOxygenFloor(
@@ -140,6 +163,7 @@ async function loadLedgerCashOxygenFloor(
       allocationBucket: true,
     },
   });
+  const pendingFixedEventCount = await countPendingFixedEvents(restaurantId, db, windowStart, asOf);
 
   if (fixedLines.length === 0) {
     return calculateCashOxygenFloor({
@@ -149,6 +173,7 @@ async function loadLedgerCashOxygenFloor(
       asOfDate: iso(asOf),
       source: currentCash == null ? "none" : "clean_ledger",
       mappedCategories: [],
+      pendingFixedEventCount,
     });
   }
 
@@ -181,6 +206,7 @@ async function loadLedgerCashOxygenFloor(
     asOfDate: iso(asOf),
     source: currentCash == null ? "none" : "clean_ledger",
     mappedCategories,
+    pendingFixedEventCount,
   });
 }
 
@@ -204,6 +230,7 @@ export async function loadCashOxygenFloor(
   });
   const asOf = latestTxn?.date ?? restaurant?.cashBalanceAnchorDate ?? new Date();
   const windowStart = new Date(asOf.getTime() - (windowDays - 1) * DAY_MS);
+  const pendingFixedEventCount = await countPendingFixedEvents(restaurantId, db, windowStart, asOf);
 
   let currentCash: number | null = null;
   if (restaurant?.cashBalanceAnchor != null && restaurant.cashBalanceAnchorDate != null) {
@@ -255,5 +282,6 @@ export async function loadCashOxygenFloor(
     asOfDate: iso(asOf),
     source: currentCash == null ? "none" : "anchor_plus_transactions",
     mappedCategories,
+    pendingFixedEventCount,
   });
 }

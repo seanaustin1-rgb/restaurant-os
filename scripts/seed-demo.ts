@@ -70,7 +70,9 @@ async function main() {
   }
 
   const result = await seedDemoData(restaurantId);
-  console.log(`Seeded ${result.dailySales} days of sales + ${result.transactions} categorized transactions (current month).`);
+  console.log(
+    `Seeded ${result.dailySales} days of sales + ${result.transactions} categorized transactions + ${result.sourceConfigs} demo source configs (current month).`,
+  );
   console.log("Open /dashboard to see the populated tiles.");
 }
 

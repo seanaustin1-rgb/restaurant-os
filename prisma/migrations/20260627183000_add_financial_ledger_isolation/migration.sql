@@ -6,6 +6,7 @@ CREATE TYPE "FinancialEventType" AS ENUM (
   'FRANCHISE_FEE',
   'COGS',
   'LABOR',
+  'OPEX',
   'FIXED_OPEX',
   'TAX_LIABILITY',
   'OWNER_PAY',
@@ -32,6 +33,7 @@ CREATE TYPE "LedgerAccount" AS ENUM (
   'AGENT_PAYABLE',
   'COGS',
   'LABOR',
+  'OPEX',
   'FIXED_OPEX',
   'TAX_VAULT',
   'PROFIT',
@@ -60,9 +62,7 @@ CREATE TABLE "RawSourceEvent" (
   "sourceSystem" TEXT NOT NULL,
   "sourceObjectType" TEXT NOT NULL,
   "sourceObjectId" TEXT NOT NULL,
-  "syncBatchId" TEXT,
   "payload" JSONB NOT NULL,
-  "payloadHash" TEXT,
   "mappingStatus" "FinancialMappingStatus" NOT NULL DEFAULT 'RAW',
   "receivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "processedAt" TIMESTAMP(3),
@@ -110,26 +110,6 @@ CREATE TABLE "LedgerEntry" (
   CONSTRAINT "LedgerEntry_pkey" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "SourceMappingRule" (
-  "id" TEXT NOT NULL,
-  "restaurantId" TEXT NOT NULL,
-  "sourceSystem" TEXT NOT NULL,
-  "sourceObjectType" TEXT,
-  "sourceField" TEXT,
-  "matchType" "RuleMatchType" NOT NULL DEFAULT 'KEYWORD',
-  "matchPattern" TEXT NOT NULL,
-  "mapsToEventType" "FinancialEventType" NOT NULL,
-  "mapsToLedgerAccount" "LedgerAccount" NOT NULL,
-  "mapsToTapBucket" "TapBucket",
-  "confidence" DOUBLE PRECISION NOT NULL DEFAULT 0.9,
-  "requiresReview" BOOLEAN NOT NULL DEFAULT false,
-  "enabled" BOOLEAN NOT NULL DEFAULT true,
-  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL,
-
-  CONSTRAINT "SourceMappingRule_pkey" PRIMARY KEY ("id")
-);
-
 CREATE TABLE "SyncException" (
   "id" TEXT NOT NULL,
   "restaurantId" TEXT NOT NULL,
@@ -152,7 +132,6 @@ CREATE UNIQUE INDEX "RawSourceEvent_restaurantId_sourceSystem_sourceObjectType_s
   ON "RawSourceEvent"("restaurantId", "sourceSystem", "sourceObjectType", "sourceObjectId");
 CREATE INDEX "RawSourceEvent_restaurantId_idx" ON "RawSourceEvent"("restaurantId");
 CREATE INDEX "RawSourceEvent_sourceSystem_sourceObjectType_idx" ON "RawSourceEvent"("sourceSystem", "sourceObjectType");
-CREATE INDEX "RawSourceEvent_syncBatchId_idx" ON "RawSourceEvent"("syncBatchId");
 CREATE INDEX "RawSourceEvent_mappingStatus_idx" ON "RawSourceEvent"("mappingStatus");
 CREATE INDEX "RawSourceEvent_receivedAt_idx" ON "RawSourceEvent"("receivedAt");
 
@@ -167,12 +146,6 @@ CREATE INDEX "LedgerEntry_normalizedFinancialEventId_idx" ON "LedgerEntry"("norm
 CREATE INDEX "LedgerEntry_ledgerDate_idx" ON "LedgerEntry"("ledgerDate");
 CREATE INDEX "LedgerEntry_ledgerAccount_idx" ON "LedgerEntry"("ledgerAccount");
 CREATE INDEX "LedgerEntry_allocationBucket_idx" ON "LedgerEntry"("allocationBucket");
-
-CREATE INDEX "SourceMappingRule_restaurantId_idx" ON "SourceMappingRule"("restaurantId");
-CREATE INDEX "SourceMappingRule_sourceSystem_sourceObjectType_idx" ON "SourceMappingRule"("sourceSystem", "sourceObjectType");
-CREATE INDEX "SourceMappingRule_mapsToEventType_idx" ON "SourceMappingRule"("mapsToEventType");
-CREATE INDEX "SourceMappingRule_mapsToLedgerAccount_idx" ON "SourceMappingRule"("mapsToLedgerAccount");
-CREATE INDEX "SourceMappingRule_enabled_idx" ON "SourceMappingRule"("enabled");
 
 CREATE INDEX "SyncException_restaurantId_idx" ON "SyncException"("restaurantId");
 CREATE INDEX "SyncException_rawSourceEventId_idx" ON "SyncException"("rawSourceEventId");
@@ -199,10 +172,6 @@ ALTER TABLE "LedgerEntry"
 ALTER TABLE "LedgerEntry"
   ADD CONSTRAINT "LedgerEntry_normalizedFinancialEventId_fkey"
   FOREIGN KEY ("normalizedFinancialEventId") REFERENCES "NormalizedFinancialEvent"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
-ALTER TABLE "SourceMappingRule"
-  ADD CONSTRAINT "SourceMappingRule_restaurantId_fkey"
-  FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "SyncException"
   ADD CONSTRAINT "SyncException_restaurantId_fkey"

@@ -76,7 +76,70 @@ function dateOf(day: number): Date {
 export interface SeedResult {
   restaurantId: string;
   dailySales: number;
+  sourceConfigs: number;
   transactions: number;
+}
+
+const DEMO_SOURCE_CONFIGS = [
+  {
+    category: "cash",
+    providerName: "Plaid",
+    status: "CONNECTED" as const,
+    notes: "Demo: First Harbor Bank transaction export seeded. No live bank token is stored.",
+  },
+  {
+    category: "sales",
+    providerName: "Toast",
+    status: "CONNECTED" as const,
+    notes: "Demo: Northstar POS daily sales feed seeded. No live POS token is stored.",
+  },
+  {
+    category: "costs",
+    providerName: "MarginEdge",
+    status: "CONNECTED" as const,
+    notes: "Demo: vendor spend and COGS are represented by seeded purchases.",
+  },
+  {
+    category: "accounting",
+    providerName: "QuickBooks Online",
+    status: "CONNECTED" as const,
+    notes: "Demo: LedgerPoint Accounting fixed-expense export seeded.",
+  },
+  {
+    category: "aura",
+    providerName: "Google Business Profile",
+    status: "CONNECTED" as const,
+    notes: "Demo: public reputation and intent signals are simulated for investor walkthroughs.",
+  },
+];
+
+async function seedDemoSourceConfigs(restaurantId: string, db: PrismaClient): Promise<number> {
+  for (const source of DEMO_SOURCE_CONFIGS) {
+    await db.dataSourceConfig.upsert({
+      where: {
+        restaurantId_category_providerName: {
+          restaurantId,
+          category: source.category,
+          providerName: source.providerName,
+        },
+      },
+      create: {
+        restaurantId,
+        category: source.category,
+        providerName: source.providerName,
+        status: source.status,
+        notes: source.notes,
+        updatedBy: "seed:demo",
+      },
+      update: {
+        status: source.status,
+        notes: source.notes,
+        updatedBy: "seed:demo",
+      },
+    });
+  }
+
+  return DEMO_SOURCE_CONFIGS.length;
 }
 
 export async function seedDemoData(restaurantId: string, db: PrismaClient = prisma): Promise<SeedResult> {
@@ -114,7 +177,7 @@ export async function seedDemoData(restaurantId: string, db: PrismaClient = pris
       checkCount: Math.round(covers * 0.55),
       laborCost: Math.round(net * 0.3),
       hoursOpen: 13,
-      source: "seed",
+      source: "toast",
     });
   }
   await db.dailySales.createMany({ data: sales });
@@ -141,5 +204,7 @@ export async function seedDemoData(restaurantId: string, db: PrismaClient = pris
   });
   await db.transaction.createMany({ data: txns });
 
-  return { restaurantId, dailySales: sales.length, transactions: txns.length };
+  const sourceConfigs = await seedDemoSourceConfigs(restaurantId, db);
+
+  return { restaurantId, dailySales: sales.length, sourceConfigs, transactions: txns.length };
 }

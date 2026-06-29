@@ -134,6 +134,9 @@ export default async function SourceMapPage({
   const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
   const syncHealth = await loadFinancialSyncHealth(role.restaurantId, prisma);
   const statusByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config.status]));
+  const configByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config]));
+  const sourceConnectedBank = configByKey.get(keyOf("cash", "Plaid"))?.status === "CONNECTED";
+  const sourceConnectedGoogle = configByKey.get(keyOf("aura", "Google Business Profile"))?.status === "CONNECTED";
   const ownerApprovalSources = sourceMap.groups.flatMap((group) =>
     group.options
       .filter((option) => {
@@ -279,9 +282,13 @@ export default async function SourceMapPage({
                 <p className="mt-0.5 text-xs text-muted">
                   {bankConnectionCount > 0
                     ? `${bankConnectionCount} active bank connection${bankConnectionCount === 1 ? "" : "s"}.`
+                    : sourceConnectedBank
+                    ? "Demo/import bank feed is connected. No live bank authorization is stored."
                     : "No active bank authorization yet."}
                 </p>
-                {role.role === "OPERATOR" ? (
+                {bankConnectionCount === 0 && sourceConnectedBank ? (
+                  <p className="mt-2 text-xs text-muted">Use live bank authorization only when replacing the demo feed with a real client account.</p>
+                ) : role.role === "OPERATOR" ? (
                   <Link href="/connections" className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper">
                     Manage bank connections
                   </Link>
@@ -300,9 +307,13 @@ export default async function SourceMapPage({
                 <p className="mt-0.5 text-xs text-muted">
                   {activeGoogleConnection
                     ? `${activeGoogleConnection.displayName ?? "Google Business Profile"} is authorized.`
+                    : sourceConnectedGoogle
+                    ? "Demo/import Aura feed is connected. No live Google authorization is stored."
                     : "No active Google authorization yet."}
                 </p>
-                {activeGoogleConnection && role.role === "OPERATOR" ? (
+                {!activeGoogleConnection && sourceConnectedGoogle ? (
+                  <p className="mt-2 text-xs text-muted">Use Google authorization only when replacing the demo feed with a real client location.</p>
+                ) : activeGoogleConnection && role.role === "OPERATOR" ? (
                   <div className="mt-2">
                     <DisconnectGoogleBusinessProfileButton
                       connectionId={activeGoogleConnection.id}

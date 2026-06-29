@@ -151,6 +151,7 @@ enum FinancialEventType {
   FRANCHISE_FEE
   COGS
   LABOR
+  OPEX
   FIXED_OPEX
   TAX_LIABILITY
   OWNER_PAY
@@ -177,6 +178,7 @@ enum LedgerAccount {
   AGENT_PAYABLE
   COGS
   LABOR
+  OPEX
   FIXED_OPEX
   TAX_VAULT
   PROFIT
@@ -258,7 +260,6 @@ model Restaurant {
   rawSourceEvents             RawSourceEvent[]
   normalizedFinancialEvents   NormalizedFinancialEvent[]
   ledgerEntries               LedgerEntry[]
-  sourceMappingRules          SourceMappingRule[]
   syncExceptions              SyncException[]
   aiActionLogs                AiActionLog[]
 }
@@ -1016,9 +1017,7 @@ model RawSourceEvent {
   sourceSystem     String // toast, qbo, plaid, dotloop, skyslope, escapia, etc.
   sourceObjectType String // order, payment, expense, deal, booking, agent, etc.
   sourceObjectId   String
-  syncBatchId      String?
   payload          Json
-  payloadHash      String?
   mappingStatus    FinancialMappingStatus @default(RAW)
   receivedAt       DateTime               @default(now())
   processedAt      DateTime?
@@ -1032,7 +1031,6 @@ model RawSourceEvent {
   @@unique([restaurantId, sourceSystem, sourceObjectType, sourceObjectId])
   @@index([restaurantId])
   @@index([sourceSystem, sourceObjectType])
-  @@index([syncBatchId])
   @@index([mappingStatus])
   @@index([receivedAt])
 }
@@ -1089,32 +1087,6 @@ model LedgerEntry {
   @@index([ledgerDate])
   @@index([ledgerAccount])
   @@index([allocationBucket])
-}
-
-model SourceMappingRule {
-  id                  String             @id @default(cuid())
-  restaurantId        String
-  sourceSystem        String
-  sourceObjectType    String?
-  sourceField         String?
-  matchType           RuleMatchType      @default(KEYWORD)
-  matchPattern        String
-  mapsToEventType     FinancialEventType
-  mapsToLedgerAccount LedgerAccount
-  mapsToTapBucket     TapBucket?
-  confidence          Float              @default(0.9)
-  requiresReview      Boolean            @default(false)
-  enabled             Boolean            @default(true)
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-
-  @@index([restaurantId])
-  @@index([sourceSystem, sourceObjectType])
-  @@index([mapsToEventType])
-  @@index([mapsToLedgerAccount])
-  @@index([enabled])
 }
 
 model SyncException {

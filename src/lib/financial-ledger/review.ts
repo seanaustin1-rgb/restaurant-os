@@ -79,6 +79,8 @@ function ledgerAccountForEventType(eventType: FinancialEventType): LedgerAccount
       return "COGS";
     case "LABOR":
       return "LABOR";
+    case "OPEX":
+      return "OPEX";
     case "TAX_LIABILITY":
       return "TAX_VAULT";
     case "OWNER_PAY":

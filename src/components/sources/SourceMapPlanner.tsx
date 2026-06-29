@@ -130,7 +130,7 @@ function ownerCopy(owner: SetupOwner): { label: string; detail: string; classNam
 }
 
 function statusCopy(status: DataSourceStatus, guide: OnboardingGuide): { label: string; detail: string } {
-  if (status === "CONNECTED") return { label: "Live", detail: "This source is connected or detected from live data." };
+  if (status === "CONNECTED") return { label: "Connected", detail: "This source is already connected or represented by an approved demo/import feed." };
   if (status === "BLOCKED") return { label: "Needs help", detail: "Something is blocking setup; support or the account owner needs to resolve it." };
   if (status === "NOT_NEEDED") return { label: "Skip for now", detail: "Not needed for the current onboarding path." };
   if (guide.mode === "oauth") return { label: "Ready to connect", detail: "Customer can start this with a provider login." };
@@ -271,7 +271,15 @@ export function SourceMapPlanner({
 
                   <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                     <div className="flex flex-wrap gap-2 sm:w-auto">
-                      {guide.href && canStartAuthorization ? (
+                      {draft.status === "CONNECTED" ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-health-green/40 bg-health-green/10 px-3 py-2 text-xs text-health-green"
+                        >
+                          <ShieldCheck size={13} /> Connected
+                        </button>
+                      ) : guide.href && canStartAuthorization ? (
                         <Link
                           href={guide.href}
                           className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20"

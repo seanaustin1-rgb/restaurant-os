@@ -33,183 +33,244 @@ _Older handoff below — historical context, superseded by the LATEST block abov
 
 ## Project
 **Restaurant OS / OutFront Data** — a multi-tenant SaaS that gives restaurant operators financial intelligence (a Profit First allocation layer, leak-detection tiles, reputation/"Aura", and a public prospect demo) on top of their bank (Plaid) and POS (Toast) data.
+## Claude → Codex Update (2026-06-28)
 
-- **Repo path on disk:** `C:\Users\Default_50\restaurant-os`
-- **Current branch:** `feat/demo-automation` (3 commits ahead of `origin/main`; open as PR #34)
-- **Production:** `main` auto-deploys to Vercel (`outfrontdata.com`). Treat `main` as prod.
+Resolving the "concurrent Claude/tooling changes ... not audited ... do not assume safe to ship" uncertainty below: **that work is now finished and merged to production.**
 
-## What changed and why (this work)
+**Finished + shipped — PR #49 (`e8bbdee`), merged to `origin/main` 2026-06-28 15:46.** These are the exact files this handoff previously flagged as risky-unaudited; they are no longer speculative:
 
-Two PRs of work, most of it shipped:
+- `scripts/agents/` — Claude Agent SDK scaffold (`_shared.ts`, `cash-analyst.ts`, `menu-pricer.ts`, `README.md`). Local one-off agent scripts; no app/runtime wiring, do not affect the build or the deployed app.
+- `docs/CONSULTANT-ONBOARDING.md` — consultant onboarding doc (docs-only).
+- `.env.sandbox.example` — sandbox env template (example only, no secrets).
+- `package.json` / `package-lock.json` — adds `@anthropic-ai/claude-agent-sdk` dependency and `agent:cash` / `agent:menu` scripts. Dev tooling only.
 
-### PR #33 — merged to `main` (commit `9c72120`)
-- **Dead-code cleanup** (no behavior change): removed ~31 one-off scripts, 3 redundant/dev-only `api/dev/*` routes, and the unused `tailwind-merge` dep.
-- **Public demo funnel:**
-  - **Mode 2 — `/demo`**: no-login instant estimate. A prospect types a few numbers; a personalized partial dashboard computes **client-side** (reuses the Profit First calculator). Tiles needing bank/POS data render "locked". Optional Google rating lookup. Supports shareable prefill links (`/demo?name=...&sales=...`).
-  - **Mode 1 — `/demo/tour`**: no-login full dashboard tour for a sample "Demo Bistro". Reads from a **separate demo database** (`DEMO_DATABASE_URL`) via a second Prisma client so production data is never touched.
+**Reconciled — `origin/main` (PR #49) is now merged into this branch.** Done by Claude in two local commits:
 
-### PR #34 — open on `feat/demo-automation` (3 commits)
-- `cfa06ef` **Monthly demo reseed** — `monthlyDemoReseed` Inngest cron (1st of month, 6am ET) refreshes the Demo Bistro; writes only to the demo DB.
-- `bfc6331` **Benchmark defensibility** — tightened the net-margin *typical* band 6–12% → **3–9%** (full-service runs thin) in both the demo and the live module; added `docs/benchmarks-rationale.md` (where the ranges come from + a publish-ready FAQ answer).
-- `0ab0d4b` **Aura reputation trending** — a new `ReputationSnapshot` table + a weekly Inngest cron that records each source's rating (+ a count-weighted "overall" row); `loadReputationTrend()` computes a latest-vs-~6-weeks-ago delta + review velocity, gated to a "gathering history" state until ~2 weeks of data exist; trend chip added to the Aura tile.
+- `f0abccd` — vendored this branch's local copies of PR #49's files so the merge wouldn't collide with the dirty working tree.
+- `ce849a1` — `Merge remote-tracking branch 'origin/main' into feat/heartbeat-landing` (clean, no conflicts; only `package.json` auto-merged).
 
-> ⚠️ **The Aura migration has NOT been applied to the databases yet** (the agent was blocked from running a prod migration by a safety classifier). See "Open questions / TODOs" — this must happen before PR #34 is merged/deployed.
+After the merge, those PR #49 files no longer show dirty. The in-progress financial-ledger / brokerage / sources work was **not** touched and remains uncommitted WIP.
 
-## Inspect first (highest-signal files)
-- `src/app/demo/` and `src/lib/demo/` — the demo (estimate.ts, demo-tenant.ts, demo-prisma.ts, DemoEstimator.tsx, page.tsx, tour/page.tsx)
-- `src/lib/modules/reputation-trend.ts`, `src/components/modules/AuraModule.tsx`, `prisma/migrations/20260621000000_add_reputation_snapshot/` — Aura trending
-- `src/lib/inngest/functions.ts` — all scheduled crons (Plaid/Toast sync, demo reseed, reputation snapshot)
-- `prisma/schema.prisma` — data model (note the new `ReputationSnapshot` at the end)
-- `docs/demo-tour-setup.md`, `docs/benchmarks-rationale.md` — setup + rationale
-- `src/middleware.ts` — Clerk auth + public-route allowlist (`/demo` is public)
+**Still genuinely uncommitted (Claude side, in no branch or PR):**
 
-## Install
-- Requires **Node v24** (works in PowerShell on Windows) and npm.
-- `npm install` — `postinstall` runs `prisma generate` automatically.
+- `PRODUCT.md` — untracked, not on `origin/main`, not committed anywhere. Review and decide keep/commit/discard.
 
-## Run locally
-- `npm run dev` → http://localhost:3000 (requires `.env.local`, see below).
-- Useful pages: `/` (landing), `/demo` (works with no DB), `/demo/tour` (needs the demo DB seeded), `/dashboard` (auth-gated via Clerk).
+**What I (Claude) did this session:** audited working-tree vs. branch/PR state to produce this accounting — no new code changes. The substantive Claude deliverable already landed as PR #49.
 
-## Checks (all run for this handoff)
+**Net for Codex:** you can drop PR #49's files from the "review before committing / don't assume safe to ship" list. The only Claude-side item still needing a decision is `PRODUCT.md`.
+
+### Coordination ask — please confirm before this goes further
+
+We appear to be working the same `feat/heartbeat-landing` working tree concurrently: while Claude was merging, new edits landed in `scripts/seed-demo.ts`, `src/app/settings/sources/page.tsx`, `src/components/sources/SourceMapPlanner.tsx`, and `src/lib/dev/seed-demo.ts` (real content changes, not just CRLF). To avoid clobbering each other:
+
+1. **History moved — re-sync before you commit.** This branch gained two commits (`f0abccd`, `ce849a1`) that may not be in your local view. Please `git fetch` / fast-forward your `feat/heartbeat-landing` (or `git rebase`/replay your uncommitted ledger work onto `ce849a1`) before committing, so you don't fork the history or lose the merge.
+2. **Push hold.** Claude has **not** pushed `feat/heartbeat-landing`. The two new commits are local only. **Confirm it's safe to push** (i.e. you're not mid-edit on something that should land first) — Claude will push only the two commits and leave your uncommitted WIP alone.
+3. **WIP ownership.** The dirty financial-ledger / brokerage / sources changes are yours — Claude is intentionally not committing them. Say the word if you want Claude to leave the tree entirely alone while you finish, or if a specific file is safe for Claude to touch.
+4. **`PRODUCT.md`** — untracked, in no branch/PR. Whose is it, and keep / commit / discard?
+
+If you'd rather Claude not operate in this working tree at all while you're active, note that here and Claude will switch to a separate worktree.
+
+## Current Project State
+
+**Restaurant OS / OutFront Data** is now broader than the original restaurant-only app. The current branch is focused on the public demo funnel, industry-specific onboarding, real estate brokerage readiness, vacation rental groundwork, and a cleaner financial-ledger foundation for Cash Oxygen / Go-Live Coach.
+
+- Repo path: `C:\Users\Default_50\restaurant-os`
+- Current branch: `feat/heartbeat-landing`
+- Remote branch: `origin/feat/heartbeat-landing`
+- Production branch: `main` auto-deploys to Vercel at `outfrontdata.com`
+- Treat `main` as production.
+
+## Current Working Tree
+
+Tracked files are currently dirty with Codex cleanup work plus likely concurrent Claude/tooling changes.
+
+Codex-owned changes in this pass:
+
+- Real estate source plan now starts with bank + accounting only.
+- Brokerage no-data CTA points to `/import/brokerage`.
+- Brokerage import preview/commit routes require explicit business selection when a user has access to multiple businesses.
+- Brokerage import UI now includes an `Import into` selector for consultants/accountants with multiple accessible businesses.
+- Brokerage template no longer carries restaurant-style `targetPrimeCost`.
+- Cash Oxygen now warns when fixed-cost events are pending review.
+- Bank transaction ledger mapping now distinguishes generic `OPEX` from true `FIXED_OPEX`.
+- Added `OPEX` as a financial event type and ledger account in the pending migration/schema.
+- Removed unused generic `financial-ledger/ingest.ts`.
+- Removed unused speculative `SourceMappingRule` model/table/indexes from the pending migration/schema.
+- Removed unused `RawSourceEvent.syncBatchId` and `payloadHash` columns from the pending migration/schema.
+- Trimmed source-mapping code to the live `buildLedgerDraftLines` helper.
+- Fixed service/retail demo optional-number parsing so `0` means zero, not unknown.
+- Added a regression test for fixed-vs-generic OpEx bank mapping.
+- Restaurant demo seeding now adds safe demo source configs for bank/POS/COGS/accounting/Aura and marks seeded daily sales as Toast-sourced. These are source-status records only, not fake live credentials.
+- Brokerage demo seeding now uses demo-connected source configs for bank, transaction pipeline, accounting, and Aura without storing live tokens. It also refuses to seed brokerage data into a non-brokerage business.
+- Source onboarding now treats saved/demo-connected sources as connected and does not push the operator into live Plaid/Google authorization unless they are replacing the demo/import feed with a real client source.
+
+Concurrent Claude/tooling changes — **status updated, see "Claude → Codex Update (2026-06-28)" at top:**
+
+- `package.json` / `package-lock.json` (`@anthropic-ai/claude-agent-sdk` + `agent:*` scripts), `scripts/agents/`, `docs/CONSULTANT-ONBOARDING.md`, `.env.sandbox.example` — **now finished + merged as PR #49** (`e8bbdee` on `origin/main`). Show dirty here only because this branch hasn't merged `main` yet.
+- Untracked brokerage/demo scripts still to review: `scripts/generate-brokerage-pilot-payload.ts`, `scripts/seed-demo-brokerage.ts`.
+- `PRODUCT.md` — still genuinely uncommitted (in no branch/PR); needs a keep/commit/discard decision.
+- Other pre-existing/unrelated untracked local folders remain: `.codex/`, `.github/hooks/`, `.impeccable/`, screenshot folders, `scripts/inspect-toast-config.ts`.
+
+## Verified Gates
+
+Last verified on this branch after the Codex cleanup:
+
 | Check | Command | Result |
 |---|---|---|
-| Tests | `npm test` (vitest) | **55 passed / 6 files** ✅ |
-| Type check | `npx tsc --noEmit` | **clean** ✅ |
-| Build | `npm run build` (`prisma generate && next build`) | **passes** ✅ |
-| Lint | `npm run lint` (`next lint`) | ⚠️ **not configured** — drops into an interactive "configure ESLint" prompt (no eslintrc). Not a working gate. |
+| Prisma client | `npx.cmd prisma generate` | Passed |
+| TypeScript | `npx.cmd tsc --noEmit --incremental false` | Passed after source-guard changes |
+| Tests | `npm.cmd test` | Passed after source-guard changes: 27 files, 139 tests |
+| Production build | `npm.cmd run build` | Passed after source-guard changes: 72 routes |
 
-Other scripts: `npm run seed:demo`, `npm run check:launch`, `npm run db:migrate`, `npm run db:studio`.
+Lint remains not a reliable gate unless ESLint has since been initialized.
 
-## Known failing tests / warnings
-- **None failing.** All 55 tests pass; tsc + build clean.
-- **Lint is unconfigured** (pre-existing) — `next lint` has no config and prompts interactively.
-- Git shows `LF will be replaced by CRLF` warnings on commit (Windows line endings) — cosmetic.
-- `public/logo.png` is modified-but-uncommitted in the working tree — **pre-existing, NOT part of this work**; left as-is intentionally.
-- The cleanup + demo were verified via type-check/build + HTTP probes, but **not** via a logged-in visual click-through of the auth-gated dashboards (local GUI/screenshot tooling was unresponsive during the session).
+## Important Pending Migration
 
-## Environment variables (names + safe placeholders only — NO real values)
-Set these in `.env.local` (local) and Vercel (deployed). Real values are intentionally omitted.
+The key migration is:
 
-```dotenv
-# --- Database (Supabase Postgres) ---
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true"   # pooled
-DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"                    # direct (migrations)
+`prisma/migrations/20260627183000_add_financial_ledger_isolation/migration.sql`
 
-# --- Separate DEMO database (for /demo/tour) ---
-DEMO_DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true&connection_limit=1"
-DEMO_DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/postgres"
+This migration has been edited before production deploy. It now creates:
 
-# --- Auth (Clerk) ---
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
-CLERK_SECRET_KEY="sk_test_xxx"
-NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
-NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL="/dashboard"
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL="/onboarding"
+- Brokerage tables
+- Financial raw event quarantine
+- Normalized financial events
+- Ledger entries
+- Sync exceptions
+- `OPEX` and `FIXED_OPEX` separation
 
-# --- Supabase (client-side keys; storage/realtime scaffolding) ---
-NEXT_PUBLIC_SUPABASE_URL="https://PROJECT.supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_xxx"
+It no longer creates:
 
-# --- Banking (Plaid) ---
-PLAID_CLIENT_ID="xxx"
-PLAID_SECRET="xxx"
-PLAID_ENV="production"   # or sandbox
+- `SourceMappingRule`
+- `RawSourceEvent.syncBatchId`
+- `RawSourceEvent.payloadHash`
 
-# --- POS (Toast) ---
-TOAST_API_HOSTNAME="https://ws-api.toasttab.com"
-TOAST_CLIENT_ID="xxx"
-TOAST_CLIENT_SECRET="xxx"
-TOAST_ANALYTICS_CLIENT_ID="xxx"
-TOAST_ANALYTICS_CLIENT_SECRET="xxx"
-TOAST_RESTAURANT_GUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+Important: if this migration has already been applied anywhere, do not edit it further for that database. If it has not been applied to production yet, this cleaned version should be the version deployed.
 
-# --- Background jobs (Inngest) ---
-INNGEST_EVENT_KEY="xxx"
-INNGEST_SIGNING_KEY="signkey-prod-xxx"
-INNGEST_DEV="0"
+## Highest-Signal Files To Inspect
 
-# --- Reputation / Aura (optional; each source lights up when its vars are set) ---
-GOOGLE_PLACES_API_KEY="xxx"          # also used by /demo Google rating lookup
-GOOGLE_PLACE_ID="ChIJxxxxxxxxxxxx"
-YELP_API_KEY="xxx"
-YELP_BUSINESS_ID="business-slug"
-# META_GRAPH_TOKEN / FACEBOOK_PAGE_ID — Facebook source, parked/unwired
+Core branch readiness:
 
-# --- Other ---
-ANTHROPIC_API_KEY="sk-ant-xxx"   # AI features
-RESEND_API_KEY="re_xxx"          # transactional email (scaffolded)
-ENCRYPTION_KEY="32-byte-hex"     # encrypts stored access tokens
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+- `prisma/schema.prisma`
+- `prisma/migrations/20260627183000_add_financial_ledger_isolation/migration.sql`
+- `src/lib/financial-ledger/bank-transactions.ts`
+- `src/lib/financial-ledger/source-mapping.ts`
+- `src/lib/modules/cash-oxygen.ts`
+- `src/components/modules/CashRunwayModule.tsx`
+
+Brokerage / real estate:
+
+- `src/lib/industry-templates.ts`
+- `src/lib/source-map.ts`
+- `src/lib/modules/brokerage-analytics.ts`
+- `src/components/modules/BrokerageAnalyticsModule.tsx`
+- `src/app/modules/brokerage/page.tsx`
+- `src/app/import/brokerage/page.tsx`
+- `src/components/import/BrokerageImportPilot.tsx`
+- `src/app/api/brokerage/import/preview/route.ts`
+- `src/app/api/brokerage/import/commit/route.ts`
+- `src/lib/brokerage/`
+
+Demo funnel:
+
+- `src/app/demo/`
+- `src/lib/demo/`
+- `src/app/demo/tour/page.tsx`
+- `src/app/demo/tour/[type]/page.tsx`
+- `src/app/demo/DemoModulePreview.tsx`
+
+Dashboard/onboarding:
+
+- `src/components/dashboard/DashboardView.tsx`
+- `src/components/dashboard/SetupOverviewCard.tsx`
+- `src/app/onboarding/actions.ts`
+- `src/components/onboarding/OnboardingFlow.tsx`
+
+## What Is Ready
+
+- Public demo/tour funnel exists for multiple sectors.
+- Brokerage demo opens with a believable sample and no longer reads like a restaurant clone.
+- Real estate onboarding branches to the brokerage import/demo path.
+- Brokerage import supports JSON and CSV conversion.
+- Brokerage analytics module exists and reads imported brokerage tables, with fallback assumptions when no imported data exists.
+- Cash Oxygen uses clean ledger data first and now warns when fixed costs are pending review.
+- Generic dead ETL/rule-mapping layer has been trimmed before production migration.
+
+## What Is Not Fully Done
+
+Product/design items for Claude:
+
+- Final polish on sector source-tier language.
+- Decide whether brokerage tiles should visually present as one `Brokerage Analytics` module with subtiles or multiple modules.
+- Polish `assumptions vs live data` copy.
+- Review `/heartbeat` before it becomes a public traffic destination.
+- Final design pass for demo/onboarding/dashboard responsiveness and hierarchy.
+
+Technical/operator items for Codex/operator:
+
+- Review concurrent Claude/tooling files before committing:
+  - `package.json`
+  - `package-lock.json`
+  - `scripts/agents/`
+  - new docs/scripts listed above
+- Confirm whether `20260627183000_add_financial_ledger_isolation` has been applied anywhere.
+- If not applied to prod, deploy this cleaned migration before merging code that depends on it.
+- Confirm Vercel env vars for database, Clerk, Plaid, Toast, Inngest, Google Business Profile, and encryption.
+- Verify live Stone data after deploy: Toast/sales freshness, Aura/GBP status, Cash Oxygen fixed-cost review count.
+
+## Known Risks
+
+1. **Migration sequencing:** deployed code expects ledger/brokerage tables. The production database must have the migration before the code goes live.
+2. **Concurrent changes:** package/dependency/agent files appeared during the broader tandem work and should be reviewed before commit.
+3. **Source truth:** settings can show a source as planned/connected based on saved config; live data still needs separate verification.
+4. **Cash Oxygen trust:** pending fixed-cost events are now surfaced, but the business still needs mapping review discipline.
+5. **Brokerage module maturity:** useful for a pilot, but some feeds remain import/assumption-based rather than true API integrations.
+6. **Lint:** still not a trustworthy gate unless ESLint is configured.
+
+## Suggested Next Steps
+
+For Codex:
+
+1. Review and either keep or remove the concurrent package/agent/docs changes.
+2. Commit the confirmed cleanup work separately from any Claude/tooling additions.
+3. Re-run:
+   - `npx.cmd prisma generate`
+   - `npx.cmd tsc --noEmit --incremental false`
+   - `npm.cmd test`
+   - `npm.cmd run build`
+4. Confirm migration status against production.
+5. Open/update the PR from `feat/heartbeat-landing` to `main`.
+
+For Claude:
+
+1. Work from the current branch, not the old `feat/demo-automation` handoff.
+2. Focus on copy/design structure, not adding backend features.
+3. Make the real estate brokerage story simple:
+   - Minimum useful: bank + accounting.
+   - Upgrade: CRM/transaction pipeline.
+   - Premium: Aura/GBP/MLS/ads.
+4. Keep assumptions clearly labeled.
+5. Do not add new modules until the existing demo/onboarding/live brokerage loop is polished.
+
+## Quick Verification Snapshot
+
+Current branch head at time of this rewrite:
+
+```text
+6b493ca Brokerage data import (JSON + CSV) + Market Intelligence honesty (#46)
+ee4584c Prefill RE demo with a believable sample brokerage (#45)
+586d6ec Add brokerage analytics module
+6abc34c Polish real estate onboarding path
+24253ab Polish brokerage demo language
 ```
 
-## External services / databases / credentials required
-- **Supabase** — two separate Postgres projects: production, and a **demo** project (`DEMO_DATABASE_URL`) for `/demo/tour`. Schema managed by Prisma migrations (`prisma/migrations`).
-- **Clerk** — authentication for all non-public routes.
-- **Plaid** — bank transactions. **Toast** — POS/sales data.
-- **Inngest** — scheduled crons + event workers (registers on deploy via `PUT /api/inngest`).
-- **Google Places + Yelp** — Aura reputation (Google is live in prod; the `/demo` estimate also uses `GOOGLE_PLACES_API_KEY`, ~free tier, cap a quota if worried).
-- **Resend** — email (scaffolded). **Anthropic** — AI features. **Vercel** — hosting (auto-deploy on push to `main`).
+Recent verified commands:
 
-## Open questions / TODOs / risky assumptions
-1. **Aura migration is pending and must run before PR #34 deploys.** The agent was denied running the prod migration. Operator must run, in this order:
-   - Prod: `npx dotenv -e .env.local -- npx prisma migrate deploy`
-   - Demo: `npx dotenv -e .env.local -- node scripts/demo-db.cjs "npx prisma migrate deploy"`
-   - **Then** merge PR #34. If the new code deploys before the table exists, `/modules/aura` will 500.
-2. **Aura is single-tenant** today (one env-configured place per source). The snapshot model + trend are written global; multi-tenant Aura is a future change.
-3. **Benchmark ranges are static industry norms** (not live peer data) — see `docs/benchmarks-rationale.md`. Structured to swap for cohort percentiles later.
-4. **Demo data goes stale monthly** unless reseeded — the new cron handles it; manual fallback `npx dotenv -e .env.local -o -- tsx scripts/seed-demo-tour.ts`. If unseeded, `/demo/tour` shows a "being prepared" state.
-5. **Lint has no config** — there is no real lint gate; consider initializing ESLint (`next lint`).
-6. `main` = production and auto-deploys; be deliberate about merges.
-
-## Suggested next steps for Codex
-1. Run the **pending Aura migration** (prod + demo, order above), then merge PR #34.
-2. After deploy, `/modules/aura` will show "gathering history" for ~2 weeks until the weekly snapshot cron accumulates data, then the trend self-activates — verify the cron registered in Inngest.
-3. **Configure ESLint** so there's a working lint gate (currently none).
-4. Optionally do a **logged-in visual smoke test** of the auth-gated dashboards (the one verification not done this session).
-5. Review `docs/demo-tour-setup.md` for the demo-DB provisioning runbook (incl. the pgbouncer + URL-safe-password gotchas already encountered).
-
----
-
-## Appendix — captured command output
-
+```text
+npx.cmd prisma generate
+npx.cmd tsc --noEmit --incremental false
+npm.cmd test
+npm.cmd run build
 ```
-$ git branch --show-current
-feat/demo-automation
 
-$ git status --short
- M public/logo.png
-?? .claude/
-?? "Access Control Policy.pdf"
-?? "Information Security Policy.pdf"
-?? "Public/Information Security Policy.docx"
-?? Public/Logo_trans.png
-?? Public/logo_trans.ai
-?? "docs/Information Security Policy.pdf"
-?? "docs/Privacy Policy.pdf"
-?? docs/access-control-policy.md
-?? docs/cleanup-handoff.md
-?? docs/information-security-policy.md
-?? docs/privacy-policy.md
-?? docs/privacy.html
-(note: CODEX_HANDOFF.md is added by this step)
-
-$ git diff --stat
- public/logo.png | Bin 87497 -> 1113859 bytes
- 1 file changed, 0 insertions(+), 0 deletions(-)
-
-$ git log --oneline -4
-0ab0d4b feat(aura): reputation trending (weekly snapshots + 4-8wk trend)
-bfc6331 chore(benchmarks): tighten net-margin typical band to 3-9% + add rationale/FAQ doc
-cfa06ef feat(demo): auto-reseed Demo Bistro monthly via Inngest cron
-9c72120 Dead-code cleanup + public demo (instant estimate /demo + full tour /demo/tour) (#33)
-
-$ npm test          # vitest
-Test Files  6 passed (6)
-     Tests  55 passed (55)
-
-$ npx tsc --noEmit  # clean (exit 0)
-$ npm run build     # passes (exit 0)
-$ npm run lint      # NOT configured — interactive prompt, not a usable gate
-```
+All passed after the Codex cleanup.

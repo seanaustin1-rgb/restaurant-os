@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { normalizeBrokerageImport, type BrokerageImportPayload } from "@/lib/brokerage/normalized-import";
 
-type Body = { payload?: BrokerageImportPayload };
+type Body = { restaurantId?: string; payload?: BrokerageImportPayload };
 
 function preview<T>(rows: T[]): T[] {
   return rows.slice(0, 5);
@@ -15,20 +15,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER", "CONSULTANT"] } },
-    select: { restaurantId: true },
-  });
-  if (!role) {
-    return NextResponse.json({ error: "no business / insufficient role" }, { status: 400 });
-  }
-
   const body = (await req.json().catch(() => ({}))) as Body;
   if (!body.payload) {
     return NextResponse.json({ error: "no brokerage import payload" }, { status: 400 });
   }
 
-  const normalized = normalizeBrokerageImport({ restaurantId: role.restaurantId }, body.payload);
+  const roles = await prisma.userRestaurantRole.findMany({
+    where: {
+      clerkUserId: userId,
+      role: { in: ["OPERATOR", "MANAGER", "CONSULTANT"] },
+      ...(body.restaurantId ? { restaurantId: body.restaurantId } : {}),
+    },
+    select: { restaurantId: true },
+  });
+  if (roles.length === 0) {
+    return NextResponse.json({ error: "no business / insufficient role" }, { status: 400 });
+  }
+  if (!body.restaurantId && roles.length > 1) {
+    return NextResponse.json({ error: "choose a business before importing brokerage data" }, { status: 400 });
+  }
+
+  const normalized = normalizeBrokerageImport({ restaurantId: roles[0].restaurantId }, body.payload);
 
   return NextResponse.json({
     summary: normalized.summary,

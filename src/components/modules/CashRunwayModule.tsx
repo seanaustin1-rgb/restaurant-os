@@ -211,6 +211,11 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
           operating expenses. Reviewed clean-ledger entries are used first; mapped bank/QBO-style transactions remain the
           fallback until imports are reviewed.
         </p>
+        {data.cashOxygen.pendingFixedEventCount > 0 ? (
+          <p className="mt-2 rounded-md border border-health-yellow/30 bg-health-yellow/10 px-3 py-2 text-[11px] leading-relaxed text-health-yellow">
+            {count(data.cashOxygen.pendingFixedEventCount)} fixed-cost item{data.cashOxygen.pendingFixedEventCount === 1 ? " is" : "s are"} pending review, so Cash Oxygen may tighten or improve once approved.
+          </p>
+        ) : null}
         {data.cashOxygen.mappedCategories.length > 0 ? (
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {data.cashOxygen.mappedCategories.slice(0, 6).map((line) => (

@@ -55,7 +55,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
       mode: "oauth",
       owner: "owner",
       headline: "Customer connects bank",
-      detail: "They choose their bank and sign in through Plaid. No routing numbers or API keys needed.",
+      detail: "They choose their bank and sign in through the secure bank connection screen. No account numbers are typed into OutFront.",
       primaryLabel: "Connect bank",
       href: "/connections",
     };
@@ -75,7 +75,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
       mode: "admin",
       owner: "support",
       headline: "Support-assisted POS setup",
-      detail: "Toast usually needs partner/API credentials. The customer should not be asked to find restaurant GUIDs.",
+      detail: "Support helps confirm the right Toast account and location.",
       primaryLabel: "Request setup help",
     };
   }
@@ -102,7 +102,7 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
     mode: "admin",
     owner: "support",
     headline: "Support confirms setup path",
-    detail: "Collect the provider name and account owner. Support decides whether this is OAuth, file import, or custom API work.",
+    detail: "Confirm the provider name and account owner. Support will choose the cleanest connection or import path.",
     primaryLabel: "Mark for support",
   };
 }
@@ -124,7 +124,7 @@ function ownerCopy(owner: SetupOwner): { label: string; detail: string; classNam
   }
   return {
     label: "support-assisted",
-    detail: "Support handles credentials, partner/API setup, or provider coordination.",
+    detail: "Support handles provider coordination and setup details.",
     className: "border-line text-muted",
   };
 }
@@ -135,7 +135,7 @@ function statusCopy(status: DataSourceStatus, guide: OnboardingGuide): { label: 
   if (status === "NOT_NEEDED") return { label: "Skip for now", detail: "Not needed for the current onboarding path." };
   if (guide.mode === "oauth") return { label: "Ready to connect", detail: "Customer can start this with a provider login." };
   if (guide.mode === "upload") return { label: "Upload path", detail: "Use a file/import path until a direct connector exists." };
-  return { label: "Support setup", detail: "Support should handle technical credentials and IDs." };
+  return { label: "Support setup", detail: "Support should confirm the setup path." };
 }
 
 function modeIcon(mode: ConnectMode) {

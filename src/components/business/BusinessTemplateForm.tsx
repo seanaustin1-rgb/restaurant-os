@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { BusinessType, UserRole } from "@prisma/client";
+import Link from "next/link";
 import { Check, Settings2 } from "lucide-react";
 import { updateBusinessTemplate } from "@/app/settings/business/actions";
 import { INDUSTRY_TEMPLATES, type ProfileQuestion } from "@/lib/industry-templates";
@@ -50,6 +51,7 @@ export function BusinessTemplateForm({
   const [applyRecommendedModules, setApplyRecommendedModules] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [savedDetail, setSavedDetail] = useState("");
   const [pending, startTransition] = useTransition();
   const selected = INDUSTRY_TEMPLATES[businessType];
   const scaleValue = profile[selected.scaleAnchor.key] ?? (selected.scaleAnchor.key === "seatCount" ? initialSeatCount : "");
@@ -71,6 +73,11 @@ export function BusinessTemplateForm({
           scaleValue: typeof scaleValue === "number" ? scaleValue : Number(scaleValue) || null,
           profile: profileWithDefaults,
         });
+        setSavedDetail(
+          applyRecommendedModules
+            ? "Template and dashboard modules were updated."
+            : "Template assumptions were saved. Dashboard modules were left unchanged.",
+        );
         setSaved(true);
       } catch (e) {
         setError(errMsg(e));
@@ -187,8 +194,9 @@ export function BusinessTemplateForm({
           <span>
             <span className="block text-sm font-medium text-ink-text">Apply recommended module setup</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-muted">
-              Turns on this template&apos;s recommended modules and de-emphasizes modules that do not fit the selected
-              business type. Existing data is not deleted.
+              When this is on, the dashboard is reset to the module set that best fits this business type. When it is
+              off, only the business assumptions are saved and the current dashboard modules stay as they are. Existing
+              data is not deleted either way.
             </span>
           </span>
           <input
@@ -203,12 +211,18 @@ export function BusinessTemplateForm({
         </label>
 
         <div className="mt-3 rounded-md border border-line bg-ink/40 px-3 py-2">
-          <p className="text-[11px] uppercase tracking-wider text-muted">Recommended modules</p>
-          <p className="mt-1 text-xs leading-relaxed text-ink-text">{selected.defaultModuleKeys.join(", ")}</p>
+          <p className="text-[11px] uppercase tracking-wider text-muted">
+            {applyRecommendedModules ? "Will apply these modules" : "Modules will stay unchanged"}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-text">
+            {applyRecommendedModules
+              ? selected.defaultModuleKeys.join(", ")
+              : "Turn the checkbox on if you want this page to replace the current dashboard module set."}
+          </p>
         </div>
       </section>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={save}
@@ -218,9 +232,17 @@ export function BusinessTemplateForm({
           {pending ? "Saving..." : "Save template"}
         </button>
         {saved && !pending && (
-          <span className="inline-flex items-center gap-1 text-sm text-health-green">
-            <Check size={14} /> Saved
-          </span>
+          <>
+            <span className="inline-flex items-center gap-1 text-sm text-health-green">
+              <Check size={14} /> {savedDetail || "Saved"}
+            </span>
+            <Link href="/onboarding" className="rounded-md border border-line px-3 py-2 text-sm text-ink-text hover:border-copper-dim">
+              Back to setup steps
+            </Link>
+            <Link href="/dashboard" className="rounded-md border border-copper-dim px-3 py-2 text-sm text-copper-soft hover:border-copper">
+              View dashboard
+            </Link>
+          </>
         )}
       </div>
     </div>

@@ -27,37 +27,37 @@ const TIER_COPY: Record<
   Record<OnboardingInput["tier"], { name: string; blurb: string }>
 > = {
   RESTAURANT: {
-    TIER_1: { name: "Guided POS + bank setup", blurb: "Authorize POS, bank, Google, payroll, and food-cost sources where available." },
+    TIER_1: { name: "Guided POS + bank setup", blurb: "Start with the core systems, then confirm each connection or support-assisted setup step." },
     TIER_2: { name: "Bank + POS first", blurb: "Start with bank and daily sales; add food cost, payroll, and reputation after the heartbeat appears." },
     TIER_3: { name: "Upload restaurant history", blurb: "Import statements or exports when POS and bank authorization are not ready." },
     TIER_4: { name: "Known restaurant numbers first", blurb: "Use rough weekly sales, labor, food, beverage, and fixed costs before connecting systems." },
   },
   SERVICE: {
-    TIER_1: { name: "Guided bank + accounting setup", blurb: "Authorize bank, accounting, CRM, payment, and reputation sources where available." },
+    TIER_1: { name: "Guided bank + accounting setup", blurb: "Start with the core systems and let OutFront show what needs approval, upload, or support help." },
     TIER_2: { name: "Bank/accounting first", blurb: "Start with cash and invoices; add pipeline and utilization once the model is useful." },
     TIER_3: { name: "Upload service history", blurb: "Import statements or accounting exports before direct connections are ready." },
     TIER_4: { name: "Known service numbers first", blurb: "Use rough revenue, payroll, recurring costs, and receivables to get an initial read." },
   },
   CONTRACTOR: {
-    TIER_1: { name: "Guided jobs + accounting setup", blurb: "Authorize bank, accounting, job-management, payroll, and reputation sources." },
+    TIER_1: { name: "Guided jobs + accounting setup", blurb: "Start with jobs, cash, accounting, payroll, and reputation sources in a guided setup path." },
     TIER_2: { name: "Bank/job-cost first", blurb: "Start with cash, materials, labor, and receivables; add schedule data next." },
     TIER_3: { name: "Upload job-cost history", blurb: "Import statements or accounting exports while job-system access is pending." },
     TIER_4: { name: "Known contractor numbers first", blurb: "Use backlog, materials, labor, subs, fixed costs, and AR to get a first read." },
   },
   REAL_ESTATE_BROKERAGE: {
-    TIER_1: { name: "Guided brokerage setup", blurb: "Authorize bank, accounting, CRM, transaction, listing, and reputation sources." },
+    TIER_1: { name: "Guided brokerage setup", blurb: "Start with bank and accounting, then add pipeline, transaction, listing, and reputation sources as needed." },
     TIER_2: { name: "Bank/accounting first", blurb: "Start with operating cash and expenses; add pipeline, splits, and lead ROI next." },
     TIER_3: { name: "Upload brokerage history", blurb: "Import statements or accounting exports before CRM/transaction data is available." },
     TIER_4: { name: "Known brokerage numbers first", blurb: "Use agents, GCI, splits, lead spend, and closings to estimate company dollar." },
   },
   VACATION_RENTAL: {
-    TIER_1: { name: "Guided PMS + booking setup", blurb: "Authorize bank, PMS/booking, accounting, maintenance, and review sources." },
+    TIER_1: { name: "Guided PMS + booking setup", blurb: "Start with booking, bank, accounting, maintenance, and review sources in a guided setup path." },
     TIER_2: { name: "Bank/booking first", blurb: "Start with cash, occupancy, ADR, owner payouts, and property-level activity." },
     TIER_3: { name: "Upload rental data", blurb: "Import property, booking, owner-statement, expense, maintenance, or review exports." },
     TIER_4: { name: "Known rental numbers first", blurb: "Use properties, ADR, occupancy, fees, turns, maintenance, and owner proceeds." },
   },
   RETAIL: {
-    TIER_1: { name: "Guided POS + inventory setup", blurb: "Authorize POS, bank, ecommerce, inventory, accounting, and review sources." },
+    TIER_1: { name: "Guided POS + inventory setup", blurb: "Start with sales, cash, inventory, accounting, and review sources in a guided setup path." },
     TIER_2: { name: "Bank/POS first", blurb: "Start with sales and cash; add inventory, ecommerce, and margin detail next." },
     TIER_3: { name: "Upload retail history", blurb: "Import statements, POS, ecommerce, or inventory exports before direct access is ready." },
     TIER_4: { name: "Known retail numbers first", blurb: "Use sales, gross margin, payroll, rent, inventory, returns, and traffic assumptions." },

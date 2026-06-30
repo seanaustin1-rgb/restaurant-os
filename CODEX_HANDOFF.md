@@ -70,6 +70,12 @@ no Claude/Codex overlap on this file anymore.
    `buckets.signal`, `sourceSetup`) and whether `attention`/`topPressure` should stay a shared helper
    or move into the data layer. Add tie-break/null rules if you'd compute them differently.
 7. **Confirm `cash-oxygen.ts` timeline to `main`** so Claude can un-gate `<CashTile>`.
+8. **Trend-arrow (E1) data — small gap found:** the directional ▲/▼ on Operating Pressure needs a
+   week-over-week delta on the contract. `prime-cost.ts` already computes **`wowPrimeDelta`** (line ~52),
+   but the `heartbeat` object assembled in `data.ts` (~L309) doesn't carry it. Surface `wowPrimeDelta`
+   (or a `primeCostTrend` direction) onto `DashboardData.heartbeat` (extend `HeartbeatData` in
+   `components/dashboard/HeartbeatStrip`). **No new math — just expose the existing value.** Claude's
+   tile renders the arrow from it.
 
 **Open operator decision blocking item 4:** net-margin definition. Everything else can start now.
 

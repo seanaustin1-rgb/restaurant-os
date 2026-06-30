@@ -9,6 +9,7 @@ describe("commitBrokerageImport", () => {
         upsert: vi.fn(async ({ create }) => ({ id: create.externalAgentId === "A-1" ? "agent-1" : "agent-2" })),
         findMany: vi.fn(async () => []),
       },
+      brokerageAgentSourceIdentity: { upsert: vi.fn(async () => ({})) },
       brokerageDeal: { upsert: vi.fn() },
       brokerageLeadSpend: {
         findFirst: vi.fn(async () => null),
@@ -32,6 +33,19 @@ describe("commitBrokerageImport", () => {
     });
 
     expect(db.brokerageLeadSpend.findFirst).toHaveBeenCalledTimes(2);
+    expect(db.brokerageAgentSourceIdentity.upsert).toHaveBeenCalledTimes(2);
+    expect(db.brokerageAgentSourceIdentity.upsert).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: {
+          restaurantId_sourceSystem_externalAgentId: {
+            restaurantId: "r1",
+            sourceSystem: "CSV",
+            externalAgentId: "A-1",
+          },
+        },
+      }),
+    );
     expect(db.brokerageLeadSpend.findFirst).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ where: expect.objectContaining({ agentId: "agent-1", source: "Zillow" }) }),

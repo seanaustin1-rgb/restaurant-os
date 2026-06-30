@@ -132,6 +132,20 @@ enum BrokerageDealStage {
   LOST
 }
 
+enum BrokerageSourceSystem {
+  CSV
+  FOLLOW_UP_BOSS
+  LONE_WOLF
+  SKYSLOPE
+  BOLDTRAIL
+  MOXIWORKS
+  DOTLOOP
+  LOFT47
+  QBO
+  GOOGLE
+  OTHER
+}
+
 // How a categorization Rule matches a transaction's merchant/description.
 //   KEYWORD   — case-insensitive substring match (operator-friendly default)
 //   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
@@ -226,42 +240,44 @@ model Restaurant {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  userRoles                   UserRestaurantRole[]
-  accessInvites               BusinessAccessInvite[]
-  posConnections              PosConnection[]
-  dailySales                  DailySales[]
-  menuItemSales               MenuItemSales[]
-  plaidConnections            PlaidConnection[]
-  transactions                Transaction[]
-  categories                  Category[]
-  rules                       Rule[]
-  tapSettings                 TapSettings?
-  virtualAccounts             VirtualAccount[]
-  bucketAllocations           BucketAllocation[]
-  bucketSweeps                BucketSweep[]
-  targetSettings              TargetSettings?
-  moduleConfigs               ModuleConfig[]
-  dataSourceConfigs           DataSourceConfig[]
-  integrationConnections      IntegrationConnection[]
-  reviewCaches                ReviewCache[]
-  socialCaches                SocialCache[]
-  vacationRentalSources       VacationRentalSource[]
-  vacationRentalImportBatches VacationRentalImportBatch[]
-  rentalProperties            RentalProperty[]
-  rentalBookings              RentalBooking[]
-  rentalOwnerStatements       RentalOwnerStatement[]
-  rentalExpenses              RentalExpense[]
-  rentalMaintenanceIssues     RentalMaintenanceIssue[]
-  rentalReviews               RentalReview[]
-  brokerageAgents             BrokerageAgent[]
-  brokerageDeals              BrokerageDeal[]
-  brokerageLeadSpend          BrokerageLeadSpend[]
-  brokerageMarketMetrics      BrokerageMarketMetric[]
-  rawSourceEvents             RawSourceEvent[]
-  normalizedFinancialEvents   NormalizedFinancialEvent[]
-  ledgerEntries               LedgerEntry[]
-  syncExceptions              SyncException[]
-  aiActionLogs                AiActionLog[]
+  userRoles                       UserRestaurantRole[]
+  accessInvites                   BusinessAccessInvite[]
+  posConnections                  PosConnection[]
+  dailySales                      DailySales[]
+  menuItemSales                   MenuItemSales[]
+  plaidConnections                PlaidConnection[]
+  transactions                    Transaction[]
+  categories                      Category[]
+  rules                           Rule[]
+  tapSettings                     TapSettings?
+  virtualAccounts                 VirtualAccount[]
+  bucketAllocations               BucketAllocation[]
+  bucketSweeps                    BucketSweep[]
+  targetSettings                  TargetSettings?
+  moduleConfigs                   ModuleConfig[]
+  dataSourceConfigs               DataSourceConfig[]
+  integrationConnections          IntegrationConnection[]
+  reviewCaches                    ReviewCache[]
+  socialCaches                    SocialCache[]
+  vacationRentalSources           VacationRentalSource[]
+  vacationRentalImportBatches     VacationRentalImportBatch[]
+  rentalProperties                RentalProperty[]
+  rentalBookings                  RentalBooking[]
+  rentalOwnerStatements           RentalOwnerStatement[]
+  rentalExpenses                  RentalExpense[]
+  rentalMaintenanceIssues         RentalMaintenanceIssue[]
+  rentalReviews                   RentalReview[]
+  brokerageAgents                 BrokerageAgent[]
+  brokerageAgentSourceIdentities  BrokerageAgentSourceIdentity[]
+  brokerageAgentActivitySnapshots BrokerageAgentActivitySnapshot[]
+  brokerageDeals                  BrokerageDeal[]
+  brokerageLeadSpend              BrokerageLeadSpend[]
+  brokerageMarketMetrics          BrokerageMarketMetric[]
+  rawSourceEvents                 RawSourceEvent[]
+  normalizedFinancialEvents       NormalizedFinancialEvent[]
+  ledgerEntries                   LedgerEntry[]
+  syncExceptions                  SyncException[]
+  aiActionLogs                    AiActionLog[]
 }
 
 model UserRestaurantRole {
@@ -918,13 +934,62 @@ model BrokerageAgent {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  restaurant Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  deals      BrokerageDeal[]
-  leadSpend  BrokerageLeadSpend[]
+  restaurant        Restaurant                       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  deals             BrokerageDeal[]
+  leadSpend         BrokerageLeadSpend[]
+  sourceIdentities  BrokerageAgentSourceIdentity[]
+  activitySnapshots BrokerageAgentActivitySnapshot[]
 
   @@unique([restaurantId, externalAgentId])
   @@index([restaurantId])
   @@index([status])
+}
+
+model BrokerageAgentSourceIdentity {
+  id              String                @id @default(cuid())
+  restaurantId    String
+  agentId         String
+  sourceSystem    BrokerageSourceSystem
+  externalAgentId String
+  email           String?
+  rawPayload      Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  restaurant Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, sourceSystem, externalAgentId])
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([email])
+}
+
+model BrokerageAgentActivitySnapshot {
+  id                  String                @id @default(cuid())
+  restaurantId        String
+  agentId             String
+  sourceSystem        BrokerageSourceSystem
+  periodStart         DateTime              @db.Date
+  periodEnd           DateTime              @db.Date
+  loginCount          Int                   @default(0)
+  newLeadCount        Int                   @default(0)
+  contactCount        Int                   @default(0)
+  appointmentCount    Int                   @default(0)
+  cmaCount            Int                   @default(0)
+  activePipelineCount Int                   @default(0)
+  rawPayload          Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  restaurant Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, agentId, sourceSystem, periodStart, periodEnd])
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([sourceSystem])
+  @@index([periodStart, periodEnd])
 }
 
 model BrokerageDeal {

@@ -1,9 +1,10 @@
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { BrokerageSourceSystem, Prisma, type PrismaClient } from "@prisma/client";
 import { normalizeBrokerageImport, type BrokerageImportPayload, type BrokerageImportSummary } from "./normalized-import";
 
 export interface CommitBrokerageImportInput {
   restaurantId: string;
   payload: BrokerageImportPayload;
+  sourceSystem?: BrokerageSourceSystem;
 }
 
 export interface CommitBrokerageImportResult {
@@ -31,6 +32,7 @@ export async function commitBrokerageImport(
   input: CommitBrokerageImportInput,
 ): Promise<CommitBrokerageImportResult> {
   const { restaurantId } = input;
+  const sourceSystem = input.sourceSystem ?? BrokerageSourceSystem.CSV;
   const normalized = normalizeBrokerageImport({ restaurantId }, input.payload);
 
   // 1) Agents first, so deals/lead-spend can resolve their foreign keys.
@@ -61,6 +63,28 @@ export async function commitBrokerageImport(
         rawPayload: json(agent.rawPayload),
       },
       select: { id: true },
+    });
+    await db.brokerageAgentSourceIdentity.upsert({
+      where: {
+        restaurantId_sourceSystem_externalAgentId: {
+          restaurantId,
+          sourceSystem,
+          externalAgentId: agent.externalAgentId,
+        },
+      },
+      create: {
+        restaurantId,
+        agentId: row.id,
+        sourceSystem,
+        externalAgentId: agent.externalAgentId,
+        email: agent.email,
+        rawPayload: json(agent.rawPayload),
+      },
+      update: {
+        agentId: row.id,
+        email: agent.email,
+        rawPayload: json(agent.rawPayload),
+      },
     });
     agentIdByExternal.set(agent.externalAgentId, row.id);
   }

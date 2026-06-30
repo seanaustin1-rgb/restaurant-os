@@ -5,6 +5,7 @@ import { count, pct } from "@/lib/format";
 
 export interface HeartbeatData {
   primeCostPct: number;
+  primeCostTrendPts: number | null;
   laborPct: number;
   foodPct: number;
   liquorPct: number;
@@ -44,6 +45,29 @@ function CostMetric({ label, value, target }: { label: string; value: number; ta
   );
 }
 
+function PrimeCostMetric({ value, target, trendPts }: { value: number; target: number; trendPts: number | null }) {
+  return (
+    <MetricCard
+      label="Prime Cost"
+      value={pct(value)}
+      health={costHealth(value, target)}
+      healthDetail={costVerdict(value, target)}
+    >
+      {trendPts != null && Math.abs(trendPts) >= 0.1 ? (
+        <span
+          className={
+            "tnum rounded px-1.5 py-0.5 text-[10px] " +
+            (trendPts <= 0 ? "bg-health-green/15 text-health-green" : "bg-health-red/15 text-health-red")
+          }
+          title="Week-over-week prime cost change"
+        >
+          {trendPts <= 0 ? "▼" : "▲"} {Math.abs(trendPts).toFixed(1)} pts
+        </span>
+      ) : null}
+    </MetricCard>
+  );
+}
+
 export function HeartbeatStrip({ data }: { data: HeartbeatData }) {
   const spark = data.coversSparkline;
   const last = spark[spark.length - 1] ?? 0;
@@ -55,7 +79,7 @@ export function HeartbeatStrip({ data }: { data: HeartbeatData }) {
     <section>
       <h2 className="mb-2 font-display text-lg text-ink-text">Heartbeat</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <CostMetric label="Prime Cost" value={data.primeCostPct} target={60} />
+        <PrimeCostMetric value={data.primeCostPct} target={60} trendPts={data.primeCostTrendPts} />
         <CostMetric label="Labor Cost" value={data.laborPct} target={32} />
         <CostMetric label="Food Cost" value={data.foodPct} target={18} />
         <CostMetric label="Liquor Cost" value={data.liquorPct} target={12} />

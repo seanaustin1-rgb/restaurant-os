@@ -10,8 +10,20 @@ function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
     periodLabel: "Jun 2026 · MTD",
     hasData: true,
     realRevenue: 100_000,
+    operatingProfit: {
+      amount: 50_000,
+      marginPct: 25,
+      components: {
+        revenue: 200_000,
+        cogs: 60_000,
+        labor: 60_000,
+        opex: 30_000,
+      },
+      excludes: ["owner pay", "debt service", "depreciation/amortization", "tax set-aside", "untracked spend"],
+    },
     heartbeat: {
       primeCostPct: 61,
+      primeCostTrendPts: 1.5,
       laborPct: 34,
       foodPct: 20,
       liquorPct: 10,

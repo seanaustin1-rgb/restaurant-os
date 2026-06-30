@@ -17,6 +17,7 @@ import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/T
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
 import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
+import { loadPrimeCost } from "@/lib/modules/prime-cost";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 import { loadAura, type AuraData } from "@/lib/modules/aura";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
@@ -28,6 +29,7 @@ export interface DashboardData {
   periodLabel: string;
   hasData: boolean;
   realRevenue: number;
+  operatingProfit: DashboardOperatingProfit;
   heartbeat: HeartbeatData;
   revenue: RevenueData;
   goLiveCoach: GoLiveCoachData;
@@ -48,6 +50,18 @@ export interface DashboardCashSafety {
   source: CashOxygenFloor["source"];
   asOfDate: string | null;
   status: CashOxygenFloor["status"];
+}
+
+export interface DashboardOperatingProfit {
+  amount: number;
+  marginPct: number | null;
+  components: {
+    revenue: number;
+    cogs: number;
+    labor: number;
+    opex: number;
+  };
+  excludes: string[];
 }
 
 export interface DashboardAuraSummary {
@@ -278,12 +292,14 @@ export async function loadDashboardData(
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
   const aura = await loadDashboardAura(restaurantId);
-  const [cashOxygen, sourceSetup, netCashChangePeriod] = await Promise.all([
+  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost] = await Promise.all([
     loadCashOxygenFloor(restaurantId, db),
     loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     loadPeriodNetCashChange(restaurantId, start, end, db),
+    loadPrimeCost(restaurantId, 8, db),
   ]);
   const goLiveCoach = await loadGoLiveCoach(restaurantId, db, cashOxygen);
+  const operatingProfitAmount = revenue - (cogsFood + cogsLiquor + cogsBeverage) - labor - opex;
 
   return {
     restaurantId,
@@ -292,6 +308,17 @@ export async function loadDashboardData(
     periodLabel: rentalPropertyRollup?.periodLabel ?? periodLabel,
     hasData: businessType === "VACATION_RENTAL" ? Boolean(rentalPropertyRollup?.hasImportedRentalData || hasData) : hasData,
     realRevenue,
+    operatingProfit: {
+      amount: r2(operatingProfitAmount),
+      marginPct: revenue > 0 ? r2((operatingProfitAmount / revenue) * 100) : null,
+      components: {
+        revenue: r2(revenue),
+        cogs: r2(cogsFood + cogsLiquor + cogsBeverage),
+        labor: r2(labor),
+        opex: r2(opex),
+      },
+      excludes: ["owner pay", "debt service", "depreciation/amortization", "tax set-aside", "untracked spend"],
+    },
     goLiveCoach,
     cashSafety: {
       currentCash: cashOxygen.currentCash,
@@ -308,6 +335,7 @@ export async function loadDashboardData(
     rentalPropertyRollup,
     heartbeat: {
       primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
+      primeCostTrendPts: primeCost.wowPrimeDelta,
       laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,
       foodPct: revenue > 0 ? (cogsFood / revenue) * 100 : 0,
       liquorPct: revenue > 0 ? (cogsLiquor / revenue) * 100 : 0,

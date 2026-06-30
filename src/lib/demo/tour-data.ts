@@ -69,6 +69,17 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     periodLabel: MONTH,
     hasData: true,
     realRevenue,
+    operatingProfit: {
+      amount: realRevenue - sample.labor - sample.opex,
+      marginPct: revenue > 0 ? ((realRevenue - sample.labor - sample.opex) / revenue) * 100 : null,
+      components: {
+        revenue,
+        cogs,
+        labor: sample.labor,
+        opex: sample.opex,
+      },
+      excludes: ["owner pay", "debt service", "depreciation/amortization", "tax set-aside", "untracked spend"],
+    },
     cashSafety: {
       currentCash: sample.cash,
       oxygenDays: sample.opex > 0 ? Math.round((sample.cash / (sample.opex / 30)) * 10) / 10 : null,
@@ -117,6 +128,7 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     }),
     heartbeat: {
       primeCostPct: calculatePrimeCost(sample.food, sample.liquor + sample.beverage, sample.labor, revenue),
+      primeCostTrendPts: type === "RESTAURANT" ? 2.4 : type === "RETAIL" ? -1.2 : null,
       laborPct: revenue > 0 ? (sample.labor / revenue) * 100 : 0,
       foodPct: revenue > 0 ? (sample.food / revenue) * 100 : 0,
       liquorPct: revenue > 0 ? (sample.liquor / revenue) * 100 : 0,

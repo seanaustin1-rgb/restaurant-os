@@ -41,11 +41,61 @@ describe("csvToBrokerageRows", () => {
     expect(unmappedHeaders).toEqual(["Favorite Color"]);
   });
 
+  it("maps Lone Wolf-style deal exports without renaming headers", () => {
+    const csv = [
+      "Transaction No,Salesperson ID,Civic Address,Gross Comm,Company Net,Completion Date",
+      "LW-1,A-7,1 Main St,10000,2500,2026-06-01",
+    ].join("\n");
+    const { rows, mapped } = csvToBrokerageRows("deals", csv, "lone_wolf");
+    expect(mapped.externalDealId).toBe("Transaction No");
+    expect(mapped.agentExternalId).toBe("Salesperson ID");
+    expect(mapped.companyDollar).toBe("Company Net");
+    expect(rows[0]).toMatchObject({
+      externalDealId: "LW-1",
+      agentExternalId: "A-7",
+      label: "1 Main St",
+      gci: 10000,
+      companyDollar: 2500,
+      closedDate: "2026-06-01",
+    });
+  });
+
+  it("maps SkySlope-style deal exports without affecting generic parsing", () => {
+    const csv = [
+      "SkySlope ID,Agent Email,Listing Address,Commission Amount,Purchase Price,Actual Close Date",
+      "SS-9,dana@example.com,9 Pine Rd,12000,400000,2026-06-12",
+    ].join("\n");
+    const { rows, mapped } = csvToBrokerageRows("deals", csv, "skyslope");
+    expect(mapped.externalDealId).toBe("SkySlope ID");
+    expect(mapped.agentExternalId).toBe("Agent Email");
+    expect(mapped.salePrice).toBe("Purchase Price");
+    expect(rows[0]).toMatchObject({
+      externalDealId: "SS-9",
+      agentExternalId: "dana@example.com",
+      label: "9 Pine Rd",
+      gci: 12000,
+      salePrice: 400000,
+      closedDate: "2026-06-12",
+    });
+
+    const generic = csvToBrokerageRows("deals", "Deal ID,Agent,GCI\nD1,A-1,5000", "generic");
+    expect(generic.rows[0]).toMatchObject({ externalDealId: "D1", agentExternalId: "A-1", gci: 5000 });
+  });
+
   it("feeds cleanly into the normalizer and derives Company Dollar", () => {
     const csv = "Deal ID,Property,GCI,Agent Split %,Franchise Fee\nD1,1 Oak St,10000,70,600";
     const payload = csvToBrokeragePayload("deals", csv);
     const { deals } = normalizeBrokerageImport({ restaurantId: "r1" }, payload);
     expect(deals).toHaveLength(1);
     expect(deals[0].companyDollar).toBeCloseTo(2400, 2); // 10000 - 7000 - 600
+  });
+
+  it("passes profile-specific rows through csvToBrokeragePayload", () => {
+    const csv = "Trade ID,Property,Gross Commission,Brokerage Net\nL47-1,5 Lake Dr,9000,2700";
+    const payload = csvToBrokeragePayload("deals", csv, "loft47");
+    const { deals } = normalizeBrokerageImport({ restaurantId: "r1" }, payload);
+    expect(deals).toHaveLength(1);
+    expect(deals[0].externalDealId).toBe("L47-1");
+    expect(deals[0].companyDollar).toBe(2700);
   });
 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { BusinessType } from "@prisma/client";
-import { csvToBrokerageRows, type BrokerageEntity } from "@/lib/brokerage/csv-import";
+import { csvToBrokerageRows, type BrokerageCsvProfile, type BrokerageEntity } from "@/lib/brokerage/csv-import";
 
 const SAMPLE = `{
   "agents": [
@@ -44,6 +44,7 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
   const [result, setResult] = useState<PreviewResponse | null>(null);
   const [committed, setCommitted] = useState<CommitResponse | null>(null);
   const [csvEntity, setCsvEntity] = useState<BrokerageEntity>("deals");
+  const [csvProfile, setCsvProfile] = useState<BrokerageCsvProfile>("generic");
   const [csvText, setCsvText] = useState("");
   const [csvNote, setCsvNote] = useState<string | null>(null);
 
@@ -54,7 +55,7 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
     setCsvNote(null);
     setError(null);
     if (!csvText.trim()) return;
-    const { rows, mapped, unmappedHeaders } = csvToBrokerageRows(csvEntity, csvText);
+    const { rows, mapped, unmappedHeaders } = csvToBrokerageRows(csvEntity, csvText, csvProfile);
     if (rows.length === 0) {
       setError("No rows parsed from that CSV — check the header row.");
       return;
@@ -72,7 +73,7 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
     setCsvNote(
       `Converted ${rows.length} ${csvEntity} row${rows.length === 1 ? "" : "s"} → mapped ${mappedFields.length} column${
         mappedFields.length === 1 ? "" : "s"
-      }${unmappedHeaders.length ? `; ignored: ${unmappedHeaders.join(", ")}` : ""}. Review the JSON, then Preview.`,
+      } using ${PROFILE_LABELS[csvProfile]}${unmappedHeaders.length ? `; ignored: ${unmappedHeaders.join(", ")}` : ""}. Review the JSON, then Preview.`,
     );
     setCsvText("");
   }
@@ -141,10 +142,20 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
       <div className="rounded-lg border border-line bg-surface px-4 py-3">
         <div className="text-[11px] uppercase tracking-wider text-muted">Have a spreadsheet? Convert CSV → JSON</div>
         <p className="mt-1 text-[11px] text-muted">
-          Paste one export at a time. Columns are matched by header name (e.g. &ldquo;GCI&rdquo;, &ldquo;Agent Split %&rdquo;,
-          &ldquo;Closed Date&rdquo;); unrecognized columns are ignored.
+          Paste one export at a time. Choose the export style if you know it; Generic is fine for normal headers.
+          Unrecognized columns are ignored.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
+          <select
+            value={csvProfile}
+            onChange={(e) => setCsvProfile(e.target.value as BrokerageCsvProfile)}
+            className="rounded-lg border border-line bg-ink px-3 py-2 text-sm text-ink-text outline-none focus:border-copper-soft"
+          >
+            <option value="generic">Generic spreadsheet</option>
+            <option value="lone_wolf">Lone Wolf-style export</option>
+            <option value="skyslope">SkySlope-style export</option>
+            <option value="loft47">Loft47-style export</option>
+          </select>
           <select
             value={csvEntity}
             onChange={(e) => setCsvEntity(e.target.value as BrokerageEntity)}
@@ -249,3 +260,10 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "wa
     </div>
   );
 }
+
+const PROFILE_LABELS: Record<BrokerageCsvProfile, string> = {
+  generic: "Generic spreadsheet",
+  lone_wolf: "Lone Wolf-style export",
+  skyslope: "SkySlope-style export",
+  loft47: "Loft47-style export",
+};

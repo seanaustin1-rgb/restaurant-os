@@ -6,6 +6,7 @@ import type { BrokerageImportPayload } from "./normalized-import";
 // side-effect free; the route/UI feed the result straight into the normalizer.
 
 export type BrokerageEntity = "agents" | "deals" | "leadSpend";
+export type BrokerageCsvProfile = "generic" | "lone_wolf" | "skyslope" | "loft47";
 
 type FieldType = "string" | "number" | "date";
 
@@ -55,7 +56,61 @@ const SPECS: Record<BrokerageEntity, FieldSpec[]> = {
   ],
 };
 
+const PROFILE_ALIASES: Partial<
+  Record<BrokerageCsvProfile, Partial<Record<BrokerageEntity, Record<string, string[]>>>>
+> = {
+  lone_wolf: {
+    agents: {
+      externalAgentId: ["associateid", "agentcode", "salespersonid"],
+      name: ["associate", "salesperson", "agentfullname"],
+    },
+    deals: {
+      externalDealId: ["transactionnumber", "transactionno", "filenumber", "dealnumber"],
+      agentExternalId: ["associateid", "agentcode", "salespersonid"],
+      label: ["civicaddress", "propertyaddress"],
+      gci: ["grosscomm", "grosscommission", "grosscommissionincome"],
+      agentPayout: ["agentcommission", "commissionpaid", "commissionpayable"],
+      companyDollar: ["brokeragenet", "companynet", "officegross"],
+      closedDate: ["completiondate", "settlementdate"],
+    },
+  },
+  skyslope: {
+    deals: {
+      externalDealId: ["skyslopeid", "transactionid"],
+      agentExternalId: ["agentemail", "agentid"],
+      label: ["listingaddress", "propertyaddress"],
+      stage: ["transactionstatus"],
+      expectedCloseDate: ["estimatedclosedate", "scheduledclosedate"],
+      closedDate: ["actualclosedate", "closeddate"],
+      salePrice: ["purchaseprice", "salesprice"],
+      gci: ["commissionamount", "grosscommission"],
+    },
+  },
+  loft47: {
+    agents: {
+      externalAgentId: ["agentid", "advisorid", "repid"],
+      name: ["advisor", "realtor"],
+    },
+    deals: {
+      externalDealId: ["dealid", "tradeid", "transactionid"],
+      label: ["address", "property"],
+      closedDate: ["completiondate", "closedate"],
+      gci: ["grosscommission", "grosscommissionincome"],
+      agentPayout: ["agentnet", "agentcommission", "commissionpayable"],
+      companyDollar: ["brokeragenet", "companydollar", "officegross"],
+    },
+  },
+};
+
 const norm = (h: string): string => h.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+function specsFor(entity: BrokerageEntity, profile: BrokerageCsvProfile): FieldSpec[] {
+  const profileAliases = PROFILE_ALIASES[profile]?.[entity] ?? {};
+  return SPECS[entity].map((spec) => ({
+    ...spec,
+    aliases: [...spec.aliases, ...(profileAliases[spec.field] ?? []).map(norm)],
+  }));
+}
 
 function toNumber(value: string): number | null {
   const cleaned = value.replace(/[$,%\s]/g, "");
@@ -117,9 +172,13 @@ export interface CsvMapResult {
   unmappedHeaders: string[];
 }
 
-export function csvToBrokerageRows(entity: BrokerageEntity, csv: string): CsvMapResult {
+export function csvToBrokerageRows(
+  entity: BrokerageEntity,
+  csv: string,
+  profile: BrokerageCsvProfile = "generic",
+): CsvMapResult {
   const { headers, rows } = parseCsv(csv);
-  const specs = SPECS[entity];
+  const specs = specsFor(entity, profile);
 
   // Build a header-index -> spec map by alias.
   const specByHeaderIndex = new Map<number, FieldSpec>();
@@ -155,7 +214,11 @@ export function csvToBrokerageRows(entity: BrokerageEntity, csv: string): CsvMap
 }
 
 /** Convenience: build a full payload from one entity's CSV (the UI does one entity at a time). */
-export function csvToBrokeragePayload(entity: BrokerageEntity, csv: string): BrokerageImportPayload {
-  const { rows } = csvToBrokerageRows(entity, csv);
+export function csvToBrokeragePayload(
+  entity: BrokerageEntity,
+  csv: string,
+  profile: BrokerageCsvProfile = "generic",
+): BrokerageImportPayload {
+  const { rows } = csvToBrokerageRows(entity, csv, profile);
   return { [entity]: rows } as unknown as BrokerageImportPayload;
 }

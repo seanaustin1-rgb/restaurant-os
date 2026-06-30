@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Activity, Banknote, CircleDollarSign, Gauge, Info, Megaphone } from "lucide-react";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import type { DashboardData } from "@/lib/dashboard/data";
+import { deriveTopPressure } from "@/lib/dashboard/signals";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { money, pct } from "@/lib/format";
 
@@ -56,26 +57,27 @@ function worstStatus(statuses: HealthStatus[]): HealthStatus {
 }
 
 function cashLens(data: DashboardData): HeartbeatLens {
-  const cash = data.goLiveCoach.cashSafety;
-  const status: HealthStatus = cash.ready ? "green" : cash.hasAnchor ? "red" : "yellow";
-  const hasBankActivity = data.goLiveCoach.transactionCount > 0;
-  const cushionRatio =
-    cash.currentCash != null && cash.minimumOperatingCash != null && cash.minimumOperatingCash > 0
-      ? cash.currentCash / cash.minimumOperatingCash
-      : null;
+  const cash = data.cashSafety;
+  const status: HealthStatus = cash.status === "unknown" ? "yellow" : cash.status;
+  const netChange =
+    cash.netCashChangePeriod == null
+      ? "No period bank movement yet."
+      : `${cash.netCashChangePeriod >= 0 ? "+" : ""}${money(cash.netCashChangePeriod)} net cash movement this period.`;
+  const pending =
+    cash.pendingReviewCount > 0
+      ? ` ${cash.pendingReviewCount} fixed-cost event${cash.pendingReviewCount === 1 ? "" : "s"} still need review.`
+      : "";
   return {
     key: "cash",
     label: "Cash oxygen",
     status,
-    statusLabel: cash.ready ? "breathing room" : cash.hasAnchor ? "below floor" : "needs anchor",
-    value: cushionRatio != null ? `${cushionRatio.toFixed(1)}x floor` : cash.currentCash != null ? money(cash.currentCash) : "Set anchor",
+    statusLabel: cash.oxygenDays != null ? `${Math.floor(cash.oxygenDays)} days` : cash.currentCash != null ? "cash known" : "needs anchor",
+    value: cash.oxygenDays != null ? `${Math.floor(cash.oxygenDays)} days` : cash.currentCash != null ? money(cash.currentCash) : "Set anchor",
     detail:
-      cash.currentCash != null && cash.minimumOperatingCash != null && cushionRatio != null
-        ? `${money(cash.currentCash)} cash vs. ${money(cash.minimumOperatingCash)} floor. ${cushionRatio >= 1.5 ? "Healthy demo cushion." : cushionRatio >= 1 ? "Thin cushion." : "Below the floor."}`
-        : hasBankActivity
-          ? "Bank activity is connected. Add one starting cash balance/date so the app can estimate runway from the imported flow."
-          : "Connect bank activity, then add one starting cash balance/date so the app can estimate runway.",
-    explainer: "Cash oxygen is not a live bank-balance read. It starts with one known cash balance on one date, then adds and subtracts imported bank activity to estimate current operating cash and runway.",
+      cash.currentCash != null
+        ? `${money(cash.currentCash)} estimated cash; ${cash.avgDailyFixedBurn != null ? `${money(cash.avgDailyFixedBurn)} daily fixed burn. ` : ""}${netChange}${pending}`
+        : "Add one starting cash balance/date so the app can estimate runway from imported bank flow.",
+    explainer: "Cash oxygen estimates operating runway from one known cash balance, imported bank movement, and reviewed fixed operating costs. It labels pending fixed-cost review so the number is not overtrusted.",
     action: "set cash anchor",
     href: "/modules/cash-runway",
   };
@@ -568,6 +570,29 @@ function headline(lenses: HeartbeatLens[]): string {
   return "Heartbeat is steady across the visible signals.";
 }
 
+function oneThingCopy(data: DashboardData): { label: string; detail: string; href: string } {
+  const top = deriveTopPressure(data);
+  if (top.state === "pressure") {
+    return {
+      label: top.label,
+      detail: `${top.label} is the first constraint: ${top.readout}.`,
+      href: top.id.startsWith("bucket-") ? "/modules/go-live" : "/dashboard",
+    };
+  }
+  if (top.state === "insufficient-data") {
+    return {
+      label: "Load the first source",
+      detail: top.reason,
+      href: "/settings/sources",
+    };
+  }
+  return {
+    label: "No red pressure visible",
+    detail: "Nothing is currently breaking the visible model. Keep reviewing yellow items and source freshness.",
+    href: "/dashboard",
+  };
+}
+
 function nextAction(lenses: HeartbeatLens[]): HeartbeatLens {
   return lenses.find((l) => l.status === "red") ?? lenses.find((l) => l.status === "yellow") ?? lenses[0];
 }
@@ -576,6 +601,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
   const template = industryTemplateFor(data.businessType);
   const lenses = buildLenses(data, demoMode);
   const focus = nextAction(lenses);
+  const oneThing = oneThingCopy(data);
   const [openInfo, setOpenInfo] = useState<LensKey | null>(null);
 
   return (
@@ -642,6 +668,22 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
             </LensCard>
           );
         })}
+      </div>
+
+      <div className="mt-3 rounded-lg border border-line bg-ink/30 px-3 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-muted">The One Thing</p>
+            <p className="mt-1 text-sm text-ink-text">{oneThing.detail}</p>
+          </div>
+          {demoMode ? (
+            <span className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft">{oneThing.label}</span>
+          ) : (
+            <Link href={oneThing.href} className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
+              {oneThing.label}
+            </Link>
+          )}
+        </div>
       </div>
     </section>
   );

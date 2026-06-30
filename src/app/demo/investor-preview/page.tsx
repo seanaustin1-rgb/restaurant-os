@@ -11,7 +11,7 @@
  */
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { Activity, Banknote, CircleDollarSign, Gauge, ShieldCheck, TrendingUp } from "lucide-react";
+import { Banknote, CircleDollarSign, Gauge, Star, TrendingUp, WalletCards } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { loadDashboardData, type DashboardData } from "@/lib/dashboard/data";
 import { money, pct } from "@/lib/format";
@@ -30,8 +30,38 @@ const TONE_CLASS: Record<Tone, string> = {
 };
 
 function cashTone(data: DashboardData): Tone {
-  if (!data.goLiveCoach.cashSafety.hasAnchor) return "yellow";
-  return data.goLiveCoach.cashSafety.ready ? "green" : "red";
+  if (data.cashSafety.status === "unknown") return "yellow";
+  return data.cashSafety.status;
+}
+
+function operatingProfitTone(data: DashboardData): Tone {
+  const margin = data.operatingProfit.marginPct;
+  if (margin == null) return "muted";
+  if (margin >= 10) return "green";
+  if (margin >= 3) return "yellow";
+  return "red";
+}
+
+function cashDetail(data: DashboardData): string {
+  const cash = data.cashSafety;
+  if (cash.currentCash == null) {
+    return "Operator needs to set one starting cash balance/date before runway can be trusted.";
+  }
+
+  const dailyBurn =
+    cash.avgDailyFixedBurn != null
+      ? `${money(cash.avgDailyFixedBurn)} estimated daily fixed burn`
+      : "fixed burn still unknown";
+  const delta =
+    cash.netCashChangePeriod == null
+      ? "no bank movement in this period yet"
+      : `${cash.netCashChangePeriod >= 0 ? "+" : ""}${money(cash.netCashChangePeriod)} net cash movement this period`;
+  const review =
+    cash.pendingReviewCount > 0
+      ? ` ${cash.pendingReviewCount} fixed-cost event${cash.pendingReviewCount === 1 ? "" : "s"} still need review.`
+      : "";
+
+  return `${dailyBurn}; ${delta}.${review}`;
 }
 
 function readinessPct(data: DashboardData): number {
@@ -85,9 +115,8 @@ function InvestorMatrix({ data }: { data: DashboardData }) {
   const realRevenueTone: Tone = data.realRevenue > 0 ? "green" : data.revenue.revenueMTD > 0 ? "yellow" : "red";
   const readiness = readinessPct(data);
   const taxReserve = data.goLiveCoach.buckets.find((bucket) => bucket.key === "tax-reserve");
-  const sourceRead = data.sourceSetup.requiredCount
-    ? `${data.sourceSetup.connectedCount} of ${data.sourceSetup.requiredCount} required sources connected`
-    : "No required source map set";
+  const aura = data.aura;
+  const operating = data.operatingProfit;
 
   return (
     <article className="rounded-lg border border-white/10 bg-[#111511] p-5 shadow-sm">
@@ -114,31 +143,33 @@ function InvestorMatrix({ data }: { data: DashboardData }) {
           icon={<Banknote className="h-4 w-4" aria-hidden="true" />}
           label="Cash oxygen"
           value={
-            data.goLiveCoach.cashSafety.hasAnchor
-              ? money(data.goLiveCoach.cashSafety.minimumOperatingCash ?? 0)
-              : "Anchor needed"
+            data.cashSafety.oxygenDays != null
+              ? `${Math.floor(data.cashSafety.oxygenDays)} days`
+              : data.cashSafety.currentCash != null
+                ? money(data.cashSafety.currentCash)
+                : "Anchor needed"
           }
-          detail={
-            data.goLiveCoach.cashSafety.hasAnchor
-              ? data.goLiveCoach.cashSafety.ready
-                ? "Cash can cover the operating floor after the modeled pilot set-aside."
-                : `${money(Math.abs(data.goLiveCoach.cashSafety.cushionAfterPilot ?? 0))} below the modeled cash floor.`
-              : "Operator needs to set the minimum cash anchor before runway can be trusted."
-          }
+          detail={cashDetail(data)}
           tone={cashTone(data)}
         />
         <MatrixCard
           icon={<CircleDollarSign className="h-4 w-4" aria-hidden="true" />}
-          label="Profit discipline"
-          value={pct(data.goLiveCoach.categorizationCoveragePct, 0)}
-          detail={
-            taxReserve
-              ? `${money(Math.abs(taxReserve.gap))} current tax reserve ${
-                  taxReserve.gap >= 0 ? "cushion" : "shortfall"
-                } flagged by the model.`
-              : "Tax reserve is waiting for synced collected sales tax."
+          label="Tax & reserve discipline"
+          value={
+            !taxReserve || taxReserve.signal === "yellow"
+              ? "Unverified"
+              : taxReserve.signal === "red"
+                ? "Short"
+                : "On track"
           }
-          tone={data.goLiveCoach.categorizationCoveragePct >= 90 ? "green" : "yellow"}
+          detail={
+            !taxReserve || taxReserve.signal === "yellow"
+              ? "Collected sales tax isn't synced yet — the reserve can only stay virtual."
+              : `${money(Math.abs(taxReserve.gap))} ${
+                  taxReserve.gap >= 0 ? "cushion over" : "shortfall against"
+                } the collected-tax reserve.`
+          }
+          tone={!taxReserve ? "yellow" : (taxReserve.signal as Tone)}
         />
         <MatrixCard
           icon={<Gauge className="h-4 w-4" aria-hidden="true" />}
@@ -148,24 +179,30 @@ function InvestorMatrix({ data }: { data: DashboardData }) {
           tone={primeCostTone}
         />
         <MatrixCard
-          icon={<Activity className="h-4 w-4" aria-hidden="true" />}
-          label="Investor return signal"
-          value={data.realRevenue > 0 ? money(data.realRevenue) : "Waiting"}
-          detail="Read-only signal for whether the business is producing usable revenue after first costs."
-          tone={realRevenueTone}
+          icon={<WalletCards className="h-4 w-4" aria-hidden="true" />}
+          label="Operating margin"
+          value={operating.marginPct == null ? "Waiting" : pct(operating.marginPct, 1)}
+          detail={`${money(operating.amount)} distributable profit pool before ${operating.excludes.slice(0, 3).join(", ")} and other excluded items.`}
+          tone={operatingProfitTone(data)}
         />
         <MatrixCard
-          icon={<ShieldCheck className="h-4 w-4" aria-hidden="true" />}
-          label="Source freshness"
-          value={sourceRead}
+          icon={<Star className="h-4 w-4" aria-hidden="true" />}
+          label="Reputation"
+          value={aura.hasAnyData && aura.overallRating != null ? `${aura.overallRating.toFixed(1)}★` : "No data"}
           detail={
-            data.sourceSetup.missingRequired.length
-              ? `Missing: ${data.sourceSetup.missingRequired.slice(0, 3).join(", ")}${
-                  data.sourceSetup.missingRequired.length > 3 ? "..." : ""
-                }`
-              : "Minimum source map is connected."
+            aura.hasAnyData
+              ? `${aura.totalReviews.toLocaleString()} reviews across connected sources (Google / Yelp).`
+              : "Connect Google or Yelp to surface the reputation read."
           }
-          tone={sourceTone(data)}
+          tone={
+            !aura.hasAnyData || aura.overallRating == null
+              ? "muted"
+              : aura.overallRating >= 4.2
+                ? "green"
+                : aura.overallRating >= 3.7
+                  ? "yellow"
+                  : "red"
+          }
         />
       </div>
     </article>

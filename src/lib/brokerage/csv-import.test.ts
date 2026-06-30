@@ -41,6 +41,18 @@ describe("csvToBrokerageRows", () => {
     expect(unmappedHeaders).toEqual(["Favorite Color"]);
   });
 
+  it("maps lead-spend campaign ids for dedupe-friendly imports", () => {
+    const csv = "Campaign ID,Lead Source,Agent ID,Start Date,End Date,Spend\nC-1,Zillow,A-1,2026-06-01,2026-06-30,1500";
+    const { rows, mapped } = csvToBrokerageRows("leadSpend", csv);
+    expect(mapped.externalLeadSpendId).toBe("Campaign ID");
+    expect(rows[0]).toMatchObject({
+      externalLeadSpendId: "C-1",
+      source: "Zillow",
+      agentExternalId: "A-1",
+      spend: 1500,
+    });
+  });
+
   it("maps Lone Wolf-style deal exports without renaming headers", () => {
     const csv = [
       "Transaction No,Salesperson ID,Civic Address,Gross Comm,Company Net,Completion Date",

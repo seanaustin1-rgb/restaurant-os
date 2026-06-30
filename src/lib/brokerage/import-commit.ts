@@ -109,14 +109,15 @@ export async function commitBrokerageImport(
     });
   }
 
-  // 3) Lead spend. No unique key in the schema, so de-dupe on the stable external id.
+  // 3) Lead spend. No unique key in the schema, so de-dupe on source + period + agent.
   for (const row of normalized.leadSpend) {
+    const agentId = resolveAgent(row.agentExternalId);
     const existing = await db.brokerageLeadSpend.findFirst({
-      where: { restaurantId, source: row.source, periodStart: date(row.periodStart)!, periodEnd: date(row.periodEnd)! },
+      where: { restaurantId, agentId, source: row.source, periodStart: date(row.periodStart)!, periodEnd: date(row.periodEnd)! },
       select: { id: true },
     });
     const data = {
-      agentId: resolveAgent(row.agentExternalId),
+      agentId,
       source: row.source,
       periodStart: date(row.periodStart)!,
       periodEnd: date(row.periodEnd)!,

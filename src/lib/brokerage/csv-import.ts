@@ -46,6 +46,7 @@ const SPECS: Record<BrokerageEntity, FieldSpec[]> = {
     { field: "probabilityPct", type: "number", aliases: ["probabilitypct", "probability", "prob", "closeprobability", "likelihood"] },
   ],
   leadSpend: [
+    { field: "externalLeadSpendId", type: "string", aliases: ["externalleadspendid", "leadspendid", "campaignid", "adcampaignid"] },
     { field: "source", type: "string", aliases: ["source", "leadsource", "channel"] },
     { field: "agentExternalId", type: "string", aliases: ["agentexternalid", "agentid", "agent"] },
     { field: "periodStart", type: "date", aliases: ["periodstart", "start", "startdate", "monthstart", "from"] },

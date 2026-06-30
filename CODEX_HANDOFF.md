@@ -28,10 +28,22 @@ no Claude/Codex overlap on this file anymore.
    full model this cycle): expose a conservative figure from **reviewed/known recurring spend** plus a
    `pendingReviewCount`/confidence flag so the view can label it *estimated*. **Do NOT** expose a
    confident fixed/variable split or breakeven.
-4. **Net-margin / return-signal components:** *blocked on operator's definition call* (relabel
-   "Contribution after COGS" vs computed "Operating margin after COGS/labor/OpEx" vs a
-   "Distributable Profit Pool" $). Whichever needs cost components → Codex exposes the raw numbers;
-   Claude renders + states inclusions/exclusions.
+4. **Operating profit / return signal — DECIDED (operator chose #2 Operating margin + #3
+   Distributable Profit Pool).** Expose ONE canonical figure, rendered two ways — same numerator,
+   no double-counting. All inputs are already tracked; **no fixed/variable split needed.**
+   ```ts
+   operatingProfit: {
+     amount: number;        // revenue − COGS(food+liquor+beverage) − labor − OpEx
+     marginPct: number | null; // amount / revenue * 100 ; null when revenue <= 0
+     components: { revenue: number; cogs: number; labor: number; opex: number }; // for the hover
+     excludes: string[];    // ["owner pay","debt service","depreciation/amortization","tax set-aside","untracked spend"]
+   }
+   ```
+   View renders **#2 Operating margin** from `marginPct` and **#3 Distributable Profit Pool** from
+   `amount` (framed as the $ pool *before* owner pay / debt / tax set-aside), with `excludes` printed
+   as the caption. Place it in the data layer or the signals helper you now own — your call; Claude
+   consumes read-only. (Note: this is **operating** profit, deliberately NOT the old `realRevenue`,
+   which only nets COGS and overclaims.)
 5. **`MetricNote` — AFTER #47 ONLY**, with the **mandatory** visibility model (no exception):
    ```prisma
    enum MetricNoteVisibility { INTERNAL INVESTOR }

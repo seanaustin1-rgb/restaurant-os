@@ -141,3 +141,17 @@ Cockpit** (each agent sees their own row) — one shape, two views.
 1. Approve/redline the `BrokerageCockpitData` strawman — especially `AgentRow` canonicalization and the `cashSafety` reuse.
 2. Does `marketAura.market` come from `BrokerageMarketMetric` now (manual seed) or stay null until RESO?
 3. Confirm `topPressure` is computed in your lane (deterministic) so the view only renders it.
+
+### 5.1 Codex redline - 2026-06-30
+
+1. **Approved with two additions.** `BrokerageCockpitData` becomes a separate contract, not an extension of generic `DashboardData`. `AgentRow` canonicalization is approved, and Codex will add `sourceConfidence` so Claude can label rows that are imported vs. profile assumptions. `cashSafety` reuse is approved with `floorDaysTarget`; default target should be `120` days while copy says the brokerage planning band is `90-180` days.
+2. **Market tile reads `BrokerageMarketMetric` when rows exist; otherwise `marketAura.market = null`.** Manual seed/imported MLS data can light the tile now. The view must not imply live RESO until a real source is connected.
+3. **`topPressure` is Codex/data-lane owned.** It is deterministic and rendered read-only by Claude. First pass ranks Company Dollar retention, Cash Oxygen, and cap-cliff risk; it does not use AI or view-local math.
+
+### 5.2 Contract tweaks Codex will formalize
+
+- Add `AgentRow.sourceConfidence: "imported" | "profile_assumption" | "mixed"`.
+- Add `sourceTrust.status: "healthy" | "partial"`.
+- Keep `marketAura.market` nullable.
+- Keep `cashSafety` as `DashboardCashSafety & { floorDaysTarget: number }`.
+- Use one `AgentRow[]` shape for Executive Cockpit and future Agent Cockpit, but gate Agent Cockpit until role-scoped reads and activity snapshots exist.

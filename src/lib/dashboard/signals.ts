@@ -54,7 +54,9 @@ const PRIORITY: Record<string, number> = {
   "gauge-labor": 1,
   "gauge-opex": 2,
   "bucket-opex": 2,
-  "gauge-food": 3,
+  "bucket-food": 3,
+  "gauge-cogs": 3,
+  "bucket-alcohol-beverage": 4,
   "ratio-liquor": 4,
   "ratio-beverage": 5,
 };
@@ -160,7 +162,7 @@ export function deriveTopPressure(data: DashboardData): TopPressure {
  */
 export function deriveSourceTrust(data: DashboardData): SourceTrust {
   const { connectedCount, requiredCount, missingRequired } = data.sourceSetup;
-  const met = requiredCount === 0 || connectedCount >= requiredCount;
+  const met = requiredCount === 0 || missingRequired.length === 0;
   return {
     status: met ? "healthy" : "partial",
     connected: connectedCount,

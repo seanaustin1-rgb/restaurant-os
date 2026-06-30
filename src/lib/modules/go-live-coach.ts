@@ -486,6 +486,7 @@ function settingsNumber(settings: unknown, key: string): number | null {
 export async function loadGoLiveCoach(
   restaurantId: string,
   db: PrismaClient = prisma,
+  cashOxygenOverride?: Awaited<ReturnType<typeof loadCashOxygenFloor>>,
 ): Promise<GoLiveCoachData> {
   const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
@@ -545,7 +546,7 @@ export async function loadGoLiveCoach(
     spendByTap[tap] = (spendByTap[tap] ?? 0) + n(t.amount);
   }
 
-  const cashOxygen = await loadCashOxygenFloor(restaurantId, db);
+  const cashOxygen = cashOxygenOverride ?? (await loadCashOxygenFloor(restaurantId, db));
   const currentCash = cashOxygen.currentCash;
 
   const avgDailyOutflow = sales.length > 0 ? periodOutflow / Math.max(sales.length, 1) : 0;

@@ -16,6 +16,7 @@ import type { RevenueData } from "@/components/dashboard/RevenueRow";
 import type { TapGauge, CategorySpend, SubGroup } from "@/components/dashboard/TapGauges";
 import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
+import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 import { loadAura, type AuraData } from "@/lib/modules/aura";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
@@ -30,11 +31,23 @@ export interface DashboardData {
   heartbeat: HeartbeatData;
   revenue: RevenueData;
   goLiveCoach: GoLiveCoachData;
+  cashSafety: DashboardCashSafety;
   aura: DashboardAuraSummary;
   sourceSetup: SourceSetupSummary;
   rentalPropertyRollup: RentalPropertyRollupData | null;
   gauges: TapGauge[];
   costRatios: CostRatioGauge[];
+}
+
+export interface DashboardCashSafety {
+  currentCash: number | null;
+  oxygenDays: number | null;
+  avgDailyFixedBurn: number | null;
+  netCashChangePeriod: number | null;
+  pendingReviewCount: number;
+  source: CashOxygenFloor["source"];
+  asOfDate: string | null;
+  status: CashOxygenFloor["status"];
 }
 
 export interface DashboardAuraSummary {
@@ -72,6 +85,7 @@ const MONTHS = [
 ];
 
 const n = (v: unknown): number => (v == null ? 0 : Number(v));
+const r2 = (v: number): number => Math.round(v * 100) / 100;
 
 /**
  * Loads + computes the dashboard for one restaurant from live DB data.
@@ -264,6 +278,12 @@ export async function loadDashboardData(
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
   const aura = await loadDashboardAura(restaurantId);
+  const [cashOxygen, sourceSetup, netCashChangePeriod] = await Promise.all([
+    loadCashOxygenFloor(restaurantId, db),
+    loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
+    loadPeriodNetCashChange(restaurantId, start, end, db),
+  ]);
+  const goLiveCoach = await loadGoLiveCoach(restaurantId, db, cashOxygen);
 
   return {
     restaurantId,
@@ -272,9 +292,19 @@ export async function loadDashboardData(
     periodLabel: rentalPropertyRollup?.periodLabel ?? periodLabel,
     hasData: businessType === "VACATION_RENTAL" ? Boolean(rentalPropertyRollup?.hasImportedRentalData || hasData) : hasData,
     realRevenue,
-    goLiveCoach: await loadGoLiveCoach(restaurantId, db),
+    goLiveCoach,
+    cashSafety: {
+      currentCash: cashOxygen.currentCash,
+      oxygenDays: cashOxygen.oxygenDays,
+      avgDailyFixedBurn: cashOxygen.avgDailyFixedBurn,
+      netCashChangePeriod,
+      pendingReviewCount: cashOxygen.pendingFixedEventCount,
+      source: cashOxygen.source,
+      asOfDate: cashOxygen.asOfDate,
+      status: cashOxygen.status,
+    },
     aura,
-    sourceSetup: await loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
+    sourceSetup,
     rentalPropertyRollup,
     heartbeat: {
       primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
@@ -294,6 +324,23 @@ export async function loadDashboardData(
     gauges,
     costRatios,
   };
+}
+
+async function loadPeriodNetCashChange(
+  restaurantId: string,
+  start: Date,
+  end: Date,
+  db: PrismaClient,
+): Promise<number | null> {
+  const txns = await db.transaction.aggregate({
+    where: { restaurantId, date: { gte: start, lt: end } },
+    _sum: { amount: true },
+    _count: { _all: true },
+  });
+  if (txns._count._all === 0) return null;
+
+  // Transaction sign convention: outflows are positive, inflows are negative.
+  return r2(-n(txns._sum.amount));
 }
 
 async function loadDashboardAura(restaurantId: string): Promise<DashboardAuraSummary> {

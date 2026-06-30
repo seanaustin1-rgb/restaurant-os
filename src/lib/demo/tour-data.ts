@@ -69,6 +69,16 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     periodLabel: MONTH,
     hasData: true,
     realRevenue,
+    cashSafety: {
+      currentCash: sample.cash,
+      oxygenDays: sample.opex > 0 ? Math.round((sample.cash / (sample.opex / 30)) * 10) / 10 : null,
+      avgDailyFixedBurn: sample.opex > 0 ? Math.round((sample.opex / 30) * 100) / 100 : null,
+      netCashChangePeriod: realRevenue - sample.labor - sample.opex - cogs,
+      pendingReviewCount: 0,
+      source: "anchor_plus_transactions",
+      asOfDate: "2026-06-30",
+      status: sample.cash >= sample.opex * 1.5 ? "green" : sample.cash >= sample.opex * 0.75 ? "yellow" : "red",
+    },
     sourceSetup: sourceSetup(type),
     aura: {
       configuredCount: 1,

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Activity, Banknote, CircleDollarSign, Gauge, ShieldCheck, TrendingUp } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { loadDashboardData, type DashboardData } from "@/lib/dashboard/data";
+import { deriveSourceTrust } from "@/lib/dashboard/signals";
 import { money, pct } from "@/lib/format";
 
 type Tone = "green" | "yellow" | "red" | "muted";
@@ -16,8 +17,8 @@ const TONE_CLASS: Record<Tone, string> = {
 };
 
 function cashTone(data: DashboardData): Tone {
-  if (!data.goLiveCoach.cashSafety.hasAnchor) return "yellow";
-  return data.goLiveCoach.cashSafety.ready ? "green" : "red";
+  if (data.cashSafety.status === "unknown") return "yellow";
+  return data.cashSafety.status;
 }
 
 function readinessPct(data: DashboardData): number {
@@ -34,10 +35,30 @@ function readinessTone(data: DashboardData): Tone {
 }
 
 function sourceTone(data: DashboardData): Tone {
-  if (data.sourceSetup.requiredCount === 0) return "muted";
-  if (data.sourceSetup.connectedCount >= data.sourceSetup.requiredCount) return "green";
+  const trust = deriveSourceTrust(data);
+  if (trust.required === 0) return "muted";
+  if (trust.status === "healthy") return "green";
   if (data.sourceSetup.connectedCount > 0) return "yellow";
   return "red";
+}
+
+function cashDetail(data: DashboardData): string {
+  const cash = data.cashSafety;
+  if (cash.currentCash == null) {
+    return "Operator needs to set one starting cash balance/date before runway can be trusted.";
+  }
+
+  const dailyBurn = cash.avgDailyFixedBurn != null ? `${money(cash.avgDailyFixedBurn)} estimated daily fixed burn` : "fixed burn still unknown";
+  const delta =
+    cash.netCashChangePeriod == null
+      ? "no bank movement in this period yet"
+      : `${cash.netCashChangePeriod >= 0 ? "+" : ""}${money(cash.netCashChangePeriod)} net cash movement this period`;
+  const review =
+    cash.pendingReviewCount > 0
+      ? ` ${cash.pendingReviewCount} fixed-cost event${cash.pendingReviewCount === 1 ? "" : "s"} still need review.`
+      : "";
+
+  return `${dailyBurn}; ${delta}.${review}`;
 }
 
 function MatrixCard({
@@ -71,7 +92,8 @@ function InvestorMatrix({ data }: { data: DashboardData }) {
   const realRevenueTone: Tone = data.realRevenue > 0 ? "green" : data.revenue.revenueMTD > 0 ? "yellow" : "red";
   const readiness = readinessPct(data);
   const taxReserve = data.goLiveCoach.buckets.find((bucket) => bucket.key === "tax-reserve");
-  const sourceRead = data.sourceSetup.requiredCount
+  const sourceTrust = deriveSourceTrust(data);
+  const sourceRead = sourceTrust.required
     ? `${data.sourceSetup.connectedCount} of ${data.sourceSetup.requiredCount} required sources connected`
     : "No required source map set";
 
@@ -100,17 +122,13 @@ function InvestorMatrix({ data }: { data: DashboardData }) {
           icon={<Banknote className="h-4 w-4" aria-hidden="true" />}
           label="Cash oxygen"
           value={
-            data.goLiveCoach.cashSafety.hasAnchor
-              ? money(data.goLiveCoach.cashSafety.minimumOperatingCash ?? 0)
-              : "Anchor needed"
+            data.cashSafety.oxygenDays != null
+              ? `${Math.floor(data.cashSafety.oxygenDays)} days`
+              : data.cashSafety.currentCash != null
+                ? money(data.cashSafety.currentCash)
+                : "Anchor needed"
           }
-          detail={
-            data.goLiveCoach.cashSafety.hasAnchor
-              ? data.goLiveCoach.cashSafety.ready
-                ? "Cash can cover the operating floor after the modeled pilot set-aside."
-                : `${money(Math.abs(data.goLiveCoach.cashSafety.cushionAfterPilot ?? 0))} below the modeled cash floor.`
-              : "Operator needs to set the minimum cash anchor before runway can be trusted."
-          }
+          detail={cashDetail(data)}
           tone={cashTone(data)}
         />
         <MatrixCard

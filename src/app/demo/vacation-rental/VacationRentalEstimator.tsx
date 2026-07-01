@@ -130,7 +130,7 @@ export function VacationRentalEstimator() {
     const inp = buildInputs(seeded);
     if (inp.properties > 0 && inp.adr > 0 && inp.occupancyPct > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "lodging")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -144,7 +144,7 @@ export function VacationRentalEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "lodging")));
   }
 
   if (view === "results" && result) {

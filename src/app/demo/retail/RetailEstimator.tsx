@@ -159,7 +159,7 @@ export function RetailEstimator() {
     const inp = buildInputs(seeded);
     if (inp.weeklySales > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "retail")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -171,7 +171,7 @@ export function RetailEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market, "retail")));
   }
 
   if (view === "results" && result) {

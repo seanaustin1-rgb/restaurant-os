@@ -152,7 +152,7 @@ export function RealEstateEstimator() {
     const inp = buildInputs(seeded);
     if (inp.monthlyGci > 0 && inp.monthlyOpex > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "real_estate")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -165,7 +165,7 @@ export function RealEstateEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market, "real_estate")));
   }
 
   if (view === "results" && result) {

@@ -147,7 +147,7 @@ export function ServiceEstimator() {
     const inp = buildInputs(seeded);
     if (inp.weeklyRevenue > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "service")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -159,7 +159,7 @@ export function ServiceEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market, "service")));
   }
 
   if (view === "results" && result) {

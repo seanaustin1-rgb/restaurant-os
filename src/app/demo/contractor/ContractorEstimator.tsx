@@ -117,7 +117,7 @@ export function ContractorEstimator() {
     const inp = buildInputs(seeded);
     if (inp.monthlyRevenue > 0 && inp.materials >= 0 && inp.fieldLabor >= 0 && (inp.materials > 0 || inp.fieldLabor > 0)) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "contractor")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -131,7 +131,7 @@ export function ContractorEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "contractor")));
   }
 
   if (view === "results" && result) {

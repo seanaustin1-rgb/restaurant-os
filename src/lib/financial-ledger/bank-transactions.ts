@@ -84,9 +84,14 @@ export async function mirrorBankTransactionToLedger(
   db: LedgerDb,
   input: BankTransactionLedgerInput,
 ): Promise<{ rawSourceEventId: string; normalizedFinancialEventId: string | null; mappingStatus: FinancialMappingStatus }> {
+  // Scope the category lookup to this tenant. Category ids are global cuids, so a
+  // findUnique-by-id would happily resolve a category belonging to *another*
+  // restaurant and drive this restaurant's ledger mapping from it. Guarding by
+  // restaurantId means a foreign/stale categoryId resolves to null and the event
+  // safely falls to PENDING_REVIEW instead of being mapped off cross-tenant data.
   const category = input.categoryId
-    ? await db.category.findUnique({
-        where: { id: input.categoryId },
+    ? await db.category.findFirst({
+        where: { id: input.categoryId, restaurantId: input.restaurantId },
         select: { name: true, tapBucket: true },
       })
     : null;

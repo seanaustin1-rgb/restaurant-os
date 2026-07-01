@@ -1,22 +1,23 @@
 /**
  * Executive Cockpit — leadership macro view for the brokerage vertical.
- * Mock-first: renders a frozen `BrokerageCockpitData` fixture. No math lives here;
- * all values are read straight off the contract (Codex's data lane owns the math).
+ * Wired to Codex's real `BrokerageCockpitData` contract (data lane owns the math).
+ * No math here — every value is read straight off the contract.
+ *
+ * The Reputation / Market split is a VIEW choice: both tiles are sourced from the
+ * contract's single `marketAura` field. Reputation trend + themes and market
+ * months-of-supply / share are future contract additions; until they exist the
+ * tiles degrade to honest "pending / connect" states.
  */
 import type { ReactNode } from "react";
-import {
-  Banknote,
-  Gauge,
-  Star,
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Scale,
-} from "lucide-react";
+import { Banknote, Building2, Gauge, Star, TrendingUp, TrendingDown, Users, Scale } from "lucide-react";
 import { money, pct } from "@/lib/format";
-import type { AgentRow, BrokerageCockpitData, CockpitStatus } from "./types";
+import type {
+  BrokerageCockpitAgentRow,
+  BrokerageCockpitData,
+  BrokerageCockpitHealth,
+} from "@/lib/modules/brokerage-analytics";
 
-const TONE_CLASS: Record<CockpitStatus, string> = {
+const TONE_CLASS: Record<BrokerageCockpitHealth, string> = {
   green: "border-emerald-500/40 bg-emerald-500/8 text-emerald-200",
   yellow: "border-amber-500/45 bg-amber-500/10 text-amber-200",
   red: "border-orange-500/45 bg-orange-500/10 text-orange-200",
@@ -34,9 +35,7 @@ function Trend({ pts }: { pts: number | null }) {
   const up = pts >= 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-xs font-semibold ${up ? "text-emerald-300" : "text-orange-300"}`}
-    >
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${up ? "text-emerald-300" : "text-orange-300"}`}>
       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {up ? "+" : ""}
       {pts.toFixed(1)} pts
@@ -56,7 +55,7 @@ function CockpitCard({
   label: string;
   value: string;
   detail?: string;
-  tone?: CockpitStatus;
+  tone?: BrokerageCockpitHealth;
   children?: ReactNode;
 }) {
   return (
@@ -72,7 +71,7 @@ function CockpitCard({
   );
 }
 
-function AgentLine({ agent, kind }: { agent: AgentRow; kind: "top" | "bottom" }) {
+function AgentLine({ agent }: { agent: BrokerageCockpitAgentRow }) {
   const net = agent.companyDollar - agent.leadSpend;
   const dot = agent.health === "green" ? "bg-emerald-400" : agent.health === "yellow" ? "bg-amber-400" : "bg-orange-400";
   return (
@@ -91,19 +90,34 @@ function AgentLine({ agent, kind }: { agent: AgentRow; kind: "top" | "bottom" })
   );
 }
 
+function auraTone(aura: BrokerageCockpitData["marketAura"]["aura"]): BrokerageCockpitHealth {
+  if (!aura.hasAnyData || aura.overallRating == null) return "unknown";
+  if (aura.overallRating >= 4.2) return "green";
+  if (aura.overallRating >= 3.7) return "yellow";
+  return "red";
+}
+
+function marketDetail(market: BrokerageCockpitData["marketAura"]["market"]): string {
+  if (!market) return "Connect your MLS (RESO) for market position — months of supply & share.";
+  const dom = market.medianDom != null ? `${market.medianDom}d median DOM` : "DOM pending";
+  const ratio = market.activeToPendingRatio != null ? ` · ${market.activeToPendingRatio.toFixed(1)} active:pending` : "";
+  const listings = market.newListings != null ? ` · ${market.newListings} new listings` : "";
+  return `${dom}${ratio}${listings}.`;
+}
+
 export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
-  const { dealHealth, ledgerHealth, companyDollarRetention: cdr, cashSafety, agentProduction, marketAura, topPressure, sourceTrust } = data;
+  const {
+    dealHealth,
+    ledgerHealth,
+    companyDollarRetention: cdr,
+    cashSafety,
+    agentProduction,
+    marketAura,
+    topPressure,
+    sourceTrust,
+  } = data;
   const aura = marketAura.aura;
   const market = marketAura.market;
-
-  const auraTone: CockpitStatus =
-    !aura.hasAnyData || aura.overallRating == null
-      ? "unknown"
-      : aura.overallRating >= 4.2
-        ? "green"
-        : aura.overallRating >= 3.7
-          ? "yellow"
-          : "red";
 
   return (
     <article className="rounded-lg border border-white/10 bg-[#111511] p-5 shadow-sm">
@@ -169,7 +183,7 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
         </p>
       </section>
 
-      {/* Four macro tiles */}
+      {/* Four compact macro tiles */}
       <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <CockpitCard
           icon={<Gauge className="h-4 w-4" aria-hidden="true" />}
@@ -191,42 +205,54 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
           tone={cashSafety.status}
         />
         <CockpitCard
-          icon={<Users className="h-4 w-4" aria-hidden="true" />}
-          label="Agent production"
-          value={`${agentProduction.activeAgents} active`}
-          tone="unknown"
-        >
-          <div className="mt-3 space-y-2">
-            <div>
-              <div className="text-[10px] uppercase tracking-wide text-slate-500">Top (company $ net of lead spend)</div>
-              <ul className="mt-1">
-                {agentProduction.topContributors.slice(0, 3).map((a) => (
-                  <AgentLine key={a.agentId} agent={a} kind="top" />
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-wide text-slate-500">Watch</div>
-              <ul className="mt-1">
-                {agentProduction.bottomContributors.slice(0, 2).map((a) => (
-                  <AgentLine key={a.agentId} agent={a} kind="bottom" />
-                ))}
-              </ul>
-            </div>
-          </div>
-        </CockpitCard>
-        <CockpitCard
           icon={<Star className="h-4 w-4" aria-hidden="true" />}
-          label="Market & aura"
+          label="Reputation"
           value={aura.hasAnyData && aura.overallRating != null ? `${aura.overallRating.toFixed(1)}★` : "No data"}
           detail={
-            market
-              ? `${aura.totalReviews.toLocaleString()} reviews · ${market.medianDom ?? "—"} median DOM · ${market.newListings ?? "—"} new listings.`
-              : `${aura.totalReviews.toLocaleString()} reviews. Connect an MLS source for market shift.`
+            aura.hasAnyData && aura.overallRating != null
+              ? `${aura.totalReviews.toLocaleString()} reviews · trend builds once weekly snapshots accumulate.`
+              : "Connect Google or Yelp to surface reputation."
           }
-          tone={auraTone}
+          tone={auraTone(aura)}
+        />
+        <CockpitCard
+          icon={<Building2 className="h-4 w-4" aria-hidden="true" />}
+          label="Market position"
+          value={market && market.medianDom != null ? `${market.medianDom}d DOM` : "Connect MLS"}
+          detail={marketDetail(market)}
+          tone="unknown"
         />
       </div>
+
+      {/* Agent Production — full width so the ranked lists breathe */}
+      <section className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-5">
+        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+          <Users className="h-4 w-4" aria-hidden="true" />
+          <span>Agent production</span>
+        </div>
+        <p className="mt-1 text-sm text-slate-400">
+          {agentProduction.activeAgents} active · {compactMoney(agentProduction.totalCompanyDollar)} company dollar ·
+          ranked by company $ net of lead spend
+        </p>
+        <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-slate-500">Top contributors</div>
+            <ul className="mt-1 divide-y divide-white/5">
+              {agentProduction.topContributors.slice(0, 3).map((a) => (
+                <AgentLine key={a.agentId} agent={a} />
+              ))}
+            </ul>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wide text-slate-500">Watch</div>
+            <ul className="mt-1 divide-y divide-white/5">
+              {agentProduction.bottomContributors.slice(0, 3).map((a) => (
+                <AgentLine key={a.agentId} agent={a} />
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
 
       {/* Source footnote */}
       <p

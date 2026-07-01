@@ -45,9 +45,9 @@ const TIER_COPY: Record<
     TIER_4: { name: "Known contractor numbers first", blurb: "Use backlog, materials, labor, subs, fixed costs, and AR to get a first read." },
   },
   REAL_ESTATE_BROKERAGE: {
-    TIER_1: { name: "Guided brokerage setup", blurb: "Start with bank and accounting, then add pipeline, transaction, listing, and reputation sources as needed." },
-    TIER_2: { name: "Bank/accounting first", blurb: "Start with operating cash and expenses; add pipeline, splits, and lead ROI next." },
-    TIER_3: { name: "Upload brokerage history", blurb: "Import statements or accounting exports before CRM/transaction data is available." },
+    TIER_1: { name: "Guided brokerage source plan", blurb: "Plan accounting, bank, transaction, CRM, MLS, and reputation sources before authorizing anything sensitive." },
+    TIER_2: { name: "Brokerage data import first", blurb: "Start with a CSV/export for agents, deals, splits, caps, and lead spend. No live APIs required." },
+    TIER_3: { name: "Upload brokerage history", blurb: "Import brokerage exports before CRM, MLS, or transaction-system access is available." },
     TIER_4: { name: "Known brokerage numbers first", blurb: "Use agents, GCI, splits, lead spend, and closings to estimate company dollar." },
   },
   VACATION_RENTAL: {
@@ -78,10 +78,14 @@ function businessNamePlaceholder(type: BusinessType): string {
   return "Stone Grille & Taphouse";
 }
 
-export function OnboardingFlow() {
+export function OnboardingFlow({
+  initialBusinessType = "RESTAURANT",
+}: {
+  initialBusinessType?: OnboardingInput["businessType"];
+}) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
-  const [businessType, setBusinessType] = useState<OnboardingInput["businessType"]>("RESTAURANT");
+  const [businessType, setBusinessType] = useState<OnboardingInput["businessType"]>(initialBusinessType);
   const [sizeSignal, setSizeSignal] = useState("");
   const [profile, setProfile] = useState<Record<string, string | number | boolean | null>>({});
   const [tier, setTier] = useState<OnboardingInput["tier"]>("TIER_2");
@@ -194,6 +198,12 @@ export function OnboardingFlow() {
         <div className="space-y-5">
           <h1 className="font-display text-2xl text-copper-soft">How should setup begin?</h1>
           <p className="text-sm text-muted">Pick the starting path. After this, the app will show exactly what to connect or confirm.</p>
+          {businessType === "REAL_ESTATE_BROKERAGE" && (
+            <p className="rounded-md border border-copper-dim/50 bg-copper/10 px-3 py-2 text-xs leading-relaxed text-copper-soft">
+              Brokerage setup can begin without live API keys. A CSV/export of agents, deals, splits, caps, and lead
+              spend is enough to light up Company Dollar, pipeline, Agent Performance, and Lead ROI.
+            </p>
+          )}
           <div className="rounded-md border border-line bg-ink px-3 py-3">
             <p className="text-xs uppercase tracking-wider text-muted">{selectedTemplate.label}</p>
             <p className="mt-1 text-sm leading-relaxed text-ink-text">{selectedSourceMap.minimumAutoInput}</p>

@@ -14,6 +14,8 @@ export interface NavLink {
 
 export const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", roles: ALL_ROLES },
+  { href: "/modules/brokerage", label: "Brokerage", roles: ALL_ROLES },
+  { href: "/modules/brokerage/agent-cockpit", label: "Agent Cockpit", roles: ALL_ROLES },
   { href: "/investor", label: "Investor Matrix", roles: ALL_ROLES },
   { href: "/access", label: "Access Paths", roles: ALL_ROLES },
   { href: "/transactions", label: "Transactions", roles: ADJUSTMENT_ROLES },

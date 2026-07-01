@@ -73,7 +73,7 @@ const EXPLAIN = {
   aura:
     "Your public rating, pulled live from Google. Service businesses win or lose jobs on reviews — a strong rating means more booked work at better prices.",
   delivery:
-    "Delivery pressure = labor + materials + subcontractors as a share of revenue — the service version of prime cost. Keep it near or below 60%; above that, fixed bills and profit get squeezed.",
+    "Delivery pressure = labor + materials + subcontractors as a share of revenue. Keep it near or below 60%; above that, fixed bills and profit get squeezed.",
   breakeven:
     "The weekly revenue you need just to cover delivery costs plus the fixed bills you entered. Below it you lose money; the cushion above funds profit and owner pay.",
   cash:

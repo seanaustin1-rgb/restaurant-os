@@ -25,11 +25,12 @@ export async function POST(req: Request) {
       clerkUserId: userId,
       role: { in: ["OPERATOR", "MANAGER", "CONSULTANT"] },
       ...(body.restaurantId ? { restaurantId: body.restaurantId } : {}),
+      restaurant: { businessType: "REAL_ESTATE_BROKERAGE" },
     },
     select: { restaurantId: true },
   });
   if (roles.length === 0) {
-    return NextResponse.json({ error: "no business / insufficient role" }, { status: 400 });
+    return NextResponse.json({ error: "no brokerage business / insufficient role" }, { status: 400 });
   }
   if (!body.restaurantId && roles.length > 1) {
     return NextResponse.json({ error: "choose a business before importing brokerage data" }, { status: 400 });

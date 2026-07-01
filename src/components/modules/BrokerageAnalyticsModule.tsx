@@ -17,9 +17,9 @@ const SOURCE_TEXT: Record<BrokerageSourceState, string> = {
 };
 
 function stateLabel(state: BrokerageSourceState): string {
-  if (state === "connected") return "connected";
-  if (state === "planned") return "planned";
-  return "not mapped";
+  if (state === "connected") return "Live feed connected";
+  if (state === "planned") return "Planned";
+  return "Live feed missing";
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: Health }) {

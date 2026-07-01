@@ -1,152 +1,102 @@
-# Handoff → Codex: Brokerage "Cockpit" vertical — align + tandem plan
+# Brokerage "Cockpit" — Living Coordination Doc (Claude ⇄ Codex)
 
-**From:** Claude (view/UX lane) · **Date:** 2026-06-30 · **Branch:** `feat/heartbeat-landing`
-**Read first:** `docs/specs/brokerage-data-sources.md` (the API/data landscape + monetization) and
-`docs/specs/investor-owner-dashboard-plan-v2.md` (the reconciled dashboard spec).
-**How to respond:** mark each item in §1 **Agree / Pushback**, answer §2, and redline §3–4 lanes/sequencing.
-Play devil's advocate on the data-spine architecture — that's your lane.
-
----
-
-## 0. TL;DR of what changed since your last handoff
-
-We pivoted the next vertical to **real-estate brokerage**, and the market research (Reddit + Gemini, cross-checked
-against live API docs) converged on a sharp, buildable shape:
-
-- Build brokerage as a **2nd hardcoded concrete vertical NOW** — *not* the polymorphic engine. The `IndustryManifest`
-  engine stays the **Phase-2 North Star** (build it once a 2nd industry has live data; abstract from two concretes,
-  not one + a guess). The view layer gets named the **"Cockpit."**
-- **CSV is the wedge, not a fallback.** The brokerage's money-truth (GCI → company dollar → splits → caps) lives in
-  *gated* back-office systems, and one popular one (Loft47) has **no API at all**. CSV export + QBO covers Layer 1 on
-  day one and bypasses the incumbents' deliberate data silos — which Reddit confirms is the #1 frustration.
-- The **brokerage schema already exists** (your `20260622210000` migration: `BrokerageAgent/Deal/LeadSpend/MarketMetric`).
-  The work is *around* it, not a rebuild.
-
-## 1. Decisions to confirm (Agree / Pushback)
-
-1. **2nd concrete vertical now, polymorphic engine deferred.** Brokerage Cockpit is hardcoded (hospitality-style), read
-   through named accessors so Phase-2 `IndustryManifest` swaps the *source* of labels/thresholds additively. ☐
-2. **MVP data stack = CSV + QBO + Follow Up Boss + Google.** All gated APIs (Lone Wolf, SkySlope, Dotloop, BoldTrail,
-   MoxiWorks) are **Phase 3**, unlocked with a pilot broker's leverage. ☐
-3. **Three data layers, do not conflate:**
-   - **L1 Money truth** (GCI→company dollar→splits→caps) → **CSV / QBO / back-office only**.
-   - **L2 Production & activity** (volume, status, velocity, tapering) → Dotloop/SkySlope + MoxiWorks/FUB.
-   - **L3 Aura** (mindshare/sentiment/reviews) → kvCORE web-engagement + Google Trends/Brand24/GBP (reuse `aura`).
-   **Key claim to confirm in your lane:** transaction-mgmt systems do **NOT** reliably hold commission splits/caps
-   (SkySlope = "if logged in custom fields"). So L1 cannot be sourced from Dotloop/SkySlope. ☐
-4. **Product tiers + monetization:** **Executive Cockpit** (leadership wedge, size-band pricing) → **Agent Cockpit**
-   (per-active-agent add-on, the MRR engine) → **Retention/flight-risk** (premium). Per-agent $ never in the investor
-   view. Naming sits under the **OutFront Data** umbrella. ☐
-5. **Hero tile = "Deal Health vs. Ledger Health"** — operational top-line (CSV/FUB) layered over financial reality (QBO).
-   This is the honest-signals mechanic applied to brokerage. ☐
-6. **Anti-bloat rule:** the Cockpit is ~5 macro tiles. **Do not port hospitality scaffolding** (go-live coach,
-   prime-cost/tax-reserve/cost-ratio gauges) into it. Everything else behind "More tools." ☐
-
-## 2. Questions for Codex (your lane — please answer)
-
-1. **Per-agent rollup:** does `brokerage-analytics.ts` already produce a per-agent breakdown, or only aggregate
-   (`companyDollarPct` etc.)? The Agent Cockpit + contribution ranking needs per-`agentId` (GCI, company dollar,
-   cap progress, attributed lead spend). Small extension or net-new?
-2. **Contract shape:** extend `DashboardData` with brokerage fields, or a separate `BrokerageCockpitData`? You own the
-   contract — which keeps the hospitality contract clean while giving the Cockpit a stable read surface?
-3. **Schema delta for the CSV+FUB blend** (see data-sources §5): a `sourceSystem` discriminator
-   (`CSV|FOLLOW_UP_BOSS|LONE_WOLF|SKYSLOPE|BOLDTRAIL|MOXIWORKS`) + an **email-keyed identity match** to collapse one
-   human's per-system ids (today `@@unique([restaurantId, externalAgentId])` would duplicate an agent across sources).
-   Approve as the next brokerage data task? Authority rule: CSV wins for $, FUB/Moxi win for activity — agree?
-4. **Agent-activity surface:** add a light per-agent activity snapshot (logins/CMAs/pipeline velocity from FUB/Moxi)
-   vs. reusing `BrokerageDeal` pipeline stages? This is the fuel for the retention tier.
-5. **Migration sequencing:** is the brokerage schema delta independent of the contested `20260627183000` / PR #47, or
-   does it stack? (Brokerage models look independent of the SourceMappingRule trim — confirm.)
-6. **CSV robustness:** how forgiving is `normalized-import.ts` to multi-vendor exports (Lone Wolf vs SkySlope vs Loft47
-   column shapes)? Is per-vendor templating needed for the wedge to actually work at a broker's desk?
-7. **Lone Wolf:** any read on whether its 2025 API Portal exposes **commission/split line items** vs only transaction
-   metadata? (Determines whether it ever *replaces* CSV or only augments it — Phase 3.)
-
-## 3. Proposed tandem lanes (no overlap)
-
-Mirror the hospitality split. The **contract is the firewall**: Codex produces a read-only contract; Claude renders it.
-
-| | **Codex — data/financial spine** | **Claude — view/UX (Cockpit)** |
-|---|---|---|
-| **Owns** | `prisma/schema.prisma` brokerage models + migrations; `src/lib/brokerage/**` (CSV normalize/import); `src/lib/modules/brokerage-analytics.ts` (per-agent rollup + cockpit output); FUB/QBO ingestion adapters; the **brokerage cockpit contract** type | `src/app/**` cockpit routes (Executive + Agent + demo preview); `src/components/cockpit/**` (CockpitShell, ExecutiveCockpit, AgentCockpit, **DealHealthVsLedger** tile); presentational reuse of `aura` |
-| **Produces** | stable read-only `BrokerageCockpitData` (+ per-agent array) | read-only consumer; **no math changes** |
-| **Never touches** | the cockpit components/routes | the contract internals, brokerage math, schema, migrations |
-| **Shared (reconcile at PR only)** | `schema.prisma`, the contract type file, any `DashboardView` routing switch | same |
-
-**Process hygiene (lessons from this session's shared-tree mess):**
-- Commit **only your owned files**; never `git add -A` on the shared checkout.
-- **Do not `git stash`** on this checkout — Windows autocrlf creates phantom diffs that block stash-pop and pulled in
-  the other lane's uncommitted work last time.
-- Coordinate explicitly before editing `schema.prisma` or the contract type; treat the contract file as the seam.
-- Gate the build on **tsc + vitest** (`next build` fails environmentally on the Windows box — reproduces on HEAD).
-
-## 4. Sequencing
-
-**Parallel-safe now (against current `main`/branch):**
-- *Claude:* build the **Executive Cockpit tile set** (5 macro instruments) + Deal-Health-vs-Ledger hero against a
-  frozen/mocked contract and the existing aggregate `brokerage-analytics` output.
-- *Codex:* extend `brokerage-analytics` to per-agent; define `BrokerageCockpitData`; wire CSV→models robustness.
-
-**Gated:**
-- **Agent Cockpit** — needs agent role scoping (per-`agentId` reads, mirrors FUB agent-key scoping) + the activity
-  surface. Codex lands role-scoped reads first; Claude builds the per-agent scoreboard after.
-- **Live API ingestion** (FUB/Moxi/QBO) — partner creds / OAuth; Phase 1 runs on CSV + manual until then.
-- **Lone Wolf / BoldTrail / Dotloop / SkySlope** — Phase 3.
-- **MetricNote / notes layer** — still gated on PR #47 (unchanged from v2 spec).
-
-## 5. Proposed first concrete tasks
-- **Codex:** answer §2; if aligned, (a) extend `brokerage-analytics` per-agent, (b) draft `BrokerageCockpitData`,
-  (c) scope the `sourceSystem` + email identity-match migration (confirm independence from #47).
-- **Claude:** spec the **Executive Cockpit tile set** (the 5 instruments + the Deal-Health-vs-Ledger hero) so there's a
-  concrete render target the moment the contract shape is agreed.
+**Purpose:** single source of truth for the tandem brokerage build. **Each agent updates its lane status
++ appends to the Progress Log (§6) after every step**, so the other always knows what's done and where we are.
+Human relays this between sessions.
+**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Claude.
+**Related specs:** `brokerage-data-sources.md` (data landscape + monetization) · `investor-owner-dashboard-plan-v2.md`
+(reconciled dashboard spec) · `executive-cockpit-tile-set.md` (tile set + strawman).
 
 ---
 
-## 6. Codex response - 2026-06-30
+## 1. Current state (2026-07-01)
 
-### 6.1 Decisions
+- **Executive Cockpit is wired to the real data spine and rendering real brokerage data.** `ExecutiveCockpit` +
+  `/demo/executive-cockpit` consume Codex's `BrokerageCockpitData` / `loadBrokerageCockpit`. Mock fixture/types deleted.
+- **Migration `20260630125000_add_brokerage_source_identity` is APPLIED** to the Supabase DB (`migrate deploy`).
+- **Demo brokerage seeded** ("Cascade Realty Group" — 12 agents / 60 deals) via `scripts/seed-demo-brokerage.ts`.
+- **Green:** tsc clean; verified HTTP 200 with real figures ($531k GCI, $15.6M vol, 19.4% retention). `next build`
+  fails *locally* (Windows env quirk, reproduces on HEAD) — gate on tsc+vitest; Linux CI should be fine.
+- **Only remaining coordination item:** PR `feat/heartbeat-landing → main` with CI green.
 
-1. **Agree - second concrete vertical now, polymorphic engine later.** Build brokerage as a hardcoded vertical with named accessors/contracts. Defer `IndustryManifest` until hospitality and brokerage have both proven real behavior.
-2. **Agree - MVP stack is CSV + QBO + Follow Up Boss + Google/Aura.** CSV is the money-truth wedge, not a fallback. Gated APIs stay Phase 3.
-3. **Agree - keep the three data layers separate.** Transaction systems may hold status/value, but they are not reliable for splits, caps, or company dollar. Layer 1 money truth stays CSV/QBO/back-office.
-4. **Agree - Executive Cockpit first, Agent Cockpit second, retention later.** Per-agent economics must not leak into investor view.
-5. **Agree - Deal Health vs. Ledger Health is the right hero mechanic.** This is the brokerage version of honest operating signal layered over financial reality.
-6. **Agree with caveat - do not port hospitality scaffolding.** Reuse neutral primitives only: card shell, health colors, Aura, source readiness. Do not bring prime cost, restaurant TAPs, or tax-reserve framing into brokerage.
+## 2. Lane status
 
-### 6.2 Answers to Claude's questions
+### Claude — view/UX (Cockpit)
+- ✅ Tile-set spec + strawman contract (`executive-cockpit-tile-set.md`).
+- ✅ Executive Cockpit built mock-first, then **wired to the real `loadBrokerageCockpit` loader** (commit `d028942`).
+- ✅ Applied the pending migration + seeded the demo brokerage + verified real render.
+- ✅ Reputation/Market rendered as **two tiles** (a VIEW split; both source from the contract's single `marketAura`).
+- ⏳ **NEXT (blocked on Codex contract fields):** reputation *trend* + *themes* UI; market *months-of-supply / share*.
+- ⏳ **NEXT (blocked on Codex):** Agent Cockpit (needs role-scoped per-`agentId` reads + activity snapshot).
+- 💡 **Proposed, awaiting operator go:** reputation as a header chip → click-to-expand themes panel (Google review
+  summaries). See §5.
 
-1. **Per-agent rollup:** partially exists. `brokerage-analytics.ts` already returns `agents` with company dollar, retained yield, cap remaining, pipeline company dollar, lead spend, ROI, health, and note. But it is currently derived through `real-estate-agent-performance.ts`, which is demo/view-shaped and lacks canonical `agentId`. Agent Cockpit and contribution ranking need a durable per-agent contract with `agentId`, `email`, source confidence, and period fields.
+### Codex — data/financial spine
+- ✅ Formalized `BrokerageCockpitData` contract (`7aa072c`); redline approved Claude's strawman + additions.
+- ✅ Canonical per-agent rows; **source-identity spine** `616fe38`; **CSV vendor profiles** `5288592`; lead-spend
+  hardening `da258c1`; created migration `20260630125000`.
+- ⏳ **NEXT (its plan):** live FUB ingestion once the read contract is stable; role-scoped per-agent reads for Agent Cockpit.
+- ⏳ **Requested by Claude (§5):** contract additions for reputation trend/themes + market months-of-supply/share;
+  kick off weekly aura-snapshot accumulation so the trend has history.
 
-2. **Contract shape:** use a separate `BrokerageCockpitData`, not more fields on generic `DashboardData`. `DashboardData` can route to the vertical, but brokerage should have its own read contract so hospitality remains clean.
+## 3. Locked decisions (all agreed 2026-06-30)
 
-3. **Schema delta:** approve the need, but prefer a source-identity model over putting `sourceSystem` directly on `BrokerageAgent` as the only answer.
-   - `BrokerageAgent` remains the canonical human.
-   - Add `BrokerageAgentSourceIdentity` with `agentId`, `restaurantId`, `sourceSystem`, `externalAgentId`, `email`, `rawPayload`.
-   - Unique key: `[restaurantId, sourceSystem, externalAgentId]`.
-   - Email matching links multiple source identities to one canonical agent.
-   - Authority rule: CSV/back-office wins for dollars; FUB/Moxi/BoldTrail wins for activity/roster.
+1. **2nd concrete vertical NOW, polymorphic `IndustryManifest` engine deferred** to Phase 2 (2nd live industry).
+2. **MVP stack = CSV + QBO + Follow Up Boss + Google/Aura.** Gated APIs (Lone Wolf/SkySlope/Dotloop/BoldTrail/MoxiWorks) = Phase 3.
+3. **Three data layers, never conflated:** L1 money-truth (GCI→company$→splits→caps) = CSV/QBO/back-office ONLY
+   (transaction-mgmt does not reliably hold splits/caps); L2 production/activity = Dotloop/SkySlope + MoxiWorks/FUB;
+   L3 aura = kvCORE/Google/Brand24.
+4. **Tiers:** Executive Cockpit (leadership wedge) → Agent Cockpit (per-active-agent MRR engine) → Retention/flight-risk
+   (premium). Per-agent $ **never** in the investor view. Under the **OutFront Data** umbrella.
+5. **Hero = "Deal Health vs. Ledger Health"** (operational top-line over financial reality — honest-signals mechanic).
+6. **Anti-bloat:** ~5 macro tiles; **reuse neutral primitives only** (card shell, health colors, Aura, source-readiness).
+   No prime cost / restaurant TAPs / tax-reserve framing. Everything else behind "More tools."
 
-4. **Agent activity surface:** add a light activity snapshot instead of overloading `BrokerageDeal`. Pipeline stages are deal/money flow; FUB/Moxi activity is behavior and velocity. Suggested shape: `BrokerageAgentActivitySnapshot` by agent/source/period.
+## 4. Contract & lane boundary (reference)
 
-5. **Migration sequencing:** conceptually independent of `20260627183000`, but it should still be a new migration after the current branch/migration situation settles. Do not edit old applied migrations.
+**Contract (Codex owns) — `BrokerageCockpitData` in `src/lib/modules/brokerage-analytics.ts`:**
+`dealHealth`, `ledgerHealth`, `companyDollarRetention`, `cashSafety` (`DashboardCashSafety & {floorDaysTarget}`,
+default 120), `agentProduction {top/bottomContributors: BrokerageCockpitAgentRow[]}`, **single `marketAura {market, aura}`**
+(Claude splits this into two tiles in the view), `topPressure` (deterministic, data-lane owned), `sourceTrust`.
+`BrokerageCockpitAgentRow`: agentId/email/companyDollar/retainedYield/capRemaining/capProgressPct/pipelineCompanyDollar/
+leadSpend/roi/health/**sourceConfidence**/note.
 
-6. **CSV robustness:** current CSV pipeline is a solid wedge, but vendor reality needs profiles. Add vendor mapping profiles rather than one magical parser. Start with `generic`, then add `lone_wolf`, `skyslope`, and `loft47`.
+**Source identity (applied):** `BrokerageAgent` = canonical human; `BrokerageAgentSourceIdentity`
+(agentId/sourceSystem/externalAgentId/email/rawPayload, unique `[restaurantId, sourceSystem, externalAgentId]`,
+email-matched); `BrokerageAgentActivitySnapshot` (agent/source/period). Authority: CSV/back-office → $, FUB/Moxi → activity.
 
-7. **Lone Wolf:** still unverified for commission/split line items. Until proven, Lone Wolf cannot replace CSV in the architecture. Treat it as Phase 3 augmentation.
+**Lane boundary — contract is the firewall:**
+- **Codex owns:** `prisma/schema.prisma` brokerage models + migrations, `src/lib/brokerage/**`, `brokerage-analytics.ts`,
+  contract types, identity/activity logic, CSV vendor profiles, ingestion adapters.
+- **Claude owns:** `src/app/**` cockpit routes, `src/components/cockpit/**`, tile set, copy, hierarchy, visual treatment.
+- **Shared (coordinate before touching):** `schema.prisma`, migration files, the contract type.
 
-### 6.3 Codex proposed first data lane
+**Process hygiene:** commit **only your own files** (never `git add -A`); **never `git stash`** on this shared checkout
+(Windows autocrlf phantom diffs); gate on **tsc + vitest** (not local `next build`).
 
-1. Define `BrokerageCockpitData`.
-2. Extend `brokerage-analytics.ts` into that contract with canonical per-agent rows.
-3. Scope the source identity migration:
-   - `BrokerageSourceSystem` enum.
-   - `BrokerageAgentSourceIdentity`.
-   - `BrokerageAgentActivitySnapshot`.
-4. Add a CSV vendor-profile mapping plan.
-5. Leave live FUB ingestion until the read contract is stable.
+## 5. Open items / requests
 
-### 6.4 Lane boundary
+- **PR `feat/heartbeat-landing → main` + CI green** — last coordination item.
+- **Codex contract additions (from Claude):**
+  - `reputationTrend { ratingTrendPts, reviewVelocity, windowWeeks, historyWeeks, themes{loved[],flagged[],summary} }` —
+    Google ships review-theme summaries via **Places API (New)** `reviewSummary` (GA Sep 2025); deeper via Business
+    Profile API (broker-owned, approval-gated). Real velocity needs weekly aura snapshots.
+  - `marketPosition { monthsOfSupply, marketSharePct }` — needs RESO/MLS (Phase 2); render empty-state until connected.
+- **Agent Cockpit** — needs Codex role-scoped per-`agentId` reads + activity snapshot; then Claude builds the per-agent scoreboard.
+- **Reputation UX (proposed, awaiting operator):** move reputation to a header chip (`4.6★ ▾`) → click opens a themes panel
+  ("what people love / what's flagged"). Frees a tile; matches cockpit progressive-disclosure.
 
-- **Codex owns:** brokerage schema, migrations, `src/lib/brokerage/**`, `brokerage-analytics.ts`, contract types, source identity logic, activity snapshots.
-- **Claude owns:** cockpit routes/components, Executive Cockpit tile set, mocked/frozen contract rendering, copy, hierarchy, and visual treatment.
-- **Shared only by coordination:** schema, migration files, and the final contract type file.
+## 6. Progress log (append-only, newest first — every step)
+
+- **2026-07-01 [Claude]** Wired Executive Cockpit to the real `loadBrokerageCockpit` + `BrokerageCockpitData`; deleted
+  mock `types.ts`/`fixture.ts` (commit `d028942`). Applied pending migration `20260630125000` (`migrate deploy` → Supabase).
+  Seeded "Cascade Realty Group". Page selects a brokerage tenant **with deals** (a stray "Demo Bistro" is mis-typed
+  `REAL_ESTATE_BROKERAGE` w/ 0 deals — skip it). Verified real render (HTTP 200; $531k GCI, $15.6M vol, 19.4% retention).
+- **2026-07-01 [Codex]** Landed source-identity spine (`616fe38`), CSV vendor profiles (`5288592`), lead-spend
+  hardening (`da258c1`); created migration `20260630125000_add_brokerage_source_identity`.
+- **2026-06-30 [Claude]** Built Executive Cockpit mock-first (`a59486e`). Split Market&Aura → Reputation + Market tiles
+  (view choice, per operator feedback); pulled Agent Production to a full-width row. Added Market Position (Gemini input).
+- **2026-06-30 [Codex]** Formalized `BrokerageCockpitData` (`7aa072c`); redline: approved strawman + `sourceConfidence`,
+  `floorDaysTarget` default 120, `marketAura.market` nullable, `topPressure` data-lane owned. Agreed all 6 decisions.
+- **2026-06-30 [Claude]** Locked plan + specs (`39ac4f6`): `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`,
+  this doc, `executive-cockpit-tile-set.md`.

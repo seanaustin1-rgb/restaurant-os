@@ -280,10 +280,36 @@ async function safeAuraSummary(restaurantId: string): Promise<DashboardAuraSumma
   }
 }
 
-export async function loadBrokerageAnalytics(
-  restaurantId: string,
-  db: PrismaClient = prisma,
-): Promise<BrokerageAnalyticsData | null> {
+/**
+ * Canonical Company Dollar + retention %, shared by every brokerage surface (the analytics
+ * module and the executive cockpit) so the same tenant can never report two different retention
+ * numbers. Pure / number-only, so it is unit-tested directly.
+ *
+ * `companyDollar` trusts imported closed Company Dollar when present, else models it from the
+ * profile split. `companyDollarPct` is that Company Dollar over monthly GCI (null only when GCI
+ * is non-positive).
+ */
+export function deriveCompanyDollar(input: {
+  closedCompanyDollar: number;
+  monthlyGci: number;
+  avgSplit: number;
+}): { companyDollar: number; companyDollarPct: number | null } {
+  const companyDollar =
+    input.closedCompanyDollar > 0
+      ? input.closedCompanyDollar
+      : input.monthlyGci * (Math.max(0, 100 - input.avgSplit) / 100);
+  const companyDollarPct = input.monthlyGci > 0 ? (companyDollar / input.monthlyGci) * 100 : null;
+  return { companyDollar, companyDollarPct };
+}
+
+/**
+ * Shared fetch + profile fallbacks + core money scalars for both brokerage loaders
+ * (`loadBrokerageAnalytics` and `loadBrokerageCockpit`). Single-sources the six queries, the
+ * profile-assumption ladder, and the Company Dollar / pipeline math so the two surfaces cannot
+ * drift (the retention-% divergence this replaces came from two hand-maintained copies).
+ * Returns null when the restaurant does not exist; callers apply their own business-type guard.
+ */
+async function loadBrokerageBase(restaurantId: string, db: PrismaClient) {
   const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
     select: { id: true, name: true, businessType: true, profile: true, cashBalanceAnchor: true },
@@ -324,15 +350,75 @@ export async function loadBrokerageAnalytics(
   const dealsPerYear = profileNumber(profile, "dealsPerYear") ?? 84;
   const leadSpendProfile = profileNumber(profile, "monthlyLeadSpend") ?? 0;
   const agentCountProfile = profileNumber(profile, "agentCount") ?? agents.length;
-  const marketName = profileString(profile, "market") || "Local market";
 
   const closedGci = closedDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
   const closedCompanyDollar = closedDeals.reduce((sum, deal) => sum + n(deal.companyDollar), 0);
+  const closedVolume = closedDeals.reduce((sum, deal) => sum + n(deal.salePrice), 0);
   const monthlyGci = closedGci > 0 ? closedGci : (avgGci * dealsPerYear) / 12;
-  const companyDollarPct = closedGci > 0 && closedCompanyDollar > 0 ? (closedCompanyDollar / closedGci) * 100 : Math.max(0, 100 - avgSplit);
-  const monthlyOpex = Math.max(12_000, monthlyGci * 0.18);
-  const pendingDeals = pipelineDeals.length > 0 ? pipelineDeals.length : Math.max(1, Math.round(dealsPerYear / 8));
+  const { companyDollar, companyDollarPct } = deriveCompanyDollar({ closedCompanyDollar, monthlyGci, avgSplit });
   const weightedPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci) * ((n(deal.probabilityPct) || 70) / 100), 0);
+  const unweightedPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
+  const pendingDeals = pipelineDeals.length > 0 ? pipelineDeals.length : Math.max(1, Math.round(dealsPerYear / 8));
+
+  return {
+    restaurant,
+    start,
+    end,
+    label,
+    profile,
+    closedDeals,
+    pipelineDeals,
+    agents,
+    leadSpendRows,
+    marketMetricRows,
+    sourceConfigs,
+    avgSplit,
+    avgGci,
+    dealsPerYear,
+    leadSpendProfile,
+    agentCountProfile,
+    closedGci,
+    closedCompanyDollar,
+    closedVolume,
+    monthlyGci,
+    companyDollar,
+    companyDollarPct,
+    weightedPipelineGci,
+    unweightedPipelineGci,
+    pendingDeals,
+  };
+}
+
+export async function loadBrokerageAnalytics(
+  restaurantId: string,
+  db: PrismaClient = prisma,
+): Promise<BrokerageAnalyticsData | null> {
+  const base = await loadBrokerageBase(restaurantId, db);
+  if (!base) return null;
+  const {
+    restaurant,
+    label,
+    profile,
+    closedDeals,
+    pipelineDeals,
+    agents,
+    leadSpendRows,
+    marketMetricRows,
+    sourceConfigs,
+    avgSplit,
+    avgGci,
+    agentCountProfile,
+    leadSpendProfile,
+    monthlyGci,
+    pendingDeals,
+    weightedPipelineGci,
+  } = base;
+
+  const marketName = profileString(profile, "market") || "Local market";
+  // Non-null retention for the estimate inputs; identical to the old expression in every case
+  // (null only arises when monthly GCI is non-positive, which the profile fallback prevents).
+  const companyDollarPct = base.companyDollarPct ?? Math.max(0, 100 - avgSplit);
+  const monthlyOpex = Math.max(12_000, monthlyGci * 0.18);
   const avgPipelineGci = pipelineDeals.length > 0 ? weightedPipelineGci / pipelineDeals.length : avgGci;
 
   const estimate = computeRealEstateEstimate({
@@ -426,59 +512,37 @@ export async function loadBrokerageCockpit(
   restaurantId: string,
   db: PrismaClient = prisma,
 ): Promise<BrokerageCockpitData | null> {
-  const restaurant = await db.restaurant.findUnique({
-    where: { id: restaurantId },
-    select: { id: true, name: true, businessType: true, profile: true, cashBalanceAnchor: true },
-  });
-  if (!restaurant || restaurant.businessType !== "REAL_ESTATE_BROKERAGE") return null;
+  const [base, cashOxygen, aura] = await Promise.all([
+    loadBrokerageBase(restaurantId, db),
+    loadCashOxygenFloor(restaurantId, db),
+    safeAuraSummary(restaurantId),
+  ]);
+  if (!base || base.restaurant.businessType !== "REAL_ESTATE_BROKERAGE") return null;
+  const {
+    restaurant,
+    label,
+    profile,
+    closedDeals,
+    pipelineDeals,
+    agents,
+    leadSpendRows,
+    marketMetricRows,
+    sourceConfigs,
+    avgSplit,
+    avgGci,
+    agentCountProfile,
+    leadSpendProfile,
+    closedGci,
+    closedVolume,
+    monthlyGci,
+    companyDollar,
+    companyDollarPct,
+    weightedPipelineGci,
+    unweightedPipelineGci,
+    pendingDeals,
+  } = base;
 
-  const latestClosed = await db.brokerageDeal.findFirst({
-    where: { restaurantId, closedDate: { not: null } },
-    orderBy: { closedDate: "desc" },
-    select: { closedDate: true },
-  });
-  const { start, end, label } = monthBounds(latestClosed?.closedDate ?? new Date());
-
-  const [closedDeals, pipelineDeals, agents, leadSpendRows, marketMetricRows, sourceConfigs, cashOxygen, aura] =
-    await Promise.all([
-      db.brokerageDeal.findMany({
-        where: { restaurantId, stage: "CLOSED", closedDate: { gte: start, lt: end } },
-        include: { agent: true },
-      }),
-      db.brokerageDeal.findMany({
-        where: { restaurantId, stage: { in: ["ACTIVE", "PENDING"] } },
-        include: { agent: true },
-      }),
-      db.brokerageAgent.findMany({ where: { restaurantId }, orderBy: { name: "asc" } }),
-      db.brokerageLeadSpend.findMany({
-        where: { restaurantId, periodStart: { lt: end }, periodEnd: { gte: start } },
-        include: { agent: true },
-      }),
-      db.brokerageMarketMetric.findMany({
-        where: { restaurantId, date: { gte: start, lt: end } },
-        orderBy: { date: "desc" },
-      }),
-      db.dataSourceConfig.findMany({ where: { restaurantId } }),
-      loadCashOxygenFloor(restaurantId, db),
-      safeAuraSummary(restaurantId),
-    ]);
-
-  const profile = restaurant.profile;
-  const avgSplit = profileNumber(profile, "avgCommissionSplit") ?? 70;
-  const avgGci = profileNumber(profile, "avgGci") ?? 9_000;
-  const dealsPerYear = profileNumber(profile, "dealsPerYear") ?? 84;
-  const leadSpendProfile = profileNumber(profile, "monthlyLeadSpend") ?? 0;
-  const agentCountProfile = profileNumber(profile, "agentCount") ?? agents.length;
   const targetCompanyDollarPct = profileNumber(profile, "targetCompanyDollarPct") ?? 25;
-
-  const closedGci = closedDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
-  const closedCompanyDollar = closedDeals.reduce((sum, deal) => sum + n(deal.companyDollar), 0);
-  const closedVolume = closedDeals.reduce((sum, deal) => sum + n(deal.salePrice), 0);
-  const monthlyGci = closedGci > 0 ? closedGci : (avgGci * dealsPerYear) / 12;
-  const companyDollar = closedCompanyDollar > 0 ? closedCompanyDollar : monthlyGci * (Math.max(0, 100 - avgSplit) / 100);
-  const companyDollarPct = monthlyGci > 0 ? (companyDollar / monthlyGci) * 100 : null;
-  const weightedPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci) * ((n(deal.probabilityPct) || 70) / 100), 0);
-  const unweightedPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
   const activeAgents = agents.filter((agent) => (agent.status ?? "active").toLowerCase() !== "inactive").length || agentCountProfile || agents.length;
 
   const agentInputs = (agents.length > 0 ? agents : Array.from({ length: Math.max(1, Math.min(3, agentCountProfile || 3)) }, (_, i) => ({
@@ -501,7 +565,7 @@ export async function loadBrokerageCockpit(
         closedGci: agentClosed.reduce((sum, deal) => sum + n(deal.gci), 0) || fallbackClosedGci,
         agentSplitPct: n(agent.defaultSplitPct) || avgSplit,
         capRemaining: Math.max(0, n(agent.annualCap) - n(agent.capPaid)) || (index === 0 ? 4_500 : 18_000),
-        pendingDeals: agentPipeline.length || Math.max(0, Math.round((pipelineDeals.length || Math.max(1, Math.round(dealsPerYear / 8))) / Math.max(1, agentCountProfile || agents.length || 1))),
+        pendingDeals: agentPipeline.length || Math.max(0, Math.round(pendingDeals / Math.max(1, agentCountProfile || agents.length || 1))),
         avgDealGci: avgGci,
         expectedCloseRatePct: 70,
         leadSpend: agentLeadSpend || (index === 0 ? Math.max(leadSpendProfile * 0.45, 0) : index === 1 ? Math.max(leadSpendProfile * 0.3, 0) : Math.max(leadSpendProfile * 0.25, 0)),

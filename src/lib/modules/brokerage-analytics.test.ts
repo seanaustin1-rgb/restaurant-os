@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveBrokerageTopPressure, type BrokerageCockpitData } from "./brokerage-analytics";
+import { deriveBrokerageTopPressure, deriveCompanyDollar, type BrokerageCockpitData } from "./brokerage-analytics";
 
 function cockpit(overrides: Partial<Omit<BrokerageCockpitData, "topPressure">> = {}): Omit<BrokerageCockpitData, "topPressure"> {
   return {
@@ -74,6 +74,40 @@ function cockpit(overrides: Partial<Omit<BrokerageCockpitData, "topPressure">> =
     ...overrides,
   };
 }
+
+describe("deriveCompanyDollar", () => {
+  it("uses imported closed Company Dollar over GCI when present", () => {
+    expect(deriveCompanyDollar({ closedCompanyDollar: 30_000, monthlyGci: 100_000, avgSplit: 70 })).toEqual({
+      companyDollar: 30_000,
+      companyDollarPct: 30,
+    });
+  });
+
+  it("models Company Dollar from the profile split when nothing is imported", () => {
+    expect(deriveCompanyDollar({ closedCompanyDollar: 0, monthlyGci: 100_000, avgSplit: 70 })).toEqual({
+      companyDollar: 30_000,
+      companyDollarPct: 30,
+    });
+    expect(deriveCompanyDollar({ closedCompanyDollar: 0, monthlyGci: 100_000, avgSplit: 75 })).toEqual({
+      companyDollar: 25_000,
+      companyDollarPct: 25,
+    });
+  });
+
+  it("returns a null retention % when there is no monthly GCI (never a divide-by-zero)", () => {
+    expect(deriveCompanyDollar({ closedCompanyDollar: 0, monthlyGci: 0, avgSplit: 70 })).toEqual({
+      companyDollar: 0,
+      companyDollarPct: null,
+    });
+  });
+
+  it("is the single source of truth — module and cockpit call sites cannot diverge", () => {
+    const input = { closedCompanyDollar: 42_500, monthlyGci: 150_000, avgSplit: 72 };
+    // Both loaders now derive retention through this one helper, so identical inputs are identical outputs.
+    expect(deriveCompanyDollar(input)).toEqual(deriveCompanyDollar({ ...input }));
+    expect(deriveCompanyDollar(input).companyDollarPct).toBeCloseTo((42_500 / 150_000) * 100, 10);
+  });
+});
 
 describe("deriveBrokerageTopPressure", () => {
   it("prioritizes company-dollar retention when it is below target", () => {

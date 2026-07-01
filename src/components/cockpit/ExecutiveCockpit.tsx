@@ -3,6 +3,11 @@
  * Wired to Codex's real `BrokerageCockpitData` contract (data lane owns the math).
  * No math here — every value is read straight off the contract.
  *
+ * Rendered in the OutFront Data design system (DESIGN.md): matte Ink ground,
+ * Surface panels, hairline Line borders, Space Mono figures via `.tnum`, serif
+ * (font-display) headings, and a strictly-separate health vocabulary that never
+ * relies on color alone. Copper is rationed to the single "one thing" callout.
+ *
  * The Reputation / Market split is a VIEW choice: both tiles are sourced from the
  * contract's single `marketAura` field. Reputation trend + themes and market
  * months-of-supply / share are future contract additions; until they exist the
@@ -10,6 +15,7 @@
  */
 import type { ReactNode } from "react";
 import { Banknote, Building2, Gauge, Star, TrendingUp, TrendingDown, Users, Scale } from "lucide-react";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import { money, pct } from "@/lib/format";
 import type {
   BrokerageCockpitAgentRow,
@@ -17,11 +23,25 @@ import type {
   BrokerageCockpitHealth,
 } from "@/lib/modules/brokerage-analytics";
 
-const TONE_CLASS: Record<BrokerageCockpitHealth, string> = {
-  green: "border-emerald-500/40 bg-emerald-500/8 text-emerald-200",
-  yellow: "border-amber-500/45 bg-amber-500/10 text-amber-200",
-  red: "border-orange-500/45 bg-orange-500/10 text-orange-200",
-  unknown: "border-white/10 bg-white/[0.03] text-slate-300",
+// Value color follows financial health; unknown falls back to primary Ink Text.
+// The word/icon (HealthSignal) carries the honest read — color is the fast read only.
+const HEALTH_TEXT: Record<BrokerageCockpitHealth, string> = {
+  green: "text-health-green",
+  yellow: "text-health-yellow",
+  red: "text-health-red",
+  unknown: "text-ink-text",
+};
+
+const HEALTH_WORD: Record<Exclude<BrokerageCockpitHealth, "unknown">, string> = {
+  green: "On track",
+  yellow: "Watch",
+  red: "Off target",
+};
+
+// Tinted status pill for the source-trust badge (DESIGN status-badge shape).
+const SOURCE_BADGE: Record<"healthy" | "partial", string> = {
+  healthy: "border-health-green/30 bg-health-green/10 text-health-green",
+  partial: "border-health-yellow/30 bg-health-yellow/10 text-health-yellow",
 };
 
 function compactMoney(n: number): string {
@@ -35,10 +55,12 @@ function Trend({ pts }: { pts: number | null }) {
   const up = pts >= 0;
   const Icon = up ? TrendingUp : TrendingDown;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${up ? "text-emerald-300" : "text-orange-300"}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${up ? "text-health-green" : "text-health-red"}`}>
       <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      {up ? "+" : ""}
-      {pts.toFixed(1)} pts
+      <span className="tnum">
+        {up ? "+" : ""}
+        {pts.toFixed(1)} pts
+      </span>
     </span>
   );
 }
@@ -47,45 +69,46 @@ function CockpitCard({
   icon,
   label,
   value,
-  detail,
   tone = "unknown",
-  children,
+  detail,
+  signal,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
-  detail?: string;
   tone?: BrokerageCockpitHealth;
-  children?: ReactNode;
+  detail?: string;
+  signal?: ReactNode;
 }) {
   return (
-    <section className={`rounded-lg border p-4 ${TONE_CLASS[tone]}`}>
-      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-        {icon}
+    <section className="rounded-lg border border-line bg-ink/40 p-4">
+      <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+        <span className="text-muted">{icon}</span>
         <span>{label}</span>
       </div>
-      <div className="mt-3 text-2xl font-semibold text-white">{value}</div>
-      {detail ? <p className="mt-2 text-sm leading-6 text-slate-300">{detail}</p> : null}
-      {children}
+      <div className={`tnum mt-3 text-2xl ${HEALTH_TEXT[tone]}`}>{value}</div>
+      {signal ?? null}
+      {detail ? <p className="mt-2 text-sm leading-relaxed text-muted">{detail}</p> : null}
     </section>
   );
 }
 
 function AgentLine({ agent }: { agent: BrokerageCockpitAgentRow }) {
   const net = agent.companyDollar - agent.leadSpend;
-  const dot = agent.health === "green" ? "bg-emerald-400" : agent.health === "yellow" ? "bg-amber-400" : "bg-orange-400";
+  const dot =
+    agent.health === "green" ? "bg-health-green" : agent.health === "yellow" ? "bg-health-yellow" : "bg-health-red";
   return (
     <li className="flex items-center justify-between gap-3 py-1.5 text-sm">
       <span className="flex min-w-0 items-center gap-2">
         <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} aria-hidden="true" />
-        <span className="truncate text-slate-200">{agent.name}</span>
+        <span className="truncate text-ink-text">{agent.name}</span>
         {agent.sourceConfidence === "profile_assumption" ? (
-          <span className="shrink-0 rounded border border-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-400">
+          <span className="shrink-0 rounded-full border border-line px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
             modeled
           </span>
         ) : null}
       </span>
-      <span className="shrink-0 font-semibold text-white">{compactMoney(net)}</span>
+      <span className="tnum shrink-0 text-ink-text">{compactMoney(net)}</span>
     </li>
   );
 }
@@ -120,68 +143,87 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
   } = data;
   const aura = marketAura.aura;
   const market = marketAura.market;
+  const cdrTone = cdr.status;
+  const cashTone = cashSafety.status;
+  const repTone = auraTone(aura);
 
   return (
-    <article className="rounded-lg border border-white/10 bg-[#111511] p-5 shadow-sm">
+    <article className="rounded-lg border border-line bg-surface p-5">
       {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-3 border-b border-line pb-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-300">Executive Cockpit</div>
-          <h2 className="mt-2 text-2xl font-semibold text-white">{data.name}</h2>
-          <p className="mt-1 text-sm text-slate-400">{data.periodLabel} · brokerage</p>
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Executive Cockpit</div>
+          <h2 className="mt-2 font-display text-2xl text-ink-text">{data.name}</h2>
+          <p className="mt-1 text-sm text-muted">{data.periodLabel} · brokerage</p>
         </div>
         <span
-          className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${
-            sourceTrust.status === "healthy" ? TONE_CLASS.green : TONE_CLASS.yellow
-          }`}
+          className={`w-fit rounded-full border px-3 py-1 text-xs font-medium ${SOURCE_BADGE[sourceTrust.status]}`}
         >
-          {sourceTrust.connected}/{sourceTrust.required} sources connected
+          <span className="tnum">
+            {sourceTrust.connected}/{sourceTrust.required}
+          </span>{" "}
+          sources connected
         </span>
       </div>
 
-      {/* The One Thing */}
+      {/* The One Thing — the single rationed copper callout */}
       {topPressure ? (
-        <div className="mt-5 rounded-lg border border-orange-500/50 bg-orange-500/10 px-4 py-3">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-300">The one thing</div>
-          <p className="mt-1 text-sm text-orange-100">
-            <span className="font-semibold text-white">{topPressure.label}</span> — {topPressure.readout}
+        <div className="mt-5 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">The one thing</div>
+          <p className="mt-1 text-sm leading-relaxed text-ink-text">
+            <span className="font-medium">{topPressure.label}</span> — {topPressure.readout}
           </p>
         </div>
       ) : null}
 
       {/* HERO — Deal Health vs Ledger Health */}
-      <section className="mt-5 rounded-lg border border-white/10 bg-white/[0.02] p-5">
-        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          <Scale className="h-4 w-4" aria-hidden="true" />
+      <section className="mt-5 rounded-lg border border-line bg-ink/40 p-5">
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+          <Scale className="h-4 w-4 text-copper-soft" aria-hidden="true" />
           <span>Deal health vs. ledger health</span>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg border border-white/10 bg-[#0f130f] p-4">
-            <div className="text-xs uppercase tracking-wide text-slate-500">What the deals say</div>
+          <div className="rounded-lg border border-line bg-surface p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted">What the deals say</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-semibold text-white">{compactMoney(dealHealth.closedGci)}</span>
-              <span className="text-sm text-slate-400">closed GCI</span>
+              <span className="tnum text-2xl text-ink-text">{compactMoney(dealHealth.closedGci)}</span>
+              <span className="text-sm text-muted">closed GCI</span>
               <Trend pts={dealHealth.trendPts} />
             </div>
-            <p className="mt-2 text-sm text-slate-400">
-              {compactMoney(dealHealth.pipelineGci)} pipeline · {compactMoney(dealHealth.closedVolume)} volume ·{" "}
-              {dealHealth.sideCount} sides
+            <p className="mt-2 text-sm text-muted">
+              <span className="tnum">{compactMoney(dealHealth.pipelineGci)}</span> pipeline ·{" "}
+              <span className="tnum">{compactMoney(dealHealth.closedVolume)}</span> volume ·{" "}
+              <span className="tnum">{dealHealth.sideCount}</span> sides
             </p>
           </div>
-          <div className="rounded-lg border border-white/10 bg-[#0f130f] p-4">
-            <div className="text-xs uppercase tracking-wide text-slate-500">What the ledger keeps</div>
+          <div className="rounded-lg border border-line bg-surface p-4">
+            <div className="text-[11px] uppercase tracking-wider text-muted">What the ledger keeps</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-2xl font-semibold text-white">{compactMoney(ledgerHealth.companyDollar)}</span>
-              <span className="text-sm text-slate-400">company dollar</span>
+              <span className={`tnum text-2xl ${HEALTH_TEXT[ledgerHealth.status]}`}>
+                {compactMoney(ledgerHealth.companyDollar)}
+              </span>
+              <span className="text-sm text-muted">company dollar</span>
             </div>
-            <p className="mt-2 text-sm text-slate-400">
-              {ledgerHealth.companyDollarPct != null ? `${pct(ledgerHealth.companyDollarPct, 1)} of GCI` : "retention pending"}
-              {ledgerHealth.cashPosition != null ? ` · ${compactMoney(ledgerHealth.cashPosition)} cash` : ""}
+            <p className="mt-2 text-sm text-muted">
+              {ledgerHealth.companyDollarPct != null ? (
+                <>
+                  <span className="tnum">{pct(ledgerHealth.companyDollarPct, 1)}</span> of GCI
+                </>
+              ) : (
+                "retention pending"
+              )}
+              {ledgerHealth.cashPosition != null ? (
+                <>
+                  {" · "}
+                  <span className="tnum">{compactMoney(ledgerHealth.cashPosition)}</span> cash
+                </>
+              ) : null}
             </p>
           </div>
         </div>
-        <p className="mt-3 text-xs leading-5 text-slate-500">
-          High volume only matters if it reaches the company. Watch the gap between top-line GCI and retained company dollar.
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          High volume only matters if it reaches the company. Watch the gap between top-line GCI and retained company
+          dollar.
         </p>
       </section>
 
@@ -191,31 +233,50 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
           icon={<Gauge className="h-4 w-4" aria-hidden="true" />}
           label="Company-dollar retention"
           value={cdr.pct != null ? pct(cdr.pct, 1) : "Pending"}
-          detail={`Target ${pct(cdr.targetPct, 0)}. ${compactMoney(cdr.atRiskFromCaps)} at risk as agents reach cap.`}
-          tone={cdr.status}
+          tone={cdrTone}
+          signal={
+            cdrTone !== "unknown" ? (
+              <HealthSignal
+                status={cdrTone}
+                label={HEALTH_WORD[cdrTone]}
+                detail={`vs ${pct(cdr.targetPct, 0)} target`}
+                className="mt-2"
+              />
+            ) : undefined
+          }
+          detail={`${compactMoney(cdr.atRiskFromCaps)} at risk as agents reach cap.`}
         />
         <CockpitCard
           icon={<Banknote className="h-4 w-4" aria-hidden="true" />}
           label="Cash oxygen"
           value={cashSafety.oxygenDays != null ? `${Math.floor(cashSafety.oxygenDays)} days` : "Anchor needed"}
-          detail={
-            `Floor target ${cashSafety.floorDaysTarget} days.` +
-            (cashSafety.netCashChangePeriod != null
-              ? ` ${cashSafety.netCashChangePeriod >= 0 ? "+" : ""}${compactMoney(cashSafety.netCashChangePeriod)} this period.`
-              : "")
+          tone={cashTone}
+          signal={
+            cashTone !== "unknown" ? (
+              <HealthSignal
+                status={cashTone}
+                label={HEALTH_WORD[cashTone]}
+                detail={`floor ${cashSafety.floorDaysTarget}d`}
+                className="mt-2"
+              />
+            ) : undefined
           }
-          tone={cashSafety.status}
+          detail={
+            cashSafety.netCashChangePeriod != null
+              ? `${cashSafety.netCashChangePeriod >= 0 ? "+" : ""}${compactMoney(cashSafety.netCashChangePeriod)} this period.`
+              : `Floor target ${cashSafety.floorDaysTarget} days.`
+          }
         />
         <CockpitCard
           icon={<Star className="h-4 w-4" aria-hidden="true" />}
           label="Reputation"
           value={aura.hasAnyData && aura.overallRating != null ? `${aura.overallRating.toFixed(1)}★` : "No data"}
+          tone={repTone}
           detail={
             aura.hasAnyData && aura.overallRating != null
               ? `${aura.totalReviews.toLocaleString()} reviews · trend builds once weekly snapshots accumulate.`
               : "Connect Google or Yelp to surface reputation."
           }
-          tone={auraTone(aura)}
         />
         <CockpitCard
           icon={<Building2 className="h-4 w-4" aria-hidden="true" />}
@@ -226,8 +287,8 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
         />
       </div>
 
-      <div className="mt-3 grid gap-3 text-xs leading-5 text-slate-400 md:grid-cols-2">
-        <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+      <div className="mt-3 grid gap-3 text-xs leading-relaxed text-muted md:grid-cols-2">
+        <p className="rounded-lg border border-line bg-ink/40 px-3 py-2">
           Reputation trend:{" "}
           {reputationTrend.state === "ready" && reputationTrend.ratingTrendPts != null
             ? `${reputationTrend.ratingTrendPts >= 0 ? "+" : ""}${reputationTrend.ratingTrendPts.toFixed(1)} rating points`
@@ -236,7 +297,7 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
               : "connect Google or review sources"}
           {reputationTrend.themes.summary ? ` - ${reputationTrend.themes.summary}` : ""}.
         </p>
-        <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+        <p className="rounded-lg border border-line bg-ink/40 px-3 py-2">
           Market position:{" "}
           {marketPosition.source === "not_connected"
             ? "connect RESO/MLS or add profile market assumptions"
@@ -247,27 +308,28 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
       </div>
 
       {/* Agent Production — full width so the ranked lists breathe */}
-      <section className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-5">
-        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          <Users className="h-4 w-4" aria-hidden="true" />
+      <section className="mt-4 rounded-lg border border-line bg-ink/40 p-5">
+        <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
+          <Users className="h-4 w-4 text-copper-soft" aria-hidden="true" />
           <span>Agent production</span>
         </div>
-        <p className="mt-1 text-sm text-slate-400">
-          {agentProduction.activeAgents} active · {compactMoney(agentProduction.totalCompanyDollar)} company dollar ·
-          ranked by company $ net of lead spend
+        <p className="mt-1 text-sm text-muted">
+          <span className="tnum">{agentProduction.activeAgents}</span> active ·{" "}
+          <span className="tnum">{compactMoney(agentProduction.totalCompanyDollar)}</span> company dollar · ranked by
+          company $ net of lead spend
         </p>
         <div className="mt-4 grid gap-6 md:grid-cols-2">
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-slate-500">Top contributors</div>
-            <ul className="mt-1 divide-y divide-white/5">
+            <div className="text-[10px] uppercase tracking-wide text-muted">Top contributors</div>
+            <ul className="mt-1 divide-y divide-line">
               {agentProduction.topContributors.slice(0, 3).map((a) => (
                 <AgentLine key={a.agentId} agent={a} />
               ))}
             </ul>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-slate-500">Watch</div>
-            <ul className="mt-1 divide-y divide-white/5">
+            <div className="text-[10px] uppercase tracking-wide text-muted">Watch</div>
+            <ul className="mt-1 divide-y divide-line">
               {agentProduction.bottomContributors.slice(0, 3).map((a) => (
                 <AgentLine key={a.agentId} agent={a} />
               ))}
@@ -277,12 +339,8 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
       </section>
 
       {/* Source footnote */}
-      <p
-        className={`mt-4 rounded-lg border px-3 py-2 text-xs leading-5 ${
-          sourceTrust.status === "healthy" ? TONE_CLASS.green : TONE_CLASS.yellow
-        }`}
-      >
-        Source trust: {sourceTrust.connected}/{sourceTrust.required} connected
+      <p className={`mt-4 rounded-lg border px-3 py-2 text-xs leading-relaxed ${SOURCE_BADGE[sourceTrust.status]}`}>
+        Source trust: <span className="tnum">{sourceTrust.connected}/{sourceTrust.required}</span> connected
         {sourceTrust.missing.length ? ` — missing ${sourceTrust.missing.slice(0, 3).join(", ")}.` : "."} Figures above
         may be partial until connected.
       </p>

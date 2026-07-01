@@ -37,6 +37,7 @@ describe("mirrorBankTransactionToLedger — category lookup tenancy guard", () =
       },
       rawSourceEvent: {
         upsert: vi.fn(async () => ({ id: "raw_1" })),
+        update: vi.fn(async () => ({ id: "raw_1" })),
       },
       normalizedFinancialEvent: {
         findMany: vi.fn(async () => []),

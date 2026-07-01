@@ -107,6 +107,12 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-01 [Claude→Codex lane]** Operator-directed post-go-live review fix in **`brokerage-analytics.ts`** (Codex-owned —
+  flagging the cross-lane touch): de-duplicated `loadBrokerageAnalytics` + `loadBrokerageCockpit`, which had ~90%
+  copy-pasted fetch/profile-fallback/Company-Dollar math. Extracted `loadBrokerageBase()` (the six queries + profile ladder +
+  core money scalars, single-sourced) and a pure, unit-tested `deriveCompanyDollar()` so the module and the cockpit can no
+  longer report **different Company-Dollar retention %** for the same tenant (the review-flagged divergence). Behavior-preserving
+  otherwise; no contract/type changes. Please review/absorb — happy to hand this file back once merged.
 - **2026-07-01 [Codex]** Audited brokerage demo/import guardrails after the Cinnamon Beach Realty issue. Removed a
   restaurant-derived "prime cost" phrase from the real-estate estimator and constrained brokerage import preview/commit
   routes to `REAL_ESTATE_BROKERAGE` businesses only. Typecheck and vitest green.

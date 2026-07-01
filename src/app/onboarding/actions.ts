@@ -42,6 +42,9 @@ function firstRunPath(input: OnboardingInput): string {
     if (input.businessType === "REAL_ESTATE_BROKERAGE") return "/import/brokerage";
     return "/import";
   }
+  if (input.businessType === "REAL_ESTATE_BROKERAGE" && input.tier === "TIER_2") {
+    return "/import/brokerage?intro=1";
+  }
   if (input.tier === "TIER_4") {
     switch (input.businessType) {
       case "CONTRACTOR":

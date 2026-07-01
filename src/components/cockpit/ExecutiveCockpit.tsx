@@ -113,6 +113,8 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
     cashSafety,
     agentProduction,
     marketAura,
+    reputationTrend,
+    marketPosition,
     topPressure,
     sourceTrust,
   } = data;
@@ -222,6 +224,26 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
           detail={marketDetail(market)}
           tone="unknown"
         />
+      </div>
+
+      <div className="mt-3 grid gap-3 text-xs leading-5 text-slate-400 md:grid-cols-2">
+        <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+          Reputation trend:{" "}
+          {reputationTrend.state === "ready" && reputationTrend.ratingTrendPts != null
+            ? `${reputationTrend.ratingTrendPts >= 0 ? "+" : ""}${reputationTrend.ratingTrendPts.toFixed(1)} rating points`
+            : reputationTrend.state === "gathering"
+              ? "gathering weekly snapshots"
+              : "connect Google or review sources"}
+          {reputationTrend.themes.summary ? ` - ${reputationTrend.themes.summary}` : ""}.
+        </p>
+        <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2">
+          Market position:{" "}
+          {marketPosition.source === "not_connected"
+            ? "connect RESO/MLS or add profile market assumptions"
+            : `${marketPosition.note}${
+                marketPosition.monthsOfSupply != null ? ` ${marketPosition.monthsOfSupply.toFixed(1)} months supply.` : ""
+              }${marketPosition.marketSharePct != null ? ` ${pct(marketPosition.marketSharePct, 1)} share.` : ""}`}
+        </p>
       </div>
 
       {/* Agent Production — full width so the ranked lists breathe */}

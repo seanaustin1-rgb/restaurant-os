@@ -108,10 +108,11 @@ async function loadRoles(): Promise<{ role: UserRole; restaurantId: string; busi
 export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams?: { new?: string };
+  searchParams?: { new?: string; type?: string };
 }) {
   const roles = await loadRoles();
   const addingBusiness = searchParams?.new === "1";
+  const initialBusinessType = searchParams?.type === "real-estate" ? "REAL_ESTATE_BROKERAGE" : "RESTAURANT";
   if (roles.length === 0 || addingBusiness) {
     return (
       <main className="min-h-screen bg-ink px-4 py-8 text-ink-text sm:px-6">
@@ -128,7 +129,7 @@ export default async function OnboardingPage({
               </Link>
             </section>
           )}
-          <OnboardingFlow />
+          <OnboardingFlow initialBusinessType={initialBusinessType} />
         </div>
       </main>
     );

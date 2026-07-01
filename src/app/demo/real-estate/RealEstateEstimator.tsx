@@ -3,7 +3,7 @@
 import type React from "react";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowLeft, Building2, Database, Gauge, Home, Info, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
+import { ArrowLeft, Building2, Database, Gauge, Info, PiggyBank, Search, Star, TrendingUp, Wallet } from "lucide-react";
 import { money, pct } from "@/lib/format";
 import { HealthSignal } from "@/components/health/HealthSignal";
 import { lookupReputation, type ReputationResult } from "../actions";
@@ -16,27 +16,11 @@ import {
   type MarketAuraResult,
 } from "@/lib/demo/market-aura";
 import {
-  buildPropertyActionQueue,
-  type PropertyActionItem,
-} from "@/lib/demo/property-action-queue";
-import {
-  computePropertyHeartbeat,
-  type PropertyHeartbeatResult,
-} from "@/lib/demo/property-heartbeat";
-import {
-  computePropertyPortfolio,
-  type PropertyPortfolioResult,
-} from "@/lib/demo/property-portfolio";
-import {
   computeRealEstateEstimate,
   type RealEstateEstimateInputs,
   type RealEstateEstimateResult,
   type RealEstateSoftware,
 } from "@/lib/demo/real-estate-estimate";
-import {
-  computeVacationRentalImportReadiness,
-  type VacationRentalImportReadinessResult,
-} from "@/lib/demo/vacation-rental-import-readiness";
 import type { Health } from "@/lib/demo/estimate";
 import { DemoModulePreview } from "../DemoModulePreview";
 
@@ -59,22 +43,26 @@ type FormState = Record<
   string
 >;
 
+// Believable sample brokerage so the demo opens to a live, coherent story
+// (a ~12-agent independent shop that is profitable but tightening: split
+// pressure and Company Dollar both land "yellow"). Prospects overwrite these
+// with their own numbers; the placeholders mirror the same values.
 const INITIAL: FormState = {
-  name: "",
-  market: "",
-  software: "followupboss",
-  monthlyGci: "",
-  agentSplitPct: "",
-  franchiseFeePct: "",
-  referralFeePct: "",
-  monthlyOpex: "",
-  currentCash: "",
-  pendingDeals: "",
-  avgSalePrice: "",
-  avgCommissionPct: "",
-  expectedCloseRatePct: "",
-  avgBrokerageSharePct: "",
-  daysToClose: "",
+  name: "Keystone Ridge Realty",
+  market: "York, PA",
+  software: "brokermint",
+  monthlyGci: "120000",
+  agentSplitPct: "70",
+  franchiseFeePct: "6",
+  referralFeePct: "4",
+  monthlyOpex: "22000",
+  currentCash: "80000",
+  pendingDeals: "12",
+  avgSalePrice: "350000",
+  avgCommissionPct: "2.5",
+  expectedCloseRatePct: "80",
+  avgBrokerageSharePct: "24",
+  daysToClose: "60",
 };
 
 const HEALTH_TEXT: Record<Health, string> = {
@@ -87,19 +75,19 @@ const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g 
 
 const EXPLAIN = {
   aura:
-    "Your public rating, pulled live from Google. A brokerage's reputation drives agent recruiting and client trust — it compounds into deal flow.",
+    "Your public rating, pulled live from Google. A brokerage's reputation drives agent recruiting and client trust - it compounds into deal flow.",
   companydollar:
     "Company Dollar is what the brokerage keeps from GCI after agent payouts, franchise fees, and referral fees. GCI is vanity; Company Dollar is what pays the bills.",
   split:
-    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). The real-estate version of prime cost; retained Company Dollar around 25–30% is a practical target.",
+    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). The real-estate version of prime cost; retained Company Dollar around 25-30% is a practical target.",
   breakeven:
     "The Company Dollar you need each month just to cover brokerage OpEx. Below it the brokerage loses money; the cushion above funds profit and owner pay.",
   runway:
     "Cash oxygen = days of operating cash at your current burn. Commissions are lumpy, so runway is the buffer that keeps payroll and rent covered between closings.",
   pipeline:
-    "Pipeline momentum = expected Company Dollar from pending deals, weighted by close probability — a rough 45–90 day forward read before closings land.",
+    "Pipeline momentum = expected Company Dollar from pending deals, weighted by close probability - a rough 45-90 day forward read before closings land.",
   pf:
-    "Starting set-asides taken from Company Dollar (not GCI) — Profit, Owner Pay, and Tax — so profit is reserved first, not whatever is left.",
+    "Starting set-asides taken from Company Dollar (not GCI) - Profit, Owner Pay, and Tax - so profit is reserved first, not whatever is left.",
 } as const;
 
 const inputCls =
@@ -164,7 +152,7 @@ export function RealEstateEstimator() {
     const inp = buildInputs(seeded);
     if (inp.monthlyGci > 0 && inp.monthlyOpex > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "real_estate")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -177,7 +165,7 @@ export function RealEstateEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market, "real_estate")));
   }
 
   if (view === "results" && result) {
@@ -185,7 +173,7 @@ export function RealEstateEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">
         Enter rough brokerage numbers. The estimate separates pass-through commission money from Company Dollar.
       </p>
@@ -217,7 +205,7 @@ export function RealEstateEstimator() {
         <Field label="Monthly closed GCI" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="120,000" value={f.monthlyGci} onChange={upd("monthlyGci")} />
         </Field>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Avg agent split" suffix="%">
             <input className={inputCls + " pr-8"} inputMode="numeric" placeholder="70" value={f.agentSplitPct} onChange={upd("agentSplitPct")} />
           </Field>
@@ -232,7 +220,7 @@ export function RealEstateEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Brokerage safety" hint="Used for break-even and runway" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Monthly fixed OpEx" required prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="22,000" value={f.monthlyOpex} onChange={upd("monthlyOpex")} />
           </Field>
@@ -244,7 +232,7 @@ export function RealEstateEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="4" title="45-90 day pipeline" hint="A rough forward read before closings land" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Pending deals">
             <input className={inputCls} inputMode="numeric" placeholder="12" value={f.pendingDeals} onChange={upd("pendingDeals")} />
           </Field>
@@ -314,76 +302,6 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
       leadSpend: 2_400,
     },
   ]);
-  const property = computePropertyHeartbeat({
-    name: "Managed owner property",
-    monthlyBookingRevenue: Math.max(7_500, r.expectedPipelineCompanyDollar * 0.55),
-    occupancyPct: 68,
-    averageDailyRate: Math.max(175, num(f.avgSalePrice) / 1_250),
-    cleaningCosts: 1_900,
-    maintenanceCosts: r.breakEvenCushion < 0 ? 2_800 : 1_300,
-    platformFees: Math.max(500, r.expectedPipelineCompanyDollar * 0.025),
-    managementFeePct: 18,
-    ownerReserveTarget: Math.max(4_500, r.monthlyOpex * 0.2),
-    openIssues: r.breakEvenCushion < 0 ? 4 : 1,
-    repeatIssues: r.breakEvenCushion < 0 ? 1 : 0,
-    avgResponseHours: r.breakEvenCushion < 0 ? 18 : 4,
-    reviewRating: r.breakEvenCushion < 0 ? 4.1 : 4.8,
-    futureBookedNights: Math.max(8, Math.round(num(f.pendingDeals) * 1.5)),
-    next30AvailableNights: 28,
-  });
-  const propertyPortfolio = computePropertyPortfolio([
-    {
-      name: "Lake House",
-      monthlyBookingRevenue: Math.max(15_000, r.expectedPipelineCompanyDollar * 0.45),
-      occupancyPct: 72,
-      averageDailyRate: 325,
-      cleaningCosts: 2_100,
-      maintenanceCosts: 1_400,
-      platformFees: 900,
-      managementFeePct: 18,
-      ownerReserveTarget: 8_000,
-      openIssues: 1,
-      repeatIssues: 0,
-      avgResponseHours: 3,
-      reviewRating: 4.8,
-      futureBookedNights: 18,
-      next30AvailableNights: 28,
-    },
-    {
-      name: "Beach Cottage",
-      monthlyBookingRevenue: Math.max(18_000, r.expectedPipelineCompanyDollar * 0.5),
-      occupancyPct: 78,
-      averageDailyRate: 410,
-      cleaningCosts: 2_400,
-      maintenanceCosts: 1_100,
-      platformFees: 1_100,
-      managementFeePct: 18,
-      ownerReserveTarget: 9_500,
-      openIssues: 0,
-      repeatIssues: 0,
-      avgResponseHours: 2,
-      reviewRating: 4.9,
-      futureBookedNights: 21,
-      next30AvailableNights: 27,
-    },
-    {
-      name: "Downtown Condo",
-      monthlyBookingRevenue: r.breakEvenCushion < 0 ? 8_500 : 11_000,
-      occupancyPct: r.breakEvenCushion < 0 ? 42 : 58,
-      averageDailyRate: 180,
-      cleaningCosts: 1_700,
-      maintenanceCosts: r.breakEvenCushion < 0 ? 2_600 : 1_200,
-      platformFees: 650,
-      managementFeePct: 20,
-      ownerReserveTarget: 5_000,
-      openIssues: r.breakEvenCushion < 0 ? 5 : 2,
-      repeatIssues: r.breakEvenCushion < 0 ? 2 : 0,
-      avgResponseHours: r.breakEvenCushion < 0 ? 24 : 8,
-      reviewRating: r.breakEvenCushion < 0 ? 3.9 : 4.4,
-      futureBookedNights: r.breakEvenCushion < 0 ? 7 : 13,
-      next30AvailableNights: 25,
-    },
-  ]);
   const marketAura = computeMarketAura({
     market: f.market || "Local market",
     newListings7d: Math.max(45, Math.round(num(f.pendingDeals) * 8)),
@@ -397,17 +315,6 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
     mortgageRateChangeBps7d: r.pipelineHealth === "green" ? -4 : r.pipelineHealth === "yellow" ? 18 : 38,
     googleIntentTrendPct: r.pipelineHealth === "green" ? 14 : r.pipelineHealth === "yellow" ? 2 : -16,
   });
-  const importReadiness = computeVacationRentalImportReadiness({
-    unitCount: 1_000,
-    annualBookings: 14_000,
-    sources: [
-      {
-        name: "Escapia",
-        capabilities: ["propertyManagers", "unitInventory", "rates", "feesTaxes", "bookingRestrictions", "bookingChannels"],
-      },
-    ],
-  });
-
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-4">
@@ -439,10 +346,9 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
       </div>
 
       <AgentPerformancePreview rows={agentRows} />
+      <LeadRoiPreview rows={agentRows} />
       <MarketAuraPreview market={marketAura} />
-      <PropertyHeartbeatPreview property={property} />
-      <PropertyPortfolioPreview portfolio={propertyPortfolio} />
-      <ImportReadinessPreview readiness={importReadiness} />
+      <BrokerageSourceReadiness softwareLabel={r.softwareLabel} />
 
       <div className="mt-6 rounded-lg border border-line bg-surface px-4 py-3 text-[11px] leading-relaxed text-muted">
         Source pipe: <span className="text-ink-text">{r.softwareLabel}</span>. {r.softwareNote}
@@ -455,10 +361,10 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RealEst
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <AddOn title="Agent Performance" text="Company Dollar yield, cap pressure, pipeline, close velocity, and coaching flags." />
           <AddOn title="Market Intelligence" text="MLS velocity, DOM, price drops, rates, showing demand, and local market Aura." />
-          <AddOn title="Property Heartbeat" text="Vacation rental owner portal, maintenance pressure, guest Aura, and owner proceeds." />
+          <AddOn title="Brokerage Source Review" text="Consultant/accountant controls for splits, caps, referral fees, fixed OpEx, and pipeline assumptions." />
         </div>
-        <Link href="/demo" className="mt-4 inline-block text-sm text-copper-soft hover:text-copper">
-          Back to restaurant demo
+        <Link href="/demo/tour" className="mt-4 inline-block text-sm text-copper-soft hover:text-copper">
+          Back to business type chooser
         </Link>
       </div>
     </div>
@@ -563,7 +469,7 @@ function WhatMovesThis({ items }: { items: string[] }) {
 function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null; pending: boolean; name: string }) {
   return (
     <Tile title="Reputation" icon={<Star size={12} className="text-copper-soft" />} explainer={EXPLAIN.aura}>
-      {pending && <div className="text-sm text-muted">Looking up {name || "your brokerage"} on Google…</div>}
+      {pending && <div className="text-sm text-muted">Looking up {name || "your brokerage"} on Google...</div>}
       {!pending && aura?.found && (
         <div>
           <div className="flex items-baseline gap-2">
@@ -571,7 +477,7 @@ function ReputationTile({ aura, pending, name }: { aura: ReputationResult | null
             <Stars rating={aura.rating ?? 0} />
           </div>
           <div className="mt-1 text-sm text-muted">{aura.reviewCount.toLocaleString()} Google reviews</div>
-          {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` · ${aura.matchedAddress}` : ""}</div>}
+          {aura.matchedName && <div className="mt-2 text-[11px] text-muted/80">Matched: {aura.matchedName}{aura.matchedAddress ? ` - ${aura.matchedAddress}` : ""}</div>}
         </div>
       )}
       {!pending && aura && !aura.found && <div className="text-sm text-muted">We couldn&apos;t auto-match a Google listing. Market Aura below reads demand and intent; the full account adds review sources.</div>}
@@ -597,8 +503,8 @@ function CompanyDollarTile({ r }: { r: RealEstateEstimateResult }) {
         <span className={"tnum text-4xl " + HEALTH_TEXT[r.companyDollarHealth]}>{money(r.companyDollar)}</span>
         <span className="text-sm text-muted">/ month retained</span>
       </div>
-      <HealthSignal status={r.companyDollarHealth} label={word(r.companyDollarHealth, "Healthy", "Thin", "Low")} detail={`${pct(r.companyDollarPct)} of GCI retained · target ~25–30%`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <HealthSignal status={r.companyDollarHealth} label={word(r.companyDollarHealth, "Healthy", "Thin", "Low")} detail={`${pct(r.companyDollarPct)} of GCI retained - target ~25-30%`} className="mt-2" />
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Closed GCI" value={money(r.monthlyGci)} />
         <Stat label="Retained share" value={pct(r.companyDollarPct)} tone={r.companyDollarHealth} />
       </div>
@@ -616,7 +522,7 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">of GCI passes through</span>
       </div>
       <HealthSignal status={r.splitPressureHealth} label={word(r.splitPressureHealth, "Lean", "Watch", "Heavy")} detail={`${pct(100 - r.splitPressurePct, 0)} kept as Company Dollar`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label="Agents" value={money(r.agentPayouts)} />
         <Stat label="Franchise" value={money(r.franchiseFees)} />
         <Stat label="Referral" value={money(r.referralFees)} />
@@ -635,7 +541,7 @@ function BreakEvenTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">Company Dollar needed</span>
       </div>
       <HealthSignal status={r.breakEvenHealth} label={word(r.breakEvenHealth, "Clear cushion", "Thin cushion", "At risk")} detail={r.breakEvenCushion >= 0 ? `${money(r.breakEvenCushion)} over OpEx` : `${money(Math.abs(r.breakEvenCushion))} short of OpEx`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="GCI needed" value={r.gciNeededToBreakEven != null ? money(r.gciNeededToBreakEven) : "-"} />
         <Stat
           label={r.breakEvenCushion >= 0 ? "Cushion" : "Shortfall"}
@@ -661,7 +567,7 @@ function RunwayTile({ r }: { r: RealEstateEstimateResult }) {
       {r.cashRunwayDays != null && (
         <HealthSignal status={r.cashRunwayHealth} label={word(r.cashRunwayHealth, "Comfortable", "Watch", "Tight")} detail="60+ days is a healthy buffer" className="mt-2" />
       )}
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Operating cash" value={money(r.currentCash)} />
         <Stat label="Monthly OpEx" value={money(r.monthlyOpex)} />
       </div>
@@ -678,7 +584,7 @@ function PipelineTile({ r }: { r: RealEstateEstimateResult }) {
         <span className="text-sm text-muted">weighted Company Dollar</span>
       </div>
       <HealthSignal status={r.pipelineHealth} label={word(r.pipelineHealth, "Ahead", "Building", "Thin")} detail={`${r.pipelineMonths.toFixed(1)} mo of forward coverage`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Weighted GCI" value={money(r.weightedPipelineGci)} />
         <Stat label="Pipeline span" value={`${r.pipelineMonths.toFixed(1)} mo`} />
       </div>
@@ -741,7 +647,7 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
           {row.overallHealth === "green" ? "healthy" : row.overallHealth === "yellow" ? "watch" : "pressure"}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
         <Stat label="Company Dollar" value={money(row.companyDollar)} tone={row.companyDollarYieldPct >= 25 ? "green" : row.companyDollarYieldPct >= 18 ? "yellow" : "red"} />
         <Stat label="Retained yield" value={pct(row.companyDollarYieldPct)} />
         <Stat label="Cap remaining" value={money(row.capRemaining)} tone={row.capPressureHealth} />
@@ -752,117 +658,47 @@ function AgentRow({ row }: { row: AgentPerformanceResult }) {
   );
 }
 
-function PropertyHeartbeatPreview({ property }: { property: PropertyHeartbeatResult }) {
+function LeadRoiPreview({ rows }: { rows: AgentPerformanceResult[] }) {
+  const leadRows = rows.filter((row) => row.leadSpend > 0);
+  const totalLeadSpend = leadRows.reduce((sum, row) => sum + row.leadSpend, 0);
+  const totalExpectedCompanyDollar = leadRows.reduce((sum, row) => sum + row.expectedPipelineCompanyDollar, 0);
+  const roi = totalLeadSpend > 0 ? totalExpectedCompanyDollar / totalLeadSpend : null;
+  const health: Health = roi == null || roi >= 3 ? "green" : roi >= 1.5 ? "yellow" : "red";
+
   return (
     <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
-          <h3 className="font-display text-xl text-ink-text">Property Heartbeat</h3>
+          <h3 className="font-display text-xl text-ink-text">Lead ROI</h3>
         </div>
-        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(property.overallHealth)}>
-          {property.overallHealth === "green" ? "healthy property" : property.overallHealth === "yellow" ? "watch property" : "property pressure"}
+        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(health)}>
+          {health === "green" ? "efficient spend" : health === "yellow" ? "watch spend" : "lead drag"}
         </span>
       </div>
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-1.5 text-sm text-ink-text">
-              <Home size={14} className="text-copper-soft" /> {property.name}
-            </div>
-            <div className={"mt-0.5 text-[11px] " + HEALTH_TEXT[property.overallHealth]}>{property.note}</div>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted">
-            <Star size={12} className="text-copper-soft" /> Mini Aura {Math.round(property.guestAuraScore)}
-          </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Stat label="Lead spend" value={money(totalLeadSpend)} />
+          <Stat label="Weighted Company Dollar" value={money(totalExpectedCompanyDollar)} tone={health} />
+          <Stat label="Expected ROI" value={roi != null ? `${roi.toFixed(1)}x` : "-"} tone={health} />
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Owner proceeds" value={money(property.ownerProceeds)} tone={property.ownerProceedsHealth} />
-          <Stat label="Maintenance drag" value={pct(property.maintenancePressurePct)} tone={property.maintenanceHealth} />
-          <Stat label="Booking pace" value={pct(property.bookingPacePct, 0)} tone={property.bookingMomentumHealth} />
-          <Stat
-            label={property.reserveCushion >= 0 ? "Reserve cushion" : "Reserve gap"}
-            value={money(Math.abs(property.reserveCushion))}
-            tone={property.reserveCushion >= 0 ? "green" : "red"}
-          />
-          <Stat label="Occupancy" value={pct(property.occupancyPct, 0)} />
-          <Stat label="ADR" value={money(property.averageDailyRate)} />
-          <Stat label="RevPAR" value={money(property.revPar)} />
-          <Stat label="Open issues" value={Math.round(property.openIssues).toLocaleString()} tone={property.maintenanceHealth} />
-        </div>
-      </div>
-      <p className="mt-3 text-[11px] leading-relaxed text-muted">
-        The owner-facing version would connect PMS, reviews, owner statements, cleaning, and maintenance reports per property.
-      </p>
-    </div>
-  );
-}
-
-function PropertyPortfolioPreview({ portfolio }: { portfolio: PropertyPortfolioResult }) {
-  const actionQueue = buildPropertyActionQueue(portfolio.properties, 4);
-
-  return (
-    <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Portfolio view</div>
-          <h3 className="font-display text-xl text-ink-text">Rental Property Rollup</h3>
-        </div>
-        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(portfolio.overallHealth)}>
-          {portfolio.pressureCount > 0 ? `${portfolio.pressureCount} needs attention` : "portfolio healthy"}
-        </span>
-      </div>
-      <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <Stat label="Properties" value={portfolio.propertyCount.toLocaleString()} />
-          <Stat label="Booking revenue" value={money(portfolio.monthlyBookingRevenue)} />
-          <Stat label="Owner proceeds" value={money(portfolio.ownerProceeds)} tone={portfolio.ownerProceedsPct >= 45 ? "green" : portfolio.ownerProceedsPct >= 30 ? "yellow" : "red"} />
-          <Stat label="Maintenance drag" value={pct(portfolio.maintenancePressurePct)} tone={portfolio.maintenancePressurePct <= 20 ? "green" : portfolio.maintenancePressurePct <= 28 ? "yellow" : "red"} />
-          <Stat label="Avg Aura" value={Math.round(portfolio.averageGuestAuraScore).toLocaleString()} tone={portfolio.averageGuestAuraScore >= 75 ? "green" : portfolio.averageGuestAuraScore >= 55 ? "yellow" : "red"} />
-        </div>
-        <p className={"mt-3 text-[11px] leading-relaxed " + HEALTH_TEXT[portfolio.overallHealth]}>{portfolio.note}</p>
         <div className="mt-4 space-y-2">
-          {portfolio.properties.map((property) => (
-            <div key={property.name} className="grid grid-cols-2 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-5">
+          {leadRows.map((row) => (
+            <div key={row.name} className="grid grid-cols-1 gap-2 rounded-lg border border-line bg-surface/80 p-3 sm:grid-cols-4">
               <div>
-                <div className="text-sm text-ink-text">{property.name}</div>
-                <div className={"text-[11px] " + HEALTH_TEXT[property.overallHealth]}>
-                  {portfolio.topPressure?.name === property.name ? "highest pressure" : "property heartbeat"}
-                </div>
+                <div className="text-sm text-ink-text">{row.name}</div>
+                <div className="text-[11px] text-muted">lead source rollup</div>
               </div>
-              <Stat label="Owner proceeds" value={money(property.ownerProceeds)} tone={property.ownerProceedsHealth} />
-              <Stat label="Maintenance" value={pct(property.maintenancePressurePct)} tone={property.maintenanceHealth} />
-              <Stat label="Aura" value={Math.round(property.guestAuraScore).toLocaleString()} tone={property.guestAuraHealth} />
-              <Stat label="Booking pace" value={pct(property.bookingPacePct, 0)} tone={property.bookingMomentumHealth} />
+              <Stat label="Spend" value={money(row.leadSpend)} />
+              <Stat label="Expected CD" value={money(row.expectedPipelineCompanyDollar)} />
+              <Stat label="ROI" value={row.leadRoi != null ? `${row.leadRoi.toFixed(1)}x` : "-"} tone={row.leadRoi == null || row.leadRoi >= 3 ? "green" : row.leadRoi >= 1.5 ? "yellow" : "red"} />
             </div>
           ))}
         </div>
-        {actionQueue.length > 0 && <PropertyActionQueue items={actionQueue} />}
       </div>
-    </div>
-  );
-}
-
-function PropertyActionQueue({ items }: { items: PropertyActionItem[] }) {
-  return (
-    <div className="mt-4 rounded-lg border border-copper-dim/40 bg-copper-dim/10 p-3">
-      <div className="text-[11px] uppercase tracking-wider text-copper-soft">Operator action queue</div>
-      <div className="mt-3 space-y-2">
-        {items.map((item) => (
-          <div key={`${item.propertyName}-${item.kind}`} className="rounded-lg border border-line bg-ink/60 p-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <div className="text-sm text-ink-text">{item.title}</div>
-                <div className="text-[11px] text-muted">{item.propertyName}</div>
-              </div>
-              <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(item.priority)}>
-                {item.priority === "red" ? "urgent" : "watch"}
-              </span>
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-muted">{item.detail}</p>
-          </div>
-        ))}
-      </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-muted">
+        Live version connects CRM lead source, ad spend, closed deals, and retained Company Dollar. A consultant can adjust attribution and close probability without owning API authorization.
+      </p>
     </div>
   );
 }
@@ -889,7 +725,7 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
           </div>
           <div className="tnum text-3xl text-ink-text">{Math.round(market.marketAuraScore)}</div>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <ScoreStat label="Contract velocity" value={market.contractVelocityScore} />
           <ScoreStat label="DOM pressure" value={market.domPressureScore} />
           <ScoreStat label="Price drop pressure" value={market.priceDropPressureScore} />
@@ -905,47 +741,73 @@ function MarketAuraPreview({ market }: { market: MarketAuraResult }) {
   );
 }
 
-function ImportReadinessPreview({ readiness }: { readiness: VacationRentalImportReadinessResult }) {
+function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) {
+  const layers = [
+    {
+      label: "Accounting backbone",
+      source: "QuickBooks / Xero",
+      coverage: 70,
+      note: "Fixed OpEx, bank reconciliation, owner pay, tax reserve, and Company Dollar checks.",
+      health: "green" as Health,
+    },
+    {
+      label: "Back-office commissions",
+      source: "Brokermint / SkySlope / Dotloop",
+      coverage: 62,
+      note: "Splits, caps, referral fees, franchise fees, agent ledgers, and closed Company Dollar.",
+      health: "yellow" as Health,
+    },
+    {
+      label: "CRM pipeline",
+      source: softwareLabel,
+      coverage: 58,
+      note: "Pending deals, expected close date, source attribution, and probability-weighted Company Dollar.",
+      health: "yellow" as Health,
+    },
+    {
+      label: "Market Aura",
+      source: "MLS / RESO + Google intent",
+      coverage: 45,
+      note: "Listings, pendings, DOM, price reductions, showing demand, rates, and search activity.",
+      health: "yellow" as Health,
+    },
+  ];
+
   return (
     <div className="mt-8 rounded-xl border border-line bg-surface px-5 py-5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Pilot import preview</div>
-          <h3 className="font-display text-xl text-ink-text">Vacation Rental Import Readiness</h3>
+          <div className="text-[11px] uppercase tracking-wider text-copper-soft">Source readiness</div>
+          <h3 className="font-display text-xl text-ink-text">What Makes This Live</h3>
         </div>
-        <span className={"rounded-full border px-2 py-0.5 text-[11px] " + badgeCls(readiness.overallHealth)}>
-          {Math.round(readiness.overallCoveragePct)}% mapped
+        <span className="rounded-full border border-health-yellow/30 bg-health-yellow/10 px-2 py-0.5 text-[11px] text-health-yellow">
+          staged connection path
         </span>
       </div>
       <div className="mt-3 rounded-lg border border-line bg-ink/50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-1.5 text-sm text-ink-text">
-              <Database size={14} className="text-copper-soft" /> Escapia-like PMS foundation
+              <Database size={14} className="text-copper-soft" /> Brokerage data foundation
             </div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              {readiness.connectedSources.join(", ")} connected for {readiness.unitCount.toLocaleString()} units and{" "}
-              {readiness.annualBookings.toLocaleString()} annual bookings.
-            </div>
-          </div>
-          <div className={"tnum text-3xl " + HEALTH_TEXT[readiness.overallHealth]}>
-            {Math.round(readiness.overallCoveragePct)}%
+            <div className="mt-0.5 text-[11px] text-muted">Start with accounting and commission/back-office data; add CRM and market feeds when the core money model is trusted.</div>
           </div>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {readiness.layers.map((layer) => (
-            <div key={layer.key} className="rounded-lg border border-line bg-surface/80 p-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {layers.map((layer) => (
+            <div key={layer.label} className="rounded-lg border border-line bg-surface/80 p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="text-sm text-ink-text">{layer.label}</div>
-                <span className={"tnum text-sm " + HEALTH_TEXT[layer.health]}>{Math.round(layer.coveragePct)}%</span>
+                <span className={"tnum text-sm " + HEALTH_TEXT[layer.health]}>{layer.coverage}%</span>
               </div>
+              <div className="mt-1 text-[11px] text-copper-soft">{layer.source}</div>
               <p className="mt-2 text-[11px] leading-relaxed text-muted">{layer.note}</p>
             </div>
           ))}
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-muted">
-          Next best source: <span className="text-copper-soft">{readiness.nextBestSource}</span>. Escapia gives the operating
-          structure; bookings, owner statements, expenses, maintenance, and reviews complete the money and Aura layers.
+          Owner/operator authorizes sensitive sources. Consultants and accountants can review mappings, edit assumptions,
+          and adjust split/cap details once access is granted.
         </p>
       </div>
     </div>

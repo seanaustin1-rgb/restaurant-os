@@ -202,7 +202,7 @@ export function DemoEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">
         Enter the rough weekly numbers you already know. Ballparks are fine.
       </p>
@@ -224,7 +224,7 @@ export function DemoEstimator() {
         <Field label="Average weekly sales" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="60,000" value={f.weeklySales} onChange={upd("weeklySales")} />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Weekly labor" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="18,000" value={f.weeklyLabor} onChange={upd("weeklyLabor")} />
           </Field>
@@ -232,7 +232,7 @@ export function DemoEstimator() {
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="12,000" value={f.weeklyFood} onChange={upd("weeklyFood")} />
           </Field>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Weekly alcohol / beverage" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="5,000" value={f.weeklyAlcohol} onChange={upd("weeklyAlcohol")} />
           </Field>
@@ -244,7 +244,7 @@ export function DemoEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Monthly fixed bills" hint="Use the bills you know; leave the rest blank" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Rent / lease" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="12,000" value={f.monthlyRent} onChange={upd("monthlyRent")} />
           </Field>
@@ -279,7 +279,7 @@ export function DemoEstimator() {
           {showOptional ? "– Hide" : "+ Add covers detail"} <span className="text-muted">(optional)</span>
         </button>
         {showOptional && (
-          <fieldset className="mt-4 grid grid-cols-2 gap-4">
+          <fieldset className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Average check" prefix="$">
               <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="32" value={f.avgCheck} onChange={upd("avgCheck")} />
             </Field>
@@ -362,7 +362,7 @@ function Results({
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
           <Lock size={12} /> Deeper diagnostics outside this quick estimate
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {LOCKED_TILES.map((t) => (
             <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
               <div className="flex items-center gap-1.5 text-sm text-muted">
@@ -566,7 +566,7 @@ function PrimeCostTile({ r }: { r: EstimateResult }) {
         detail={Math.abs(r.primeCostPct - 60) < 0.5 ? "right at ≤60% target" : `${Math.abs(r.primeCostPct - 60).toFixed(1)} pts ${r.primeCostPct > 60 ? "over" : "under"} ≤60%`}
         className="mt-2"
       />
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Food + bev / week" value={money(weeklyCogs)} />
         <Stat label="Labor / week" value={money(weeklyLabor)} />
       </div>
@@ -587,7 +587,7 @@ function BreakEvenTile({ r }: { r: EstimateResult }) {
         <span className="tnum text-3xl text-ink-text">{weeklyBreakEven != null ? money(weeklyBreakEven) : "—"}</span>
         <span className="text-sm text-muted">/ week before profit starts</span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Your weekly sales" value={money(weeklySales)} />
         <Stat
           label={weeklyCushion >= 0 ? "Cushion / week" : "Shortfall / week"}
@@ -637,7 +637,7 @@ function CashFlowTile({ r }: { r: EstimateResult }) {
 
   return (
     <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
         <div>
           <div className="text-[11px] text-muted">In / week</div>
           <div className="tnum text-base text-ink-text">{money(weeklyCashIn)}</div>
@@ -664,7 +664,7 @@ function SalesMixTile({ r }: { r: EstimateResult }) {
         <div style={{ width: `${m.foodPct}%`, backgroundColor: HEALTH_HEX.green, opacity: 0.5 }} />
         <div style={{ width: `${m.bevPct}%`, backgroundColor: "#D9A35E", opacity: 0.6 }} />
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Food / kitchen" value={pct(m.foodPct, 0)} />
         <Stat label="Bar / beverage" value={pct(m.bevPct, 0)} />
       </div>
@@ -680,7 +680,7 @@ function CoversTile({ r }: { r: EstimateResult }) {
         <span className="tnum text-3xl text-ink-text">{Math.round(c.perDay).toLocaleString()}</span>
         <span className="text-sm text-muted">covers / day</span>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Stat label="Avg check" value={money(c.avgCheck)} />
         <Stat label="Covers / month" value={Math.round(c.perMonth).toLocaleString()} />
       </div>

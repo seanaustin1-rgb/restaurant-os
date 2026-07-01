@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { calculatePrimeCost, getHealthStatus, type HealthStatus } from "@/lib/profit-first/calculator";
 
@@ -90,11 +91,11 @@ const empty = (periodLabel = "", targetPct = DEFAULT_COGS_FOOD_PCT + DEFAULT_COG
   hasData: false,
 });
 
-export async function loadPrimeCost(restaurantId: string, weeks = 8): Promise<PrimeCostData> {
+export async function loadPrimeCost(restaurantId: string, weeks = 8, db: PrismaClient = prisma): Promise<PrimeCostData> {
   // Prime Cost target = the COGS (food + liquor) + Labor TAP %s the operator set.
   // Beer COGS is included in actual prime cost but has no TAP of its own yet, so
   // it is not in the target (mirrors the COGS gauge on the dashboard).
-  const restaurant = await prisma.restaurant.findUnique({
+  const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
     select: { tapSettings: { select: { cogsFoodPct: true, cogsLiquorPct: true, laborPct: true } } },
   });
@@ -103,7 +104,7 @@ export async function loadPrimeCost(restaurantId: string, weeks = 8): Promise<Pr
     : DEFAULT_COGS_FOOD_PCT + DEFAULT_COGS_LIQUOR_PCT + DEFAULT_LABOR_PCT;
 
   // Window anchors on the latest day with sales data (netSales is always present).
-  const latestRow = await prisma.dailySales.findFirst({
+  const latestRow = await db.dailySales.findFirst({
     where: { restaurantId },
     orderBy: { date: "desc" },
     select: { date: true },
@@ -116,19 +117,19 @@ export async function loadPrimeCost(restaurantId: string, weeks = 8): Promise<Pr
   windowStart.setUTCDate(windowStart.getUTCDate() - 7 * (weeks - 1));
 
   // Sales + labor by day (POS tier).
-  const salesRows = await prisma.dailySales.findMany({
+  const salesRows = await db.dailySales.findMany({
     where: { restaurantId, date: { gte: windowStart, lte: end } },
     orderBy: { date: "asc" },
     select: { date: true, netSales: true, laborCost: true },
   });
 
   // COGS by transaction (bank tier). Map each txn's category → TAP bucket.
-  const cats = await prisma.category.findMany({
+  const cats = await db.category.findMany({
     where: { restaurantId },
     select: { id: true, tapBucket: true },
   });
   const tapByCatId = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
-  const txns = await prisma.transaction.findMany({
+  const txns = await db.transaction.findMany({
     where: { restaurantId, date: { gte: windowStart, lte: end } },
     select: { date: true, categoryId: true, amount: true },
   });

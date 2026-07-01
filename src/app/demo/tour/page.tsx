@@ -56,10 +56,10 @@ const TOUR_OPTIONS = [
 export default function DemoTourSelectorPage() {
   return (
     <main className="min-h-screen bg-ink px-4 py-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto w-full max-w-6xl">
         <header className="text-center">
           <div className="text-[11px] uppercase tracking-[0.2em] text-copper-soft">OutFront Data tour</div>
-          <h1 className="mt-2 font-display text-4xl text-ink-text">What kind of business do you want to see?</h1>
+          <h1 className="mt-2 text-balance font-display text-3xl leading-tight text-ink-text sm:text-4xl">What kind of business do you want to see?</h1>
           <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-muted">
             Pick a template and we will open a fictional company with realistic sample numbers already loaded.
           </p>
@@ -72,16 +72,16 @@ export default function DemoTourSelectorPage() {
               <Link
                 key={option.type}
                 href={`/demo/tour/${option.type}`}
-                className="group rounded-lg border border-line bg-surface p-5 transition hover:border-copper-dim"
+                className="group min-w-0 rounded-lg border border-line bg-surface p-5 transition hover:border-copper-dim"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2 text-sm text-copper-soft">
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2 text-sm text-copper-soft">
                       <Icon size={16} /> {option.template.label}
                     </div>
-                    <h2 className="mt-2 font-display text-2xl text-ink-text">{option.company}</h2>
+                    <h2 className="mt-2 break-words font-display text-2xl text-ink-text">{option.company}</h2>
                   </div>
-                  <span className="rounded-md border border-copper-dim bg-copper/10 px-2 py-1 text-xs text-copper-soft group-hover:bg-copper/20">
+                  <span className="shrink-0 rounded-md border border-copper-dim bg-copper/10 px-2 py-1 text-xs text-copper-soft group-hover:bg-copper/20">
                     Tour
                   </span>
                 </div>

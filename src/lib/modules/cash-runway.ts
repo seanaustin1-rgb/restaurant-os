@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
 
 // Cash Runway module — days of cash at the current burn rate, with an early
 // warning. There is no live balance feed (statement import skips balance lines,
@@ -29,6 +30,7 @@ export interface CashRunwayData {
   series: RunwayDay[]; // history since anchor + 8-week projection
   staleDays: number | null; // days between asOf and today — honesty signal
   hasData: boolean; // any transactions at all
+  cashOxygen: CashOxygenFloor;
 }
 
 const n = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -39,6 +41,7 @@ const PROJECT_DAYS = 56; // 8 weeks
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 export async function loadCashRunway(restaurantId: string): Promise<CashRunwayData> {
+  const cashOxygen = await loadCashOxygenFloor(restaurantId);
   const [restaurant, txns] = await Promise.all([
     prisma.restaurant.findUnique({
       where: { id: restaurantId },
@@ -65,6 +68,7 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
     series: [],
     staleDays: null,
     hasData: txns.length > 0,
+    cashOxygen,
   };
 
   if (!restaurant?.cashBalanceAnchor || !restaurant.cashBalanceAnchorDate) {
@@ -144,5 +148,6 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
     series,
     staleDays,
     hasData: txns.length > 0,
+    cashOxygen,
   };
 }

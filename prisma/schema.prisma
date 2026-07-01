@@ -132,6 +132,20 @@ enum BrokerageDealStage {
   LOST
 }
 
+enum BrokerageSourceSystem {
+  CSV
+  FOLLOW_UP_BOSS
+  LONE_WOLF
+  SKYSLOPE
+  BOLDTRAIL
+  MOXIWORKS
+  DOTLOOP
+  LOFT47
+  QBO
+  GOOGLE
+  OTHER
+}
+
 // How a categorization Rule matches a transaction's merchant/description.
 //   KEYWORD   — case-insensitive substring match (operator-friendly default)
 //   REGEX     — JS regex source, matched case-insensitively (power/seed fidelity)
@@ -141,6 +155,68 @@ enum RuleMatchType {
   KEYWORD
   REGEX
   CHECK_MIN
+}
+
+enum FinancialEventType {
+  REVENUE
+  REAL_REVENUE
+  PASS_THROUGH
+  AGENT_SPLIT
+  FRANCHISE_FEE
+  COGS
+  LABOR
+  OPEX
+  FIXED_OPEX
+  TAX_LIABILITY
+  OWNER_PAY
+  PROFIT
+  DEBT_SERVICE
+  INTERNAL_TRANSFER
+  EXCLUDED
+}
+
+enum FinancialMappingStatus {
+  RAW
+  NORMALIZED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXCLUDED
+}
+
+enum LedgerAccount {
+  OPERATING_CASH
+  REVENUE
+  REAL_REVENUE
+  PASS_THROUGH_PAYABLE
+  AGENT_PAYABLE
+  COGS
+  LABOR
+  OPEX
+  FIXED_OPEX
+  TAX_VAULT
+  PROFIT
+  OWNER_PAY
+  DEBT_SERVICE
+  INTERNAL_TRANSFER
+  SUSPENSE
+}
+
+enum SyncExceptionSeverity {
+  INFO
+  WARNING
+  BLOCKING
+}
+
+enum SyncExceptionType {
+  MISSING_MAPPING
+  DUPLICATE_SOURCE_EVENT
+  STALE_SOURCE
+  UNBALANCED_LEDGER
+  INVALID_AMOUNT
+  MISSING_REQUIRED_FIELD
+  API_ERROR
+  UNKNOWN
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -164,38 +240,44 @@ model Restaurant {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
-  userRoles                   UserRestaurantRole[]
-  accessInvites               BusinessAccessInvite[]
-  posConnections              PosConnection[]
-  dailySales                  DailySales[]
-  menuItemSales               MenuItemSales[]
-  plaidConnections            PlaidConnection[]
-  transactions                Transaction[]
-  categories                  Category[]
-  rules                       Rule[]
-  tapSettings                 TapSettings?
-  virtualAccounts             VirtualAccount[]
-  bucketAllocations           BucketAllocation[]
-  bucketSweeps                BucketSweep[]
-  targetSettings              TargetSettings?
-  moduleConfigs               ModuleConfig[]
-  dataSourceConfigs           DataSourceConfig[]
-  integrationConnections      IntegrationConnection[]
-  reviewCaches                ReviewCache[]
-  socialCaches                SocialCache[]
-  vacationRentalSources       VacationRentalSource[]
-  vacationRentalImportBatches VacationRentalImportBatch[]
-  rentalProperties            RentalProperty[]
-  rentalBookings              RentalBooking[]
-  rentalOwnerStatements       RentalOwnerStatement[]
-  rentalExpenses              RentalExpense[]
-  rentalMaintenanceIssues     RentalMaintenanceIssue[]
-  rentalReviews               RentalReview[]
-  brokerageAgents             BrokerageAgent[]
-  brokerageDeals              BrokerageDeal[]
-  brokerageLeadSpend          BrokerageLeadSpend[]
-  brokerageMarketMetrics      BrokerageMarketMetric[]
-  aiActionLogs                AiActionLog[]
+  userRoles                       UserRestaurantRole[]
+  accessInvites                   BusinessAccessInvite[]
+  posConnections                  PosConnection[]
+  dailySales                      DailySales[]
+  menuItemSales                   MenuItemSales[]
+  plaidConnections                PlaidConnection[]
+  transactions                    Transaction[]
+  categories                      Category[]
+  rules                           Rule[]
+  tapSettings                     TapSettings?
+  virtualAccounts                 VirtualAccount[]
+  bucketAllocations               BucketAllocation[]
+  bucketSweeps                    BucketSweep[]
+  targetSettings                  TargetSettings?
+  moduleConfigs                   ModuleConfig[]
+  dataSourceConfigs               DataSourceConfig[]
+  integrationConnections          IntegrationConnection[]
+  reviewCaches                    ReviewCache[]
+  socialCaches                    SocialCache[]
+  vacationRentalSources           VacationRentalSource[]
+  vacationRentalImportBatches     VacationRentalImportBatch[]
+  rentalProperties                RentalProperty[]
+  rentalBookings                  RentalBooking[]
+  rentalOwnerStatements           RentalOwnerStatement[]
+  rentalExpenses                  RentalExpense[]
+  rentalMaintenanceIssues         RentalMaintenanceIssue[]
+  rentalReviews                   RentalReview[]
+  brokerageAgents                 BrokerageAgent[]
+  brokerageAgentSourceIdentities  BrokerageAgentSourceIdentity[]
+  brokerageAgentActivitySnapshots BrokerageAgentActivitySnapshot[]
+  brokerageDeals                  BrokerageDeal[]
+  brokerageLeadSpend              BrokerageLeadSpend[]
+  brokerageMarketMetrics          BrokerageMarketMetric[]
+  rawSourceEvents                 RawSourceEvent[]
+  normalizedFinancialEvents       NormalizedFinancialEvent[]
+  ledgerEntries                   LedgerEntry[]
+  syncExceptions                  SyncException[]
+  aiActionLogs                    AiActionLog[]
 }
 
 model UserRestaurantRole {
@@ -852,13 +934,62 @@ model BrokerageAgent {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  restaurant Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  deals      BrokerageDeal[]
-  leadSpend  BrokerageLeadSpend[]
+  restaurant        Restaurant                       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  deals             BrokerageDeal[]
+  leadSpend         BrokerageLeadSpend[]
+  sourceIdentities  BrokerageAgentSourceIdentity[]
+  activitySnapshots BrokerageAgentActivitySnapshot[]
 
   @@unique([restaurantId, externalAgentId])
   @@index([restaurantId])
   @@index([status])
+}
+
+model BrokerageAgentSourceIdentity {
+  id              String                @id @default(cuid())
+  restaurantId    String
+  agentId         String
+  sourceSystem    BrokerageSourceSystem
+  externalAgentId String
+  email           String?
+  rawPayload      Json?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  restaurant Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, sourceSystem, externalAgentId])
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([email])
+}
+
+model BrokerageAgentActivitySnapshot {
+  id                  String                @id @default(cuid())
+  restaurantId        String
+  agentId             String
+  sourceSystem        BrokerageSourceSystem
+  periodStart         DateTime              @db.Date
+  periodEnd           DateTime              @db.Date
+  loginCount          Int                   @default(0)
+  newLeadCount        Int                   @default(0)
+  contactCount        Int                   @default(0)
+  appointmentCount    Int                   @default(0)
+  cmaCount            Int                   @default(0)
+  activePipelineCount Int                   @default(0)
+  rawPayload          Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  restaurant Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, agentId, sourceSystem, periodStart, periodEnd])
+  @@index([restaurantId])
+  @@index([agentId])
+  @@index([sourceSystem])
+  @@index([periodStart, periodEnd])
 }
 
 model BrokerageDeal {
@@ -939,6 +1070,116 @@ model BrokerageMarketMetric {
   @@index([restaurantId])
   @@index([market])
   @@index([date])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Source quarantine → normalized financial events → clean ledger
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RawSourceEvent {
+  id               String                 @id @default(cuid())
+  restaurantId     String
+  sourceSystem     String // toast, qbo, plaid, dotloop, skyslope, escapia, etc.
+  sourceObjectType String // order, payment, expense, deal, booking, agent, etc.
+  sourceObjectId   String
+  payload          Json
+  mappingStatus    FinancialMappingStatus @default(RAW)
+  receivedAt       DateTime               @default(now())
+  processedAt      DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  restaurant       Restaurant                 @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  normalizedEvents NormalizedFinancialEvent[]
+  syncExceptions   SyncException[]
+
+  @@unique([restaurantId, sourceSystem, sourceObjectType, sourceObjectId])
+  @@index([restaurantId])
+  @@index([sourceSystem, sourceObjectType])
+  @@index([mappingStatus])
+  @@index([receivedAt])
+}
+
+model NormalizedFinancialEvent {
+  id               String                 @id @default(cuid())
+  restaurantId     String
+  rawSourceEventId String?
+  eventDate        DateTime               @db.Date
+  eventType        FinancialEventType
+  amount           Decimal                @db.Decimal(14, 2)
+  counterparty     String?
+  description      String?
+  confidence       Float                  @default(0)
+  mappingStatus    FinancialMappingStatus @default(PENDING_REVIEW)
+  approvedBy       String?
+  approvedAt       DateTime?
+  metadata         Json?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rawSourceEvent RawSourceEvent? @relation(fields: [rawSourceEventId], references: [id], onDelete: SetNull)
+  ledgerEntries  LedgerEntry[]
+  syncExceptions SyncException[]
+
+  @@index([restaurantId])
+  @@index([rawSourceEventId])
+  @@index([eventDate])
+  @@index([eventType])
+  @@index([mappingStatus])
+}
+
+model LedgerEntry {
+  id                         String    @id @default(cuid())
+  restaurantId               String
+  normalizedFinancialEventId String?
+  ledgerDate                 DateTime  @db.Date
+  ledgerAccount              LedgerAccount
+  debit                      Decimal   @default(0) @db.Decimal(14, 2)
+  credit                     Decimal   @default(0) @db.Decimal(14, 2)
+  cashEffect                 Decimal   @default(0) @db.Decimal(14, 2)
+  taxEffect                  Decimal   @default(0) @db.Decimal(14, 2)
+  allocationBucket           TapBucket?
+  memo                       String?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([normalizedFinancialEventId])
+  @@index([ledgerDate])
+  @@index([ledgerAccount])
+  @@index([allocationBucket])
+}
+
+model SyncException {
+  id                         String                @id @default(cuid())
+  restaurantId               String
+  rawSourceEventId           String?
+  normalizedFinancialEventId String?
+  sourceSystem               String
+  severity                   SyncExceptionSeverity @default(WARNING)
+  issueType                  SyncExceptionType
+  message                    String
+  detail                     Json?
+  resolvedAt                 DateTime?
+  resolvedBy                 String?
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
+
+  restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  rawSourceEvent           RawSourceEvent?           @relation(fields: [rawSourceEventId], references: [id], onDelete: SetNull)
+  normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([rawSourceEventId])
+  @@index([normalizedFinancialEventId])
+  @@index([sourceSystem])
+  @@index([severity])
+  @@index([issueType])
+  @@index([resolvedAt])
 }
 
 model ReviewCache {

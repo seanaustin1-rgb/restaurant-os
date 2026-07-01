@@ -100,8 +100,10 @@ const num = (s: string): number => {
 };
 
 const optNum = (s: string): number | null => {
-  const v = num(s);
-  return v > 0 ? v : null;
+  const t = s.trim();
+  if (!t) return null;
+  const v = parseFloat(t.replace(/[^0-9.\-]/g, ""));
+  return Number.isFinite(v) ? v : null;
 };
 
 function buildInputs(f: FormState): RetailEstimateInputs {
@@ -157,7 +159,7 @@ export function RetailEstimator() {
     const inp = buildInputs(seeded);
     if (inp.weeklySales > 0) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "retail")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -169,7 +171,7 @@ export function RetailEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market)));
+    if (next.name) startTransition(async () => setAura(await lookupReputation(next.name, next.market, "retail")));
   }
 
   if (view === "results" && result) {
@@ -177,7 +179,7 @@ export function RetailEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">
         Enter the rough retail numbers you already know. The POS choice tells the demo what data pipe would light this up later.
       </p>
@@ -213,7 +215,7 @@ export function RetailEstimator() {
         <Field label="Average weekly sales" required prefix="$">
           <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="52,000" value={f.weeklySales} onChange={upd("weeklySales")} />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Weekly inventory purchases / COGS" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="24,000" value={f.weeklyInventoryPurchases} onChange={upd("weeklyInventoryPurchases")} />
           </Field>
@@ -231,7 +233,7 @@ export function RetailEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Monthly fixed bills" hint="Use the bills you know; leave the rest blank" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Rent / lease" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="8,000" value={f.monthlyRent} onChange={upd("monthlyRent")} />
           </Field>
@@ -255,7 +257,7 @@ export function RetailEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="4" title="Inventory and channel detail" hint="Optional, used to explain the next data connection" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Current inventory value" prefix="$">
             <input className={inputCls + " pl-7"} inputMode="numeric" placeholder="180,000" value={f.currentInventoryValue} onChange={upd("currentInventoryValue")} />
           </Field>
@@ -328,7 +330,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
             detail={`${Math.abs(r.grossMarginPct - 45).toFixed(0)} pts ${r.grossMarginPct >= 45 ? "above" : "below"} ~45% target`}
             className="mt-2"
           />
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat label="Inventory / COGS" value={money(r.monthlyInventoryPurchases)} />
             <Stat label="Returns / markdowns" value={money(r.monthlyReturnsMarkdowns)} />
           </div>
@@ -339,7 +341,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
             <span className="tnum text-4xl text-ink-text">{money(r.weeklyBreakEven)}</span>
             <span className="text-sm text-muted">/ week before profit starts</span>
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat label="Your weekly sales" value={money(r.weeklySales)} />
             <Stat
               label={r.dollarsAboveBreakEven >= 0 ? "Monthly cushion" : "Monthly shortfall"}
@@ -364,7 +366,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
               className="mt-2"
             />
           )}
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Stat label="Payroll load" value={pct(r.payrollPct)} tone={r.payrollHealth} />
             <Stat label="Online share" value={r.ecommerceSharePct != null ? pct(r.ecommerceSharePct, 0) : "-"} />
           </div>
@@ -394,7 +396,7 @@ function Results({ f, r, aura, auraPending, onEdit }: { f: FormState; r: RetailE
 
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {RETAIL_LOCKED_TILES.map((t) => (
             <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
               <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>

@@ -4,7 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
-import { TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
+import { keywordMatchesText, TAP_BUCKET_TO_LEGACY } from "@/lib/categorization/rules";
+import { signatureOf } from "@/lib/categorization/suggestions";
 
 // User-created rules win over seeded vendor rules (10+) but run after the
 // payroll CHECK_MIN (0) — same band the rules screen uses.
@@ -62,6 +63,7 @@ export async function confirmVendorMappings(mappings: VendorMapping[]): Promise<
     const signature = (m.signature ?? "").trim();
     const categoryId = m.categoryId;
     if (!signature || !categoryId) continue;
+    if (!signatureOf(signature, null)) continue;
     const tap = tapById.get(categoryId);
     if (!tap) continue; // category not in this restaurant — skip silently
     vendorsMapped++;
@@ -95,7 +97,7 @@ export async function confirmVendorMappings(mappings: VendorMapping[]): Promise<
     // 2) Recategorize the vendor's existing transactions (categoryId is what the
     //    dashboard reads; also dual-write the coarse legacy bucket + mark manual).
     const legacy = TAP_BUCKET_TO_LEGACY[tap];
-    const res = await prisma.transaction.updateMany({
+    const candidates = await prisma.transaction.findMany({
       where: {
         restaurantId,
         OR: [
@@ -103,9 +105,18 @@ export async function confirmVendorMappings(mappings: VendorMapping[]): Promise<
           { description: { contains: signature, mode: "insensitive" } },
         ],
       },
-      data: { categoryId, bucket: legacy, isManualOverride: true },
+      select: { id: true, merchantName: true, description: true },
     });
-    txnsRecategorized += res.count;
+    const matchedIds = candidates
+      .filter((t) => keywordMatchesText(signature, t.merchantName, t.description))
+      .map((t) => t.id);
+    if (matchedIds.length > 0) {
+      const res = await prisma.transaction.updateMany({
+        where: { restaurantId, id: { in: matchedIds } },
+        data: { categoryId, bucket: legacy, isManualOverride: true },
+      });
+      txnsRecategorized += res.count;
+    }
   }
 
   // Numbers move on the dashboard and every category-driven view.

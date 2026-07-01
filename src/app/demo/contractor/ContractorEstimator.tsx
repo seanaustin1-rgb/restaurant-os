@@ -117,7 +117,7 @@ export function ContractorEstimator() {
     const inp = buildInputs(seeded);
     if (inp.monthlyRevenue > 0 && inp.materials >= 0 && inp.fieldLabor >= 0 && (inp.materials > 0 || inp.fieldLabor > 0)) {
       setView("results");
-      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+      if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "contractor")));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -131,7 +131,7 @@ export function ContractorEstimator() {
     setError(null);
     setView("results");
     setAura(null);
-    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market)));
+    if (inp.name) startTransition(async () => setAura(await lookupReputation(inp.name, inp.market, "contractor")));
   }
 
   if (view === "results" && result) {
@@ -139,12 +139,12 @@ export function ContractorEstimator() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-xl">
+    <form onSubmit={onSubmit} className="mx-auto w-full max-w-xl">
       <p className="text-sm text-muted">Enter a typical month. Revenue plus your job costs is enough for the first read on margin.</p>
 
       <fieldset className="mt-6 space-y-4">
         <Legend n="1" title="Job economics" hint="Revenue and the three job-cost levers" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Company name"><input className={inputCls} placeholder="Iron Ridge Field Services" value={f.name} onChange={upd("name")} /></Field>
           <Field label="Market"><input className={inputCls} placeholder="York, PA" value={f.market} onChange={upd("market")} /></Field>
         </div>
@@ -160,7 +160,7 @@ export function ContractorEstimator() {
           </select>
         </Field>
         <Field label="Monthly revenue (billed work)" required prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="200,000" value={f.revenue} onChange={upd("revenue")} /></Field>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Materials / mo" required prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="70,000" value={f.materials} onChange={upd("materials")} /></Field>
           <Field label="Field labor / mo" required prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="64,000" value={f.labor} onChange={upd("labor")} /></Field>
           <Field label="Subs / mo" prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="12,000" value={f.subs} onChange={upd("subs")} /></Field>
@@ -169,7 +169,7 @@ export function ContractorEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="2" title="Overhead & pipeline" hint="What overhead must be recovered, and how much work is booked" />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="Monthly overhead" prefix="$" hint="Office, trucks, insurance, admin"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="30,000" value={f.overhead} onChange={upd("overhead")} /></Field>
           <Field label="Signed backlog" prefix="$" hint="Awarded, not yet built"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="412,000" value={f.backlog} onChange={upd("backlog")} /></Field>
           <Field label="Crew capacity / mo" prefix="$" hint="Work you can produce"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="220,000" value={f.capacity} onChange={upd("capacity")} /></Field>
@@ -178,7 +178,7 @@ export function ContractorEstimator() {
 
       <fieldset className="mt-8 space-y-4">
         <Legend n="3" title="Getting paid" hint="Open receivables drive the cash gap" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Open receivables (AR)" prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="120,000" value={f.receivables} onChange={upd("receivables")} /></Field>
           <Field label="…of that, past 30 days" prefix="$"><input className={inputCls + " pl-7"} inputMode="numeric" placeholder="18,200" value={f.receivablesOver30} onChange={upd("receivablesOver30")} /></Field>
         </div>
@@ -231,7 +231,7 @@ function Results({ f, r, aura, auraPending, onEdit }: {
 
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted"><Lock size={12} /> Deeper diagnostics outside this quick estimate</div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {CONTRACTOR_LOCKED_TILES.map((t) => (
             <div key={t.key} className="rounded-lg border border-line bg-surface/40 px-3 py-3 opacity-60">
               <div className="flex items-center gap-1.5 text-sm text-muted"><Lock size={12} /> {t.label}</div>
@@ -352,7 +352,7 @@ function JobMarginTile({ r }: { r: ContractorEstimateResult }) {
         <span className="text-sm text-muted">after job costs</span>
       </div>
       <HealthSignal status={r.jobMarginHealth} label={word(r.jobMarginHealth, "Healthy", "Thin", "Low")} detail={`${money(r.monthlyRevenue - r.jobCost)}/mo to overhead · typical 30–45%`} className="mt-2" />
-      <div className="mt-3 grid grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label="Materials" value={pct(r.materialsPct, 0)} />
         <Stat label="Labor" value={pct(r.laborPct, 0)} />
         <Stat label="Subs" value={pct(r.subsPct, 0)} />
@@ -468,7 +468,7 @@ function ProfitFirstTile({ r }: { r: ContractorEstimateResult }) {
 function CashFlowTile({ r }: { r: ContractorEstimateResult }) {
   return (
     <Tile title="Cash flow (rough)" icon={<Wallet size={12} className="text-copper-soft" />} badge={YOURS} explainer={EXPLAIN.cash}>
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
         <div><div className="text-[11px] text-muted">In / mo</div><div className="tnum text-base text-ink-text">{money(r.cashIn)}</div></div>
         <div><div className="text-[11px] text-muted">Out / mo</div><div className="tnum text-base text-ink-text">{money(r.cashOut)}</div></div>
         <div><div className="text-[11px] text-muted">Left / mo</div><div className={"tnum text-base " + (r.cashLeft >= 0 ? "text-health-green" : "text-health-red")}>{money(r.cashLeft)}</div></div>

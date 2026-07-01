@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { loadCashOxygenFloor } from "@/lib/modules/cash-oxygen";
 import { calculateTargets, getHealthStatus, type HealthStatus, type Taps } from "@/lib/profit-first/calculator";
 
 const n = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -56,6 +57,8 @@ export interface CashSafety {
   hasAnchor: boolean;
   currentCash: number | null;
   minimumOperatingCash: number | null;
+  oxygenDays: number | null;
+  avgDailyFixedBurn: number | null;
   pilotSetAside: number;
   cushionAfterPilot: number | null;
   ready: boolean;
@@ -88,6 +91,8 @@ export interface GoLiveCoachInput {
   spendByTap: Record<string, number>;
   currentCash?: number | null;
   minimumOperatingCash?: number | null;
+  oxygenDays?: number | null;
+  avgDailyFixedBurn?: number | null;
   assumptions?: Partial<GoLiveAssumptions>;
 }
 
@@ -243,12 +248,20 @@ function normalizeAssumptions(input?: Partial<GoLiveAssumptions>): GoLiveAssumpt
   };
 }
 
-function assessCashSafety(currentCash: number | null | undefined, minimumOperatingCash: number | null | undefined, pilotSetAside: number): CashSafety {
+function assessCashSafety(
+  currentCash: number | null | undefined,
+  minimumOperatingCash: number | null | undefined,
+  pilotSetAside: number,
+  oxygenDays?: number | null,
+  avgDailyFixedBurn?: number | null,
+): CashSafety {
   if (currentCash == null || minimumOperatingCash == null) {
     return {
       hasAnchor: false,
       currentCash: currentCash ?? null,
       minimumOperatingCash: minimumOperatingCash ?? null,
+      oxygenDays: oxygenDays ?? null,
+      avgDailyFixedBurn: avgDailyFixedBurn ?? null,
       pilotSetAside: r2(pilotSetAside),
       cushionAfterPilot: null,
       ready: false,
@@ -261,12 +274,16 @@ function assessCashSafety(currentCash: number | null | undefined, minimumOperati
     hasAnchor: true,
     currentCash: r2(currentCash),
     minimumOperatingCash: r2(minimumOperatingCash),
+    oxygenDays: oxygenDays == null ? null : r2(oxygenDays),
+    avgDailyFixedBurn: avgDailyFixedBurn == null ? null : r2(avgDailyFixedBurn),
     pilotSetAside: r2(pilotSetAside),
     cushionAfterPilot: r2(cushionAfterPilot),
     ready: cushionAfterPilot >= 0,
     detail:
       cushionAfterPilot >= 0
-        ? "Estimated cash can cover the operating floor after the virtual pilot set-aside."
+        ? oxygenDays != null
+          ? `Estimated cash has about ${Math.floor(oxygenDays)} days of Cash Oxygen and can cover the operating floor after the virtual pilot set-aside.`
+          : "Estimated cash can cover the operating floor after the virtual pilot set-aside."
         : "The pilot would dip below the operating cash floor; stay virtual or reduce the pilot.",
   };
 }
@@ -422,7 +439,13 @@ export function assessGoLiveReadiness(input: GoLiveCoachInput): GoLiveCoachData 
   const pilotSetAside = pilotPlan
     .filter((p) => p.mode === "pilot_candidate")
     .reduce((sum, p) => sum + (p.amount ?? 0), 0);
-  const cashSafety = assessCashSafety(input.currentCash, input.minimumOperatingCash, pilotSetAside);
+  const cashSafety = assessCashSafety(
+    input.currentCash,
+    input.minimumOperatingCash,
+    pilotSetAside,
+    input.oxygenDays,
+    input.avgDailyFixedBurn,
+  );
   checks.push({
     key: "cash-floor",
     label: "Cash anchor",
@@ -463,6 +486,7 @@ function settingsNumber(settings: unknown, key: string): number | null {
 export async function loadGoLiveCoach(
   restaurantId: string,
   db: PrismaClient = prisma,
+  cashOxygenOverride?: Awaited<ReturnType<typeof loadCashOxygenFloor>>,
 ): Promise<GoLiveCoachData> {
   const restaurant = await db.restaurant.findUnique({
     where: { id: restaurantId },
@@ -522,14 +546,8 @@ export async function loadGoLiveCoach(
     spendByTap[tap] = (spendByTap[tap] ?? 0) + n(t.amount);
   }
 
-  let currentCash: number | null = null;
-  if (restaurant?.cashBalanceAnchor && restaurant.cashBalanceAnchorDate) {
-    const sinceAnchor = await db.transaction.findMany({
-      where: { restaurantId, date: { gt: restaurant.cashBalanceAnchorDate } },
-      select: { amount: true },
-    });
-    currentCash = n(restaurant.cashBalanceAnchor) + sinceAnchor.reduce((sum, t) => sum + -n(t.amount), 0);
-  }
+  const cashOxygen = cashOxygenOverride ?? (await loadCashOxygenFloor(restaurantId, db));
+  const currentCash = cashOxygen.currentCash;
 
   const avgDailyOutflow = sales.length > 0 ? periodOutflow / Math.max(sales.length, 1) : 0;
   const cfg = await db.moduleConfig.findUnique({
@@ -539,7 +557,7 @@ export async function loadGoLiveCoach(
   const manualFloor = settingsNumber(cfg?.settings, "operatingCashFloor");
   const pilotProfitPct = settingsNumber(cfg?.settings, "pilotProfitPct");
   const investorReturnPct = settingsNumber(cfg?.settings, "investorReturnPct");
-  const minimumOperatingCash = manualFloor ?? Math.max(5000, avgDailyOutflow * 7);
+  const minimumOperatingCash = manualFloor ?? cashOxygen.goLiveFloorCash ?? Math.max(5000, avgDailyOutflow * 7);
 
   return assessGoLiveReadiness({
     periodLabel,
@@ -553,6 +571,8 @@ export async function loadGoLiveCoach(
     spendByTap,
     currentCash,
     minimumOperatingCash,
+    oxygenDays: cashOxygen.oxygenDays,
+    avgDailyFixedBurn: cashOxygen.avgDailyFixedBurn,
     assumptions: {
       operatingCashFloor: manualFloor,
       pilotProfitPct: pilotProfitPct ?? DEFAULT_PILOT_PROFIT_PCT,

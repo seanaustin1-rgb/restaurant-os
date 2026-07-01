@@ -1,11 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Landmark, PlugZap, ShieldCheck, Unplug } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Database, Landmark, PlugZap, ShieldCheck, Unplug } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
+import {
+  financialSyncHealthStatus,
+  loadFinancialSyncHealth,
+  type FinancialSyncHealth,
+} from "@/lib/financial-ledger/sync-health";
 import { SourceMapPlanner } from "@/components/sources/SourceMapPlanner";
 import { GoogleBusinessProfileLocationPicker } from "@/components/sources/GoogleBusinessProfileLocationPicker";
 import {
@@ -31,6 +36,84 @@ function googleLocationsFromMetadata(metadata: unknown): GoogleBusinessProfileLo
   });
 }
 
+function FinancialDataSafetyPanel({ health }: { health: FinancialSyncHealth }) {
+  const status = financialSyncHealthStatus(health);
+  const toneClass =
+    status.tone === "green"
+      ? "border-health-green/40 bg-health-green/5 text-health-green"
+      : status.tone === "red"
+      ? "border-health-red/40 bg-health-red/5 text-health-red"
+      : status.tone === "yellow"
+      ? "border-health-yellow/40 bg-health-yellow/5 text-health-yellow"
+      : "border-line bg-ink/30 text-muted";
+  const StatusIcon = status.tone === "green" ? CheckCircle2 : status.tone === "muted" ? Database : AlertTriangle;
+
+  return (
+    <section className="rounded-lg border border-line bg-surface p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          <Database size={18} className="mt-0.5 text-copper-soft" />
+          <div>
+            <h2 className="text-sm font-medium text-ink-text">Financial data safety</h2>
+            <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">
+              Imported records are quarantined first, then mapped into reviewed financial events before they can feed the
+              clean ledger used by Cash Oxygen, Tax Vault, Go-Live Coach, and investor reads.
+            </p>
+          </div>
+        </div>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${toneClass}`}>
+          <StatusIcon size={13} /> {status.label}
+        </span>
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-muted">{status.detail}</p>
+
+      <div className="mt-3">
+        <Link
+          href="/settings/sources/review"
+          className="inline-flex items-center justify-center rounded-md border border-copper-dim px-3 py-2 text-xs text-copper-soft hover:border-copper"
+        >
+          Review mappings
+        </Link>
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Raw imports</p>
+          <p className="mt-1 text-lg text-ink-text">{health.rawEventCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Pending review</p>
+          <p className="mt-1 text-lg text-ink-text">{health.pendingMappingCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Ledger entries</p>
+          <p className="mt-1 text-lg text-ink-text">{health.ledgerEntryCount.toLocaleString()}</p>
+        </div>
+        <div className="rounded-md border border-line bg-ink/40 px-3 py-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted">Open issues</p>
+          <p className="mt-1 text-lg text-ink-text">{health.unresolvedExceptionCount.toLocaleString()}</p>
+        </div>
+      </div>
+
+      {health.recentIssues.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {health.recentIssues.map((issue) => (
+            <div key={issue.id} className="rounded-md border border-health-yellow/30 bg-health-yellow/5 px-3 py-2">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-medium text-health-yellow">{issue.severity}</span>
+                <span className="text-muted">{issue.sourceSystem}</span>
+                <span className="text-muted">{issue.issueType}</span>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-ink-text">{issue.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default async function SourceMapPage({
   searchParams,
 }: {
@@ -49,7 +132,11 @@ export default async function SourceMapPage({
   const template = industryTemplateFor(role.restaurant.businessType);
   const sourceMap = sourceMapFor(role.restaurant.businessType);
   const configs = await loadSourceConfigSnapshots(role.restaurantId, prisma);
+  const syncHealth = await loadFinancialSyncHealth(role.restaurantId, prisma);
   const statusByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config.status]));
+  const configByKey = new Map(configs.map((config) => [keyOf(config.category, config.providerName), config]));
+  const sourceConnectedBank = configByKey.get(keyOf("cash", "Plaid"))?.status === "CONNECTED";
+  const sourceConnectedGoogle = configByKey.get(keyOf("aura", "Google Business Profile"))?.status === "CONNECTED";
   const ownerApprovalSources = sourceMap.groups.flatMap((group) =>
     group.options
       .filter((option) => {
@@ -99,12 +186,18 @@ export default async function SourceMapPage({
           <h1 className="mt-1 font-display text-2xl text-copper-soft">Source Onboarding</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
             {role.restaurant.name} is using the {template.label.toLowerCase()} template. Pick the systems the business
-            uses; the app handles OAuth where possible and support/admin setup where a provider still requires technical credentials.
+            uses. OutFront will guide the owner through secure connections where available and keep support-assisted
+            setup clearly labeled.
           </p>
         </div>
-        <span className="rounded-full border border-copper-dim px-3 py-1 text-xs text-copper-soft">
-          {role.role.toLowerCase()} view
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-copper-dim px-3 py-1 text-xs text-copper-soft">
+            {role.role.toLowerCase()} view
+          </span>
+          <Link href="/onboarding" className="rounded-md border border-line px-3 py-1.5 text-xs text-ink-text hover:border-copper-dim">
+            Back to setup steps
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-lg border border-copper-dim/40 bg-surface p-4">
@@ -123,12 +216,14 @@ export default async function SourceMapPage({
           <div>
             <h2 className="text-sm font-medium text-ink-text">Customer promise</h2>
             <p className="mt-1 text-sm leading-relaxed text-muted">
-              Customers should not hunt for API keys, account IDs, or location IDs. They connect accounts, confirm the
-              business we found, and support handles anything that still requires provider credentials.
+              The owner should only need to choose the systems they use, approve secure connections, and confirm the
+              business or location when prompted. Anything more technical belongs in a support-assisted setup path.
             </p>
           </div>
         </div>
       </section>
+
+      <FinancialDataSafetyPanel health={syncHealth} />
 
       <section className="rounded-lg border border-line bg-surface p-4">
         <p className="text-[11px] uppercase tracking-wider text-muted">Device guidance</p>
@@ -193,9 +288,13 @@ export default async function SourceMapPage({
                 <p className="mt-0.5 text-xs text-muted">
                   {bankConnectionCount > 0
                     ? `${bankConnectionCount} active bank connection${bankConnectionCount === 1 ? "" : "s"}.`
+                    : sourceConnectedBank
+                    ? "Demo/import bank feed is connected. No live bank authorization is stored."
                     : "No active bank authorization yet."}
                 </p>
-                {role.role === "OPERATOR" ? (
+                {bankConnectionCount === 0 && sourceConnectedBank ? (
+                  <p className="mt-2 text-xs text-muted">Use live bank authorization only when replacing the demo feed with a real client account.</p>
+                ) : role.role === "OPERATOR" ? (
                   <Link href="/connections" className="mt-2 inline-flex text-xs text-copper-soft hover:text-copper">
                     Manage bank connections
                   </Link>
@@ -214,9 +313,13 @@ export default async function SourceMapPage({
                 <p className="mt-0.5 text-xs text-muted">
                   {activeGoogleConnection
                     ? `${activeGoogleConnection.displayName ?? "Google Business Profile"} is authorized.`
+                    : sourceConnectedGoogle
+                    ? "Demo/import Aura feed is connected. No live Google authorization is stored."
                     : "No active Google authorization yet."}
                 </p>
-                {activeGoogleConnection && role.role === "OPERATOR" ? (
+                {!activeGoogleConnection && sourceConnectedGoogle ? (
+                  <p className="mt-2 text-xs text-muted">Use Google authorization only when replacing the demo feed with a real client location.</p>
+                ) : activeGoogleConnection && role.role === "OPERATOR" ? (
                   <div className="mt-2">
                     <DisconnectGoogleBusinessProfileButton
                       connectionId={activeGoogleConnection.id}
@@ -271,6 +374,23 @@ export default async function SourceMapPage({
       )}
 
       <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} actorRole={role.role} />
+
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-4">
+        <div>
+          <h2 className="text-sm font-medium text-ink-text">Finished planning sources?</h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted">
+            Return to the setup steps when the source plan looks right. You can come back and adjust it later.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/onboarding" className="rounded-md border border-line px-3 py-2 text-sm text-ink-text hover:border-copper-dim">
+            Back to setup steps
+          </Link>
+          <Link href="/dashboard" className="rounded-md border border-copper-dim px-3 py-2 text-sm text-copper-soft hover:border-copper">
+            View dashboard
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

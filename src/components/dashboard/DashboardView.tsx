@@ -61,8 +61,8 @@ function noDataMessage(type: BusinessType): { text: string; href: string; cta: s
   if (type === "REAL_ESTATE_BROKERAGE") {
     return {
       text: "No brokerage data imported yet.",
-      href: "/reports/rental-pilot",
-      cta: "Review pilot reports",
+      href: "/import/brokerage",
+      cta: "Import brokerage data",
     };
   }
   if (type === "CONTRACTOR") {
@@ -277,7 +277,7 @@ export function DashboardView({
         ) : (
           <IndustryHeartbeatPreview data={displayActive} />
         )}
-        <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} />
+        <GoLiveCoachCard data={displayActive.goLiveCoach} demoMode={demoMode} businessType={displayActive.businessType} />
         {!isInvestor && <ProfitFirstExplainer />}
 
         {/* TAP gauges and modules are hidden from the investor (selected metrics only). */}
@@ -301,7 +301,7 @@ function IndustryHeartbeatPreview({ data }: { data: DashboardData }) {
           <PreviewCard icon={<Building2 size={15} />} title="Company Dollar" detail="Retained Company Dollar is the operating base. Practical target: about 25-30%+ of GCI after splits, referrals, and fees." />
           <PreviewCard icon={<Users size={15} />} title="Agent Performance" detail="Company Dollar yield, cap pressure, pipeline, and lead ROI by agent." />
           <PreviewCard icon={<Search size={15} />} title="Market Intelligence" detail="MLS velocity, DOM, price drops, rates, showing demand, and intent." />
-          <PreviewCard icon={<Home size={15} />} title="Property Heartbeat" detail="Owner proceeds, maintenance drag, booking pace, and guest Aura add-on." />
+          <PreviewCard icon={<GaugeIcon />} title="Lead ROI" detail="Lead spend compared with expected retained Company Dollar, by agent and source." />
         </div>
       </section>
     );

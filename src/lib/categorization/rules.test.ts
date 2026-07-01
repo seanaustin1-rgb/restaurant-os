@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { compileRule, sortRules, applyRules, type RuleInput } from "./rules";
+import { applyRules, compileRule, keywordMatchesText, sortRules, type RuleInput } from "./rules";
 import { signatureOf } from "./suggestions";
+import { categorizeTransaction } from "./vendor-map";
 
 // Helper: build a single-KEYWORD engine and ask what it matches.
 function keywordEngine(pattern: string, categoryId = "cat") {
@@ -44,6 +45,12 @@ describe("KEYWORD rules match at a word start (not arbitrary substrings)", () =>
   it("is case-insensitive", () => {
     expect(matches("ace hardware", "ACE HARDWARE")).toBe(true);
   });
+
+  it("uses the same safe keyword behavior for setup-time recategorization", () => {
+    expect(keywordMatchesText("ACE", null, "ACE HARDWARE #42")).toBe(true);
+    expect(keywordMatchesText("ACE", null, "SPACE NEEDLE LLC")).toBe(false);
+    expect(keywordMatchesText("OVER", null, "DISCOVERY CHANNEL")).toBe(false);
+  });
 });
 
 describe("signatureOf rejects weak (non-vendor) keywords", () => {
@@ -66,5 +73,19 @@ describe("signatureOf rejects weak (non-vendor) keywords", () => {
   it("returns null when there is no distinctive word", () => {
     expect(signatureOf(null, "CHECK 10451")).toBeNull();
     expect(signatureOf(null, "ACH DEBIT")).toBeNull();
+  });
+});
+
+describe("operator vendor patterns", () => {
+  it("maps PA Wine and Spirits to liquor COGS", () => {
+    expect(categorizeTransaction("Wine And Spirits", "DEBIT CARD PURCHASE WINE AND SPIRITS 6717 YORK PA").bucket).toBe(
+      "COGS_LIQUOR",
+    );
+  });
+
+  it("maps PA sales-tax withdrawals to sales tax", () => {
+    expect(categorizeTransaction("Commwlthofpapath Pastsaletx Txp", "COMMWLTHOFPAPATH/PASTSALETX TXP SLS").bucket).toBe(
+      "TAX_SALES",
+    );
   });
 });

@@ -10,12 +10,19 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Wallet, Flame, CalendarClock, Pencil } from "lucide-react";
+import { Wallet, Flame, CalendarClock, Pencil, ShieldCheck } from "lucide-react";
 import type { CashRunwayData } from "@/lib/modules/cash-runway";
 import { setCashAnchor } from "@/app/modules/cash-runway/actions";
 import { money, count } from "@/lib/format";
 
 const STATUS_COLOR = { green: "#5FA777", yellow: "#D9A35E", red: "#C8643A", unknown: "#8A8F89" };
+
+const CASH_OXYGEN_SOURCE_LABEL = {
+  clean_ledger: "Ledger-backed",
+  anchor_plus_transactions: "Bank estimate",
+  live_balance: "Live balance",
+  none: "Needs setup",
+};
 
 function AnchorForm({
   initialBalance,
@@ -169,6 +176,61 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
             <div className="mt-0.5 text-[11px] text-muted">cash isn&apos;t shrinking at the current rate</div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-lg border border-line bg-surface px-4 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted">
+              <ShieldCheck size={12} style={{ color: STATUS_COLOR[data.cashOxygen.status] }} /> Cash Oxygen Floor
+            </span>
+            <div className="tnum mt-1 text-3xl" style={{ color: STATUS_COLOR[data.cashOxygen.status] }}>
+              {data.cashOxygen.oxygenDays != null ? `${count(Math.floor(data.cashOxygen.oxygenDays))} days` : "unknown"}
+            </div>
+            <div className="mt-1 inline-flex rounded-full border border-line px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted">
+              {CASH_OXYGEN_SOURCE_LABEL[data.cashOxygen.source]}
+            </div>
+          </div>
+          <div className="min-w-[220px] rounded-md border border-line bg-ink/50 px-3 py-2 text-xs text-muted">
+            <div className="flex justify-between gap-4">
+              <span>Liquid cash</span>
+              <span className="tnum text-ink-text">{data.cashOxygen.currentCash != null ? money(data.cashOxygen.currentCash) : "Set anchor"}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-4">
+              <span>90d fixed burn/day</span>
+              <span className="tnum text-ink-text">{data.cashOxygen.avgDailyFixedBurn != null ? money(data.cashOxygen.avgDailyFixedBurn) : "Map fixed bills"}</span>
+            </div>
+            <div className="mt-1 flex justify-between gap-4">
+              <span>Go-live floor</span>
+              <span className="tnum text-ink-text">{data.cashOxygen.goLiveFloorCash != null ? money(data.cashOxygen.goLiveFloorCash) : "Unknown"}</span>
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted">
+          Cash Oxygen divides estimated liquid cash by the rolling {data.cashOxygen.windowDays}-day average of fixed
+          operating expenses. Reviewed clean-ledger entries are used first; mapped bank/QBO-style transactions remain the
+          fallback until imports are reviewed.
+        </p>
+        {data.cashOxygen.pendingFixedEventCount > 0 ? (
+          <p className="mt-2 rounded-md border border-health-yellow/30 bg-health-yellow/10 px-3 py-2 text-[11px] leading-relaxed text-health-yellow">
+            {count(data.cashOxygen.pendingFixedEventCount)} fixed-cost item{data.cashOxygen.pendingFixedEventCount === 1 ? " is" : "s are"} pending review, so Cash Oxygen may tighten or improve once approved.
+          </p>
+        ) : null}
+        {data.cashOxygen.mappedCategories.length > 0 ? (
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {data.cashOxygen.mappedCategories.slice(0, 6).map((line) => (
+              <div key={line.categoryId ?? line.categoryName} className="rounded-md border border-line bg-ink/40 px-3 py-2">
+                <div className="truncate text-[11px] text-muted">{line.categoryName}</div>
+                <div className="tnum text-sm text-ink-text">{money(line.amount)}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 rounded-md border border-dashed border-line px-3 py-2 text-[11px] text-muted">
+            No fixed operating expense categories were found in the last {data.cashOxygen.windowDays} days. Map rent,
+            utilities, insurance, software, debt, and other recurring overhead to unlock this floor.
+          </p>
+        )}
       </div>
 
       {/* Balance history + projection */}

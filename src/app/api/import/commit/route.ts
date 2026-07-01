@@ -10,6 +10,7 @@ import {
 } from "@/lib/categorization/categories";
 import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
 import type { CandidateTxn } from "@/lib/import/parse-statement";
+import { mirrorBankTransactionToLedger } from "@/lib/financial-ledger/bank-transactions";
 
 // Writes confirmed statement transactions. Deduped via a synthetic plaidTxnId
 // (stmt-<restaurant>-<hash>) so re-importing the same statement is idempotent.
@@ -66,6 +67,48 @@ export async function POST(req: Request) {
     };
   });
 
-  const result = await prisma.transaction.createMany({ data, skipDuplicates: true });
+  const result = await prisma.$transaction(async (tx) => {
+    const created = await tx.transaction.createMany({ data, skipDuplicates: true });
+    const imported = await tx.transaction.findMany({
+      where: {
+        restaurantId: role.restaurantId,
+        plaidTxnId: { in: data.map((txn) => txn.plaidTxnId) },
+      },
+      select: {
+        plaidTxnId: true,
+        date: true,
+        amount: true,
+        merchantName: true,
+        description: true,
+        categoryId: true,
+        bucket: true,
+        confidence: true,
+      },
+    });
+
+    for (const txn of imported) {
+      if (!txn.plaidTxnId) continue;
+      await mirrorBankTransactionToLedger(tx, {
+        restaurantId: role.restaurantId,
+        sourceSystem: "statement",
+        sourceObjectId: txn.plaidTxnId,
+        payload: {
+          statement_transaction_id: txn.plaidTxnId,
+          date: txn.date.toISOString().slice(0, 10),
+          amount: Number(txn.amount),
+          description: txn.description,
+        },
+        date: txn.date,
+        amount: Number(txn.amount),
+        merchantName: txn.merchantName,
+        description: txn.description,
+        categoryId: txn.categoryId,
+        bucket: txn.bucket,
+        confidence: txn.confidence,
+      });
+    }
+
+    return created;
+  });
   return NextResponse.json({ imported: result.count, submitted: txns.length });
 }

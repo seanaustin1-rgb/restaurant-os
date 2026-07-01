@@ -2,9 +2,9 @@
 
 // Best-effort reputation lookup for the public Instant-Estimate demo.
 //
-// Resolves a prospect's restaurant by name + city via Google Places Text Search
+// Resolves a prospect's business by name + city via Google Places Text Search
 // (one call — it returns rating & total directly) so the Aura tile can show
-// their REAL stars. This is the "that's MY restaurant" hook.
+// their REAL stars. This is the "that's MY business" hook.
 //
 // Deliberately fail-soft: if the API key isn't set, no match is found, or the
 // request errors, it returns { found: false } and the UI shows the Aura tile in
@@ -26,6 +26,7 @@ interface PlacesTextResult {
   rating?: number;
   user_ratings_total?: number;
   formatted_address?: string;
+  types?: string[];
 }
 interface PlacesTextResponse {
   status: string;
@@ -41,15 +42,42 @@ const NOT_FOUND: ReputationResult = {
   matchedAddress: null,
 };
 
-export async function lookupReputation(name: string, city: string): Promise<ReputationResult> {
+type ReputationLookupKind = "restaurant" | "real_estate" | "contractor" | "service" | "retail" | "lodging";
+
+const LOOKUP_CONFIG: Record<ReputationLookupKind, { querySuffix: string; type?: string; rejectTypes?: string[] }> = {
+  restaurant: { querySuffix: "restaurant", type: "restaurant" },
+  real_estate: {
+    querySuffix: "real estate agency",
+    type: "real_estate_agency",
+    rejectTypes: ["restaurant", "bar", "cafe", "meal_takeaway", "bakery", "food"],
+  },
+  contractor: { querySuffix: "contractor", type: "general_contractor" },
+  service: { querySuffix: "service business" },
+  retail: { querySuffix: "store", type: "store" },
+  lodging: { querySuffix: "lodging", type: "lodging" },
+};
+
+function acceptableResult(result: PlacesTextResult, kind: ReputationLookupKind): boolean {
+  const rejectTypes = LOOKUP_CONFIG[kind].rejectTypes ?? [];
+  if (!rejectTypes.length) return true;
+  const types = result.types ?? [];
+  return !types.some((type) => rejectTypes.includes(type));
+}
+
+export async function lookupReputation(
+  name: string,
+  city: string,
+  kind: ReputationLookupKind = "restaurant",
+): Promise<ReputationResult> {
   const key = process.env.GOOGLE_PLACES_API_KEY?.trim();
   const query = [name, city].map((s) => s?.trim()).filter(Boolean).join(" ");
   if (!key || !query) return NOT_FOUND;
 
   try {
+    const config = LOOKUP_CONFIG[kind];
     const url = new URL(TEXT_SEARCH_URL);
-    url.searchParams.set("query", `${query} restaurant`);
-    url.searchParams.set("type", "restaurant");
+    url.searchParams.set("query", `${query} ${config.querySuffix}`);
+    if (config.type) url.searchParams.set("type", config.type);
     url.searchParams.set("key", key);
 
     // Reputation moves slowly; let Next cache identical lookups for an hour.
@@ -59,7 +87,8 @@ export async function lookupReputation(name: string, city: string): Promise<Repu
     const data = (await res.json()) as PlacesTextResponse;
     if (data.status !== "OK" || !data.results?.length) return NOT_FOUND;
 
-    const top = data.results[0];
+    const top = data.results.find((result) => acceptableResult(result, kind)) ?? data.results[0];
+    if (!acceptableResult(top, kind)) return NOT_FOUND;
     if (typeof top.rating !== "number") return NOT_FOUND;
 
     return {

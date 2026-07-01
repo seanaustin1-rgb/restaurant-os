@@ -10,6 +10,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   // Public Mode-2 instant-estimate demo (no login).
   "/demo(.*)",
+  // Public "Live Heartbeat" marketing landing (no login).
+  "/heartbeat(.*)",
   // Inngest authenticates via its signing key, not Clerk.
   "/api/inngest(.*)",
   // Dev-only helper routes (additionally guarded by NODE_ENV inside each handler).

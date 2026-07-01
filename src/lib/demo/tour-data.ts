@@ -48,14 +48,18 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
   const sample = SAMPLE[type];
   const revenue = sample.revenue;
   const cogs = sample.food + sample.liquor + sample.beverage;
-  const realRevenue = calculateRealRevenue(revenue, sample.food, sample.liquor + sample.beverage);
+  const companyDollar = type === "REAL_ESTATE_BROKERAGE" ? revenue * 0.284 : null;
+  const allocationBase = companyDollar ?? revenue;
+  const realRevenue = companyDollar ?? calculateRealRevenue(revenue, sample.food, sample.liquor + sample.beverage);
+  const taxReserveModel = type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.06 : allocationBase * 0.06;
+  const taxReserveCleared = type === "RESTAURANT" || type === "RETAIL" ? revenue * 0.045 : allocationBase * 0.05;
   const taps = { profitPct: 5, ownerPayPct: 8, cogsFoodPct: 18, cogsLiquorPct: 12, laborPct: 32, opexPct: 28 };
   const gauges = [
-    gauge("profit", "Profit", 5, revenue * 0.05, revenue * 0.04),
-    gauge("ownerPay", "Owner Pay", 8, revenue * 0.08, revenue * 0.07),
+    gauge("profit", "Profit", 5, allocationBase * 0.05, allocationBase * 0.04),
+    gauge("ownerPay", "Owner Pay", 8, allocationBase * 0.08, allocationBase * 0.07),
     gauge("cogs", type === "RESTAURANT" ? "COGS" : "Direct Costs", 30, revenue * 0.3, cogs, [{ name: type === "RETAIL" ? "Inventory purchases" : "Job costs", amount: cogs }]),
-    gauge("labor", "Labor", 32, revenue * 0.32, sample.labor, [{ name: "Payroll", amount: sample.labor }]),
-    gauge("opex", "OpEx + Spill", 28, revenue * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
+    gauge("labor", "Labor", 32, allocationBase * 0.32, sample.labor, [{ name: "Payroll", amount: sample.labor }]),
+    gauge("opex", "OpEx + Spill", 28, allocationBase * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
   ];
 
   return {
@@ -65,6 +69,27 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     periodLabel: MONTH,
     hasData: true,
     realRevenue,
+    operatingProfit: {
+      amount: realRevenue - sample.labor - sample.opex,
+      marginPct: revenue > 0 ? ((realRevenue - sample.labor - sample.opex) / revenue) * 100 : null,
+      components: {
+        revenue,
+        cogs,
+        labor: sample.labor,
+        opex: sample.opex,
+      },
+      excludes: ["owner pay", "debt service", "depreciation/amortization", "tax set-aside", "untracked spend"],
+    },
+    cashSafety: {
+      currentCash: sample.cash,
+      oxygenDays: sample.opex > 0 ? Math.round((sample.cash / (sample.opex / 30)) * 10) / 10 : null,
+      avgDailyFixedBurn: sample.opex > 0 ? Math.round((sample.opex / 30) * 100) / 100 : null,
+      netCashChangePeriod: realRevenue - sample.labor - sample.opex - cogs,
+      pendingReviewCount: 0,
+      source: "anchor_plus_transactions",
+      asOfDate: "2026-06-30",
+      status: sample.cash >= sample.opex * 1.5 ? "green" : sample.cash >= sample.opex * 0.75 ? "yellow" : "red",
+    },
     sourceSetup: sourceSetup(type),
     aura: {
       configuredCount: 1,
@@ -84,15 +109,15 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     goLiveCoach: assessGoLiveReadiness({
       periodLabel: MONTH,
       salesDays: 21,
-      netSales: revenue,
+      netSales: allocationBase,
       transactionCount: 420,
       categorizedTransactionCount: 392,
-      salesTaxCollected: revenue * 0.06,
-      salesTaxCleared: revenue * 0.045,
+      salesTaxCollected: taxReserveModel,
+      salesTaxCleared: taxReserveCleared,
       taps,
       spendByTap: {
-        PROFIT: revenue * 0.04,
-        OWNER_PAY: revenue * 0.07,
+        PROFIT: allocationBase * 0.04,
+        OWNER_PAY: allocationBase * 0.07,
         COGS_FOOD: sample.food,
         COGS_LIQUOR: sample.liquor + sample.beverage,
         LABOR: sample.labor,
@@ -103,6 +128,7 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     }),
     heartbeat: {
       primeCostPct: calculatePrimeCost(sample.food, sample.liquor + sample.beverage, sample.labor, revenue),
+      primeCostTrendPts: type === "RESTAURANT" ? 2.4 : type === "RETAIL" ? -1.2 : null,
       laborPct: revenue > 0 ? (sample.labor / revenue) * 100 : 0,
       foodPct: revenue > 0 ? (sample.food / revenue) * 100 : 0,
       liquorPct: revenue > 0 ? (sample.liquor / revenue) * 100 : 0,

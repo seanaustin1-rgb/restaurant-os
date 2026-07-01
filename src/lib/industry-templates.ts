@@ -207,7 +207,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "tax_reserve", name: "Tax Reserve", targetPct: 6 },
       { key: "opex", name: "OpEx + Spill", targetPct: 10 },
     ],
-    defaultTargets: { targetPrimeCost: 58, targetLaborCost: 8 },
+    defaultTargets: { targetPrimeCost: null, targetLaborCost: 8 },
     profileQuestions: [
       { key: "avgCommissionSplit", label: "Typical agent split (agent's %)", type: "percent", defaultValue: 70 },
       { key: "avgGci", label: "Average gross commission per deal ($)", type: "money" },

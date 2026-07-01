@@ -82,6 +82,7 @@ const TEXT_BY_TYPE: Partial<Record<BusinessType, Partial<StepText>>> = {
     mappingLabel: "Review commission and lead-cost mappings",
     mappingTodo: "Map agent payouts, referral fees, franchise fees, lead spend, staff payroll, and OpEx.",
     mappingDone: "Rules exist for brokerage spend and commission cleanup.",
+    mappingHref: "/import/brokerage",
     liveSourceTodo: "Owner/operator authorizes bank, accounting, CRM, transaction, listing, or reputation sources.",
   },
   VACATION_RENTAL: {
@@ -131,6 +132,9 @@ export async function loadOwnerSetupChecklist(
           integrationConnections: true,
           userRoles: true,
           accessInvites: true,
+          brokerageAgents: true,
+          brokerageDeals: true,
+          brokerageLeadSpend: true,
         },
       },
     },
@@ -159,7 +163,10 @@ export async function loadOwnerSetupChecklist(
     restaurant._count.posConnections > 0 ||
     restaurant._count.integrationConnections > 0;
   const hasCashAnchor = restaurant.cashBalanceAnchor != null && restaurant.cashBalanceAnchorDate != null;
-  const hasVendorRules = vendorRuleCount > 0;
+  const hasBrokerageImport =
+    restaurant.businessType === "REAL_ESTATE_BROKERAGE" &&
+    (restaurant._count.brokerageAgents > 0 || restaurant._count.brokerageDeals > 0 || restaurant._count.brokerageLeadSpend > 0);
+  const hasVendorRules = vendorRuleCount > 0 || hasBrokerageImport;
   const hasSharedAccess = restaurant._count.userRoles > 1 || restaurant._count.accessInvites > 0;
   const templateDone =
     restaurant._count.moduleConfigs > 0 && restaurant.tapSettings != null && restaurant.targetSettings != null;

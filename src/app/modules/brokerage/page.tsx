@@ -10,7 +10,7 @@ export default async function BrokerageAnalyticsPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, restaurant: { businessType: "REAL_ESTATE_BROKERAGE" } },
     select: { restaurantId: true, restaurant: { select: { name: true, businessType: true } } },
   });
 
@@ -29,6 +29,12 @@ export default async function BrokerageAnalyticsPage() {
         </div>
         <Link href="/settings/sources?intro=1" className="rounded-md border border-copper-dim px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
           Plan brokerage sources
+        </Link>
+        <Link href="/modules/brokerage/cockpit" className="rounded-md border border-line px-3 py-1.5 text-xs text-ink-text hover:border-copper-dim">
+          Executive Cockpit
+        </Link>
+        <Link href="/modules/brokerage/agent-cockpit" className="rounded-md border border-line px-3 py-1.5 text-xs text-ink-text hover:border-copper-dim">
+          Agent Cockpit
         </Link>
       </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { BusinessType } from "@prisma/client";
 import { csvToBrokerageRows, type BrokerageCsvProfile, type BrokerageEntity } from "@/lib/brokerage/csv-import";
@@ -47,6 +48,7 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
   const [csvProfile, setCsvProfile] = useState<BrokerageCsvProfile>("generic");
   const [csvText, setCsvText] = useState("");
   const [csvNote, setCsvNote] = useState<string | null>(null);
+  const [showJson, setShowJson] = useState(false);
 
   // Convert a pasted CSV (one entity at a time) into rows and merge them into
   // the JSON payload below, so an operator can build the import from spreadsheet
@@ -117,6 +119,13 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
 
   return (
     <div className="space-y-4">
+      {brokerageBusinesses.length === 0 && (
+        <div className="rounded-lg border border-health-yellow/40 bg-health-yellow/10 px-4 py-3 text-sm leading-relaxed text-ink-text">
+          No real-estate brokerage business is available for this import. Add or switch to a brokerage business before
+          saving data.
+        </div>
+      )}
+
       {importBusinesses.length > 1 ? (
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
           <label className="block">
@@ -140,10 +149,11 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
       ) : null}
 
       <div className="rounded-lg border border-line bg-surface px-4 py-3">
-        <div className="text-[11px] uppercase tracking-wider text-muted">Have a spreadsheet? Convert CSV → JSON</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted">Step 1 - paste one brokerage export</div>
+        <h2 className="mt-1 font-display text-xl text-ink-text">Start with CSV. No API keys required.</h2>
         <p className="mt-1 text-[11px] text-muted">
-          Paste one export at a time. Choose the export style if you know it; Generic is fine for normal headers.
-          Unrecognized columns are ignored.
+          Paste one export at a time. Choose the export style if you know it; Generic is fine for normal headers. The
+          mapper builds the clean payload for agents, deals, or lead spend.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <select
@@ -170,7 +180,7 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
             disabled={!csvText.trim()}
             className="rounded-lg border border-line bg-surface px-4 py-2 text-sm text-ink-text hover:border-copper-dim disabled:opacity-50"
           >
-            Convert into JSON
+            Convert export
           </button>
         </div>
         <textarea
@@ -184,13 +194,32 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
         {csvNote && <p className="mt-2 text-[11px] text-health-green">{csvNote}</p>}
       </div>
 
-      <textarea
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        spellCheck={false}
-        rows={14}
-        className="tnum w-full rounded-lg border border-line bg-ink px-3 py-2.5 font-mono text-[12px] text-ink-text outline-none focus:border-copper-soft"
-      />
+      <div className="rounded-lg border border-line bg-surface px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-muted">Step 2 - preview before saving</div>
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              Preview validates the payload and shows rejected rows. Commit is disabled until preview succeeds.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowJson((value) => !value)}
+            className="rounded-md border border-line px-3 py-1.5 text-xs text-ink-text hover:border-copper-dim"
+          >
+            {showJson ? "Hide payload" : "Review/edit payload"}
+          </button>
+        </div>
+        {showJson && (
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            spellCheck={false}
+            rows={14}
+            className="tnum mt-3 w-full rounded-lg border border-line bg-ink px-3 py-2.5 font-mono text-[12px] text-ink-text outline-none focus:border-copper-soft"
+          />
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -214,8 +243,18 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
 
       {committed && (
         <div className="rounded-lg border border-health-green/30 bg-health-green/10 px-4 py-3 text-sm text-ink-text">
-          Imported <span className="tnum">{committed.imported}</span> rows into the clean brokerage tables. The
-          Company Dollar, Commission Pipeline, Agent Performance, and Lead ROI tiles now read live data.
+          <p>
+            Imported <span className="tnum">{committed.imported}</span> rows into the clean brokerage tables. The
+            Company Dollar, Commission Pipeline, Agent Performance, and Lead ROI tiles now read live data.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/modules/brokerage" className="rounded-md bg-copper px-3 py-2 text-xs font-medium text-ink hover:bg-copper-soft">
+              Open brokerage analytics
+            </Link>
+            <Link href="/dashboard" className="rounded-md border border-line px-3 py-2 text-xs text-ink-text hover:border-copper-dim">
+              Return to dashboard
+            </Link>
+          </div>
         </div>
       )}
 

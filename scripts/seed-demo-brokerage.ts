@@ -18,7 +18,8 @@
  *   --user <clerkUserId>   Attach an OPERATOR role so the tenant shows on that
  *                          login's /dashboard. Find it in the Clerk dashboard.
  *   --restaurant <id>      Seed into an existing brokerage tenant instead of creating one.
- *   --name <name>          Name for a newly created tenant (default "Cascade Realty Group").
+ *   --name <name>          Name for a newly created tenant (default "Cascade Realty Group";
+ *                          can also use BROKERAGE_DEMO_NAME env).
  */
 import type { PrismaClient, Prisma, TransactionBucket } from "@prisma/client";
 import { prisma } from "../src/lib/prisma";
@@ -328,7 +329,7 @@ async function seedBrokerageTransactions(db: PrismaClient, restaurantId: string)
 async function main() {
   const userId = arg("--user") ?? process.env.CLERK_USER_ID;
   let restaurantId = arg("--restaurant");
-  const name = arg("--name") ?? "Cascade Realty Group";
+  const name = arg("--name") ?? process.env.BROKERAGE_DEMO_NAME ?? "Cascade Realty Group";
 
   // Prefer an existing tenant for the given user (mirrors seed-demo.ts).
   if (!restaurantId && userId) {

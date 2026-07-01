@@ -30,9 +30,10 @@ Progress Log after every step, so the other agent always knows what's done and w
 2. MVP stack = CSV + QBO + Follow Up Boss + Google/Aura; gated APIs = Phase 3.
 3. Three data layers, never conflated — L1 money-truth (CSV/QBO/back-office only), L2 production/activity
    (Dotloop/SkySlope + MoxiWorks/FUB), L3 aura (kvCORE/Google/Brand24). Transaction-mgmt does NOT hold splits/caps.
-4. Tiers: Executive Cockpit (wedge) → Agent Cockpit (per-agent MRR) → Retention (premium). Per-agent $ never in investor view.
+4. Tiers: Executive Cockpit (wedge) → Agent Cockpit (per-agent MRR) → Retention (premium). Per-agent $ never in the **external `/investor`** view — scoped by decision 7.
 5. Hero = "Deal Health vs. Ledger Health".
 6. Anti-bloat: ~5 macro tiles; reuse neutral primitives only; no restaurant framing.
+7. **Cockpit audience — DECIDED (operator, 2026-07-01):** Executive Cockpit is **leadership-only**. Keep the named per-agent leaderboard (Company Dollar / lead ROI / cap remaining). When it leaves demo, **gate the authed route to `OPERATOR` / `MANAGER` / `CONSULTANT`; never render for an `INVESTOR` role.** The decision-4 guardrail ("per-agent $ never in the investor view") applies to the **external `/investor` surface only**, which stays aggregate — the Executive Cockpit is a leadership tool, not an external-investor view. No change to the leaderboard itself; this is a scope clarification + an auth-gate requirement for the future authed page. `loadBrokerageAgentCockpitForUser` (agent sees only their own row) is unaffected.
 
 **Blockers:** PR `feat/heartbeat-landing → main` (+ CI green) is the only remaining coordination item.
 
@@ -107,6 +108,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-01 [Claude]** Operator ruled on cockpit audience (new locked decision 7): Executive Cockpit is
+  **leadership-only** — keep the named per-agent leaderboard, gate the future authed route to
+  OPERATOR/MANAGER/CONSULTANT, never INVESTOR. Resolves the post-go-live review flag ("per-agent $ leaderboard
+  vs. the investor-view guardrail") as a scope clarification: the guardrail binds the external `/investor` surface
+  only, which stays aggregate. No leaderboard code change; auth-gate required when the cockpit leaves demo.
 - **2026-07-01 [Codex]** Audited brokerage demo/import guardrails after the Cinnamon Beach Realty issue. Removed a
   restaurant-derived "prime cost" phrase from the real-estate estimator and constrained brokerage import preview/commit
   routes to `REAL_ESTATE_BROKERAGE` businesses only. Typecheck and vitest green.

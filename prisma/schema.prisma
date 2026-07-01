@@ -278,6 +278,7 @@ model Restaurant {
   ledgerEntries                   LedgerEntry[]
   syncExceptions                  SyncException[]
   aiActionLogs                    AiActionLog[]
+  metricNotes                     MetricNote[]
 }
 
 model UserRestaurantRole {
@@ -1254,4 +1255,33 @@ model AuraIntentSnapshot {
 
   @@unique([source, metric, date])
   @@index([source, metric, date])
+}
+
+// MetricNote — a dated operator note that explains a red / over-target metric so an
+// investor sees the "why" without a phone call (a scary alert becomes a "managed
+// event"). `audience` is the leak guard: INTERNAL notes ("laid off 3 staff", "missed a
+// debt payment") are operator-only; only INVESTOR notes surface in the investor view.
+// Enforced server-side on every read AND write (src/lib/dashboard/metric-notes.ts) —
+// hidden buttons are not access control. Default INTERNAL; sharing is an explicit opt-in.
+model MetricNote {
+  id           String       @id @default(cuid())
+  restaurantId String
+  metricKey    String // namespaced: "gauge-opex" | "bucket-tax-reserve" | "ratio-liquor"
+  eventDate    DateTime // the dated event the note explains
+  periodKey    String // e.g. "2026-06" — which period the note applies to
+  body         String // length-limited at the server action
+  audience     NoteAudience @default(INTERNAL)
+  authorId     String // clerkUserId of the author
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  resolvedAt   DateTime? // when the managed event is closed out
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId, metricKey, eventDate]) // chronological sort per metric
+}
+
+enum NoteAudience {
+  INTERNAL
+  INVESTOR
 }

@@ -100,8 +100,14 @@ export default function DemoTourSelectorPage() {
             <Link href="/demo/service" className="text-copper-soft hover:text-copper">
               Service estimate
             </Link>
+            <Link href="/demo/contractor" className="text-copper-soft hover:text-copper">
+              Contractor estimate
+            </Link>
             <Link href="/demo/real-estate" className="text-copper-soft hover:text-copper">
               Brokerage estimate
+            </Link>
+            <Link href="/demo/vacation-rental" className="text-copper-soft hover:text-copper">
+              Vacation rental estimate
             </Link>
             <Link href="/demo/retail" className="text-copper-soft hover:text-copper">
               Retail estimate

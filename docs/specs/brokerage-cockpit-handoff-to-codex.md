@@ -59,23 +59,26 @@ _Data/financial spine. Owned by Codex._
 - ✅ Added and wired the source-identity spine (`616fe38`): `BrokerageSourceSystem`,
   `BrokerageAgentSourceIdentity`, `BrokerageAgentActivitySnapshot`; CSV imports now create source identity rows for
   canonical agents.
+- ✅ Added Executive Cockpit contract extensions for Claude:
+  `reputationTrend { ratingTrendPts, reviewVelocity, windowWeeks, historyWeeks, themes, state }` and
+  `marketPosition { monthsOfSupply, marketSharePct, source, note }`. These are honest-null until snapshots / RESO data exist.
+- ✅ Added Agent Cockpit protected read surface:
+  `loadBrokerageAgentCockpitForUser(...)`, `agentProduction.allAgents`, and `GET /api/brokerage/agent-cockpit`.
+  Operators/managers/consultants can read any agent; other users only resolve an agent matched to their email/source identity.
 - ✅ Verified after Codex changes: `tsc --noEmit --incremental false` passed; `vitest --run` passed (`30` files,
   `151` tests).
 - ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion adapters. These should wait until the branch PR is
   stable and partner credentials / pilot source shapes are available.
-- ⏳ Not started: Agent Cockpit role-scoped reads. The data model exists; next Codex step is the read API/helper that
-  enforces per-agent visibility before Claude builds the scoreboard UI.
 
 ## Next Actions
 
 - **[Human/either] Open PR** `feat/heartbeat-landing → main`, confirm CI green. Last item to ship this vertical.
-- **[Codex] Contract additions** for the reputation + market enhancements:
-  - `reputationTrend { ratingTrendPts, reviewVelocity, windowWeeks, historyWeeks, themes{loved[],flagged[],summary} }`
-    — Google ships review-theme summaries via **Places API (New) `reviewSummary`** (GA Sep 2025); deeper via Business
-    Profile API (broker-owned, approval-gated). Real velocity needs **weekly aura-snapshot accumulation** (please kick off).
-  - `marketPosition { monthsOfSupply, marketSharePct }` — needs RESO/MLS (Phase 2); render empty-state until connected.
-- **[Codex] Agent Cockpit prerequisites:** role-scoped per-`agentId` reads + activity snapshot; then **[Claude]** builds
-  the per-agent scoreboard (same `AgentRow` shape).
+- **[Claude] Reputation + Market UI:** contract fields now exist. Render `reputationTrend` as gathering/not-connected
+  until snapshots/review themes are populated; render `marketPosition` empty-state until RESO/MLS or profile values exist.
+- **[Claude] Agent Cockpit UI:** protected read endpoint exists at `/api/brokerage/agent-cockpit?restaurantId=...&agentId=...`.
+  It returns one allowed agent plus latest activity snapshot. Use `agentProduction.allAgents` only for operator-facing
+  selection lists; never expose all rows in an agent-scoped view.
+- **[Codex later] Live ingestion:** FUB/Moxi/BoldTrail activity adapters and real reputation themes after pilot creds/data.
 - **[Operator] Decide** the reputation header-chip + themes-panel UX (frees a tile; progressive disclosure).
 
 ## Reference — Contract & Lane Boundary
@@ -104,6 +107,9 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-01 [Codex]** Wrapped the first two requested Codex blockers: added nullable reputation/market contract
+  extensions and a protected Agent Cockpit read surface (`loadBrokerageAgentCockpitForUser` +
+  `/api/brokerage/agent-cockpit`). Typecheck and vitest green.
 - **2026-07-01 [Codex]** Confirmed handoff file structure and updated Codex lane status directly. Current Codex side:
   brokerage Executive Cockpit data contract is landed and consumed; CSV/source identity foundation is pushed; remaining
   Codex work is contract additions for reputation/market, role-scoped Agent Cockpit reads, then live activity ingestion.

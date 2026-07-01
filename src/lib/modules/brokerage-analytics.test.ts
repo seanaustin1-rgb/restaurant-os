@@ -40,6 +40,7 @@ function cockpit(overrides: Partial<Omit<BrokerageCockpitData, "topPressure">> =
     agentProduction: {
       activeAgents: 12,
       totalCompanyDollar: 18_000,
+      allAgents: [],
       topContributors: [],
       bottomContributors: [],
     },
@@ -54,6 +55,20 @@ function cockpit(overrides: Partial<Omit<BrokerageCockpitData, "topPressure">> =
         hasAnyData: false,
         intentMetrics: [],
       },
+    },
+    reputationTrend: {
+      ratingTrendPts: null,
+      reviewVelocity: null,
+      windowWeeks: 6,
+      historyWeeks: 0,
+      themes: { loved: [], flagged: [], summary: null },
+      state: "not_connected",
+    },
+    marketPosition: {
+      monthsOfSupply: null,
+      marketSharePct: null,
+      source: "not_connected",
+      note: "Connect RESO/MLS market data for months of supply and brokerage market share.",
     },
     sourceTrust: { connected: 1, required: 3, missing: ["Follow Up Boss"], status: "partial" },
     ...overrides,

@@ -76,6 +76,26 @@ export interface BrokerageCockpitAgentRow {
   note?: string;
 }
 
+export interface BrokerageReputationTrend {
+  ratingTrendPts: number | null;
+  reviewVelocity: number | null;
+  windowWeeks: number;
+  historyWeeks: number;
+  themes: {
+    loved: string[];
+    flagged: string[];
+    summary: string | null;
+  };
+  state: "ready" | "gathering" | "not_connected";
+}
+
+export interface BrokerageMarketPosition {
+  monthsOfSupply: number | null;
+  marketSharePct: number | null;
+  source: "reso" | "profile" | "not_connected";
+  note: string;
+}
+
 export interface BrokerageCockpitData {
   restaurantId: string;
   name: string;
@@ -104,6 +124,7 @@ export interface BrokerageCockpitData {
   agentProduction: {
     activeAgents: number;
     totalCompanyDollar: number;
+    allAgents: BrokerageCockpitAgentRow[];
     topContributors: BrokerageCockpitAgentRow[];
     bottomContributors: BrokerageCockpitAgentRow[];
   };
@@ -116,6 +137,8 @@ export interface BrokerageCockpitData {
     } | null;
     aura: DashboardAuraSummary;
   };
+  reputationTrend: BrokerageReputationTrend;
+  marketPosition: BrokerageMarketPosition;
   topPressure: {
     metricKey: string;
     label: string;
@@ -124,6 +147,31 @@ export interface BrokerageCockpitData {
     readout: string;
   } | null;
   sourceTrust: { connected: number; required: number; missing: string[]; status: "healthy" | "partial" };
+}
+
+export interface BrokerageAgentCockpitData {
+  restaurantId: string;
+  restaurantName: string;
+  periodLabel: string;
+  agent: BrokerageCockpitAgentRow;
+  activity: {
+    sourceSystem: string | null;
+    periodStart: string | null;
+    periodEnd: string | null;
+    loginCount: number;
+    newLeadCount: number;
+    contactCount: number;
+    appointmentCount: number;
+    cmaCount: number;
+    activePipelineCount: number;
+  } | null;
+}
+
+export interface LoadBrokerageAgentCockpitForUserInput {
+  clerkUserId: string;
+  userEmail?: string | null;
+  restaurantId?: string | null;
+  agentId?: string | null;
 }
 
 function sourceConfidence(hasImportedAgent: boolean, usesFallbackMath: boolean): BrokerageAgentSourceConfidence {
@@ -136,6 +184,36 @@ function companyDollarStatus(pct: number | null, targetPct: number): BrokerageCo
   if (pct >= targetPct) return "green";
   if (pct >= targetPct - 7) return "yellow";
   return "red";
+}
+
+function defaultReputationTrend(aura: DashboardAuraSummary): BrokerageReputationTrend {
+  return {
+    ratingTrendPts: null,
+    reviewVelocity: null,
+    windowWeeks: 6,
+    historyWeeks: 0,
+    themes: { loved: [], flagged: [], summary: null },
+    state: aura.hasAnyData ? "gathering" : "not_connected",
+  };
+}
+
+function marketPositionFromProfile(profile: unknown): BrokerageMarketPosition {
+  const marketSharePct = profileNumber(profile, "marketSharePct");
+  const monthsOfSupply = profileNumber(profile, "monthsOfSupply");
+  if (marketSharePct != null || monthsOfSupply != null) {
+    return {
+      monthsOfSupply,
+      marketSharePct,
+      source: "profile",
+      note: "Profile-supplied until RESO/MLS market inventory is connected.",
+    };
+  }
+  return {
+    monthsOfSupply: null,
+    marketSharePct: null,
+    source: "not_connected",
+    note: "Connect RESO/MLS market data for months of supply and brokerage market share.",
+  };
 }
 
 export function deriveBrokerageTopPressure(data: Omit<BrokerageCockpitData, "topPressure">): BrokerageCockpitData["topPressure"] {
@@ -457,6 +535,8 @@ export async function loadBrokerageCockpit(
     if (agent.capRemaining == null) return sum;
     return sum + Math.max(0, agent.pipelineCompanyDollar - agent.capRemaining);
   }, 0);
+  const topAgents = [...agentRows].sort((a, b) => b.companyDollar - a.companyDollar);
+  const bottomAgents = [...agentRows].sort((a, b) => a.companyDollar - b.companyDollar);
   const latestMarket = marketMetricRows[0] ?? null;
   const connectedCount = sourceConfigs.filter((source) => source.status === "CONNECTED").length;
   const requiredSources = [
@@ -480,6 +560,8 @@ export async function loadBrokerageCockpit(
     status: cashOxygen.status,
     floorDaysTarget: 120,
   };
+  const reputationTrend = defaultReputationTrend(aura);
+  const marketPosition = marketPositionFromProfile(profile);
 
   const withoutTopPressure: Omit<BrokerageCockpitData, "topPressure"> = {
     restaurantId,
@@ -509,8 +591,9 @@ export async function loadBrokerageCockpit(
     agentProduction: {
       activeAgents,
       totalCompanyDollar: r2(agentRows.reduce((sum, agent) => sum + agent.companyDollar, 0)),
-      topContributors: agentRows.slice(0, 3),
-      bottomContributors: [...agentRows].sort((a, b) => a.companyDollar - b.companyDollar).slice(0, 3),
+      allAgents: agentRows,
+      topContributors: topAgents.slice(0, 3),
+      bottomContributors: bottomAgents.slice(0, 3),
     },
     marketAura: {
       market: latestMarket
@@ -523,6 +606,8 @@ export async function loadBrokerageCockpit(
         : null,
       aura,
     },
+    reputationTrend,
+    marketPosition,
     sourceTrust: {
       connected: connectedCount,
       required: requiredSources.length,
@@ -532,4 +617,85 @@ export async function loadBrokerageCockpit(
   };
 
   return { ...withoutTopPressure, topPressure: deriveBrokerageTopPressure(withoutTopPressure) };
+}
+
+export async function loadBrokerageAgentCockpitForUser(
+  input: LoadBrokerageAgentCockpitForUserInput,
+  db: PrismaClient = prisma,
+): Promise<BrokerageAgentCockpitData | null> {
+  const roles = await db.userRestaurantRole.findMany({
+    where: {
+      clerkUserId: input.clerkUserId,
+      ...(input.restaurantId ? { restaurantId: input.restaurantId } : {}),
+      restaurant: { businessType: "REAL_ESTATE_BROKERAGE" },
+    },
+    select: { role: true, restaurantId: true, restaurant: { select: { name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  const role = roles[0];
+  if (!role) return null;
+
+  const canViewAnyAgent = ["OPERATOR", "MANAGER", "CONSULTANT"].includes(role.role);
+  const email = input.userEmail?.trim().toLowerCase() || null;
+  const requestedAgentId = input.agentId?.trim() || null;
+
+  const matchedAgent = await db.brokerageAgent.findFirst({
+    where: {
+      restaurantId: role.restaurantId,
+      ...(requestedAgentId ? { id: requestedAgentId } : {}),
+      ...(canViewAnyAgent
+        ? {}
+        : email
+          ? {
+              OR: [
+                { email: { equals: email, mode: "insensitive" } },
+                { sourceIdentities: { some: { email: { equals: email, mode: "insensitive" } } } },
+              ],
+            }
+          : { id: "__no_agent_without_email__" }),
+    },
+    select: { id: true },
+    orderBy: { name: "asc" },
+  });
+  if (!matchedAgent) return null;
+
+  const cockpit = await loadBrokerageCockpit(role.restaurantId, db);
+  const agent = cockpit?.agentProduction.allAgents.find((row) => row.agentId === matchedAgent.id);
+  if (!cockpit || !agent) return null;
+
+  const activity = await db.brokerageAgentActivitySnapshot.findFirst({
+    where: { restaurantId: role.restaurantId, agentId: matchedAgent.id },
+    orderBy: [{ periodEnd: "desc" }, { updatedAt: "desc" }],
+    select: {
+      sourceSystem: true,
+      periodStart: true,
+      periodEnd: true,
+      loginCount: true,
+      newLeadCount: true,
+      contactCount: true,
+      appointmentCount: true,
+      cmaCount: true,
+      activePipelineCount: true,
+    },
+  });
+
+  return {
+    restaurantId: role.restaurantId,
+    restaurantName: role.restaurant.name,
+    periodLabel: cockpit.periodLabel,
+    agent,
+    activity: activity
+      ? {
+          sourceSystem: activity.sourceSystem,
+          periodStart: activity.periodStart.toISOString().slice(0, 10),
+          periodEnd: activity.periodEnd.toISOString().slice(0, 10),
+          loginCount: activity.loginCount,
+          newLeadCount: activity.newLeadCount,
+          contactCount: activity.contactCount,
+          appointmentCount: activity.appointmentCount,
+          cmaCount: activity.cmaCount,
+          activePipelineCount: activity.activePipelineCount,
+        }
+      : null,
+  };
 }

@@ -10,7 +10,7 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Claude ·
+**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Codex ·
 **Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
 
 ---
@@ -49,12 +49,22 @@ _View/UX (Cockpit). Owned by Claude._
 
 ## Codex Lane Status
 
-_Data/financial spine. Owned by Codex (Claude's best understanding — Codex to correct)._
-- ✅ Formalized `BrokerageCockpitData` (`7aa072c`) + redline approving Claude's strawman with additions.
-- ✅ Canonical per-agent rows; **source-identity spine** (`616fe38`); **CSV vendor profiles** (`5288592`); lead-spend
-  hardening (`da258c1`); created migration `20260630125000`.
-- ⏳ Live FUB ingestion (after read contract stable); role-scoped per-agent reads for Agent Cockpit.
-- ⏳ Requested by Claude — see Next Actions.
+_Data/financial spine. Owned by Codex._
+- ✅ Formalized `BrokerageCockpitData` (`7aa072c`) and approved Claude's strawman with additions:
+  `sourceConfidence`, `floorDaysTarget`, nullable market data, and data-lane-owned `topPressure`.
+- ✅ Built the brokerage read spine now consumed by the real Executive Cockpit: canonical per-agent rows,
+  company-dollar retention, cash safety reuse, market/aura wrapper, source trust, and deterministic top pressure.
+- ✅ Hardened the CSV onboarding wedge: vendor profiles (`5288592`) for generic / Lone Wolf-style / SkySlope-style /
+  Loft47-style exports; lead-spend campaign ID mapping and per-agent de-dupe hardening (`da258c1`).
+- ✅ Added and wired the source-identity spine (`616fe38`): `BrokerageSourceSystem`,
+  `BrokerageAgentSourceIdentity`, `BrokerageAgentActivitySnapshot`; CSV imports now create source identity rows for
+  canonical agents.
+- ✅ Verified after Codex changes: `tsc --noEmit --incremental false` passed; `vitest --run` passed (`30` files,
+  `151` tests).
+- ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion adapters. These should wait until the branch PR is
+  stable and partner credentials / pilot source shapes are available.
+- ⏳ Not started: Agent Cockpit role-scoped reads. The data model exists; next Codex step is the read API/helper that
+  enforces per-agent visibility before Claude builds the scoreboard UI.
 
 ## Next Actions
 
@@ -94,6 +104,9 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-01 [Codex]** Confirmed handoff file structure and updated Codex lane status directly. Current Codex side:
+  brokerage Executive Cockpit data contract is landed and consumed; CSV/source identity foundation is pushed; remaining
+  Codex work is contract additions for reputation/market, role-scoped Agent Cockpit reads, then live activity ingestion.
 - **2026-07-01 [Claude]** Restructured this doc into the agreed lane sections (Shared / Claude Lane / Codex Lane / Next
   Actions + Reference + Log).
 - **2026-07-01 [Claude]** Wired Executive Cockpit to real `loadBrokerageCockpit` + `BrokerageCockpitData`; deleted mock

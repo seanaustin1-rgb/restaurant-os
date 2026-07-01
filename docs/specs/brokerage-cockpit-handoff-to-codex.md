@@ -107,6 +107,9 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-01 [Codex]** Audited brokerage demo/import guardrails after the Cinnamon Beach Realty issue. Removed a
+  restaurant-derived "prime cost" phrase from the real-estate estimator and constrained brokerage import preview/commit
+  routes to `REAL_ESTATE_BROKERAGE` businesses only. Typecheck and vitest green.
 - **2026-07-01 [Codex]** Wrapped the first two requested Codex blockers: added nullable reputation/market contract
   extensions and a protected Agent Cockpit read surface (`loadBrokerageAgentCockpitForUser` +
   `/api/brokerage/agent-cockpit`). Typecheck and vitest green.

@@ -79,7 +79,7 @@ const EXPLAIN = {
   companydollar:
     "Company Dollar is what the brokerage keeps from GCI after agent payouts, franchise fees, and referral fees. GCI is vanity; Company Dollar is what pays the bills.",
   split:
-    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). The real-estate version of prime cost; retained Company Dollar around 25-30% is a practical target.",
+    "Split pressure = the share of GCI that leaves before the brokerage keeps a dollar (agent splits + franchise + referral fees). Retained Company Dollar around 25-30% is a practical target because it is the money left to operate the brokerage.",
   breakeven:
     "The Company Dollar you need each month just to cover brokerage OpEx. Below it the brokerage loses money; the cushion above funds profit and owner pay.",
   runway:

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Lock, GripVertical, Info, Star } from "lucide-react";
+import { Lock, GripVertical, Info, Star, ChevronDown } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -40,6 +40,9 @@ export function ModuleGrid({
   demoMode?: boolean;
 }) {
   const [openInfo, setOpenInfo] = useState<string | null>(null);
+  // Secondary tools stay tucked behind a "More tools" disclosure so the cockpit
+  // reads clean; pinned essentials still surface in the Quick Access strip above.
+  const [showModules, setShowModules] = useState(false);
   const sensors = useSensors(
     // A small drag threshold so a click still navigates; only a deliberate drag reorders.
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -112,23 +115,40 @@ export function ModuleGrid({
     );
   }
 
+  const liveCount = MODULES.filter((m) => m.status === "live").length;
   return (
     <section>
-      <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-display text-lg text-ink-text">Modules</h2>
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <h2 className="font-display text-lg text-ink-text">
+          <button
+            type="button"
+            onClick={() => setShowModules((open) => !open)}
+            aria-expanded={showModules}
+            className="flex items-center gap-1.5 transition-colors hover:text-copper-soft"
+          >
+            More tools
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={"text-muted transition-transform " + (showModules ? "rotate-180" : "")}
+            />
+          </button>
+        </h2>
         <span className="text-xs text-muted">
-          drag to reorder · ★ to pin · {MODULES.filter((m) => m.status === "live").length} live
+          {showModules ? `drag to reorder · ★ to pin · ${liveCount} live` : `${liveCount} tools`}
         </span>
       </div>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={items.map((m) => m.key)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {items.map((m) => (
-              <SortableTile key={m.key} m={m} pinned={pinnedKeys.has(m.key)} onTogglePin={onTogglePin} />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+      {showModules && (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={items.map((m) => m.key)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {items.map((m) => (
+                <SortableTile key={m.key} m={m} pinned={pinnedKeys.has(m.key)} onTogglePin={onTogglePin} />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      )}
     </section>
   );
 }

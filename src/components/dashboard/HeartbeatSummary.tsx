@@ -164,7 +164,7 @@ function demoPressureLens(data: DashboardData): HeartbeatLens | null {
       detail: "Maintenance and turn costs are elevated on 2 properties, led by Driftwood Condo.",
       explainer: "Property pressure rolls up maintenance drag, turn cost, issue count, and owner-proceeds pressure by property.",
       action: "inspect properties",
-      href: "/modules/property-heartbeat",
+      href: "/modules/rentals/cockpit",
     };
   }
   if (data.businessType === "RETAIL") {
@@ -201,7 +201,7 @@ function pressureLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
         : "Import bookings, owner statements, expenses, maintenance, and reviews to read property pressure.",
       explainer: "Property pressure rolls up maintenance drag, turn cost, issue count, and owner-proceeds pressure by property.",
       action: "inspect properties",
-      href: "/modules/property-heartbeat",
+      href: "/modules/rentals/cockpit",
     };
   }
 
@@ -328,7 +328,7 @@ function demoMomentumLens(data: DashboardData): HeartbeatLens | null {
       detail: "Portfolio occupancy is 74% with 312 future booked nights in the next 60 days.",
       explainer: "Booking momentum tracks occupancy, ADR, booked nights, booking pace, and owner proceeds.",
       action: "inspect properties",
-      href: "/modules/property-heartbeat",
+      href: "/modules/rentals/cockpit",
     };
   }
   if (data.businessType === "RETAIL") {
@@ -496,7 +496,7 @@ function demoAuraLens(data: DashboardData): HeartbeatLens | null {
       detail: "Guest rating, response speed, and repeat-issue score are healthy across the portfolio.",
       explainer: "Guest Aura reads review score, response speed, issue themes, and repeat problems by property.",
       action: "inspect properties",
-      href: "/modules/property-heartbeat",
+      href: "/modules/rentals/cockpit",
     };
   }
   if (data.businessType === "RETAIL") {

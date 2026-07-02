@@ -24,6 +24,8 @@ interface PreviewResponse {
   preview: Record<string, unknown[]>;
 }
 
+type ImportBusiness = { id: string; name: string };
+
 const SAMPLE_PAYLOAD = {
   properties: [
     {
@@ -119,7 +121,8 @@ const SUMMARY_FIELDS: Array<[keyof ImportSummary, string]> = [
   ["reviews", "Reviews"],
 ];
 
-export function RentalImportPilot() {
+export function RentalImportPilot({ businesses = [] }: { businesses?: ImportBusiness[] }) {
+  const [restaurantId, setRestaurantId] = useState(businesses[0]?.id ?? "");
   const [sourceName, setSourceName] = useState("Escapia");
   const [sourceKind, setSourceKind] = useState<SourceKind>("ESCAPIA");
   const [fileName, setFileName] = useState("");
@@ -150,7 +153,7 @@ export function RentalImportPilot() {
       const r = await fetch("/api/vacation-rentals/import/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sourceName, sourceKind, payload: parsedPayload.payload }),
+        body: JSON.stringify({ restaurantId: restaurantId || undefined, sourceName, sourceKind, payload: parsedPayload.payload }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error || "Preview failed");
@@ -171,6 +174,7 @@ export function RentalImportPilot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          restaurantId: restaurantId || undefined,
           sourceName,
           sourceKind,
           fileName: fileName.trim() || null,
@@ -194,6 +198,30 @@ export function RentalImportPilot() {
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
       <section className="space-y-4 rounded-lg border border-line bg-surface p-4">
+        {businesses.length === 0 && (
+          <div className="rounded-lg border border-health-yellow/40 bg-health-yellow/10 px-3 py-2 text-sm leading-relaxed text-ink-text">
+            No vacation-rental business is available for this import. Add or switch to a vacation-rental business before
+            saving data.
+          </div>
+        )}
+
+        {businesses.length > 1 && (
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-muted">Import into</span>
+            <select
+              value={restaurantId}
+              onChange={(e) => setRestaurantId(e.target.value)}
+              className="w-full rounded-lg border border-line bg-ink px-3 py-2 text-ink-text outline-none focus:border-copper-soft"
+            >
+              {businesses.map((business) => (
+                <option key={business.id} value={business.id}>
+                  {business.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <div className="flex items-center gap-2 text-sm text-ink-text">
           <FileJson size={16} className="text-copper-soft" />
           Rental export payload

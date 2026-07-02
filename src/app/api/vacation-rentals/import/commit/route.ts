@@ -6,6 +6,7 @@ import { commitVacationRentalImport } from "@/lib/vacation-rentals/import-commit
 import type { VacationRentalImportPayload } from "@/lib/vacation-rentals/normalized-import";
 
 type Body = {
+  restaurantId?: string;
   sourceName?: string;
   sourceKind?: string;
   fileName?: string;
@@ -25,21 +26,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+  const body = (await req.json().catch(() => ({}))) as Body;
+  const roles = await prisma.userRestaurantRole.findMany({
+    where: {
+      clerkUserId: userId,
+      role: { in: ["OPERATOR", "MANAGER", "CONSULTANT"] },
+      ...(body.restaurantId ? { restaurantId: body.restaurantId } : {}),
+      restaurant: { businessType: "VACATION_RENTAL" },
+    },
     select: { restaurantId: true },
   });
-  if (!role) {
-    return NextResponse.json({ error: "no business / insufficient role" }, { status: 400 });
+  if (roles.length === 0) {
+    return NextResponse.json({ error: "no vacation-rental business / insufficient role" }, { status: 400 });
+  }
+  if (!body.restaurantId && roles.length > 1) {
+    return NextResponse.json({ error: "choose a vacation-rental business before importing data" }, { status: 400 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as Body;
   if (!body.payload) {
     return NextResponse.json({ error: "no rental import payload" }, { status: 400 });
   }
 
   const result = await commitVacationRentalImport(prisma, {
-    restaurantId: role.restaurantId,
+    restaurantId: roles[0].restaurantId,
     importedBy: userId,
     sourceName: body.sourceName?.trim() || "Rental import",
     sourceKind: sourceKind(body.sourceKind),

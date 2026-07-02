@@ -1,11 +1,22 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { RentalImportPilot } from "@/components/import/RentalImportPilot";
 
 export default async function RentalImportPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+  const roles = await prisma.userRestaurantRole.findMany({
+    where: {
+      clerkUserId: userId,
+      role: { in: ["OPERATOR", "MANAGER", "CONSULTANT"] },
+      restaurant: { businessType: "VACATION_RENTAL" },
+    },
+    select: { restaurantId: true, restaurant: { select: { name: true } } },
+    orderBy: { restaurant: { name: "asc" } },
+  });
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-6 py-10">
@@ -22,7 +33,7 @@ export default async function RentalImportPage() {
           View import history
         </Link>
       </div>
-      <RentalImportPilot />
+      <RentalImportPilot businesses={roles.map((role) => ({ id: role.restaurantId, name: role.restaurant.name }))} />
     </main>
   );
 }

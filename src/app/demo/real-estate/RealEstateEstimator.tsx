@@ -71,6 +71,13 @@ const HEALTH_TEXT: Record<Health, string> = {
   red: "text-health-red",
 };
 
+const AGENT_GRID_SOURCES = [
+  { label: "Closed Company Dollar", source: "commission/back-office export" },
+  { label: "Cap remaining", source: "cap model + paid-to-date" },
+  { label: "Weighted pipeline", source: "CRM or transaction pipeline" },
+  { label: "Lead ROI", source: "lead spend by source + retained Company Dollar" },
+] as const;
+
 const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
 
 const EXPLAIN = {
@@ -621,7 +628,15 @@ function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
           <div className="text-[11px] uppercase tracking-wider text-copper-soft">Paid add-on preview</div>
           <h3 className="font-display text-xl text-ink-text">Agent Performance</h3>
         </div>
-        <div className="text-[11px] text-muted">Sample rows generated from the brokerage estimate</div>
+        <div className="text-[11px] text-muted">Demo rows are synthetic until agent data is imported</div>
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {AGENT_GRID_SOURCES.map((item) => (
+          <div key={item.label} className="rounded-lg border border-line bg-ink/45 px-3 py-2">
+            <div className="text-[10px] uppercase tracking-wider text-muted">{item.label}</div>
+            <div className="mt-0.5 text-[11px] text-ink-text-soft">{item.source}</div>
+          </div>
+        ))}
       </div>
       <div className="mt-4 grid grid-cols-1 gap-3">
         {rows.map((row) => (
@@ -629,7 +644,7 @@ function AgentPerformancePreview({ rows }: { rows: AgentPerformanceResult[] }) {
         ))}
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
-        In a live setup, these rows should be editable per agent: split %, annual cap, cap paid-to-date, pending deals, expected close rate, lead spend, and source. Cap remaining is the warning light for how much Company Dollar the brokerage can still collect before that agent's future deals retain less.
+        In a live setup, these rows should stay locked until the agent roster, split rules, annual cap, cap paid-to-date, pending deals, expected close rate, lead spend, and source mappings are imported or reviewed. Consultants and accountants should be able to adjust those assumptions per agent before the dashboard treats them as real.
       </p>
     </div>
   );

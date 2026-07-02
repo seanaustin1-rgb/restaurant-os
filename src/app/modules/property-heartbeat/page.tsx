@@ -10,7 +10,7 @@ export default async function PropertyHeartbeatPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, restaurant: { businessType: "VACATION_RENTAL" } },
     select: { restaurantId: true, restaurant: { select: { name: true, businessType: true } } },
   });
 
@@ -38,7 +38,7 @@ export default async function PropertyHeartbeatPage() {
         <PropertyHeartbeatModule data={data} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need a business account to view property heartbeat. Complete onboarding first.
+          You need a vacation-rental business to view property heartbeat. Complete onboarding or switch businesses first.
         </p>
       )}
     </main>

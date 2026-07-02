@@ -123,7 +123,7 @@ function demoPressureLens(data: DashboardData): HeartbeatLens | null {
       statusLabel: "watch labor",
       value: "66.4%",
       detail: "Payroll, materials, and subcontractors are taking 66.4% of revenue this month.",
-      explainer: "Delivery pressure is the service-business version of prime cost: direct labor plus job costs compared with revenue.",
+      explainer: "Delivery pressure shows how much revenue is being consumed by direct labor, materials, subcontractors, and delivery costs.",
       action: "enter service numbers",
       href: "/demo/service",
     };
@@ -241,7 +241,7 @@ function pressureLens(data: DashboardData, demoMode: boolean): HeartbeatLens {
       statusLabel: "needs clients",
       value: "Waiting",
       detail: "Connect bank, accounting, payroll, and CRM data to read payroll load, recurring cost, and client profitability.",
-      explainer: "Delivery pressure is the service-business version of prime cost: direct labor plus job costs compared with revenue.",
+      explainer: "Service pressure shows how much revenue is being consumed by direct labor, delivery costs, recurring overhead, and client work that is not profitable enough.",
       action: "plan service sources",
       href: "/settings/sources",
     };
@@ -570,6 +570,13 @@ function headline(lenses: HeartbeatLens[]): string {
   return "Heartbeat is steady across the visible signals.";
 }
 
+function templateSummaryLabel(templateLabel: string, lenses: HeartbeatLens[]): string {
+  const labels = lenses.map((lens) => lens.label.toLowerCase());
+  const last = labels.pop();
+  const list = last ? `${labels.join(", ")}, and ${last}` : "visible signals";
+  return `${templateLabel} template: ${list} in one read.`;
+}
+
 function oneThingCopy(data: DashboardData): { label: string; detail: string; href: string } {
   const top = deriveTopPressure(data);
   if (top.state === "pressure") {
@@ -610,9 +617,7 @@ export function HeartbeatSummary({ data, demoMode = false }: { data: DashboardDa
         <div>
           <p className="text-[11px] uppercase tracking-wider text-muted">Heartbeat summary</p>
           <h2 className="mt-1 font-display text-2xl text-copper-soft">{headline(lenses)}</h2>
-          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">
-            {template.label} template: cash, Profit First discipline, operating pressure, sales momentum, and market energy in one read.
-          </p>
+          <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">{templateSummaryLabel(template.label, lenses)}</p>
         </div>
         {demoMode ? (
           <span className="rounded-md border border-line px-3 py-1.5 text-xs text-copper-soft">

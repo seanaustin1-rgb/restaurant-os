@@ -77,7 +77,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "cogs_food", name: "COGS - Food", targetPct: 18 },
       { key: "cogs_liquor", name: "COGS - Liquor", targetPct: 12 },
       { key: "labor", name: "Labor", targetPct: 32 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 28 },
+      { key: "opex", name: "Operating Expenses", targetPct: 28 },
     ],
     defaultTargets: {
       targetPrimeCost: 60,
@@ -126,7 +126,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "labor", name: "Team / Payroll", targetPct: 38 },
       { key: "cogs_direct", name: "Direct Costs", targetPct: 8 },
       { key: "tax_reserve", name: "Tax Reserve", targetPct: 7 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 25 },
+      { key: "opex", name: "Operating Expenses", targetPct: 25 },
     ],
     defaultTargets: { targetPrimeCost: 46, targetLaborCost: 38 },
     profileQuestions: [
@@ -163,7 +163,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "labor", name: "Field Labor", targetPct: 28 },
       { key: "cogs_subs", name: "Subcontractors", targetPct: 6 },
       { key: "tax_reserve", name: "Tax Reserve", targetPct: 5 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 15 },
+      { key: "opex", name: "Overhead", targetPct: 15 },
     ],
     defaultTargets: { targetPrimeCost: 64, targetLaborCost: 28 },
     profileQuestions: [
@@ -205,7 +205,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "labor", name: "Staff Payroll", targetPct: 8 },
       { key: "lead_marketing", name: "Lead Gen / Marketing", targetPct: 8 },
       { key: "tax_reserve", name: "Tax Reserve", targetPct: 6 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 10 },
+      { key: "opex", name: "Operating Overhead", targetPct: 10 },
     ],
     defaultTargets: { targetPrimeCost: null, targetLaborCost: 8 },
     profileQuestions: [
@@ -245,9 +245,9 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "profit", name: "Profit", targetPct: 7 },
       { key: "owner_pay", name: "Owner Pay", targetPct: 7 },
       { key: "tax_reserve", name: "Tax / Lodging Tax Reserve", targetPct: 5 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 18 },
+      { key: "opex", name: "Operating Overhead", targetPct: 18 },
     ],
-    defaultTargets: { targetPrimeCost: 63, targetLaborCost: 12 },
+    defaultTargets: { targetPrimeCost: null, targetLaborCost: 12 },
     profileQuestions: [
       { key: "ownershipModel", label: "Do you own the units or manage for owners?", type: "select", options: ["Manage for owners", "Own the units", "Mixed"], required: true },
       { key: "mgmtFeePct", label: "Management fee (% of booking revenue)", type: "percent", defaultValue: 20 },
@@ -281,7 +281,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "cogs_inventory", name: "COGS - Inventory", targetPct: 45 },
       { key: "labor", name: "Labor", targetPct: 18 },
       { key: "tax_reserve", name: "Tax Reserve", targetPct: 5 },
-      { key: "opex", name: "OpEx + Spill", targetPct: 18 },
+      { key: "opex", name: "Operating Expenses", targetPct: 18 },
     ],
     defaultTargets: { targetPrimeCost: 63, targetLaborCost: 18 },
     profileQuestions: [

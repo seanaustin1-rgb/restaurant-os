@@ -251,7 +251,7 @@ export async function loadDashboardData(
       cogsSubGroups,
     ),
     mkGauge("labor", "Labor", taps.laborPct, targets.labor, labor, catsForTap("LABOR")),
-    mkGauge("opex", "OpEx + Spill", taps.opexPct, targets.opex, opex, catsForTap("OPEX")),
+    mkGauge("opex", "Operating Expenses", taps.opexPct, targets.opex, opex, catsForTap("OPEX")),
   ];
 
   // Beverage cost ratios (Milestone B). Denominator = real per-day alcohol sales

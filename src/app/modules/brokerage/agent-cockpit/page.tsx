@@ -44,7 +44,12 @@ export default async function BrokerageAgentCockpitPage({
     orderBy: { createdAt: "asc" },
   });
 
-  const selectedRestaurantId = searchParams?.restaurantId ?? roles[0]?.restaurantId ?? null;
+  const authorizedRestaurantIds = new Set(roles.map((role) => role.restaurantId));
+  const requestedRestaurantId = searchParams?.restaurantId ?? null;
+  const selectedRestaurantId =
+    requestedRestaurantId && authorizedRestaurantIds.has(requestedRestaurantId)
+      ? requestedRestaurantId
+      : roles[0]?.restaurantId ?? null;
   const cockpit = selectedRestaurantId ? await loadBrokerageCockpit(selectedRestaurantId) : null;
   const selectedAgentId = searchParams?.agentId ?? cockpit?.agentProduction.allAgents[0]?.agentId ?? null;
   const data = await loadBrokerageAgentCockpitForUser({

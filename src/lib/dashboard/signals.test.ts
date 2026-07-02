@@ -152,7 +152,7 @@ describe("dashboard signals", () => {
       gauges: [
         {
           key: "opex",
-          label: "OpEx + Spill",
+          label: "Operating Expenses",
           tapPct: 28,
           target: 100,
           spent: 175,

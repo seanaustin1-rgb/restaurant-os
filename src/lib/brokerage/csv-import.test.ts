@@ -53,6 +53,45 @@ describe("csvToBrokerageRows", () => {
     });
   });
 
+  it("maps BoldTrail lead-spend exports into agent-attributed spend", () => {
+    const csv = [
+      "Campaign,Assigned Agent ID,Lead Cost,Estimated GCI,Closed Deals",
+      "Google PPC,BT-22,1200,18000,2",
+    ].join("\n");
+    const { rows, mapped } = csvToBrokerageRows("leadSpend", csv, "boldtrail");
+    expect(mapped.source).toBe("Campaign");
+    expect(mapped.agentExternalId).toBe("Assigned Agent ID");
+    expect(mapped.spend).toBe("Lead Cost");
+    expect(rows[0]).toMatchObject({
+      source: "Google PPC",
+      agentExternalId: "BT-22",
+      spend: 1200,
+      attributedGci: 18000,
+      attributedDeals: 2,
+    });
+  });
+
+  it("maps appFiles transaction exports into deal rows", () => {
+    const csv = [
+      "File Number,Agent Email,File Address,File Status,Commission Amount,Agent Commission,Company Dollar,Settlement Date",
+      "AF-31,sam@example.com,31 Ocean Ave,Approved for Payout,14000,9800,4200,2026-06-25",
+    ].join("\n");
+    const { rows, mapped } = csvToBrokerageRows("deals", csv, "appfiles");
+    expect(mapped.externalDealId).toBe("File Number");
+    expect(mapped.stage).toBe("File Status");
+    expect(mapped.companyDollar).toBe("Company Dollar");
+    expect(rows[0]).toMatchObject({
+      externalDealId: "AF-31",
+      agentExternalId: "sam@example.com",
+      label: "31 Ocean Ave",
+      stage: "Approved for Payout",
+      gci: 14000,
+      agentPayout: 9800,
+      companyDollar: 4200,
+      closedDate: "2026-06-25",
+    });
+  });
+
   it("maps Lone Wolf-style deal exports without renaming headers", () => {
     const csv = [
       "Transaction No,Salesperson ID,Civic Address,Gross Comm,Company Net,Completion Date",

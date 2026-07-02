@@ -6,7 +6,7 @@ import type { BrokerageImportPayload } from "./normalized-import";
 // side-effect free; the route/UI feed the result straight into the normalizer.
 
 export type BrokerageEntity = "agents" | "deals" | "leadSpend";
-export type BrokerageCsvProfile = "generic" | "lone_wolf" | "skyslope" | "loft47";
+export type BrokerageCsvProfile = "generic" | "boldtrail" | "appfiles" | "lone_wolf" | "skyslope" | "loft47";
 
 type FieldType = "string" | "number" | "date";
 
@@ -60,6 +60,51 @@ const SPECS: Record<BrokerageEntity, FieldSpec[]> = {
 const PROFILE_ALIASES: Partial<
   Record<BrokerageCsvProfile, Partial<Record<BrokerageEntity, Record<string, string[]>>>>
 > = {
+  boldtrail: {
+    agents: {
+      externalAgentId: ["userid", "boldtrailuserid", "agentuuid"],
+      name: ["agentname", "assignedagent", "owner"],
+      email: ["agentemail", "useremail"],
+    },
+    deals: {
+      externalDealId: ["transactionid", "dealid", "opportunityid", "leadid"],
+      agentExternalId: ["userid", "agentid", "assignedagentid", "agentemail"],
+      label: ["propertyaddress", "address", "listingaddress"],
+      stage: ["pipelinestage", "status", "transactionstage"],
+      expectedCloseDate: ["expectedclosedate", "estimatedclosingdate"],
+      salePrice: ["saleprice", "listingprice", "propertyvalue"],
+      gci: ["grosscommission", "estimatedcommission", "commissionamount"],
+      probabilityPct: ["probability", "closeprobability"],
+    },
+    leadSpend: {
+      externalLeadSpendId: ["campaignid", "leadid", "sourceid"],
+      source: ["leadsource", "campaign", "source", "utm_source"],
+      agentExternalId: ["userid", "agentid", "assignedagentid", "agentemail"],
+      spend: ["adspend", "cost", "leadcost", "cpa"],
+      attributedGci: ["attributedcommission", "estimatedgci"],
+      attributedDeals: ["closings", "closeddeals", "deals"],
+    },
+  },
+  appfiles: {
+    agents: {
+      externalAgentId: ["agentid", "agentemail", "realtorid"],
+      name: ["agent", "realtor", "agentname"],
+      email: ["agentemail", "realtoremail"],
+    },
+    deals: {
+      externalDealId: ["fileid", "filenumber", "transactionid", "contractid"],
+      agentExternalId: ["agentemail", "agentid", "realtorid"],
+      label: ["propertyaddress", "fileaddress", "listingaddress"],
+      stage: ["filestatus", "transactionstatus", "compliancestatus"],
+      expectedCloseDate: ["scheduledclosingdate", "estimatedclosedate"],
+      closedDate: ["closeddate", "settlementdate", "approveddate"],
+      salePrice: ["saleprice", "contractprice", "purchaseprice"],
+      gci: ["grosscommission", "commissionamount", "gci"],
+      agentSplitPct: ["split", "agentsplit", "commissionpercentage"],
+      agentPayout: ["agentcommission", "agentpayout"],
+      companyDollar: ["companydollar", "brokeragenet", "officegross"],
+    },
+  },
   lone_wolf: {
     agents: {
       externalAgentId: ["associateid", "agentcode", "salespersonid"],

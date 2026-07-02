@@ -127,7 +127,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   REAL_ESTATE_BROKERAGE: {
     businessType: "REAL_ESTATE_BROKERAGE",
-    minimumAutoInput: "Plaid + QuickBooks/Xero. That is enough to establish cash truth, fixed burn, and the first Company Dollar read; CRM, transaction, Aura, and MLS feeds are upgrade layers.",
+    minimumAutoInput: "Bank + QuickBooks/Xero plus a brokerage export. CSV gets the first Company Dollar read live; BoldTrail, BoldTrail BackOffice/Brokermint, and appFiles can replace exports when API or partner access is available.",
     groups: [
       commonCash,
       commonAccounting,
@@ -136,8 +136,9 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Commission pipeline",
         purpose: "Shows pending closings, expected commission, splits, referral fees, and close timing.",
         options: [
-          { name: "Follow Up Boss / Lofty / kvCORE", role: "CRM pipeline and lead source", unlocks: ["commission pipeline", "lead ROI"] },
-          { name: "Brokermint / Dotloop / SkySlope", role: "Transaction management", unlocks: ["pending closings", "deal margin"] },
+          { name: "BoldTrail CRM / export", role: "Lead source, campaigns, agent assignment, and early pipeline; API if admin-enabled, CSV/export first.", unlocks: ["commission pipeline", "lead ROI"] },
+          { name: "BoldTrail BackOffice / Brokermint export", role: "Commission management, splits, caps, agent ledgers, and QBO checks; API access or export.", unlocks: ["Company Dollar", "cap pressure"] },
+          { name: "appFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"] },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],
       },
@@ -155,7 +156,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   VACATION_RENTAL: {
     businessType: "VACATION_RENTAL",
-    minimumAutoInput: "Plaid + booking platform. Accounting adds owner payouts and cleaner property-level profit.",
+    minimumAutoInput: "Bank + Escapia/API or export. Escapia can start with inventory, rates, fees, taxes, and restrictions; booking/profit detail becomes live when reservations, owner statements, and property expenses are imported or connected.",
     groups: [
       commonCash,
       commonAccounting,
@@ -164,6 +165,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Bookings and occupancy",
         purpose: "Shows occupancy, ADR, RevPAR, booking pace, platform fees, and future cash.",
         options: [
+          { name: "Escapia API / export", role: "Property managers, units, rates, fees, taxes, restrictions, and channels; booking/profit fields depend on account access.", unlocks: ["rate freshness", "booking pace"], minimum: true },
           { name: "Airbnb / Vrbo / Booking.com", role: "Bookings, payouts, reviews", unlocks: ["occupancy", "booking pace", "guest Aura"], minimum: true },
           { name: "Guesty / Hostaway / OwnerRez / Lodgify", role: "Property-management system", unlocks: ["property profit", "owner payouts", "maintenance drag"] },
         ],
@@ -173,7 +175,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Turns and maintenance",
         purpose: "Shows cleaning, laundry, supplies, repairs, and unit-level drag.",
         options: [
-          { name: "QuickBooks classes / locations", role: "Property-level cost tagging", unlocks: ["unit profitability", "maintenance drag"], minimum: true },
+          { name: "Escapia owner statement / QBO export", role: "Owner proceeds, property-level expense tagging, and payout checks.", unlocks: ["unit profitability", "maintenance drag"], minimum: true },
           { name: "Jobber / Breezeway", role: "Turnover and maintenance work", unlocks: ["turn cost", "service reliability"] },
         ],
       },

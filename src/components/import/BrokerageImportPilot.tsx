@@ -162,6 +162,8 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
             className="rounded-lg border border-line bg-ink px-3 py-2 text-sm text-ink-text outline-none focus:border-copper-soft"
           >
             <option value="generic">Generic spreadsheet</option>
+            <option value="boldtrail">BoldTrail export</option>
+            <option value="appfiles">appFiles export</option>
             <option value="lone_wolf">Lone Wolf-style export</option>
             <option value="skyslope">SkySlope-style export</option>
             <option value="loft47">Loft47-style export</option>
@@ -302,6 +304,8 @@ function Stat({ label, value, tone }: { label: string; value: number; tone?: "wa
 
 const PROFILE_LABELS: Record<BrokerageCsvProfile, string> = {
   generic: "Generic spreadsheet",
+  boldtrail: "BoldTrail export",
+  appfiles: "appFiles export",
   lone_wolf: "Lone Wolf-style export",
   skyslope: "SkySlope-style export",
   loft47: "Loft47-style export",

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -37,7 +37,7 @@ export default async function BusinessSettingsPage() {
         />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need an owner, consultant, or manager role on a restaurant to manage its business template.
+          You need an owner, consultant, or manager role on a business to manage its business template.
         </p>
       )}
     </main>

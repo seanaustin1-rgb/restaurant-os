@@ -1,15 +1,15 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { DemoEstimator } from "./DemoEstimator";
 
 export const metadata: Metadata = {
-  title: "Instant Estimate — OutFront Data",
+  title: "Instant Estimate â€” OutFront Data",
   description:
-    "See what your restaurant's numbers look like on the OutFront Data dashboard — a 60-second, no-login estimate.",
+    "See what your business numbers look like on the OutFront Data dashboard — a 60-second, no-login estimate.",
 };
 
 // Public Mode-2 demo: a prospect enters a few averages and watches a partial,
-// personalized dashboard fill in. No auth, no database — the financial tiles
+// personalized dashboard fill in. No auth, no database â€” the financial tiles
 // compute client-side; only the optional Google reputation lookup hits the network.
 export default function DemoPage() {
   return (

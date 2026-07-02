@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -8,8 +8,8 @@ import { canWriteMetricNotes, normalizeAudience, readableAudiencesFor } from "@/
 
 const MAX_BODY = 600;
 
-// Resolve the caller's single role on a restaurant (one row per user/tenant).
-// Everything gates off this — a user with no role on the tenant resolves to null
+// Resolve the caller's single role on a business (one row per user/tenant).
+// Everything gates off this â€” a user with no role on the tenant resolves to null
 // and gets neither reads nor writes.
 async function resolveViewer(restaurantId: string): Promise<{ userId: string; role: UserRole | null }> {
   const { userId } = await auth();

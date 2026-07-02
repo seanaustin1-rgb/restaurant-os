@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadSalesMix } from "@/lib/modules/sales-mix";
@@ -20,8 +20,8 @@ export default async function SalesMixPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Sales Mix</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.windowLabel}` : ""} · net sales by revenue center, from Toast.
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.windowLabel}` : ""} Â· net sales by revenue center, from Toast.
         </p>
       </div>
       {data?.hasData ? (

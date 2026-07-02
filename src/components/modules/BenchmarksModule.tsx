@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Gauge } from "lucide-react";
 import type { BenchmarksData, BenchmarkRow } from "@/lib/modules/benchmarks";
@@ -70,7 +70,7 @@ function MetricBar({ row }: { row: BenchmarkRow }) {
 
       <div className="mt-2 flex items-center justify-between text-[11px]">
         <span className="text-muted">
-          typical <span className="tnum text-muted">{row.typicalLow}–{row.typicalHigh}%</span>
+          typical <span className="tnum text-muted">{row.typicalLow}â€“{row.typicalHigh}%</span>
         </span>
         <span className={HEALTH_TEXT[row.status]}>{row.note}</span>
       </div>
@@ -90,7 +90,7 @@ export function BenchmarksModule({ data }: { data: BenchmarksData }) {
             </span>
             <div className={"mt-1 text-2xl " + HEALTH_TEXT[data.overall]}>{OVERALL_LABEL[data.overall]}</div>
             <div className="mt-0.5 text-[11px] text-muted">
-              {data.greenCount} of {data.rows.length} metrics within range · {data.cohort}
+              {data.greenCount} of {data.rows.length} metrics within range Â· {data.cohort}
             </div>
           </div>
         </div>
@@ -106,10 +106,10 @@ export function BenchmarksModule({ data }: { data: BenchmarksData }) {
       {/* Honest footnote */}
       <p className="text-[11px] leading-relaxed text-muted">
         Ranges are <span className="text-ink-text">static industry reference figures</span> for{" "}
-        {data.cohort.toLowerCase()} (Prime ≤60%, COGS 28–32%, Labor 28–34%, Net Margin ≥6%) — not live peer data,
+        {data.cohort.toLowerCase()} (Prime â‰¤60%, COGS 28â€“32%, Labor 28â€“34%, Net Margin â‰¥6%) â€” not live peer data,
         so read them as guide-rails, not a leaderboard. They&apos;ll be replaced with real cohort percentiles
         once a peer dataset is connected. Your figures use the trailing 8-week window: net sales &amp; labor from
-        Toast; COGS, operating costs &amp; debt service cash-basis from categorized transactions.
+        sales source; direct costs, operating costs &amp; debt service cash-basis from categorized transactions.
       </p>
     </div>
   );

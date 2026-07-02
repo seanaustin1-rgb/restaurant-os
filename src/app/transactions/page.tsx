@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
@@ -38,7 +38,7 @@ export default async function TransactionsPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Transactions</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — {rows.length} most recent. Recategorize to correct the
+          {role?.restaurant?.name ?? "Your business"} â€” {rows.length} most recent. Recategorize to correct the
           automatic mapping; your choice sticks across future syncs.
         </p>
       </div>

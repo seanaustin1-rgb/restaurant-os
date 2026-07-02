@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadTaxVault } from "@/lib/modules/tax-vault";
@@ -20,8 +20,8 @@ export default async function TaxVaultPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Tax Vault</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · sales &amp; payroll tax set aside vs. pulled.
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· sales &amp; payroll tax set aside vs. pulled.
         </p>
       </div>
       {data?.hasData ? (

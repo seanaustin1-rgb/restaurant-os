@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadLaborHours } from "@/lib/modules/labor-hours";
@@ -20,8 +20,8 @@ export default async function LaborPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Labor Hours</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · actual hours, labor cost &amp;
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· actual hours, labor cost &amp;
           sales per labor hour, by week, from Toast.
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadAura } from "@/lib/modules/aura";
@@ -23,9 +23,9 @@ export default async function AuraPage() {
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
-        <h1 className="font-display text-2xl text-copper-soft">Aura — Reputation</h1>
+        <h1 className="font-display text-2xl text-copper-soft">Aura â€” Reputation</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} · your standing across Google, Yelp &amp; Facebook in
+          {role?.restaurant?.name ?? "Your business"} Â· your standing across Google, Yelp &amp; Facebook in
           one place. Connect a source and it lights up here.
         </p>
       </div>

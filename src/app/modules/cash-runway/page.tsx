@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadCashRunway } from "@/lib/modules/cash-runway";
@@ -20,7 +20,7 @@ export default async function CashRunwayPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Cash Runway</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} · days of cash at the current burn rate,
+          {role?.restaurant?.name ?? "Your business"} Â· days of cash at the current burn rate,
           from your bank transactions.
         </p>
       </div>
@@ -28,7 +28,7 @@ export default async function CashRunwayPage() {
         <CashRunwayModule data={data} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need a restaurant to view cash runway. Complete onboarding first.
+          You need a business to view cash runway. Complete onboarding first.
         </p>
       )}
     </main>

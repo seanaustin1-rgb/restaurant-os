@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadVendorSpend } from "@/lib/modules/vendor-spend";
@@ -20,15 +20,15 @@ export default async function VendorSpendPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Vendor Spend</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data ? ` — ${data.periodLabel}` : ""} · where your money went, biggest suppliers first.
+          {role?.restaurant?.name ?? "Your business"}
+          {data ? ` â€” ${data.periodLabel}` : ""} Â· where your money went, biggest suppliers first.
         </p>
       </div>
       {data ? (
         <VendorSpendModule data={data} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need a restaurant to view vendor spend. Complete onboarding first.
+          You need a business to view vendor spend. Complete onboarding first.
         </p>
       )}
     </main>

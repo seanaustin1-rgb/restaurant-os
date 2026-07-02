@@ -1,4 +1,4 @@
-import type { BusinessType, UserRole } from "@prisma/client";
+﻿import type { BusinessType, UserRole } from "@prisma/client";
 
 const ALL_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT", "INVESTOR"];
 const ADJUSTMENT_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT"];
@@ -31,8 +31,8 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/settings/access", label: "Access", roles: OWNER_ROLES },
   { href: "/settings/business", label: "Business Template", roles: ADJUSTMENT_ROLES },
   { href: "/settings/sources", label: "Source Map", roles: ADJUSTMENT_ROLES },
-  { href: "/settings/allocation", label: "Allocation", roles: ADJUSTMENT_ROLES },
-  { href: "/settings/beverage", label: "Beverage", roles: ADJUSTMENT_ROLES },
+  { href: "/settings/allocation", label: "Allocation", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
+  { href: "/settings/beverage", label: "Beverage", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/connections", label: "Connections", roles: OWNER_ROLES },
 ];
 

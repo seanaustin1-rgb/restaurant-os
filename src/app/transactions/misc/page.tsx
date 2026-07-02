@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
@@ -53,9 +53,9 @@ export default async function MiscReviewPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div>
-        <h1 className="font-display text-2xl text-copper-soft">Review — Unnamed Transactions</h1>
+        <h1 className="font-display text-2xl text-copper-soft">Review â€” Unnamed Transactions</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — everything still in Misc/Unassigned, biggest dollars first.
+          {role?.restaurant?.name ?? "Your business"} â€” everything still in Misc/Unassigned, biggest dollars first.
           Select rows and give them a category; your choice sticks and won&rsquo;t be re-swept by rules. Add a keyword{" "}
           <span className="text-ink-text">Rule</span> to auto-categorize these next time.
         </p>

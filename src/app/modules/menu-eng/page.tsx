@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadMenuEngineering } from "@/lib/modules/menu-engineering";
@@ -20,8 +20,8 @@ export default async function MenuEngineeringPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Menu Engineering</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.windowLabel}` : ""} · items by popularity &amp; revenue, from Toast.
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.windowLabel}` : ""} Â· items by popularity &amp; revenue, from Toast.
         </p>
       </div>
       {data?.hasData ? (

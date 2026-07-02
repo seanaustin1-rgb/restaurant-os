@@ -77,6 +77,14 @@ function businessDateToUtcDate(bd: string): Date {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+async function markToastConnectionSynced(restaurantId: string): Promise<void> {
+  const { restaurantGuid } = getToastConfig();
+  await prisma.posConnection.updateMany({
+    where: { restaurantId, provider: "TOAST", externalId: restaurantGuid, isActive: true },
+    data: { lastSyncedAt: new Date() },
+  });
+}
+
 /**
  * Sync the last `days` closed business days (yesterday backwards) into
  * DailySales for one restaurant. Days the era API returns no data for are
@@ -125,6 +133,8 @@ export async function syncToastDailyMetrics(
     }
     if (offset > 1) await sleep(spacingMs);
   }
+
+  if (written > 0) await markToastConnectionSynced(restaurantId);
 
   return {
     restaurantId,
@@ -175,6 +185,8 @@ export async function syncToastSalesTax(
     }
     if (offset > 1) await sleep(spacingMs);
   }
+
+  if (written > 0) await markToastConnectionSynced(restaurantId);
 
   return {
     restaurantId,
@@ -250,6 +262,8 @@ export async function syncToastSalesMix(
     }
     if (offset > 1) await sleep(spacingMs);
   }
+
+  if (written > 0) await markToastConnectionSynced(restaurantId);
 
   return {
     restaurantId,
@@ -330,6 +344,8 @@ export async function syncToastMenuItemSales(
     lastWritten = dates[dates.length - 1] ?? lastWritten;
     if (w > 1) await sleep(spacingMs);
   }
+
+  if (rowsWritten > 0) await markToastConnectionSynced(restaurantId);
 
   return {
     restaurantId,

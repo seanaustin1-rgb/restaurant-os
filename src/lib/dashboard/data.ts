@@ -146,13 +146,14 @@ export async function loadDashboardData(
   // Sales/operational from DailySales.
   const sales = await db.dailySales.aggregate({
     where: { restaurantId, date: { gte: start, lt: end } },
-    _sum: { netSales: true, liquorSales: true, beverageSales: true, covers: true, checkCount: true, hoursOpen: true },
+    _sum: { netSales: true, liquorSales: true, beverageSales: true, covers: true, checkCount: true, laborCost: true, hoursOpen: true },
   });
   const revenue = n(sales._sum.netSales);
   const liquorSalesActual = n(sales._sum.liquorSales);
   const beverageSalesActual = n(sales._sum.beverageSales);
   const covers = n(sales._sum.covers);
   const checks = n(sales._sum.checkCount);
+  const posLabor = n(sales._sum.laborCost);
   const hoursOpen = n(sales._sum.hoursOpen);
 
   // Costs/spend per TAP, rolled up from each transaction's Category -> tapBucket.
@@ -194,6 +195,7 @@ export async function loadDashboardData(
   const cogsLiquor = tap("COGS_LIQUOR");
   const cogsBeverage = tap("COGS_BEVERAGE");
   const labor = tap("LABOR"); // Payroll — Paper Checks already maps to LABOR
+  const heartbeatLabor = posLabor > 0 ? posLabor : labor;
   const opex = tap("OPEX");
   const ownerPay = tap("OWNER_PAY");
   const profitSpend = tap("PROFIT"); // Debt Service — serviced from Profit (PF), not OpEx
@@ -334,9 +336,9 @@ export async function loadDashboardData(
     sourceSetup,
     rentalPropertyRollup,
     heartbeat: {
-      primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, labor, revenue),
+      primeCostPct: calculatePrimeCost(cogsFood, cogsLiquor + cogsBeverage, heartbeatLabor, revenue),
       primeCostTrendPts: primeCost.wowPrimeDelta,
-      laborPct: revenue > 0 ? (labor / revenue) * 100 : 0,
+      laborPct: revenue > 0 ? (heartbeatLabor / revenue) * 100 : 0,
       foodPct: revenue > 0 ? (cogsFood / revenue) * 100 : 0,
       liquorPct: revenue > 0 ? (cogsLiquor / revenue) * 100 : 0,
       beveragePct: revenue > 0 ? (cogsBeverage / revenue) * 100 : 0,

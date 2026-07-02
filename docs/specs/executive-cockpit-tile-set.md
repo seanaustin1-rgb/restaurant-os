@@ -155,3 +155,33 @@ Cockpit** (each agent sees their own row) — one shape, two views.
 - Keep `marketAura.market` nullable.
 - Keep `cashSafety` as `DashboardCashSafety & { floorDaysTarget: number }`.
 - Use one `AgentRow[]` shape for Executive Cockpit and future Agent Cockpit, but gate Agent Cockpit until role-scoped reads and activity snapshots exist.
+
+## 6. Shipped (2026-07-02) — what actually landed
+
+The strawman above is now implemented and merged (PRs #58, #59). Current state:
+
+- **Executive Cockpit** (`src/components/cockpit/ExecutiveCockpit.tsx`): rebuilt on the OutFront Data
+  design system (DESIGN.md) — matte Ink ground, Surface panels, hairline Line borders, Space Mono
+  figures via `.tnum`, serif `font-display` headings, `HealthSignal` (word + icon, never colour alone),
+  and copper rationed to the single "The one thing" callout. Renders read-only off `BrokerageCockpitData`.
+- **Agent Cockpit** (`src/app/modules/brokerage/agent-cockpit/page.tsx`): per-agent view brought up to the
+  same standard — `HealthSignal` badge + health-coloured Company Dollar, a copper **"Focus"** callout
+  (the agent's "one thing", from the data-lane note, shown only under pressure), and a **cap-pressure bar**
+  driven by `capProgressPct`.
+- **Property Cockpit** (`src/components/cockpit/PropertyCockpit.tsx`, route `/modules/rentals/cockpit`): the
+  rentals analogue for the `VACATION_RENTAL` vertical — **properties instead of agents**. Hero = bookings
+  vs. owner proceeds; tiles = owner proceeds, maintenance drag, guest Aura, occupancy. View-only over the
+  existing `RentalPropertyRollupData` / `PropertyPortfolioResult` contract (no new data lane).
+- **Red/yellow float to the top:** both cockpits surface unhealthy agents/properties as a **"Needs attention"**
+  early-action list (red before yellow, then a value tiebreak), falling back to lowest producer/proceeds when
+  all green. The ordering lives in a shared, unit-tested helper `orderByNeedsAttention`
+  (`src/lib/cockpit/needs-attention.ts`).
+- **Dashboard "More tools":** the module launcher grid collapses behind a "More tools" disclosure so the
+  dashboard reads clean; pinned modules still surface in Quick Access.
+- **Business-type-aware nav** (`src/lib/nav.ts`): vertical links (brokerage cockpits, Property Cockpit) only
+  show for tenants of the matching `businessType`, driven by the union of the viewer's tenants.
+
+**Design north star (next iterations):** push the cockpit toward a **fighter-jet** feel — an executive at the
+peak of their game glances once and takes the big decisions *now* because the info is already there, out front
+of the field. High-velocity single-glance read, purposeful cockpit motion (150–250ms, honouring
+`prefers-reduced-motion`), and "out front" framing. Deliberately deferred; iterate on feel from here.

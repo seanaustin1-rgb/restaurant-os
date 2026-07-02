@@ -160,7 +160,7 @@ function AgentCockpit({
               <div
                 className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line"
                 role="progressbar"
-                aria-valuenow={Math.round(agent.capProgressPct)}
+                aria-valuenow={Math.round(Math.min(100, Math.max(0, agent.capProgressPct)))}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-label="Cap used"

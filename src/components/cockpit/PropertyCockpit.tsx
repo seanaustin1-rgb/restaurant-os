@@ -16,6 +16,7 @@
 import type { ReactNode } from "react";
 import { Banknote, Building2, Percent, Scale, Star, Wrench } from "lucide-react";
 import { HealthSignal } from "@/components/health/HealthSignal";
+import { orderByNeedsAttention } from "@/lib/cockpit/needs-attention";
 import { money, pct } from "@/lib/format";
 import type { RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 import type { PropertyHeartbeatResult } from "@/lib/demo/property-heartbeat";
@@ -35,9 +36,6 @@ const BADGE: Record<Health, string> = {
   yellow: "border-health-yellow/30 bg-health-yellow/10 text-health-yellow",
   red: "border-health-red/35 bg-health-red/10 text-health-red",
 };
-
-// Severity order so red/yellow properties float to the top of the action list.
-const HEALTH_RANK: Record<Health, number> = { red: 2, yellow: 1, green: 0 };
 
 // Presentation tone bands — mirror the per-property thresholds in property-heartbeat.ts
 // so a tile's tone matches how each property's own health was scored.
@@ -113,10 +111,11 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
 
   // Early-action list: unhealthy properties raised to the top (red before yellow, then
   // thinnest owner proceeds first). Falls back to lowest proceeds when everything is green.
-  const needsAction = [...portfolio.properties]
-    .filter((p) => p.overallHealth !== "green")
-    .sort((a, b) => HEALTH_RANK[b.overallHealth] - HEALTH_RANK[a.overallHealth] || a.ownerProceeds - b.ownerProceeds)
-    .slice(0, 4);
+  const needsAction = orderByNeedsAttention(
+    portfolio.properties,
+    (p) => p.overallHealth,
+    (a, b) => a.ownerProceeds - b.ownerProceeds,
+  ).slice(0, 4);
   const lowestProceeds = [...portfolio.properties].sort((a, b) => a.ownerProceeds - b.ownerProceeds).slice(0, 4);
   const topPerformers = [...portfolio.properties].sort((a, b) => b.ownerProceeds - a.ownerProceeds).slice(0, 4);
 

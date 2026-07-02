@@ -16,6 +16,7 @@
 import type { ReactNode } from "react";
 import { Banknote, Building2, Gauge, Star, TrendingUp, TrendingDown, Users, Scale } from "lucide-react";
 import { HealthSignal } from "@/components/health/HealthSignal";
+import { orderByNeedsAttention } from "@/lib/cockpit/needs-attention";
 import { money, pct } from "@/lib/format";
 import type {
   BrokerageCockpitAgentRow,
@@ -43,9 +44,6 @@ const SOURCE_BADGE: Record<"healthy" | "partial", string> = {
   healthy: "border-health-green/30 bg-health-green/10 text-health-green",
   partial: "border-health-yellow/30 bg-health-yellow/10 text-health-yellow",
 };
-
-// Severity order so red/yellow agents float to the top of the action list.
-const HEALTH_RANK: Record<"green" | "yellow" | "red", number> = { red: 2, yellow: 1, green: 0 };
 
 function compactMoney(n: number): string {
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -151,10 +149,11 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
   const repTone = auraTone(aura);
   // Early-action list: unhealthy agents raised to the top (red before yellow, then
   // biggest company dollar at risk first). Falls back to lowest producers when all green.
-  const needsAction = [...agentProduction.allAgents]
-    .filter((a) => a.health !== "green")
-    .sort((a, b) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || b.companyDollar - a.companyDollar)
-    .slice(0, 3);
+  const needsAction = orderByNeedsAttention(
+    agentProduction.allAgents,
+    (a) => a.health,
+    (a, b) => b.companyDollar - a.companyDollar,
+  ).slice(0, 3);
 
   return (
     <article className="rounded-lg border border-line bg-surface p-5">

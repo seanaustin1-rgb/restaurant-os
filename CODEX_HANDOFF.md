@@ -47,6 +47,10 @@ contracts **read-only**.
 - **North star (deferred, documented):** push the cockpit toward a **fighter-jet** feel — single-glance
   high-velocity read, purposeful cockpit motion (150–250ms, honour `prefers-reduced-motion`), "out
   front" framing.
+- **⚠️ #62 in flight (Codex):** branch `polish/current-cockpit-instrument-panel` re-polishes
+  `ExecutiveCockpit.tsx` / `PropertyCockpit.tsx` on top of this work (health-tinted `CARD_TONE_PANEL`
+  panels, larger figures, "One thing first" rename, boxed agent sections). Those two cockpit component
+  files are Codex's active lane right now — coordinate / rebase before touching them.
 
 Everything below this line is prior context (Phase 1 build order, earlier handoffs) and is retained
 for history — the above supersedes it for current cockpit state.

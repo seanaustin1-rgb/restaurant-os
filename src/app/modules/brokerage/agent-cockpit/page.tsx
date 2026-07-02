@@ -4,8 +4,18 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { ArrowLeft, BarChart3, BriefcaseBusiness, CircleDollarSign, Gauge, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { HealthSignal } from "@/components/health/HealthSignal";
 import { money, pct } from "@/lib/format";
 import { loadBrokerageAgentCockpitForUser, loadBrokerageCockpit } from "@/lib/modules/brokerage-analytics";
+import type { HealthStatus } from "@/lib/profit-first/calculator";
+
+// Agent-context health words (the icon stays fixed by status inside HealthSignal).
+const AGENT_HEALTH_WORD: Record<HealthStatus, string> = { green: "Healthy", yellow: "Watch", red: "Pressure" };
+const HEALTH_TEXT: Record<HealthStatus, string> = {
+  green: "text-health-green",
+  yellow: "text-health-yellow",
+  red: "text-health-red",
+};
 
 function primaryEmail(user: Awaited<ReturnType<typeof currentUser>>): string | null {
   return (
@@ -126,12 +136,12 @@ function AgentCockpit({
                   : "profile assumption"}
             </p>
           </div>
-          <span className="rounded-full border border-line px-3 py-1 text-xs text-copper-soft">{agent.health}</span>
+          <HealthSignal status={agent.health} mode="badge" label={AGENT_HEALTH_WORD[agent.health]} />
         </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={<CircleDollarSign size={16} />} label="Company Dollar" value={money(agent.companyDollar)} detail={retainedYield} />
+        <Stat icon={<CircleDollarSign size={16} />} label="Company Dollar" value={money(agent.companyDollar)} detail={retainedYield} tone={agent.health} />
         <Stat icon={<Gauge size={16} />} label="Cap remaining" value={capRemaining} detail={capProgress} />
         <Stat icon={<BriefcaseBusiness size={16} />} label="Pipeline CD" value={money(agent.pipelineCompanyDollar)} detail="Weighted future company dollar" />
         <Stat icon={<BarChart3 size={16} />} label="Lead ROI" value={leadRoi} detail={`${money(agent.leadSpend)} lead spend`} />
@@ -161,14 +171,26 @@ function AgentCockpit({
   );
 }
 
-function Stat({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {
+function Stat({
+  icon,
+  label,
+  value,
+  detail,
+  tone,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: HealthStatus;
+}) {
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
       <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted">
         <span className="text-copper-soft">{icon}</span>
         {label}
       </div>
-      <div className="tnum mt-2 text-2xl text-ink-text">{value}</div>
+      <div className={"tnum mt-2 text-2xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
       <p className="mt-1 text-xs text-muted">{detail}</p>
     </div>
   );

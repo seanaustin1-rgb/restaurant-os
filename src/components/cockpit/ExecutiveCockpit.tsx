@@ -44,6 +44,9 @@ const SOURCE_BADGE: Record<"healthy" | "partial", string> = {
   partial: "border-health-yellow/30 bg-health-yellow/10 text-health-yellow",
 };
 
+// Severity order so red/yellow agents float to the top of the action list.
+const HEALTH_RANK: Record<"green" | "yellow" | "red", number> = { red: 2, yellow: 1, green: 0 };
+
 function compactMoney(n: number): string {
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
   if (Math.abs(n) >= 1_000) return `$${Math.round(n / 1_000)}k`;
@@ -146,6 +149,12 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
   const cdrTone = cdr.status;
   const cashTone = cashSafety.status;
   const repTone = auraTone(aura);
+  // Early-action list: unhealthy agents raised to the top (red before yellow, then
+  // biggest company dollar at risk first). Falls back to lowest producers when all green.
+  const needsAction = [...agentProduction.allAgents]
+    .filter((a) => a.health !== "green")
+    .sort((a, b) => HEALTH_RANK[b.health] - HEALTH_RANK[a.health] || b.companyDollar - a.companyDollar)
+    .slice(0, 3);
 
   return (
     <article className="rounded-lg border border-line bg-surface p-5">
@@ -328,9 +337,11 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
             </ul>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted">Watch</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted">
+              {needsAction.length ? "Needs attention" : "Watch"}
+            </div>
             <ul className="mt-1 divide-y divide-line">
-              {agentProduction.bottomContributors.slice(0, 3).map((a) => (
+              {(needsAction.length ? needsAction : agentProduction.bottomContributors.slice(0, 3)).map((a) => (
                 <AgentLine key={a.agentId} agent={a} />
               ))}
             </ul>

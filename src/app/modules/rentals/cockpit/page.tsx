@@ -30,10 +30,10 @@ export default async function RentalPropertyCockpitPage({
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <Link
-          href="/modules/property-heartbeat"
+          href="/dashboard"
           className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-copper-soft"
         >
-          <ArrowLeft size={14} /> Property heartbeat
+          <ArrowLeft size={14} /> Dashboard
         </Link>
         <h1 className="mt-2 font-display text-2xl text-copper-soft">Property Cockpit</h1>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">

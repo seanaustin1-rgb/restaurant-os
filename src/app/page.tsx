@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
+import { SignInButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import Link from "next/link";
 
-// Signed-in users never need the marketing landing — send them straight to the
-// dashboard. Doing it here (server-side) makes the post-login destination
-// reliable even if Clerk's redirect env vars aren't set in the deployment.
+// Signed-in users never need the marketing landing; send them straight to the
+// dashboard. Doing it here server-side makes the post-login destination reliable
+// even if Clerk's redirect env vars are not set in the deployment.
 export default async function Home() {
   const { userId } = await auth();
   if (userId) redirect("/dashboard");
@@ -16,27 +16,19 @@ export default async function Home() {
       <img src="/logo.png" alt="OutFront Data" className="h-16 w-auto" />
       <p className="text-muted">Know your numbers. Decide now.</p>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center justify-center gap-4">
         <SignInButton forceRedirectUrl="/dashboard">
           <button className="rounded-md border border-line bg-surface px-4 py-2 text-sm font-medium text-ink-text hover:border-copper-dim">
-            Sign in
+            Log in
           </button>
         </SignInButton>
-        <SignUpButton forceRedirectUrl="/onboarding">
-          <button className="rounded-md bg-copper px-4 py-2 text-sm font-medium text-ink hover:bg-copper-soft">
-            Sign up
-          </button>
-        </SignUpButton>
+        <Link
+          href="/demo/tour"
+          className="rounded-md bg-copper px-4 py-2 text-sm font-medium text-ink hover:bg-copper-soft"
+        >
+          Take a tour
+        </Link>
       </div>
-
-      <p className="text-sm text-muted">
-        Curious first?{" "}
-        <Link href="/demo" className="text-copper-soft hover:text-copper">See your numbers</Link>
-        <span className="text-line"> · </span>
-        <Link href="/demo/tour" className="text-copper-soft hover:text-copper">Tour a live demo</Link>
-        <span className="text-line"> Â· </span>
-        <Link href="/access" className="text-copper-soft hover:text-copper">Choose access path</Link>
-      </p>
 
       <footer className="mt-4">
         <Link href="/privacy" className="text-xs text-gray-400 hover:text-gray-600">

@@ -20,7 +20,7 @@ const PF_OWNER_PAY_PCT = 10;
 const PF_TAX_PCT = 8;
 const PF_RESERVE_PCT = 5; // furnishing / capex reserve
 
-export type VacationRentalPms = "guesty" | "hostaway" | "ownerrez" | "hospitable" | "airbnb_vrbo" | "spreadsheet" | "other";
+export type VacationRentalPms = "escapia" | "guesty" | "hostaway" | "ownerrez" | "hospitable" | "airbnb_vrbo" | "spreadsheet" | "other";
 export type Season = "typical" | "peak" | "slow";
 export type AdrBasis = "gross" | "net";
 
@@ -115,6 +115,7 @@ export interface VacationRentalEstimateResult {
 }
 
 const PMS_LABELS: Record<VacationRentalPms, string> = {
+  escapia: "Escapia",
   guesty: "Guesty",
   hostaway: "Hostaway",
   ownerrez: "OwnerRez",
@@ -125,6 +126,7 @@ const PMS_LABELS: Record<VacationRentalPms, string> = {
 };
 
 const PMS_NOTES: Record<VacationRentalPms, string> = {
+  escapia: "Pilot source: API/export can start with property managers, units, rates, fees, taxes, restrictions, and channels; booking/profit fields depend on account access.",
   guesty: "Rich source: reservations, payouts, channel mix, cleaning tasks, and owner statements can roll in cleanly.",
   hostaway: "Strong for multi-channel hosts; reservations, financials, and automated tasks export well.",
   ownerrez: "Good for owner-operators; bookings, payments, owner statements, and expenses are accessible.",

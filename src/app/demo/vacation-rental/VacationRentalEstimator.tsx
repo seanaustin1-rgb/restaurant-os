@@ -58,7 +58,7 @@ type FormState = Record<
 >;
 
 const INITIAL: FormState = {
-  name: "", market: "", pms: "guesty", properties: "", adr: "", occupancy: "",
+  name: "", market: "", pms: "escapia", properties: "", adr: "", occupancy: "",
   adrBasis: "gross", season: "typical", nights: "",
   platformFee: "", managementFee: "", cleaning: "", maintenance: "", utilities: "", fixed: "",
 };
@@ -78,7 +78,7 @@ function buildInputs(f: FormState): VacationRentalEstimateInputs {
   return {
     name: f.name.trim(),
     market: f.market.trim(),
-    pms: (f.pms as VacationRentalPms) || "guesty",
+    pms: (f.pms as VacationRentalPms) || "escapia",
     properties: num(f.properties),
     adr: num(f.adr),
     occupancyPct: num(f.occupancy),
@@ -163,6 +163,7 @@ export function VacationRentalEstimator() {
         </div>
         <Field label="Property manager / PMS" hint="Tells the demo what would light this up live">
           <select className={selectCls} value={f.pms} onChange={updText("pms")}>
+            <option value="escapia">Escapia</option>
             <option value="guesty">Guesty</option>
             <option value="hostaway">Hostaway</option>
             <option value="ownerrez">OwnerRez</option>

@@ -408,8 +408,8 @@ export async function loadBrokerageAnalytics(
     market,
     sourceReadiness: [
       { label: "Accounting", state: stateFor("accounting", ["QuickBooks Online", "Xero"]), detail: "Company Dollar checks, fixed OpEx, tax reserve, and advisor review." },
-      { label: "CRM pipeline", state: stateFor("pipeline", ["Follow Up Boss / Lofty / kvCORE"]), detail: "Pending deals, source attribution, expected close date, and close probability." },
-      { label: "Transaction management", state: stateFor("pipeline", ["Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, and agent ledgers." },
+      { label: "CRM pipeline", state: stateFor("pipeline", ["BoldTrail CRM / export", "Follow Up Boss / Lofty / kvCORE"]), detail: "Pending deals, source attribution, expected close date, close probability, and lead-source activity." },
+      { label: "Commission + files", state: stateFor("pipeline", ["BoldTrail BackOffice / Brokermint export", "appFiles transaction export", "Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
       { label: "Market Aura", state: stateFor("aura", ["Google Business Profile", "Zillow / Realtor.com"]), detail: "Search intent, profile actions, reviews, portal activity, and local demand." },
     ],
     counts: {
@@ -541,7 +541,7 @@ export async function loadBrokerageCockpit(
   const connectedCount = sourceConfigs.filter((source) => source.status === "CONNECTED").length;
   const requiredSources = [
     { category: "accounting", providerName: "QuickBooks Online" },
-    { category: "pipeline", providerName: "Follow Up Boss / Lofty / kvCORE" },
+    { category: "pipeline", providerName: "BoldTrail CRM / export" },
     { category: "aura", providerName: "Google Business Profile" },
   ];
   const connectedKeys = new Set(sourceConfigs.filter((source) => source.status === "CONNECTED").map((source) => `${source.category}:${source.providerName}`));

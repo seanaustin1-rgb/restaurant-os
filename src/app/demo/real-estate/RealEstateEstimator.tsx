@@ -50,7 +50,7 @@ type FormState = Record<
 const INITIAL: FormState = {
   name: "Keystone Ridge Realty",
   market: "York, PA",
-  software: "brokermint",
+  software: "boldtrail_appfiles",
   monthlyGci: "120000",
   agentSplitPct: "70",
   franchiseFeePct: "6",
@@ -72,10 +72,10 @@ const HEALTH_TEXT: Record<Health, string> = {
 };
 
 const AGENT_GRID_SOURCES = [
-  { label: "Closed Company Dollar", source: "commission/back-office export" },
-  { label: "Cap remaining", source: "cap model + paid-to-date" },
-  { label: "Weighted pipeline", source: "CRM or transaction pipeline" },
-  { label: "Lead ROI", source: "lead spend by source + retained Company Dollar" },
+  { label: "Closed Company Dollar", source: "BoldTrail BackOffice/Brokermint, QBO, or CSV export" },
+  { label: "Cap remaining", source: "cap model + paid-to-date from back office/export" },
+  { label: "Weighted pipeline", source: "BoldTrail CRM + appFiles transaction status" },
+  { label: "Lead ROI", source: "BoldTrail lead source/spend + retained Company Dollar" },
 ] as const;
 
 const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
@@ -193,13 +193,15 @@ export function RealEstateEstimator() {
         <Field label="Market">
           <input className={inputCls} placeholder="York, PA" value={f.market} onChange={upd("market")} />
         </Field>
-        <Field label="CRM / back office" hint="Tells the demo what would light this up live">
+        <Field label="Brokerage tech stack" hint="API when available; CSV/export first when access is gated">
           <select className={selectCls} value={f.software} onChange={upd("software")}>
+            <option value="boldtrail_appfiles">BoldTrail + appFiles</option>
             <option value="followupboss">Follow Up Boss</option>
-            <option value="boldtrail">BoldTrail / kvCORE</option>
+            <option value="boldtrail">BoldTrail CRM</option>
             <option value="sierra">Sierra Interactive</option>
             <option value="lofty">Lofty (Chime)</option>
-            <option value="brokermint">Brokermint</option>
+            <option value="brokermint">BoldTrail BackOffice / Brokermint</option>
+            <option value="appfiles">appFiles</option>
             <option value="quickbooks">QuickBooks</option>
             <option value="spreadsheet">Spreadsheet / none</option>
             <option value="other">Other</option>
@@ -712,7 +714,7 @@ function LeadRoiPreview({ rows }: { rows: AgentPerformanceResult[] }) {
         </div>
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
-        Live version connects CRM lead source, ad spend, closed deals, and retained Company Dollar. A consultant can adjust attribution and close probability without owning API authorization.
+        Live version connects BoldTrail lead source and campaign spend to closed Company Dollar from QBO/back-office data. Until API access is approved, this can be imported from CSV/export and reviewed by a consultant or accountant.
       </p>
     </div>
   );
@@ -767,16 +769,16 @@ function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) 
     },
     {
       label: "Back-office commissions",
-      source: "Brokermint / SkySlope / Dotloop",
+      source: "BoldTrail BackOffice / Brokermint or CSV",
       coverage: 62,
-      note: "Splits, caps, referral fees, franchise fees, agent ledgers, and closed Company Dollar.",
+      note: "Splits, caps, referral fees, franchise fees, agent ledgers, and closed Company Dollar. Use API access when available; otherwise import exports.",
       health: "yellow" as Health,
     },
     {
-      label: "CRM pipeline",
+      label: "CRM + file workflow",
       source: softwareLabel,
       coverage: 58,
-      note: "Pending deals, expected close date, source attribution, and probability-weighted Company Dollar.",
+      note: "BoldTrail supplies lead source, campaign, agent assignment, and pipeline. appFiles supplies transaction-file status and commission worksheets when exported.",
       health: "yellow" as Health,
     },
     {
@@ -805,7 +807,7 @@ function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) 
             <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Database size={14} className="text-copper-soft" /> Brokerage data foundation
             </div>
-            <div className="mt-0.5 text-[11px] text-muted">Start with accounting and commission/back-office data; add CRM and market feeds when the core money model is trusted.</div>
+            <div className="mt-0.5 text-[11px] text-muted">Start with QBO/bank plus CSV exports. Replace exports with BoldTrail, appFiles, or back-office APIs only after access is confirmed.</div>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

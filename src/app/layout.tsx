@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { dark } from "@clerk/themes";
-import type { UserRole } from "@prisma/client";
+import type { BusinessType, UserRole } from "@prisma/client";
 import { Cormorant_Garamond, DM_Sans, Space_Mono } from "next/font/google";
 import { AppHeader } from "@/components/AppHeader";
 import { prisma } from "@/lib/prisma";
@@ -31,16 +31,18 @@ export const metadata: Metadata = {
   description: "Financial insights for operators — know your numbers, decide now.",
 };
 
-async function loadSignedInRoles(): Promise<UserRole[]> {
+async function loadSignedInAccess(): Promise<{ roles: UserRole[]; businessTypes: BusinessType[] }> {
   const { userId } = await auth();
-  if (!userId) return [];
+  if (!userId) return { roles: [], businessTypes: [] };
 
   const rows = await prisma.userRestaurantRole.findMany({
     where: { clerkUserId: userId },
-    select: { role: true },
-    distinct: ["role"],
+    select: { role: true, restaurant: { select: { businessType: true } } },
   });
-  return rows.map((row) => row.role);
+  return {
+    roles: [...new Set(rows.map((row) => row.role))],
+    businessTypes: [...new Set(rows.map((row) => row.restaurant.businessType))],
+  };
 }
 
 export default async function RootLayout({
@@ -48,7 +50,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const roles = await loadSignedInRoles();
+  const { roles, businessTypes } = await loadSignedInAccess();
 
   return (
     <ClerkProvider
@@ -67,7 +69,7 @@ export default async function RootLayout({
     >
       <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <body className="min-h-screen bg-ink text-ink-text antialiased">
-          <AppHeader roles={roles} />
+          <AppHeader roles={roles} businessTypes={businessTypes} />
           {children}
         </body>
       </html>

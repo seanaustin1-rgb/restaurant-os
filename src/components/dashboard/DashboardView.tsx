@@ -213,6 +213,9 @@ export function DashboardView({
     id: d.restaurantId,
     name: d.restaurantId === activeId ? displayActive.name : d.name,
   }));
+  // Union of the viewer's real business types (not the preview) so vertical nav
+  // links only surface for tenants that actually operate that vertical.
+  const navBusinessTypes = [...new Set(dashboards.map((d) => d.businessType))];
 
   return (
     <div>
@@ -223,6 +226,7 @@ export function DashboardView({
         role={role}
         onSelectRole={setRole}
         roleOptions={demoMode ? undefined : [roleByRestaurant.get(displayActive.restaurantId) ?? role]}
+        businessTypes={navBusinessTypes}
         demoMode={demoMode}
       />
 

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadPaymentWatch } from "@/lib/modules/payment-watch";
@@ -20,8 +20,8 @@ export default async function PaymentWatchPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Payment Watch</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.windowLabel}` : ""} · likely double-pays and off-norm
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.windowLabel}` : ""} Â· likely double-pays and off-norm
           charges, for review.
         </p>
       </div>

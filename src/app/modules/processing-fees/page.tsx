@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadProcessingFees } from "@/lib/modules/processing-fees";
@@ -20,9 +20,9 @@ export default async function ProcessingFeesPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Processing Fee Leak</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · card-processing fees as a share of sales,
-          vs. benchmark — where the swipe is leaking cash.
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· card-processing fees as a share of sales,
+          vs. benchmark â€” where the swipe is leaking cash.
         </p>
       </div>
       {data?.hasData ? (

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Landmark } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -58,13 +58,13 @@ export default async function ConnectionsPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Bank connections</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — link bank accounts via Plaid to pull transactions automatically.
+          {role?.restaurant?.name ?? "Your business"} â€” link bank accounts via Plaid to pull transactions automatically.
         </p>
       </div>
 
       {!role && (
         <div className="rounded-lg border border-line bg-surface p-4 text-sm text-muted">
-          You don&apos;t have a restaurant yet. Complete onboarding first.
+          You don&apos;t have a business yet. Complete onboarding first.
         </div>
       )}
 
@@ -89,7 +89,7 @@ export default async function ConnectionsPage() {
                   <div>
                     <div className="text-sm text-ink-text">{c.institution ?? "Bank"}</div>
                     <div className="text-xs text-muted">
-                      {c._count.transactions} transactions ·{" "}
+                      {c._count.transactions} transactions Â·{" "}
                       {c.lastSyncedAt ? `synced ${c.lastSyncedAt.toLocaleDateString()}` : "never synced"}
                     </div>
                   </div>

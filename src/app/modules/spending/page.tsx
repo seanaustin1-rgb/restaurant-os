@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadSpendingByCategory } from "@/lib/modules/spending-by-category";
@@ -20,15 +20,15 @@ export default async function SpendingByCategoryPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Spending by Category</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data ? ` — ${data.periodLabel}` : ""} · where every dollar goes, and what&apos;s left as profit.
+          {role?.restaurant?.name ?? "Your business"}
+          {data ? ` â€” ${data.periodLabel}` : ""} Â· where every dollar goes, and what&apos;s left as profit.
         </p>
       </div>
       {data ? (
         <SpendingByCategoryModule data={data} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need a restaurant to view spending. Complete onboarding first.
+          You need a business to view spending. Complete onboarding first.
         </p>
       )}
     </main>

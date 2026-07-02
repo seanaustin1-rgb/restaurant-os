@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadGoLiveCoach } from "@/lib/modules/go-live-coach";
@@ -20,7 +20,7 @@ export default async function GoLiveCoachPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Go-Live Coach</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
+          {role?.restaurant?.name ?? "Your business"}
           {data?.hasData ? ` - ${data.periodLabel}` : ""} - virtual Profit First readiness before real account setup.
         </p>
       </div>

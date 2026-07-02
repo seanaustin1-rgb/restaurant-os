@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadCategoryTrends } from "@/lib/modules/category-trends";
@@ -20,7 +20,7 @@ export default async function CategoryTrendsPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Category Trends &amp; Budgets</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} · month-over-month spend by category, with optional budgets.
+          {role?.restaurant?.name ?? "Your business"} Â· month-over-month spend by category, with optional budgets.
         </p>
       </div>
       {data?.hasData ? (

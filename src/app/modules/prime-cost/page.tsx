@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadPrimeCost } from "@/lib/modules/prime-cost";
@@ -20,8 +20,8 @@ export default async function PrimeCostPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Prime Cost</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · COGS + labor as a share of sales, vs. your
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· COGS + labor as a share of sales, vs. your
           TAP target, by week.
         </p>
       </div>

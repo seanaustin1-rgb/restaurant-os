@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
@@ -11,7 +11,7 @@ export default async function BeverageSettingsPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
@@ -32,7 +32,7 @@ export default async function BeverageSettingsPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Beverage Cost Targets</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — set your pour-cost goals and, until Toast is connected, the
+          {role?.restaurant?.name ?? "Your business"} â€” set your pour-cost goals and, until Toast is connected, the
           alcohol share of sales the ratios are measured against. These drive the Beverage Cost gauges on your dashboard.
         </p>
       </div>
@@ -47,7 +47,7 @@ export default async function BeverageSettingsPage() {
         />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a restaurant to manage these settings.
+          This settings page is only available for restaurant businesses.
         </p>
       )}
     </main>

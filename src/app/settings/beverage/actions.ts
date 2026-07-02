@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -11,7 +11,7 @@ async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
@@ -11,7 +11,7 @@ export default async function AllocationSettingsPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
@@ -33,9 +33,9 @@ export default async function AllocationSettingsPage() {
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-6 py-10">
       <div>
-        <h1 className="font-display text-2xl text-copper-soft">Profit First — Allocation</h1>
+        <h1 className="font-display text-2xl text-copper-soft">Profit First â€” Allocation</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — your Target Allocation Percentages (TAPs). These split every
+          {role?.restaurant?.name ?? "Your business"} â€” your Target Allocation Percentages (TAPs). These split every
           sales dollar across the Profit First buckets and set the targets on your dashboard gauges. They must total
           100%.
         </p>
@@ -54,7 +54,7 @@ export default async function AllocationSettingsPage() {
         />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a restaurant to manage these settings.
+          This settings page is only available for restaurant businesses.
         </p>
       )}
     </main>

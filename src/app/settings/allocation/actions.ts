@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
@@ -11,7 +11,7 @@ async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");
@@ -19,7 +19,7 @@ async function requireRestaurant(): Promise<string> {
 }
 
 // The six TAP percentages (whole-number percents). Spill is held at 0 (no column
-// yet) until the allocation-engine migration lands — see the allocation spec.
+// yet) until the allocation-engine migration lands â€” see the allocation spec.
 export interface TapSettingsInput {
   profitPct: number;
   ownerPayPct: number;
@@ -44,8 +44,8 @@ export async function updateTapSettings(input: TapSettingsInput): Promise<void> 
   const data = {
     profitPct: clean(input.profitPct, "Profit"),
     ownerPayPct: clean(input.ownerPayPct, "Owner Pay"),
-    cogsFoodPct: clean(input.cogsFoodPct, "COGS — Food"),
-    cogsLiquorPct: clean(input.cogsLiquorPct, "COGS — Wine & Spirits"),
+    cogsFoodPct: clean(input.cogsFoodPct, "COGS â€” Food"),
+    cogsLiquorPct: clean(input.cogsLiquorPct, "COGS â€” Wine & Spirits"),
     laborPct: clean(input.laborPct, "Labor"),
     opexPct: clean(input.opexPct, "OpEx"),
     simulationMode: input.simulationMode,
@@ -61,7 +61,7 @@ export async function updateTapSettings(input: TapSettingsInput): Promise<void> 
     data.laborPct +
     data.opexPct;
   if (Math.abs(total - 100) > 0.01) {
-    throw new Error(`TAP percentages must total 100% — they currently sum to ${Math.round(total * 100) / 100}%`);
+    throw new Error(`TAP percentages must total 100% â€” they currently sum to ${Math.round(total * 100) / 100}%`);
   }
 
   // TapSettings is created at onboarding, but upsert keeps this safe for any

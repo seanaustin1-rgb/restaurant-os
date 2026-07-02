@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadRecurring } from "@/lib/modules/recurring";
@@ -20,8 +20,8 @@ export default async function RecurringPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Recurring &amp; Subscriptions</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.windowLabel}` : ""} · repeating charges from your bank
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.windowLabel}` : ""} Â· repeating charges from your bank
           transactions, with price-creep flags.
         </p>
       </div>

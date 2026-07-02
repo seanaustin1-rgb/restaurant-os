@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadCoversFlow } from "@/lib/modules/covers-flow";
@@ -21,8 +21,8 @@ export default async function CoversFlowPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Covers Flow</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · guests, orders &amp; average check by day
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· guests, orders &amp; average check by day
           {fromToast ? ", from Toast" : ""}.
         </p>
       </div>

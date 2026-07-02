@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadBreakEven } from "@/lib/modules/break-even";
@@ -20,8 +20,8 @@ export default async function BreakEvenPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Break-even</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data?.hasData ? ` — ${data.periodLabel}` : ""} · the sales you need to cover fixed costs,
+          {role?.restaurant?.name ?? "Your business"}
+          {data?.hasData ? ` â€” ${data.periodLabel}` : ""} Â· the sales you need to cover fixed costs,
           and how much cushion you have above it.
         </p>
       </div>

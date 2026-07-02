@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadAllocation } from "@/lib/modules/allocation";
@@ -20,8 +20,8 @@ export default async function AllocationPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Allocation &amp; Variance</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"}
-          {data ? ` — ${data.periodLabel}` : ""} · Profit First set-aside vs. what actually cleared.
+          {role?.restaurant?.name ?? "Your business"}
+          {data ? ` â€” ${data.periodLabel}` : ""} Â· Profit First set-aside vs. what actually cleared.
         </p>
       </div>
       {data && data.hasData ? (
@@ -29,8 +29,8 @@ export default async function AllocationPage() {
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           {data
-            ? "No sales data yet for this period — connect Toast or import sales so allocations can compute."
-            : "You need a restaurant to view allocations. Complete onboarding first."}
+            ? "No sales data yet for this period â€” sync or import sales so allocations can compute."
+            : "You need a business to view allocations. Complete onboarding first."}
         </p>
       )}
     </main>

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES, roleListLabel } from "@/lib/access/roles";
@@ -42,7 +42,7 @@ export default async function CategoriesPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Categories</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} — name every dollar. Each category rolls up into a Profit First
+          {role?.restaurant?.name ?? "Your business"} â€” name every dollar. Each category rolls up into a Profit First
           bucket; add your own. &ldquo;Misc&rdquo; is the catch-all, and &ldquo;Excluded&rdquo; keeps cash movements
           (register cash, tip-outs, transfers) out of the gauges.
         </p>
@@ -51,7 +51,7 @@ export default async function CategoriesPage() {
         <CategoriesManager rows={rows} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
-          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a restaurant to manage categories.
+          You need an {roleListLabel(ADJUSTMENT_ROLES)} role on a business to manage categories.
         </p>
       )}
     </main>

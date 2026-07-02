@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
@@ -21,7 +21,7 @@ export default async function VendorSetupPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Set up your vendors</h1>
         <p className="mt-1 text-sm text-muted">
-          {role?.restaurant?.name ?? "Your restaurant"} · confirm where your biggest vendors belong. Each one you
+          {role?.restaurant?.name ?? "Your business"} Â· confirm where your biggest vendors belong. Each one you
           confirm teaches the system a rule, so future imports self-categorize.
         </p>
       </div>

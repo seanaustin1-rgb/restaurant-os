@@ -1,5 +1,58 @@
 # CODEX_HANDOFF
 
+## ✅ LATEST — 2026-07-02 (from Claude) — Cockpit surfaces shipped to `main`
+
+Three PRs merged to `main` (all green: `tsc` / `npm test` / `npm run build`; the advisory Codex job
+also ran the gates itself on #60 and reported clean — 177 tests). All **view-lane only** — no data
+contracts, calculators, migrations, middleware, or auth were touched. The cockpits consume existing
+contracts **read-only**.
+
+**What shipped**
+
+- **#58 — Executive Cockpit restyle + Property Cockpit + polish.**
+  - `src/components/cockpit/ExecutiveCockpit.tsx`: rebuilt on the OutFront Data design system
+    (DESIGN.md) — Ink/Surface/Line, Space Mono `.tnum`, serif `font-display`, `HealthSignal`
+    (word+icon, never colour alone), copper rationed to the "one thing". Reads `BrokerageCockpitData`
+    read-only; no view math.
+  - `src/components/cockpit/PropertyCockpit.tsx` + route `src/app/modules/rentals/cockpit/page.tsx`
+    (gated to `VACATION_RENTAL`): the rentals analogue — **properties, not agents**. Reads the
+    existing `RentalPropertyRollupData` / `PropertyPortfolioResult` (property-portfolio.ts) read-only.
+    No new loader/contract.
+  - `src/app/modules/brokerage/agent-cockpit/page.tsx`: `HealthSignal` badge + health-coloured
+    Company Dollar, a copper **"Focus"** callout (from the data-lane `AgentRow.note`, shown only under
+    pressure), and a **cap-pressure bar** from `capProgressPct`.
+  - `src/components/dashboard/ModuleGrid.tsx`: module launcher tucked behind a **"More tools"**
+    disclosure (collapsed by default); Quick Access strip still surfaces pins.
+- **#59 — business-type-aware nav.** `src/lib/nav.ts` `navLinksForRoles(roles, businessTypes?)` gates
+  the brokerage/rental cockpit links to matching `businessType` (union across the viewer's tenants).
+  Fed from `src/app/layout.tsx` (AppHeader) and `DashboardView` → `DashboardHeader`. Covered by
+  `src/lib/nav.test.ts`.
+- **#60 — hardening.** Extracted the red/yellow "float to the top" ordering into a pure, unit-tested
+  helper `src/lib/cockpit/needs-attention.ts` (`orderByNeedsAttention`) used by both cockpits;
+  refreshed `docs/specs/executive-cockpit-tile-set.md` (new §6 "Shipped" + the fighter-jet north
+  star); clamped the cap-bar `aria-valuenow`.
+
+**Lane notes / where Codex comes in (data lane owns the math)**
+
+- The cockpits render whatever the contracts expose. If you reshape `BrokerageCockpitData`,
+  `RentalPropertyRollupData`, or `PropertyPortfolioResult`, the consumers are the two cockpit
+  components + `needs-attention.ts` + the nav. `needs-attention.ts` is a shared view helper — keep,
+  harden, or move into the data layer as you see fit (tell Claude the new import path).
+- **Still degrading to pending/connect states** on the Executive Cockpit, awaiting data-lane work:
+  `reputationTrend` (weekly snapshots) and `marketPosition` (RESO/MLS). Contract shape already exists;
+  the view is ready to light up when real values arrive.
+- **Per-property identity:** `PropertyHeartbeatResult` is keyed by `name` (no `propertyId`), so the
+  Property Cockpit uses `name` as its React key. A stable id threaded from `rental-property-rollup.ts`
+  would be more robust for drill-downs.
+- **North star (deferred, documented):** push the cockpit toward a **fighter-jet** feel — single-glance
+  high-velocity read, purposeful cockpit motion (150–250ms, honour `prefers-reduced-motion`), "out
+  front" framing.
+
+Everything below this line is prior context (Phase 1 build order, earlier handoffs) and is retained
+for history — the above supersedes it for current cockpit state.
+
+---
+
 ## 🚧 CODEX PHASE 1 BUILD ORDER — 2026-06-29 (operator-approved, concrete-first)
 
 Operator approved **Option A — concrete-first**: build the **hospitality** investor/owner

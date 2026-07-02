@@ -154,6 +154,34 @@ export interface BrokerageAgentCockpitData {
   restaurantName: string;
   periodLabel: string;
   agent: BrokerageCockpitAgentRow;
+  production: {
+    closedGci: number;
+    closedVolume: number;
+    closedSides: number;
+    agentNetCommission: number;
+    annualCap: number | null;
+    capPaid: number | null;
+    capRemaining: number | null;
+    capProgressPct: number | null;
+  };
+  forecast: {
+    grossPipelineGci: number;
+    weightedPipelineGci: number;
+    projectedAgentNetCommission: number;
+    pendingDeals: number;
+    monthlyIncomeGoal: number | null;
+    incomeGoalCoveragePct: number | null;
+  };
+  leads: {
+    spend: number;
+    attributedGci: number;
+    attributedDeals: number;
+    grossRoiMultiple: number | null;
+    netCommissionRoiMultiple: number | null;
+    appointmentConversionPct: number | null;
+    closeConversionPct: number | null;
+    speedToLeadMinutes: number | null;
+  };
   activity: {
     sourceSystem: string | null;
     periodStart: string | null;
@@ -629,7 +657,7 @@ export async function loadBrokerageAgentCockpitForUser(
       ...(input.restaurantId ? { restaurantId: input.restaurantId } : {}),
       restaurant: { businessType: "REAL_ESTATE_BROKERAGE" },
     },
-    select: { role: true, restaurantId: true, restaurant: { select: { name: true } } },
+    select: { role: true, restaurantId: true, restaurant: { select: { name: true, profile: true } } },
     orderBy: { createdAt: "asc" },
   });
   const role = roles[0];
@@ -654,7 +682,7 @@ export async function loadBrokerageAgentCockpitForUser(
             }
           : { id: "__no_agent_without_email__" }),
     },
-    select: { id: true },
+    select: { id: true, defaultSplitPct: true, annualCap: true, capPaid: true },
     orderBy: { name: "asc" },
   });
   if (!matchedAgent) return null;
@@ -663,27 +691,92 @@ export async function loadBrokerageAgentCockpitForUser(
   const agent = cockpit?.agentProduction.allAgents.find((row) => row.agentId === matchedAgent.id);
   if (!cockpit || !agent) return null;
 
-  const activity = await db.brokerageAgentActivitySnapshot.findFirst({
-    where: { restaurantId: role.restaurantId, agentId: matchedAgent.id },
-    orderBy: [{ periodEnd: "desc" }, { updatedAt: "desc" }],
-    select: {
-      sourceSystem: true,
-      periodStart: true,
-      periodEnd: true,
-      loginCount: true,
-      newLeadCount: true,
-      contactCount: true,
-      appointmentCount: true,
-      cmaCount: true,
-      activePipelineCount: true,
-    },
+  const latestClosed = await db.brokerageDeal.findFirst({
+    where: { restaurantId: role.restaurantId, closedDate: { not: null } },
+    orderBy: { closedDate: "desc" },
+    select: { closedDate: true },
   });
+  const { start, end } = monthBounds(latestClosed?.closedDate ?? new Date());
+  const [closedDeals, pipelineDeals, leadSpendRows, activity] = await Promise.all([
+    db.brokerageDeal.findMany({
+      where: { restaurantId: role.restaurantId, agentId: matchedAgent.id, stage: "CLOSED", closedDate: { gte: start, lt: end } },
+    }),
+    db.brokerageDeal.findMany({
+      where: { restaurantId: role.restaurantId, agentId: matchedAgent.id, stage: { in: ["ACTIVE", "PENDING"] } },
+    }),
+    db.brokerageLeadSpend.findMany({
+      where: { restaurantId: role.restaurantId, agentId: matchedAgent.id, periodStart: { lt: end }, periodEnd: { gte: start } },
+    }),
+    db.brokerageAgentActivitySnapshot.findFirst({
+      where: { restaurantId: role.restaurantId, agentId: matchedAgent.id },
+      orderBy: [{ periodEnd: "desc" }, { updatedAt: "desc" }],
+      select: {
+        sourceSystem: true,
+        periodStart: true,
+        periodEnd: true,
+        loginCount: true,
+        newLeadCount: true,
+        contactCount: true,
+        appointmentCount: true,
+        cmaCount: true,
+        activePipelineCount: true,
+      },
+    }),
+  ]);
+
+  const agentSplitPct = n(matchedAgent.defaultSplitPct) || (agent.retainedYield != null ? Math.max(0, 100 - agent.retainedYield) : 70);
+  const closedGci = closedDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
+  const closedVolume = closedDeals.reduce((sum, deal) => sum + n(deal.salePrice), 0);
+  const agentPayout = closedDeals.reduce((sum, deal) => sum + n(deal.agentPayout), 0);
+  const agentNetCommission = agentPayout > 0 ? agentPayout : closedGci * (agentSplitPct / 100);
+  const annualCap = matchedAgent.annualCap == null ? null : n(matchedAgent.annualCap);
+  const capPaid = annualCap == null ? null : n(matchedAgent.capPaid);
+  const capRemaining = annualCap == null ? null : Math.max(0, annualCap - (capPaid ?? 0));
+  const capProgressPct = annualCap && annualCap > 0 && capPaid != null ? (capPaid / annualCap) * 100 : null;
+  const grossPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci), 0);
+  const weightedPipelineGci = pipelineDeals.reduce((sum, deal) => sum + n(deal.gci) * ((n(deal.probabilityPct) || 70) / 100), 0);
+  const projectedAgentNetCommission = weightedPipelineGci * (agentSplitPct / 100);
+  const monthlyIncomeGoal = profileNumber(role.restaurant.profile, "agentMonthlyIncomeGoal") ?? profileNumber(role.restaurant.profile, "monthlyAgentIncomeGoal");
+  const incomeGoalCoveragePct = monthlyIncomeGoal && monthlyIncomeGoal > 0 ? ((agentNetCommission + projectedAgentNetCommission) / monthlyIncomeGoal) * 100 : null;
+  const leadSpend = leadSpendRows.reduce((sum, row) => sum + n(row.spend), 0);
+  const attributedGci = leadSpendRows.reduce((sum, row) => sum + n(row.attributedGci), 0);
+  const attributedDeals = leadSpendRows.reduce((sum, row) => sum + row.attributedDeals, 0);
+  const leadNetCommission = attributedGci * (agentSplitPct / 100);
+  const newLeadCount = activity?.newLeadCount ?? 0;
 
   return {
     restaurantId: role.restaurantId,
     restaurantName: role.restaurant.name,
     periodLabel: cockpit.periodLabel,
     agent,
+    production: {
+      closedGci: r2(closedGci),
+      closedVolume: r2(closedVolume),
+      closedSides: closedDeals.length,
+      agentNetCommission: r2(agentNetCommission),
+      annualCap: annualCap == null ? null : r2(annualCap),
+      capPaid: capPaid == null ? null : r2(capPaid),
+      capRemaining: capRemaining == null ? null : r2(capRemaining),
+      capProgressPct: capProgressPct == null ? null : r2(capProgressPct),
+    },
+    forecast: {
+      grossPipelineGci: r2(grossPipelineGci),
+      weightedPipelineGci: r2(weightedPipelineGci),
+      projectedAgentNetCommission: r2(projectedAgentNetCommission),
+      pendingDeals: pipelineDeals.length,
+      monthlyIncomeGoal: monthlyIncomeGoal == null ? null : r2(monthlyIncomeGoal),
+      incomeGoalCoveragePct: incomeGoalCoveragePct == null ? null : r2(incomeGoalCoveragePct),
+    },
+    leads: {
+      spend: r2(leadSpend),
+      attributedGci: r2(attributedGci),
+      attributedDeals,
+      grossRoiMultiple: leadSpend > 0 && attributedGci > 0 ? r2(attributedGci / leadSpend) : null,
+      netCommissionRoiMultiple: leadSpend > 0 && leadNetCommission > 0 ? r2(leadNetCommission / leadSpend) : null,
+      appointmentConversionPct: newLeadCount > 0 ? r2(((activity?.appointmentCount ?? 0) / newLeadCount) * 100) : null,
+      closeConversionPct: newLeadCount > 0 && attributedDeals > 0 ? r2((attributedDeals / newLeadCount) * 100) : null,
+      speedToLeadMinutes: null,
+    },
     activity: activity
       ? {
           sourceSystem: activity.sourceSystem,

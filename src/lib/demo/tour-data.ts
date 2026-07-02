@@ -25,6 +25,15 @@ const SAMPLE: Record<BusinessType, { revenue: number; food: number; liquor: numb
   RETAIL: { revenue: 221_900, food: 92_300, liquor: 0, beverage: 0, labor: 43_800, opex: 38_600, cash: 88_200 },
 };
 
+const OPEX_LABELS: Record<BusinessType, string> = {
+  RESTAURANT: "Operating Expenses",
+  SERVICE: "Operating Expenses",
+  CONTRACTOR: "Overhead",
+  REAL_ESTATE_BROKERAGE: "Operating Overhead",
+  VACATION_RENTAL: "Operating Overhead",
+  RETAIL: "Operating Expenses",
+};
+
 function sourceSetup(type: BusinessType) {
   const map = sourceMapFor(type);
   const minimum = map.groups.flatMap((group) => group.options.filter((option) => option.minimum).map((option) => option.name));
@@ -59,7 +68,7 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
     gauge("ownerPay", "Owner Pay", 8, allocationBase * 0.08, allocationBase * 0.07),
     gauge("cogs", type === "RESTAURANT" ? "COGS" : "Direct Costs", 30, revenue * 0.3, cogs, [{ name: type === "RETAIL" ? "Inventory purchases" : "Job costs", amount: cogs }]),
     gauge("labor", "Labor", 32, allocationBase * 0.32, sample.labor, [{ name: "Payroll", amount: sample.labor }]),
-    gauge("opex", "OpEx + Spill", 28, allocationBase * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
+    gauge("opex", OPEX_LABELS[type], 28, allocationBase * 0.28, sample.opex, [{ name: "Fixed operating bills", amount: sample.opex }]),
   ];
 
   return {

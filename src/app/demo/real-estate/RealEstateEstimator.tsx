@@ -527,7 +527,7 @@ function SplitPressureTile({ r }: { r: RealEstateEstimateResult }) {
         <Stat label="Franchise" value={money(r.franchiseFees)} />
         <Stat label="Referral" value={money(r.referralFees)} />
       </div>
-      <p className="mt-3 text-[11px] text-muted">This is the real estate version of prime-cost pressure.</p>
+      <p className="mt-3 text-[11px] text-muted">Split pressure shows how much closed GCI passes through before the brokerage keeps Company Dollar.</p>
       <WhatMovesThis items={["agent splits", "agent cap remaining", "franchise fees", "referral fees", "which agents are closing the deals"]} />
     </Tile>
   );

@@ -140,9 +140,39 @@ function AgentCockpit({
         </div>
       </section>
 
+      {/* Focus — the agent's "one thing", from the data-lane note. Copper-rationed, shown only under pressure. */}
+      {agent.health !== "green" && agent.note ? (
+        <div className="rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">Focus</div>
+          <p className="mt-1 text-sm leading-relaxed text-ink-text">{agent.note}</p>
+        </div>
+      ) : null}
+
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={<CircleDollarSign size={16} />} label="Company Dollar" value={money(agent.companyDollar)} detail={retainedYield} tone={agent.health} />
-        <Stat icon={<Gauge size={16} />} label="Cap remaining" value={capRemaining} detail={capProgress} />
+        <Stat
+          icon={<Gauge size={16} />}
+          label="Cap remaining"
+          value={capRemaining}
+          detail={capProgress}
+          foot={
+            agent.capProgressPct != null ? (
+              <div
+                className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line"
+                role="progressbar"
+                aria-valuenow={Math.round(agent.capProgressPct)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Cap used"
+              >
+                <div
+                  className="h-full rounded-full bg-copper-soft"
+                  style={{ width: `${Math.min(100, Math.max(0, agent.capProgressPct))}%` }}
+                />
+              </div>
+            ) : null
+          }
+        />
         <Stat icon={<BriefcaseBusiness size={16} />} label="Pipeline CD" value={money(agent.pipelineCompanyDollar)} detail="Weighted future company dollar" />
         <Stat icon={<BarChart3 size={16} />} label="Lead ROI" value={leadRoi} detail={`${money(agent.leadSpend)} lead spend`} />
       </section>
@@ -177,12 +207,14 @@ function Stat({
   value,
   detail,
   tone,
+  foot,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   detail: string;
   tone?: HealthStatus;
+  foot?: ReactNode;
 }) {
   return (
     <div className="rounded-lg border border-line bg-surface p-4">
@@ -192,6 +224,7 @@ function Stat({
       </div>
       <div className={"tnum mt-2 text-2xl " + (tone ? HEALTH_TEXT[tone] : "text-ink-text")}>{value}</div>
       <p className="mt-1 text-xs text-muted">{detail}</p>
+      {foot}
     </div>
   );
 }

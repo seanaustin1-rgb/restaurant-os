@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import type { UserRole } from "@prisma/client";
+import type { BusinessType, UserRole } from "@prisma/client";
 import { Menu, X } from "lucide-react";
 import { navLinksForRoles } from "@/lib/nav";
 
@@ -18,12 +18,12 @@ function isHidden(path: string): boolean {
   return path.startsWith("/sign-in") || path.startsWith("/sign-up");
 }
 
-export function AppHeader({ roles = [] }: { roles?: UserRole[] }) {
+export function AppHeader({ roles = [], businessTypes = [] }: { roles?: UserRole[]; businessTypes?: BusinessType[] }) {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
   if (isHidden(pathname)) return null;
 
-  const navLinks = navLinksForRoles(roles);
+  const navLinks = navLinksForRoles(roles, businessTypes);
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
 

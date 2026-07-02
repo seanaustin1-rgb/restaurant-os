@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import type { UserRole } from "@prisma/client";
+import type { BusinessType, UserRole } from "@prisma/client";
 import { ChevronDown, FlaskConical, Menu, X } from "lucide-react";
 import type { RoleKey } from "@/lib/mock/dashboard";
 import { navLinksForRoles } from "@/lib/nav";
@@ -22,6 +22,7 @@ export function DashboardHeader({
   role,
   onSelectRole,
   roleOptions = ROLES,
+  businessTypes,
   demoMode = false,
 }: {
   restaurants: RestaurantOption[];
@@ -30,11 +31,12 @@ export function DashboardHeader({
   role: RoleKey;
   onSelectRole: (r: RoleKey) => void;
   roleOptions?: RoleKey[];
+  businessTypes?: BusinessType[];
   demoMode?: boolean;
 }) {
   const active = restaurants.find((r) => r.id === activeId) ?? restaurants[0];
   const [navOpen, setNavOpen] = useState(false);
-  const navLinks = navLinksForRoles([role as UserRole]);
+  const navLinks = navLinksForRoles([role as UserRole], businessTypes);
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-ink/90 backdrop-blur">

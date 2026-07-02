@@ -1,4 +1,4 @@
-import type { UserRole } from "@prisma/client";
+import type { BusinessType, UserRole } from "@prisma/client";
 
 const ALL_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT", "INVESTOR"];
 const ADJUSTMENT_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT"];
@@ -10,14 +10,17 @@ export interface NavLink {
   href: string;
   label: string;
   roles: UserRole[];
+  // When set, the link only shows for tenants of these business types (e.g. the
+  // brokerage cockpits for a real-estate broker). Omit for universal links.
+  businessTypes?: BusinessType[];
 }
 
 export const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", roles: ALL_ROLES },
-  { href: "/modules/brokerage", label: "Brokerage", roles: ALL_ROLES },
-  { href: "/modules/brokerage/cockpit", label: "Executive Cockpit", roles: ALL_ROLES },
-  { href: "/modules/brokerage/agent-cockpit", label: "Agent Cockpit", roles: ALL_ROLES },
-  { href: "/modules/rentals/cockpit", label: "Property Cockpit", roles: ALL_ROLES },
+  { href: "/modules/brokerage", label: "Brokerage", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
+  { href: "/modules/brokerage/cockpit", label: "Executive Cockpit", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
+  { href: "/modules/brokerage/agent-cockpit", label: "Agent Cockpit", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
+  { href: "/modules/rentals/cockpit", label: "Property Cockpit", roles: ALL_ROLES, businessTypes: ["VACATION_RENTAL"] },
   { href: "/investor", label: "Investor Matrix", roles: ALL_ROLES },
   { href: "/access", label: "Access Paths", roles: ALL_ROLES },
   { href: "/transactions", label: "Transactions", roles: ADJUSTMENT_ROLES },
@@ -33,8 +36,20 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/connections", label: "Connections", roles: OWNER_ROLES },
 ];
 
-export function navLinksForRoles(roles: readonly UserRole[]): NavLink[] {
-  if (roles.length === 0) return NAV_LINKS;
-  const allowed = new Set(roles);
-  return NAV_LINKS.filter((link) => link.roles.some((role) => allowed.has(role)));
+// Filter the nav by the viewer's roles and the business types they operate.
+// `businessTypes` is the union of types across the user's tenants; a
+// vertical-specific link shows if the user has at least one matching tenant.
+// Passing no `businessTypes` (or an empty set) skips business-type filtering,
+// preserving the prior role-only behavior.
+export function navLinksForRoles(
+  roles: readonly UserRole[],
+  businessTypes?: readonly BusinessType[],
+): NavLink[] {
+  const allowedRoles = roles.length === 0 ? null : new Set(roles);
+  const allowedTypes = businessTypes && businessTypes.length > 0 ? new Set(businessTypes) : null;
+  return NAV_LINKS.filter((link) => {
+    const roleOk = !allowedRoles || link.roles.some((role) => allowedRoles.has(role));
+    const typeOk = !link.businessTypes || !allowedTypes || link.businessTypes.some((type) => allowedTypes.has(type));
+    return roleOk && typeOk;
+  });
 }

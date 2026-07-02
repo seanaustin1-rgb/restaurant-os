@@ -28,6 +28,12 @@ const HEALTH_TEXT: Record<Health, string> = {
   red: "text-health-red",
 };
 
+const CARD_TONE_PANEL: Record<Health, string> = {
+  green: "border-health-green/25 bg-health-green/5",
+  yellow: "border-health-yellow/30 bg-health-yellow/5",
+  red: "border-health-red/35 bg-health-red/5",
+};
+
 const HEALTH_WORD: Record<Health, string> = { green: "On track", yellow: "Watch", red: "Off target" };
 
 // Tinted status pill (DESIGN status-badge shape).
@@ -71,9 +77,9 @@ function PropertyCard({
   signal?: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-line bg-ink/40 p-4">
+    <section className={`rounded-lg border p-4 ${tone ? CARD_TONE_PANEL[tone] : "border-line bg-ink/40"}`}>
       <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
-        <span className="text-muted">{icon}</span>
+        <span className="text-copper-soft">{icon}</span>
         <span>{label}</span>
       </div>
       <div className={`tnum mt-3 text-2xl ${tone ? HEALTH_TEXT[tone] : "text-ink-text"}`}>{value}</div>
@@ -120,12 +126,12 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
   const topPerformers = [...portfolio.properties].sort((a, b) => b.ownerProceeds - a.ownerProceeds).slice(0, 4);
 
   return (
-    <article className="rounded-lg border border-line bg-surface p-5">
+    <article className="rounded-lg border border-line bg-surface px-4 py-4 sm:px-5 sm:py-5">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-line pb-5 md:flex-row md:items-end md:justify-between">
         <div>
-          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">Property Cockpit</div>
-          <h2 className="mt-2 font-display text-2xl text-ink-text">{name}</h2>
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">Property Cockpit</div>
+          <h2 className="mt-2 font-display text-3xl text-ink-text">{name}</h2>
           <p className="mt-1 text-sm text-muted">{data.periodLabel} · portfolio</p>
         </div>
         <span className={`w-fit rounded-full border px-3 py-1 text-xs font-medium ${BADGE[portfolio.overallHealth]}`}>
@@ -146,8 +152,8 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
 
       {/* The One Thing — the single rationed copper callout */}
       {one && one.overallHealth !== "green" ? (
-        <div className="mt-5 rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
-          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">The one thing</div>
+        <div className="mt-5 rounded-lg border border-copper-dim bg-copper/10 px-4 py-3">
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">One thing first</div>
           <p className="mt-1 text-sm leading-relaxed text-ink-text">
             <span className="font-medium">{one.name}</span> — {one.note}
           </p>
@@ -155,16 +161,16 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
       ) : null}
 
       {/* HERO — Booking revenue vs. owner proceeds (the honest-signal split) */}
-      <section className="mt-5 rounded-lg border border-line bg-ink/40 p-5">
+      <section className="mt-5 rounded-lg border border-line bg-ink/40 p-4 sm:p-5">
         <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
           <Scale className="h-4 w-4 text-copper-soft" aria-hidden="true" />
-          <span>Bookings vs. owner proceeds</span>
+          <span>Bookings vs. Owner Proceeds</span>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-lg border border-line bg-surface p-4">
             <div className="text-[11px] uppercase tracking-wider text-muted">What the bookings bring</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="tnum text-2xl text-ink-text">{compactMoney(portfolio.monthlyBookingRevenue)}</span>
+              <span className="tnum text-3xl text-ink-text">{compactMoney(portfolio.monthlyBookingRevenue)}</span>
               <span className="text-sm text-muted">booking revenue</span>
             </div>
             <p className="mt-2 text-sm text-muted">
@@ -172,10 +178,10 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
               <span className="tnum">{portfolio.propertyCount}</span> properties
             </p>
           </div>
-          <div className="rounded-lg border border-line bg-surface p-4">
+          <div className={`rounded-lg border p-4 ${CARD_TONE_PANEL[proceeds]}`}>
             <div className="text-[11px] uppercase tracking-wider text-muted">What the owner keeps</div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className={`tnum text-2xl ${HEALTH_TEXT[proceeds]}`}>{compactMoney(portfolio.ownerProceeds)}</span>
+              <span className={`tnum text-3xl ${HEALTH_TEXT[proceeds]}`}>{compactMoney(portfolio.ownerProceeds)}</span>
               <span className="text-sm text-muted">owner proceeds</span>
             </div>
             <p className="mt-2 text-sm text-muted">
@@ -191,7 +197,7 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
       </section>
 
       {/* Four macro tiles */}
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <PropertyCard
           icon={<Banknote className="h-4 w-4" aria-hidden="true" />}
           label="Owner proceeds"
@@ -239,7 +245,7 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
       </div>
 
       {/* Property production — ranked lists, unhealthy floated to the top */}
-      <section className="mt-4 rounded-lg border border-line bg-ink/40 p-5">
+      <section className="mt-4 rounded-lg border border-line bg-ink/40 p-4 sm:p-5">
         <div className="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted">
           <Building2 className="h-4 w-4 text-copper-soft" aria-hidden="true" />
           <span>Property production</span>
@@ -248,8 +254,8 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
           <span className="tnum">{portfolio.propertyCount}</span> properties ·{" "}
           <span className="tnum">{compactMoney(portfolio.ownerProceeds)}</span> owner proceeds · ranked by owner proceeds
         </p>
-        <div className="mt-4 grid gap-6 md:grid-cols-2">
-          <div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg border border-line bg-surface px-3 py-3">
             <div className="text-[10px] uppercase tracking-wide text-muted">
               {needsAction.length ? "Needs attention" : "Watch"}
             </div>
@@ -259,7 +265,7 @@ export function PropertyCockpit({ data, name }: { data: RentalPropertyRollupData
               ))}
             </ul>
           </div>
-          <div>
+          <div className="rounded-lg border border-line bg-surface px-3 py-3">
             <div className="text-[10px] uppercase tracking-wide text-muted">Top performers</div>
             <ul className="mt-1 divide-y divide-line">
               {topPerformers.map((property) => (

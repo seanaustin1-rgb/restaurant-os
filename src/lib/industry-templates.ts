@@ -247,7 +247,7 @@ export const INDUSTRY_TEMPLATES: Record<BusinessType, IndustryTemplate> = {
       { key: "tax_reserve", name: "Tax / Lodging Tax Reserve", targetPct: 5 },
       { key: "opex", name: "OpEx + Spill", targetPct: 18 },
     ],
-    defaultTargets: { targetPrimeCost: 63, targetLaborCost: 12 },
+    defaultTargets: { targetPrimeCost: null, targetLaborCost: 12 },
     profileQuestions: [
       { key: "ownershipModel", label: "Do you own the units or manage for owners?", type: "select", options: ["Manage for owners", "Own the units", "Mixed"], required: true },
       { key: "mgmtFeePct", label: "Management fee (% of booking revenue)", type: "percent", defaultValue: 20 },

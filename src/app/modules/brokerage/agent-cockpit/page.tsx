@@ -2,7 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowLeft, BarChart3, BriefcaseBusiness, CircleDollarSign, Gauge, Users } from "lucide-react";
+import { ArrowLeft, BarChart3, BriefcaseBusiness, CircleDollarSign, Gauge, Target, Timer, TrendingUp, Users, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { HealthSignal } from "@/components/health/HealthSignal";
 import { money, pct } from "@/lib/format";
@@ -70,8 +70,8 @@ export default async function BrokerageAgentCockpitPage({
           </Link>
           <h1 className="mt-2 font-display text-2xl text-copper-soft">Agent Cockpit</h1>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted">
-            Per-agent production, cap pressure, pipeline, and activity. Leadership can select agents; agent-scoped users
-            only resolve their own email/source identity.
+            Agent-facing production, projected income, and lead efficiency. Leadership can select agents; agent-scoped
+            users only resolve their own email/source identity.
           </p>
         </div>
         <Link href="/import/brokerage" className="rounded-md border border-copper-dim px-3 py-1.5 text-xs text-copper-soft hover:border-copper">
@@ -119,10 +119,15 @@ function AgentCockpit({
   data: NonNullable<Awaited<ReturnType<typeof loadBrokerageAgentCockpitForUser>>>;
 }) {
   const agent = data.agent;
-  const leadRoi = agent.roi != null ? `${agent.roi.toFixed(1)}x` : "No spend";
-  const retainedYield = agent.retainedYield != null ? `${pct(agent.retainedYield, 1)} retained yield` : "Retained yield pending";
-  const capProgress = agent.capProgressPct != null ? `${Math.round(agent.capProgressPct)}% of cap used` : "No cap tracked";
-  const capRemaining = agent.capRemaining != null ? money(agent.capRemaining) : "No cap";
+  const { production, forecast, leads } = data;
+  const capProgress = production.capProgressPct != null ? `${Math.round(production.capProgressPct)}% of cap used` : "No cap tracked";
+  const capRemaining = production.capRemaining != null ? money(production.capRemaining) : "No cap tracked";
+  const goalCoverage = forecast.incomeGoalCoveragePct != null ? `${pct(forecast.incomeGoalCoveragePct, 0)} of goal` : "Add income goal";
+  const leadRoi = leads.grossRoiMultiple != null ? `${leads.grossRoiMultiple.toFixed(1)}x` : "Needs attribution";
+  const leadNetRoi = leads.netCommissionRoiMultiple != null ? `${leads.netCommissionRoiMultiple.toFixed(1)}x net` : "Net ROI pending";
+  const appointmentConversion = leads.appointmentConversionPct != null ? pct(leads.appointmentConversionPct, 1) : "Needs BoldTrail activity";
+  const closeConversion = leads.closeConversionPct != null ? pct(leads.closeConversionPct, 1) : "Needs closed-lead match";
+  const focus = agentFocus(data);
   return (
     <div className="space-y-5">
       <section className="rounded-lg border border-copper-dim/40 bg-surface p-5">
@@ -145,41 +150,41 @@ function AgentCockpit({
         </div>
       </section>
 
-      {/* Focus — the agent's "one thing", from the data-lane note. Copper-rationed, shown only under pressure. */}
-      {agent.health !== "green" && agent.note ? (
+      {focus ? (
         <div className="rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
-          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">Focus</div>
-          <p className="mt-1 text-sm leading-relaxed text-ink-text">{agent.note}</p>
+          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">Focus this week</div>
+          <p className="mt-1 text-sm leading-relaxed text-ink-text">{focus}</p>
         </div>
       ) : null}
 
+      <SectionTitle label="Production, splits, and take-home" detail="Closed work for this period from appFiles/back-office exports and reconciled payout data." />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={<CircleDollarSign size={16} />} label="Company Dollar" value={money(agent.companyDollar)} detail={retainedYield} tone={agent.health} />
+        <Stat icon={<CircleDollarSign size={16} />} label="Closed GCI" value={money(production.closedGci)} detail={`${production.closedSides} closed side${production.closedSides === 1 ? "" : "s"}`} tone={agent.health} />
+        <Stat icon={<Wallet size={16} />} label="My take-home" value={money(production.agentNetCommission)} detail="Agent payout from files/export, or split-based estimate" />
         <Stat
           icon={<Gauge size={16} />}
           label="Cap remaining"
           value={capRemaining}
           detail={capProgress}
-          foot={
-            agent.capProgressPct != null ? (
-              <div
-                className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line"
-                role="progressbar"
-                aria-valuenow={Math.round(Math.min(100, Math.max(0, agent.capProgressPct)))}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Cap used"
-              >
-                <div
-                  className="h-full rounded-full bg-copper-soft"
-                  style={{ width: `${Math.min(100, Math.max(0, agent.capProgressPct))}%` }}
-                />
-              </div>
-            ) : null
-          }
+          foot={<CapProgressBar value={production.capProgressPct} />}
         />
-        <Stat icon={<BriefcaseBusiness size={16} />} label="Pipeline CD" value={money(agent.pipelineCompanyDollar)} detail="Weighted future company dollar" />
-        <Stat icon={<BarChart3 size={16} />} label="Lead ROI" value={leadRoi} detail={`${money(agent.leadSpend)} lead spend`} />
+        <Stat icon={<BriefcaseBusiness size={16} />} label="Closed volume" value={money(production.closedVolume)} detail="Sales volume behind closed GCI" />
+      </section>
+
+      <SectionTitle label="45-90 day income forecast" detail="BoldTrail/appFiles pipeline converted into expected agent income, not brokerage Company Dollar." />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={<BriefcaseBusiness size={16} />} label="Gross pipeline" value={money(forecast.grossPipelineGci)} detail={`${forecast.pendingDeals} active/pending deal${forecast.pendingDeals === 1 ? "" : "s"}`} />
+        <Stat icon={<TrendingUp size={16} />} label="Weighted pipeline" value={money(forecast.weightedPipelineGci)} detail="Stage probability applied" />
+        <Stat icon={<Wallet size={16} />} label="Projected take-home" value={money(forecast.projectedAgentNetCommission)} detail="Weighted pipeline x current split" />
+        <Stat icon={<Target size={16} />} label="Income coverage" value={goalCoverage} detail={forecast.monthlyIncomeGoal != null ? `${money(forecast.monthlyIncomeGoal)} monthly target` : "Set goal during agent setup"} />
+      </section>
+
+      <SectionTitle label="Lead source ROI and accountability" detail="BoldTrail lead source and company spend matched back to appFiles/back-office closed results." />
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={<BarChart3 size={16} />} label="Company lead spend" value={money(leads.spend)} detail="Assigned to this agent" />
+        <Stat icon={<CircleDollarSign size={16} />} label="GCI from leads" value={money(leads.attributedGci)} detail={`${leads.attributedDeals} attributed close${leads.attributedDeals === 1 ? "" : "s"}`} />
+        <Stat icon={<TrendingUp size={16} />} label="Lead ROI" value={leadRoi} detail={leadNetRoi} />
+        <Stat icon={<Timer size={16} />} label="Speed to lead" value={leads.speedToLeadMinutes != null ? `${Math.round(leads.speedToLeadMinutes)}m` : "Needs BoldTrail"} detail={`Appt ${appointmentConversion} - Close ${closeConversion}`} />
       </section>
 
       <section className="rounded-lg border border-line bg-surface p-4">
@@ -197,11 +202,51 @@ function AgentCockpit({
           </div>
         ) : (
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Connect Follow Up Boss, MoxiWorks, BoldTrail, or a CRM export to show lead and activity momentum for this
-            agent.
+            Connect BoldTrail or import a CRM activity export to show lead, appointment, and activity momentum for this
+            agent. appFiles/back-office data still powers closed production and cap progress.
           </p>
         )}
       </section>
+    </div>
+  );
+}
+
+function agentFocus(data: NonNullable<Awaited<ReturnType<typeof loadBrokerageAgentCockpitForUser>>>): string | null {
+  const { production, forecast, leads } = data;
+  if (forecast.incomeGoalCoveragePct != null && forecast.incomeGoalCoveragePct < 100) {
+    return `Your closed plus weighted pipeline is at ${pct(forecast.incomeGoalCoveragePct, 0)} of the monthly income target. Add pipeline or move pending files forward before the next 45-90 day window thins out.`;
+  }
+  if (production.capRemaining != null && production.capRemaining > 0 && production.capRemaining <= 5_000) {
+    return `${money(production.capRemaining)} remains before cap. Prioritize files closest to closing so more future commission shifts toward your take-home.`;
+  }
+  if (leads.spend > 0 && (leads.grossRoiMultiple == null || leads.grossRoiMultiple < 2)) {
+    return `${money(leads.spend)} in company lead spend is assigned here, but closed-lead return is low or not matched yet. Review speed-to-lead and follow-up in BoldTrail.`;
+  }
+  return null;
+}
+
+function SectionTitle({ label, detail }: { label: string; detail: string }) {
+  return (
+    <div>
+      <div className="text-[11px] uppercase tracking-wider text-copper-soft">{label}</div>
+      <p className="mt-1 text-sm leading-relaxed text-muted">{detail}</p>
+    </div>
+  );
+}
+
+function CapProgressBar({ value }: { value: number | null }) {
+  if (value == null) return null;
+  const safeValue = Math.min(100, Math.max(0, value));
+  return (
+    <div
+      className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-line"
+      role="progressbar"
+      aria-valuenow={Math.round(safeValue)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label="Cap used"
+    >
+      <div className="h-full rounded-full bg-copper-soft" style={{ width: `${safeValue}%` }} />
     </div>
   );
 }

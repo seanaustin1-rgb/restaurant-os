@@ -44,11 +44,15 @@ const NOT_FOUND: ReputationResult = {
 
 type ReputationLookupKind = "restaurant" | "real_estate" | "contractor" | "service" | "retail" | "lodging";
 
-const LOOKUP_CONFIG: Record<ReputationLookupKind, { querySuffix: string; type?: string; rejectTypes?: string[] }> = {
+const LOOKUP_CONFIG: Record<
+  ReputationLookupKind,
+  { querySuffix: string; type?: string; rejectTypes?: string[]; acceptTypes?: string[] }
+> = {
   restaurant: { querySuffix: "restaurant", type: "restaurant" },
   real_estate: {
     querySuffix: "real estate agency",
     type: "real_estate_agency",
+    acceptTypes: ["real_estate_agency"],
     rejectTypes: ["restaurant", "bar", "cafe", "meal_takeaway", "bakery", "food"],
   },
   contractor: { querySuffix: "contractor", type: "general_contractor" },
@@ -58,10 +62,13 @@ const LOOKUP_CONFIG: Record<ReputationLookupKind, { querySuffix: string; type?: 
 };
 
 function acceptableResult(result: PlacesTextResult, kind: ReputationLookupKind): boolean {
-  const rejectTypes = LOOKUP_CONFIG[kind].rejectTypes ?? [];
-  if (!rejectTypes.length) return true;
+  const config = LOOKUP_CONFIG[kind];
+  const rejectTypes = config.rejectTypes ?? [];
   const types = result.types ?? [];
-  return !types.some((type) => rejectTypes.includes(type));
+  if (types.some((type) => rejectTypes.includes(type))) return false;
+  const acceptTypes = config.acceptTypes ?? [];
+  if (!acceptTypes.length) return true;
+  return types.some((type) => acceptTypes.includes(type));
 }
 
 export async function lookupReputation(

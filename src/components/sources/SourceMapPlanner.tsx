@@ -152,6 +152,10 @@ function nextStatus(status: DataSourceStatus, guide: OnboardingGuide): DataSourc
   return "PLANNED";
 }
 
+function requiresGoogleAuthorization(option: SourceOption): boolean {
+  return option.name.toLowerCase().includes("google business profile");
+}
+
 export function SourceMapPlanner({
   sourceMap,
   initialConfigs,
@@ -235,6 +239,7 @@ export function SourceMapPlanner({
               const copy = statusCopy(draft.status, guide);
               const owner = ownerCopy(guide.owner);
               const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
+              const googleNeedsAuthorization = requiresGoogleAuthorization(option) && draft.status !== "CONNECTED";
               const Icon = draft.status === "CONNECTED" ? ShieldCheck : draft.status === "PLANNED" ? modeIcon(guide.mode) : draft.status === "BLOCKED" ? LifeBuoy : SearchCheck;
               return (
                 <div key={option.name} className="rounded-md border border-line bg-ink/40 px-3 py-3">
@@ -317,7 +322,7 @@ export function SourceMapPlanner({
                       className={"w-full rounded-md border bg-surface px-2 py-2 text-xs outline-none focus-visible:ring-1 focus-visible:ring-copper-soft sm:w-auto " + STATUS_STYLE[draft.status]}
                     >
                       {STATUS_OPTIONS.map((status) => (
-                        <option key={status.value} value={status.value}>
+                        <option key={status.value} value={status.value} disabled={googleNeedsAuthorization && status.value === "CONNECTED"}>
                           {status.label}
                         </option>
                       ))}

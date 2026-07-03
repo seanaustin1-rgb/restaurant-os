@@ -33,6 +33,20 @@ export async function updateSourceConfig(input: UpdateSourceConfigInput): Promis
   const group = sourceMap.groups.find((g) => g.category === input.category);
   const provider = group?.options.find((o) => o.name === input.providerName);
   if (!group || !provider) throw new Error("Unknown source option for this business template.");
+  if (input.category === "aura" && input.providerName === "Google Business Profile" && input.status === "CONNECTED") {
+    const activeGoogleConnection = await prisma.integrationConnection.findFirst({
+      where: {
+        restaurantId,
+        provider: "GOOGLE_BUSINESS_PROFILE",
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
+      select: { id: true },
+    });
+    if (!activeGoogleConnection) {
+      throw new Error("Authorize Google Business Profile and choose a location before marking it connected.");
+    }
+  }
 
   await prisma.dataSourceConfig.upsert({
     where: {

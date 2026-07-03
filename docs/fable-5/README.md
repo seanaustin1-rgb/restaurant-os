@@ -3,14 +3,17 @@
 Handoff + specs from the Fable 5 stress-test sessions, preserved here so they're reachable
 remotely (Claude Code web / phone). Content only — no secrets. Nothing here is executed yet.
 
-**Start with [SESSION-HANDOFF-2026-07-03-chunk5.md](SESSION-HANDOFF-2026-07-03-chunk5.md)** — it is
-authoritative over every prior RESUME block and carries the ranked backlog, cut/bury list, and
-investor-demo angle.
+**Start with [MASTER-ROADMAP-2026-07-03.md](MASTER-ROADMAP-2026-07-03.md)** — the capstone that
+sequences everything below into Buckets A (this week / pre-investor), B (pre-launch), C
+(post-launch), with dependencies, top-3 risks, and the single highest-leverage next action.
+Then [SESSION-HANDOFF-2026-07-03-chunk5.md](SESSION-HANDOFF-2026-07-03-chunk5.md) for the
+authoritative ranked backlog and the rationale behind each item.
 
 ## What's here
 
 | File | What it is |
 |------|-----------|
+| [MASTER-ROADMAP-2026-07-03.md](MASTER-ROADMAP-2026-07-03.md) | **Capstone roadmap.** Buckets A/B/C, dependency graph, top-3 risks, highest-leverage next action. Read first. |
 | [SESSION-HANDOFF-2026-07-03-chunk5.md](SESSION-HANDOFF-2026-07-03-chunk5.md) | **Authoritative resume block.** Ranked enrichment backlog (code-verified vs `main`), cut/bury list, execution order, resume prompt. |
 | [investor-demo-script.md](investor-demo-script.md) | 7-beat brokerage/rental demo for the first investor + T-minus checklist + objection handling. |
 | [PR-rule-guardrails-and-triage.md](PR-rule-guardrails-and-triage.md) | PR write-up for `claude/rule-guardrails-and-triage` (commit `6923f48`) — **merge this first**, it strands CLAUDE.md + PRODUCT-MAP.md. |

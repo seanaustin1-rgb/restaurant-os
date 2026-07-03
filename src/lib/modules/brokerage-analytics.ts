@@ -193,6 +193,7 @@ export interface BrokerageAgentCockpitData {
     cmaCount: number;
     activePipelineCount: number;
   } | null;
+  coachingSignals: BrokerageAgentCoachingSignal[];
 }
 
 export interface LoadBrokerageAgentCockpitForUserInput {
@@ -200,6 +201,25 @@ export interface LoadBrokerageAgentCockpitForUserInput {
   userEmail?: string | null;
   restaurantId?: string | null;
   agentId?: string | null;
+}
+
+export type BrokerageAgentCoachingSeverity = "red" | "yellow";
+export type BrokerageAgentCoachingSource = "setup" | "BoldTrail" | "appFiles" | "QBO/back office" | "CSV/export";
+
+export interface BrokerageAgentCoachingSignal {
+  key:
+    | "goal_gap"
+    | "pipeline_deficit"
+    | "cap_sprint"
+    | "lead_waste"
+    | "activity_gap"
+    | "conversion_leak"
+    | "speed_to_lead_missing";
+  severity: BrokerageAgentCoachingSeverity;
+  label: string;
+  readout: string;
+  action: string;
+  source: BrokerageAgentCoachingSource;
 }
 
 function sourceConfidence(hasImportedAgent: boolean, usesFallbackMath: boolean): BrokerageAgentSourceConfidence {
@@ -278,6 +298,117 @@ export function deriveBrokerageTopPressure(data: Omit<BrokerageCockpitData, "top
   }
 
   return pressures[0] ?? null;
+}
+
+function money0(value: number): string {
+  return r2(value).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+}
+
+function pct0(value: number): string {
+  return `${Math.round(value)}%`;
+}
+
+export function deriveAgentCoachingSignals(
+  data: Pick<BrokerageAgentCockpitData, "production" | "forecast" | "leads" | "activity">,
+): BrokerageAgentCoachingSignal[] {
+  const signals: BrokerageAgentCoachingSignal[] = [];
+  const priority: Record<BrokerageAgentCoachingSignal["key"], number> = {
+    goal_gap: 10,
+    pipeline_deficit: 20,
+    lead_waste: 30,
+    activity_gap: 40,
+    conversion_leak: 50,
+    speed_to_lead_missing: 60,
+    cap_sprint: 70,
+  };
+
+  if (data.forecast.incomeGoalCoveragePct != null && data.forecast.incomeGoalCoveragePct < 100) {
+    signals.push({
+      key: "goal_gap",
+      severity: data.forecast.incomeGoalCoveragePct < 70 ? "red" : "yellow",
+      label: "Income target gap",
+      readout: `Closed plus weighted pipeline is at ${pct0(data.forecast.incomeGoalCoveragePct)} of the monthly income target.`,
+      action: "Add qualified pipeline or move pending files forward before the next 45-90 day window thins out.",
+      source: "setup",
+    });
+  }
+
+  if (data.forecast.pendingDeals === 0 || data.forecast.weightedPipelineGci <= 0) {
+    signals.push({
+      key: "pipeline_deficit",
+      severity: data.production.closedGci > 0 ? "red" : "yellow",
+      label: "Pipeline needs attention",
+      readout:
+        data.forecast.pendingDeals === 0
+          ? "No active or pending deals are currently feeding the income forecast."
+          : `${money0(data.forecast.weightedPipelineGci)} of weighted pipeline is too thin to protect the next period.`,
+      action: "Update BoldTrail stages and prioritize prospecting or active-listing work this week.",
+      source: "BoldTrail",
+    });
+  }
+
+  if (data.leads.spend > 0 && (data.leads.grossRoiMultiple == null || data.leads.grossRoiMultiple < 2)) {
+    signals.push({
+      key: "lead_waste",
+      severity: data.leads.grossRoiMultiple == null || data.leads.grossRoiMultiple < 1 ? "red" : "yellow",
+      label: "Company lead spend needs proof",
+      readout:
+        data.leads.grossRoiMultiple == null
+          ? `${money0(data.leads.spend)} in company lead spend is assigned, but closed return is not matched yet.`
+          : `${data.leads.grossRoiMultiple.toFixed(1)}x gross lead ROI is below the 2.0x coaching floor.`,
+      action: "Review speed-to-lead, follow-up cadence, and source attribution before assigning more company leads.",
+      source: "BoldTrail",
+    });
+  }
+
+  if (data.activity && data.activity.newLeadCount >= 5 && data.activity.appointmentCount === 0) {
+    signals.push({
+      key: "activity_gap",
+      severity: data.activity.newLeadCount >= 10 ? "red" : "yellow",
+      label: "Lead activity is not becoming appointments",
+      readout: `${data.activity.newLeadCount} new leads show in the activity export with no booked appointments.`,
+      action: "Work the current lead queue before increasing spend or routing more leads to this agent.",
+      source: "BoldTrail",
+    });
+  }
+
+  if (data.leads.appointmentConversionPct != null && data.leads.appointmentConversionPct < 10) {
+    signals.push({
+      key: "conversion_leak",
+      severity: data.leads.appointmentConversionPct < 5 ? "red" : "yellow",
+      label: "Appointment conversion is low",
+      readout: `${pct0(data.leads.appointmentConversionPct)} of new leads are becoming appointments.`,
+      action: "Coach first-response scripts and booking discipline before judging the lead source itself.",
+      source: "BoldTrail",
+    });
+  }
+
+  if (data.leads.spend > 0 && data.leads.speedToLeadMinutes == null) {
+    signals.push({
+      key: "speed_to_lead_missing",
+      severity: "yellow",
+      label: "Speed-to-lead is missing",
+      readout: `${money0(data.leads.spend)} in lead spend is active, but response-time data is not imported.`,
+      action: "Connect BoldTrail activity or import response-time exports so coaching can separate lead quality from follow-up speed.",
+      source: "BoldTrail",
+    });
+  }
+
+  if (data.production.capRemaining != null && data.production.capRemaining > 0 && data.production.capRemaining <= 5_000) {
+    signals.push({
+      key: "cap_sprint",
+      severity: data.production.capRemaining <= 2_500 ? "red" : "yellow",
+      label: "Cap sprint opportunity",
+      readout: `${money0(data.production.capRemaining)} remains before cap.`,
+      action: "Prioritize files closest to closing so more future commission shifts toward agent take-home.",
+      source: "appFiles",
+    });
+  }
+
+  return signals.sort((a, b) => {
+    const severityRank = a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1;
+    return severityRank || priority[a.key] - priority[b.key];
+  });
 }
 
 function auraSummary(aura: Awaited<ReturnType<typeof loadAura>>): DashboardAuraSummary {
@@ -744,7 +875,7 @@ export async function loadBrokerageAgentCockpitForUser(
   const leadNetCommission = attributedGci * (agentSplitPct / 100);
   const newLeadCount = activity?.newLeadCount ?? 0;
 
-  return {
+  const agentCockpit: Omit<BrokerageAgentCockpitData, "coachingSignals"> = {
     restaurantId: role.restaurantId,
     restaurantName: role.restaurant.name,
     periodLabel: cockpit.periodLabel,
@@ -791,4 +922,6 @@ export async function loadBrokerageAgentCockpitForUser(
         }
       : null,
   };
+
+  return { ...agentCockpit, coachingSignals: deriveAgentCoachingSignals(agentCockpit) };
 }

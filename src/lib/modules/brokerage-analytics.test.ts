@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { deriveBrokerageTopPressure, type BrokerageCockpitData } from "./brokerage-analytics";
+import { deriveAgentCoachingSignals, deriveBrokerageTopPressure, type BrokerageCockpitData } from "./brokerage-analytics";
 
 function cockpit(overrides: Partial<Omit<BrokerageCockpitData, "topPressure">> = {}): Omit<BrokerageCockpitData, "topPressure"> {
   return {
@@ -114,5 +114,107 @@ describe("deriveBrokerageTopPressure", () => {
       metricKey: "brokerage-cap-cliff",
       label: "Cap-Cliff Risk",
     });
+  });
+});
+
+function agentSignals(overrides: Partial<Parameters<typeof deriveAgentCoachingSignals>[0]> = {}): Parameters<typeof deriveAgentCoachingSignals>[0] {
+  return {
+    production: {
+      closedGci: 50_000,
+      closedVolume: 1_400_000,
+      closedSides: 3,
+      agentNetCommission: 35_000,
+      annualCap: 24_000,
+      capPaid: 12_000,
+      capRemaining: 12_000,
+      capProgressPct: 50,
+    },
+    forecast: {
+      grossPipelineGci: 80_000,
+      weightedPipelineGci: 56_000,
+      projectedAgentNetCommission: 39_200,
+      pendingDeals: 4,
+      monthlyIncomeGoal: 20_000,
+      incomeGoalCoveragePct: 371,
+    },
+    leads: {
+      spend: 2_500,
+      attributedGci: 15_000,
+      attributedDeals: 2,
+      grossRoiMultiple: 6,
+      netCommissionRoiMultiple: 4.2,
+      appointmentConversionPct: 22,
+      closeConversionPct: 8,
+      speedToLeadMinutes: 12,
+    },
+    activity: {
+      sourceSystem: "BoldTrail",
+      periodStart: "2026-06-01",
+      periodEnd: "2026-06-30",
+      loginCount: 20,
+      newLeadCount: 25,
+      contactCount: 21,
+      appointmentCount: 6,
+      cmaCount: 3,
+      activePipelineCount: 4,
+    },
+    ...overrides,
+  };
+}
+
+describe("deriveAgentCoachingSignals", () => {
+  it("prioritizes a severe income target gap", () => {
+    const signals = deriveAgentCoachingSignals(
+      agentSignals({
+        forecast: {
+          ...agentSignals().forecast,
+          incomeGoalCoveragePct: 62,
+        },
+      }),
+    );
+
+    expect(signals[0]).toMatchObject({
+      key: "goal_gap",
+      severity: "red",
+      source: "setup",
+    });
+  });
+
+  it("flags company lead spend that has no matched return yet", () => {
+    const signals = deriveAgentCoachingSignals(
+      agentSignals({
+        leads: {
+          ...agentSignals().leads,
+          attributedGci: 0,
+          grossRoiMultiple: null,
+          netCommissionRoiMultiple: null,
+          speedToLeadMinutes: null,
+        },
+      }),
+    );
+
+    expect(signals.map((signal) => signal.key)).toEqual(expect.arrayContaining(["lead_waste", "speed_to_lead_missing"]));
+  });
+
+  it("flags cap sprint when the agent is close to capping", () => {
+    const signals = deriveAgentCoachingSignals(
+      agentSignals({
+        production: {
+          ...agentSignals().production,
+          capRemaining: 2_000,
+          capProgressPct: 91.7,
+        },
+      }),
+    );
+
+    expect(signals[0]).toMatchObject({
+      key: "cap_sprint",
+      severity: "red",
+      source: "appFiles",
+    });
+  });
+
+  it("does not manufacture coaching pressure from healthy data", () => {
+    expect(deriveAgentCoachingSignals(agentSignals())).toEqual([]);
   });
 });

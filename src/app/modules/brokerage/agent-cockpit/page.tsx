@@ -2,7 +2,20 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowLeft, BarChart3, BriefcaseBusiness, CircleDollarSign, Gauge, Target, Timer, TrendingUp, Users, Wallet } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  BarChart3,
+  BriefcaseBusiness,
+  CheckCircle2,
+  CircleDollarSign,
+  Gauge,
+  Target,
+  Timer,
+  TrendingUp,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { HealthSignal } from "@/components/health/HealthSignal";
 import { money, pct } from "@/lib/format";
@@ -15,6 +28,10 @@ const HEALTH_TEXT: Record<HealthStatus, string> = {
   green: "text-health-green",
   yellow: "text-health-yellow",
   red: "text-health-red",
+};
+const SIGNAL_STYLE = {
+  red: "border-health-red/40 bg-health-red/10 text-health-red",
+  yellow: "border-health-yellow/40 bg-health-yellow/10 text-health-yellow",
 };
 
 function primaryEmail(user: Awaited<ReturnType<typeof currentUser>>): string | null {
@@ -127,7 +144,7 @@ function AgentCockpit({
   const leadNetRoi = leads.netCommissionRoiMultiple != null ? `${leads.netCommissionRoiMultiple.toFixed(1)}x net` : "Net ROI pending";
   const appointmentConversion = leads.appointmentConversionPct != null ? pct(leads.appointmentConversionPct, 1) : "Needs BoldTrail activity";
   const closeConversion = leads.closeConversionPct != null ? pct(leads.closeConversionPct, 1) : "Needs closed-lead match";
-  const focus = agentFocus(data);
+  const topSignal = data.coachingSignals[0] ?? null;
   return (
     <div className="space-y-5">
       <section className="rounded-lg border border-copper-dim/40 bg-surface p-5">
@@ -150,12 +167,55 @@ function AgentCockpit({
         </div>
       </section>
 
-      {focus ? (
+      {topSignal ? (
         <div className="rounded-lg border border-copper-dim/50 bg-copper-dim/10 px-4 py-3">
           <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">Focus this week</div>
-          <p className="mt-1 text-sm leading-relaxed text-ink-text">{focus}</p>
+          <p className="mt-1 text-base font-medium text-ink-text">{topSignal.label}</p>
+          <p className="mt-1 text-sm leading-relaxed text-muted">{topSignal.readout}</p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-text">{topSignal.action}</p>
         </div>
       ) : null}
+
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-[11px] uppercase tracking-wider text-copper-soft">Coaching queue</div>
+            <p className="mt-1 text-sm text-muted">Ranked from current production, pipeline, lead, cap, and activity signals.</p>
+          </div>
+          <span className="rounded-full border border-line px-2 py-1 text-[11px] uppercase tracking-wider text-muted">
+            {data.coachingSignals.length} active
+          </span>
+        </div>
+        {data.coachingSignals.length > 0 ? (
+          <div className="mt-4 grid gap-3">
+            {data.coachingSignals.slice(0, 4).map((signal) => (
+              <div key={signal.key} className="rounded-md border border-line bg-ink/35 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle size={16} className={signal.severity === "red" ? "mt-0.5 text-health-red" : "mt-0.5 text-health-yellow"} />
+                    <div>
+                      <div className="text-sm font-medium text-ink-text">{signal.label}</div>
+                      <p className="mt-1 text-xs leading-relaxed text-muted">{signal.readout}</p>
+                    </div>
+                  </div>
+                  <span className={"rounded-full border px-2 py-1 text-[10px] uppercase tracking-wider " + SIGNAL_STYLE[signal.severity]}>
+                    {signal.severity}
+                  </span>
+                </div>
+                <div className="mt-3 rounded-md border border-line bg-ink/40 px-3 py-2 text-xs leading-relaxed text-ink-text">
+                  {signal.action}
+                  <span className="ml-2 text-muted">Source: {signal.source}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-health-green/30 bg-health-green/10 p-3 text-sm leading-relaxed text-muted">
+            <CheckCircle2 size={16} className="mt-0.5 text-health-green" />
+            No coaching pressure detected from the current imports. Keep CRM stages, appFiles payout data, and lead attribution current.
+          </div>
+        )}
+      </section>
 
       <SectionTitle label="Production, splits, and take-home" detail="Closed work for this period from appFiles/back-office exports and reconciled payout data." />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -209,20 +269,6 @@ function AgentCockpit({
       </section>
     </div>
   );
-}
-
-function agentFocus(data: NonNullable<Awaited<ReturnType<typeof loadBrokerageAgentCockpitForUser>>>): string | null {
-  const { production, forecast, leads } = data;
-  if (forecast.incomeGoalCoveragePct != null && forecast.incomeGoalCoveragePct < 100) {
-    return `Your closed plus weighted pipeline is at ${pct(forecast.incomeGoalCoveragePct, 0)} of the monthly income target. Add pipeline or move pending files forward before the next 45-90 day window thins out.`;
-  }
-  if (production.capRemaining != null && production.capRemaining > 0 && production.capRemaining <= 5_000) {
-    return `${money(production.capRemaining)} remains before cap. Prioritize files closest to closing so more future commission shifts toward your take-home.`;
-  }
-  if (leads.spend > 0 && (leads.grossRoiMultiple == null || leads.grossRoiMultiple < 2)) {
-    return `${money(leads.spend)} in company lead spend is assigned here, but closed-lead return is low or not matched yet. Review speed-to-lead and follow-up in BoldTrail.`;
-  }
-  return null;
 }
 
 function SectionTitle({ label, detail }: { label: string; detail: string }) {

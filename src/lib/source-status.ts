@@ -27,6 +27,26 @@ function mergeSourceConfigs(
   return [...byKey.values()];
 }
 
+function googleBusinessProfileKey(): string {
+  return keyOf({ category: "aura", providerName: "Google Business Profile" });
+}
+
+function normalizeGoogleBusinessProfileTruth(
+  configs: SourceConfigSnapshot[],
+  hasGoogleBusinessProfileAuthorization: boolean,
+): SourceConfigSnapshot[] {
+  return configs.map((config) => {
+    if (keyOf(config) !== googleBusinessProfileKey()) return config;
+    if (hasGoogleBusinessProfileAuthorization || config.status !== "CONNECTED") return config;
+    return {
+      ...config,
+      status: "BLOCKED",
+      notes:
+        "Google Business Profile was marked connected manually, but no owner-authorized Business Profile location is stored. Authorize Google to sync calls, directions, website clicks, and profile views.",
+    };
+  });
+}
+
 export async function loadSourceConfigSnapshots(
   restaurantId: string,
   db: PrismaClient,
@@ -127,5 +147,5 @@ export async function loadSourceConfigSnapshots(
     });
   }
 
-  return mergeSourceConfigs(saved, actual);
+  return normalizeGoogleBusinessProfileTruth(mergeSourceConfigs(saved, actual), Boolean(googleBusinessProfile));
 }

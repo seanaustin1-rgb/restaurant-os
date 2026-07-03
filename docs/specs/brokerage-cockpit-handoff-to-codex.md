@@ -15,6 +15,80 @@ Progress Log after every step, so the other agent always knows what's done and w
 
 ---
 
+## 2026-07-03 Tandem Setup - Current Working Plan
+
+**Current repo state from Codex:** local `main` is aligned with `origin/main`. PR #70 is merged and shipped to `main`.
+The Agent Cockpit now has a deterministic data-layer coaching helper (`deriveAgentCoachingSignals`) and the page renders
+`Focus this week` plus a ranked `Coaching queue`. Core gates passed locally and in CI: typecheck, tests, build, Vercel,
+and Codex Review.
+
+**Today goal:** get the three near-term verticals ready for early-adopter/investor review:
+1. Restaurant / Stone live dashboard truth.
+2. Real estate brokerage Executive Cockpit + Agent Cockpit + import/demo path.
+3. Vacation rental / property management cockpit + import/demo path.
+
+### Claude Help Lane - Start Here
+
+Claude should avoid data-contract/math/schema work unless explicitly coordinated. The useful lane today is product QA,
+design/copy review, and source-story clarity against the current shipped app/preview.
+
+**Claude tasks:**
+
+1. **Brokerage visual/copy QA**
+   - Review `/modules/brokerage`, `/modules/brokerage/cockpit`, `/modules/brokerage/agent-cockpit`,
+     `/demo/real-estate`, and `/import/brokerage`.
+   - Confirm the cockpit still matches the intended "fighter-jet / 30-second cockpit" direction.
+   - Flag places where the UI looks like a generic dashboard instead of an operating cockpit.
+   - Flag any restaurant/hospitality cross-talk, especially words like prime cost, spill, COGS where they are not brokerage-native.
+   - Check that Agent Cockpit copy makes clear where data comes from: BoldTrail/activity, appFiles/back-office files,
+     QBO/cash truth, CSV/export fallback.
+
+2. **Vacation rental visual/copy QA**
+   - Review `/modules/rentals/cockpit`, `/modules/property-heartbeat`, `/demo/vacation-rental`, and `/import/rentals`.
+   - Decide whether `/modules/property-heartbeat` should remain as a separate legacy/module path or become a redirect/entry
+     to `/modules/rentals/cockpit`.
+   - Flag restaurant or brokerage wording leakage.
+   - Confirm the user-facing model is property-native: occupancy, ADR, RevPAR, owner proceeds, maintenance drag,
+     break-even occupancy, Escapia/PMS import story.
+
+3. **Demo funnel QA**
+   - Review `/demo/tour`, `/demo/real-estate`, `/demo/vacation-rental`, and `/demo`.
+   - Confirm "put in your own numbers" never routes a brokerage/rental prospect to a restaurant result.
+   - Confirm public demo language is honest about what is sample/demo, what can come from API, and what can come from CSV.
+
+4. **Output format for Claude**
+   - Produce a short punch list with severity:
+     - P0: blocks investor/early-adopter demo.
+     - P1: should fix before design lock.
+     - P2: design polish / later.
+   - For each finding include route, screenshot if useful, exact copy currently shown, and suggested replacement copy.
+   - Do not make broad rewrites. If code edits are needed, list exact file/route first so Codex can avoid overlap.
+
+### Codex Lane - Current Owner
+
+Codex will handle the repo/data integrity side:
+- Check open PRs/status and latest `main`.
+- Verify brokerage source labels and agent coaching rules are defensible.
+- Fix hard routing/data-source bugs found in the demo and import flows.
+- Verify restaurant live data truth: Toast freshness, Aura/Google status, Cash Oxygen/pending review count, Plaid/QBO/cash
+  assumptions, and Davo/sales-tax language.
+- Keep any design-only findings out of data-layer changes unless they expose a real correctness problem.
+
+### Coordination Rules For Today
+
+- Claude owns review output and visual/copy recommendations.
+- Codex owns app/data fixes and mergeable implementation.
+- If Claude edits files, avoid:
+  - `src/lib/modules/brokerage-analytics.ts`
+  - `src/lib/modules/property-portfolio.ts`
+  - `src/lib/modules/rental-property-rollup.ts`
+  - Prisma schema/migrations
+  - API/import routes
+- If Claude needs to change cockpit UI components, note it first in this file or in a short handoff so Codex does not patch
+  the same component in parallel.
+
+---
+
 ## Shared Current State
 
 **Where we are (2026-07-01):**
@@ -108,6 +182,10 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-03 [Codex]** Added the current tandem setup block for today's work. Claude lane is product QA,
+  design/copy review, and source-story clarity across brokerage, vacation rental, and demo funnel routes. Codex lane is
+  repo/data integrity, hard routing/source fixes, and restaurant live-data truth checks. PR #70 is merged to `main`, adding
+  deterministic Agent Cockpit coaching signals and the ranked coaching queue.
 - **2026-07-01 [Claude]** Operator ruled on cockpit audience (new locked decision 7): Executive Cockpit is
   **leadership-only** — keep the named per-agent leaderboard, gate the future authed route to
   OPERATOR/MANAGER/CONSULTANT, never INVESTOR. Resolves the post-go-live review flag ("per-agent $ leaderboard

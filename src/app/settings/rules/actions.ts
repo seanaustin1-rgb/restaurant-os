@@ -6,7 +6,7 @@ import type { RuleMatchType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { loadRules, applyRules } from "@/lib/categorization/rules";
-import { getDismissedKeys, SUGGESTIONS_MODULE } from "@/lib/categorization/suggestions";
+import { getDismissedKeys, keywordPatternProblem, SUGGESTIONS_MODULE } from "@/lib/categorization/suggestions";
 
 const PATH = "/settings/rules";
 
@@ -65,6 +65,12 @@ function validatePattern(matchType: RuleMatchType, pattern: string): string {
     } catch {
       throw new Error("invalid regular expression");
     }
+  } else if (matchType === "KEYWORD") {
+    // Guardrail: refuse generic/too-short keywords (`THE`, `payroll`, …) — the
+    // rule class that miscategorized $17.7k of labor in June 2026. The wizard
+    // path is already protected via signatureOf; this closes the manual form.
+    const problem = keywordPatternProblem(trimmed);
+    if (problem) throw new Error(problem);
   }
   return trimmed;
 }

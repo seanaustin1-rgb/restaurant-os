@@ -20,12 +20,16 @@ Investor meeting: ~1 week | Launch: ~1 month
 - [ ] A6. Clear Stone's 373 sync exceptions via new bulk tools; run
       summarize-sync-exceptions.ts before/after (that diff is a demo asset). [S]
 - [ ] A7. Fix or pull Sandbox Diner (48 exceptions / 0 ledger) — can't be on screen. [S]
-- [ ] A8. Build 30-day forward cash (backlog #2) — assembly not build: Recurring module
+- [x] A8. Build 30-day forward cash (backlog #2) — assembly not build: Recurring module
       + payroll cadence inference + sweep dates. Demo Beat 2 depends on it; investor #1
       is vacation-property — forward obligations is his game. [M]
-- [ ] A9. Build daily digest (backlog #1) — clone dailyPlaidSyncScheduler fan-out,
+      DONE 2026-07-04 — merged (Forward Cash module, live tile, 9 pure-fn tests).
+- [x] A9. Build daily digest (backlog #1) — clone dailyPlaidSyncScheduler fan-out,
       cron ~7:45 ET, content already in signals.ts. Demo Beat 1 (6am digest on phone)
       and the retention mechanism. [M]
+      DONE 2026-07-04 — merged (PR #95). Deterministic content from signals.ts +
+      Forward Cash low-point; Inngest scheduler + Resend worker; external send hard-gated
+      behind DAILY_DIGEST_ENABLED=true + RESEND_API_KEY (off until the operator opts in).
 - [ ] A10. Verify brokerage demo tenant reseed; seed with brokerage RuleSeeds pack. [S]
 - [ ] A11. Rehearse investor-demo-script twice; record screen-capture fallback. [S]
 

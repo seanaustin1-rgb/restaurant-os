@@ -4,6 +4,8 @@ import {
   SOURCE_PROFILES,
   buildSourceSetupNote,
   isSourceProfileId,
+  sourceApiSetupLabel,
+  sourceApiSetupState,
   sourceProfile,
   sourceSetupChecklist,
   type SourceProfileId,
@@ -74,5 +76,18 @@ describe("source profiles", () => {
     expect(isSourceProfileId("escapia-operations")).toBe(true);
     expect(isSourceProfileId("not-a-profile")).toBe(false);
     expect(isSourceProfileId(null)).toBe(false);
+  });
+
+  it("derives setup status from source status and setup notes", () => {
+    const apiProfile = sourceProfile("escapia-operations")!;
+    const csvProfile = sourceProfile("appfiles-transactions")!;
+
+    expect(sourceApiSetupState({ profile: apiProfile, status: "PLANNED", notes: null })).toBe("api_available");
+    expect(sourceApiSetupState({ profile: csvProfile, status: "PLANNED", notes: null })).toBe("csv_ready");
+    expect(sourceApiSetupState({ profile: apiProfile, status: "PLANNED", notes: buildSourceSetupNote(apiProfile) })).toBe("api_requested");
+    expect(sourceApiSetupState({ profile: apiProfile, status: "CONNECTED", notes: null })).toBe("connected");
+    expect(sourceApiSetupState({ profile: apiProfile, status: "BLOCKED", notes: null })).toBe("blocked");
+    expect(sourceApiSetupState({ profile: apiProfile, status: "NOT_NEEDED", notes: null })).toBe("not_needed");
+    expect(sourceApiSetupLabel("api_requested").label).toBe("API requested");
   });
 });

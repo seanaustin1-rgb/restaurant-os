@@ -8,6 +8,9 @@ export type SourceProfileId =
   | "escapia-owner-statements";
 
 export type SourceConnectionPath = "oauth" | "partner_api" | "admin_api" | "csv_export";
+export type SourceApiSetupState = "csv_ready" | "api_available" | "api_requested" | "connected" | "not_needed" | "blocked";
+
+export const API_SETUP_REQUESTED_TEXT = "API setup requested.";
 
 export interface SourceProfile {
   id: SourceProfileId;
@@ -140,7 +143,7 @@ export function sourceProfile(id: SourceProfileId | null | undefined): SourcePro
 
 export function buildSourceSetupNote(profile: SourceProfile): string {
   return [
-    `${profile.label}: API setup requested.`,
+    `${profile.label}: ${API_SETUP_REQUESTED_TEXT}`,
     `Path: ${profile.connectionLabel}.`,
     `Needs: ${profile.apiAccessNeeds.join("; ")}.`,
     `Fallback: ${profile.csvFallback}`,
@@ -153,4 +156,34 @@ export function sourceSetupChecklist(profile: SourceProfile): string[] {
     ...profile.requiredIdentity.map((item) => `Match key: ${item}`),
     `CSV fallback: ${profile.csvFallback}`,
   ];
+}
+
+export function sourceApiSetupState(input: {
+  profile: SourceProfile;
+  status: "PLANNED" | "CONNECTED" | "BLOCKED" | "NOT_NEEDED";
+  notes?: string | null;
+}): SourceApiSetupState {
+  if (input.status === "CONNECTED") return "connected";
+  if (input.status === "BLOCKED") return "blocked";
+  if (input.status === "NOT_NEEDED") return "not_needed";
+  if ((input.notes ?? "").includes(API_SETUP_REQUESTED_TEXT)) return "api_requested";
+  return input.profile.connectionPath === "csv_export" ? "csv_ready" : "api_available";
+}
+
+export function sourceApiSetupLabel(state: SourceApiSetupState): { label: string; detail: string } {
+  switch (state) {
+    case "connected":
+      return { label: "Connected", detail: "This source is represented by a connected source or approved import feed." };
+    case "blocked":
+      return { label: "Blocked", detail: "Setup needs vendor, owner, or support follow-up before it can move forward." };
+    case "not_needed":
+      return { label: "Skipped", detail: "This source is not needed for the current setup path." };
+    case "api_requested":
+      return { label: "API requested", detail: "Setup request is saved. Use CSV/import while vendor or admin access is pending." };
+    case "api_available":
+      return { label: "API path available", detail: "Request setup to capture the required access checklist; use CSV/import until approved." };
+    case "csv_ready":
+    default:
+      return { label: "CSV ready", detail: "This source can start with an export/import before a live API exists." };
+  }
 }

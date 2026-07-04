@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Check, ExternalLink, LifeBuoy, LockKeyhole, PlugZap, Save, SearchCheck, ShieldCheck } from "lucide-react";
 import { updateSourceConfig } from "@/app/settings/sources/actions";
 import type { BusinessSourceMap, SourceCategory, SourceOption } from "@/lib/source-map";
-import { sourceProfile } from "@/lib/source-profiles";
+import { sourceApiSetupLabel, sourceApiSetupState, sourceProfile } from "@/lib/source-profiles";
 
 type SourceConfigSnapshot = {
   category: string;
@@ -361,6 +361,8 @@ export function SourceMapPlanner({
               const profile = sourceProfile(option.profileId);
               const copy = statusCopy(draft.status, guide);
               const apiChecklist = apiChecklistByKey[key] ?? [];
+              const apiState = profile ? sourceApiSetupState({ profile, status: draft.status, notes: draft.notes }) : null;
+              const apiStateCopy = apiState ? sourceApiSetupLabel(apiState) : null;
               const owner = ownerCopy(guide.owner);
               const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
               const googleNeedsAuthorization = requiresGoogleAuthorization(option) && draft.status !== "CONNECTED";
@@ -404,6 +406,11 @@ export function SourceMapPlanner({
                         <div className="text-[10px] uppercase tracking-wider text-copper-soft">Setup path</div>
                         <p className="mt-1 text-ink-text">{profile.connectionLabel}</p>
                         <p className="mt-1">{profile.clientSetup}</p>
+                        {apiStateCopy && (
+                          <p className="mt-2 rounded-md border border-line bg-ink/40 px-2 py-1 text-[11px] text-ink-text">
+                            {apiStateCopy.label}: <span className="text-muted">{apiStateCopy.detail}</span>
+                          </p>
+                        )}
                       </div>
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-copper-soft">Imports</div>

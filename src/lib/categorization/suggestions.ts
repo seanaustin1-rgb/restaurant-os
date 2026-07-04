@@ -42,6 +42,25 @@ export function isWeakSignature(signature: string): boolean {
 }
 
 /**
+ * Guardrail for operator-typed KEYWORD rules (the manual rules form + rule
+ * edits). The wizard path already refuses weak signatures via signatureOf, but
+ * an operator could still hand-type `THE` or `payroll` — the exact class of
+ * rule behind the June 2026 labor miscategorization. Returns a human-readable
+ * problem, or null when the keyword is safe. Pure, so it's unit-testable and
+ * reusable by any future rule-creation surface.
+ */
+export function keywordPatternProblem(pattern: string): string | null {
+  const value = pattern.trim();
+  if (value.length < 3) {
+    return "keyword is too short — use at least 3 characters of the vendor name";
+  }
+  if (isWeakSignature(value)) {
+    return `"${value.toUpperCase()}" is a generic banking/filler word that would silently misfile unrelated transactions — use a distinctive part of the vendor name instead`;
+  }
+  return null;
+}
+
+/**
  * Pick a meaningful keyword from a transaction: the first 3+ letter word that
  * isn't a generic banking/filler/locale token (see STOPWORDS). Returns null when
  * the description carries no distinctive vendor word (e.g. a payee-less check) —

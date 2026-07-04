@@ -14,6 +14,11 @@ import { seedDemoBistro } from "@/lib/demo/demo-tenant";
 import { demoPrisma } from "@/lib/demo/demo-prisma";
 import { snapshotReputation } from "@/lib/modules/reputation-trend";
 import { syncAuraIntentSnapshots } from "@/lib/modules/aura-intent";
+import { loadDashboardData } from "@/lib/dashboard/data";
+import { loadForwardCash } from "@/lib/modules/forward-cash";
+import { buildDailyDigest } from "@/lib/modules/daily-digest";
+import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
+import { digestRecipientEmails } from "@/lib/email/digest-recipients";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -165,6 +170,85 @@ export const dailyAuraIntentSnapshot = inngest.createFunction(
   },
 );
 
+/** Human date for a digest, e.g. "Saturday, Jul 4", in the operator's timezone. */
+function digestDateLabel(): string {
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/New_York",
+  }).format(new Date());
+}
+
+/**
+ * Daily Digest scheduler — fans out one send event per restaurant that has an
+ * OPERATOR (the digest's recipient). Kept thin like the Plaid scheduler so one
+ * tenant's failure can't block the others. GATED on an explicit opt-in: this is
+ * the only cron that sends mail OUT to operators, so it no-ops unless
+ * DAILY_DIGEST_ENABLED is "true" AND a Resend key is present — a fresh/preview env
+ * can never blast real inboxes. Read-only; no DB writes, so it's demo-safe.
+ */
+export const dailyDigestScheduler = inngest.createFunction(
+  { id: "daily-digest-scheduler" },
+  { cron: "TZ=America/New_York 45 7 * * *" }, // 7:45am ET daily — after the morning syncs
+  async ({ step }) => {
+    if (process.env.DAILY_DIGEST_ENABLED !== "true") return { dispatched: 0, reason: "digest-disabled" };
+    if (!process.env.RESEND_API_KEY?.trim()) return { dispatched: 0, reason: "resend-not-configured" };
+
+    const restaurants = await step.run("load-digest-restaurants", async () => {
+      return prisma.userRestaurantRole.findMany({
+        where: { role: "OPERATOR" },
+        select: { restaurantId: true },
+        distinct: ["restaurantId"],
+      });
+    });
+
+    if (restaurants.length > 0) {
+      await step.sendEvent(
+        "dispatch-digests",
+        restaurants.map((r) => ({
+          name: "digest/send.requested",
+          data: { restaurantId: r.restaurantId },
+        })),
+      );
+    }
+
+    return { dispatched: restaurants.length };
+  },
+);
+
+/**
+ * Per-restaurant digest worker — resolves recipients, builds the deterministic
+ * digest from the shared dashboard signals + Forward Cash low-point, and sends it.
+ * Skips cleanly when a restaurant has no resolvable recipient. Idempotent-enough
+ * for retries: a resend just re-delivers the same morning read.
+ */
+export const sendDailyDigest = inngest.createFunction(
+  { id: "send-daily-digest", retries: 2 },
+  { event: "digest/send.requested" },
+  async ({ event, step }) => {
+    const restaurantId = event.data.restaurantId as string;
+
+    const recipients = await step.run("resolve-recipients", () => digestRecipientEmails(restaurantId));
+    if (recipients.length === 0) return { sent: false, reason: "no-recipients" };
+
+    const digest = await step.run("build-digest", async () => {
+      const [dashboard, forwardCash] = await Promise.all([
+        loadDashboardData(restaurantId),
+        loadForwardCash(restaurantId),
+      ]);
+      return buildDailyDigest({
+        restaurantName: dashboard.name,
+        dateLabel: digestDateLabel(),
+        dashboard,
+        forwardCash,
+      });
+    });
+
+    return step.run("send-email", () => sendDailyDigestEmail({ to: recipients, digest }));
+  },
+);
+
 export const functions = [
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
@@ -173,4 +257,6 @@ export const functions = [
   monthlyDemoReseed,
   weeklyReputationSnapshot,
   dailyAuraIntentSnapshot,
+  dailyDigestScheduler,
+  sendDailyDigest,
 ];

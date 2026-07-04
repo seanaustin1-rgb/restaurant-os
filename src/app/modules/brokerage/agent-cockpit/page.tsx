@@ -212,12 +212,12 @@ function AgentCockpit({
         ) : (
           <div className="mt-4 flex items-start gap-2 rounded-md border border-health-green/30 bg-health-green/10 p-3 text-sm leading-relaxed text-muted">
             <CheckCircle2 size={16} className="mt-0.5 text-health-green" />
-            No coaching pressure detected from the current imports. Keep CRM stages, AppFiles payout data, and lead attribution current.
+            No coaching pressure detected from the current imports. Keep CRM stages, transaction-file payouts, and lead attribution current.
           </div>
         )}
       </section>
 
-      <SectionTitle label="Production, splits, and take-home" detail="Closed work for this period from AppFiles/back-office exports and reconciled payout data." />
+      <SectionTitle label="Production, splits, and take-home" detail="Closed work for this period from transaction-file or back-office exports and reconciled payout data." />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={<CircleDollarSign size={16} />} label="Closed GCI" value={money(production.closedGci)} detail={`${production.closedSides} closed side${production.closedSides === 1 ? "" : "s"}`} tone={agent.health} />
         <Stat icon={<Wallet size={16} />} label="My take-home" value={money(production.agentNetCommission)} detail="Agent payout from files/export, or split-based estimate" />
@@ -231,7 +231,7 @@ function AgentCockpit({
         <Stat icon={<BriefcaseBusiness size={16} />} label="Closed volume" value={money(production.closedVolume)} detail="Sales volume behind closed GCI" />
       </section>
 
-      <SectionTitle label="45-90 day income forecast" detail="CRM/AppFiles pipeline converted into expected agent income, not brokerage Company Dollar." />
+      <SectionTitle label="45-90 day income forecast" detail="CRM and transaction-file pipeline converted into expected agent income, not brokerage Company Dollar." />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={<BriefcaseBusiness size={16} />} label="Gross pipeline" value={money(forecast.grossPipelineGci)} detail={`${forecast.pendingDeals} active/pending deal${forecast.pendingDeals === 1 ? "" : "s"}`} />
         <Stat icon={<TrendingUp size={16} />} label="Weighted pipeline" value={money(forecast.weightedPipelineGci)} detail="Stage probability applied" />
@@ -239,7 +239,7 @@ function AgentCockpit({
         <Stat icon={<Target size={16} />} label="Income coverage" value={goalCoverage} detail={forecast.monthlyIncomeGoal != null ? `${money(forecast.monthlyIncomeGoal)} monthly target` : "Set goal during agent setup"} />
       </section>
 
-      <SectionTitle label="Lead source ROI and accountability" detail="CRM lead source and company spend matched back to AppFiles/back-office closed results." />
+      <SectionTitle label="Lead source ROI and accountability" detail="CRM lead source and company spend matched back to transaction-file or back-office closed results." />
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={<BarChart3 size={16} />} label="Company lead spend" value={money(leads.spend)} detail="Assigned to this agent" />
         <Stat icon={<CircleDollarSign size={16} />} label="GCI from leads" value={money(leads.attributedGci)} detail={`${leads.attributedDeals} attributed close${leads.attributedDeals === 1 ? "" : "s"}`} />
@@ -262,8 +262,8 @@ function AgentCockpit({
           </div>
         ) : (
           <p className="mt-3 text-sm leading-relaxed text-muted">
-            Connect your CRM (BoldTrail, Follow Up Boss, Lofty…) or import a CRM activity export to show lead,
-            appointment, and activity momentum for this agent. AppFiles/back-office data still powers closed production
+            Connect your CRM (Follow Up Boss, BoldTrail, Lofty, or Moxi) or import a CRM activity export to show lead,
+            appointment, and activity momentum for this agent. Transaction-file or back-office data still powers closed production
             and cap progress.
           </p>
         )}

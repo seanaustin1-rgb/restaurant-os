@@ -1,12 +1,15 @@
 import type { BusinessType } from "@prisma/client";
+import type { SourceProfileId } from "./source-profiles";
 
 export type SourceCategory = "cash" | "sales" | "costs" | "labor" | "pipeline" | "aura" | "accounting";
 
 export interface SourceOption {
   name: string;
+  displayName?: string;
   role: string;
   unlocks: string[];
   minimum?: boolean;
+  profileId?: SourceProfileId;
 }
 
 export interface SourceGroup {
@@ -127,7 +130,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   REAL_ESTATE_BROKERAGE: {
     businessType: "REAL_ESTATE_BROKERAGE",
-    minimumAutoInput: "Bank + QuickBooks/Xero plus a brokerage export. CSV gets the first Company Dollar read live; BoldTrail, BoldTrail BackOffice/Brokermint, and AppFiles can replace exports when API or partner access is available.",
+    minimumAutoInput: "Bank + QuickBooks/Xero plus a brokerage export. CSV gets the first Company Dollar read live; Follow Up Boss, BoldTrail, BoldTrail BackOffice/Brokermint, and AppFiles can replace exports when API or partner access is available.",
     groups: [
       commonCash,
       commonAccounting,
@@ -136,12 +139,13 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Commission pipeline",
         purpose: "Shows pending closings, expected commission, splits, referral fees, and close timing.",
         options: [
-          { name: "BoldTrail CRM / export", role: "Lead source, campaigns, agent assignment, and early pipeline; API if admin-enabled, CSV/export first.", unlocks: ["commission pipeline", "lead ROI"] },
-          { name: "BoldTrail BackOffice / Brokermint export", role: "Commission management, splits, caps, agent ledgers, and QBO checks; API access or export.", unlocks: ["Company Dollar", "cap pressure"] },
+          { name: "BoldTrail CRM / export", role: "Lead source, campaigns, agent assignment, and early pipeline; API if admin-enabled, CSV/export first.", unlocks: ["commission pipeline", "lead ROI"], profileId: "boldtrail-crm" },
+          { name: "Follow Up Boss CRM / export", role: "People/leads, deals, users, source attribution, assigned agent, and pipeline status; API if admin-approved, CSV/export first.", unlocks: ["commission pipeline", "lead ROI", "agent coaching"], profileId: "follow-up-boss-crm" },
+          { name: "BoldTrail BackOffice / Brokermint export", role: "Commission management, splits, caps, agent ledgers, and QBO checks; API access or export.", unlocks: ["Company Dollar", "cap pressure"], profileId: "boldtrail-backoffice" },
           // NB: this `name` is a persisted key — it's saved as DataSourceConfig.providerName
           // and matched by stateFor(). Renaming (e.g. casing to "AppFiles") would orphan
           // tenants' saved source status, so it stays as-is pending a data migration.
-          { name: "appFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"] },
+          { name: "appFiles transaction export", displayName: "AppFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"], profileId: "appfiles-transactions" },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],
       },
@@ -168,7 +172,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Bookings and occupancy",
         purpose: "Shows occupancy, ADR, RevPAR, booking pace, platform fees, and future cash.",
         options: [
-          { name: "Escapia API / export", role: "Property managers, units, rates, fees, taxes, restrictions, and channels; booking/profit fields depend on account access.", unlocks: ["rate freshness", "booking pace"], minimum: true },
+          { name: "Escapia API / export", role: "Property managers, units, rates, fees, taxes, restrictions, and channels; booking/profit fields depend on account access.", unlocks: ["rate freshness", "booking pace"], minimum: true, profileId: "escapia-operations" },
           { name: "Airbnb / Vrbo / Booking.com", role: "Bookings, payouts, reviews", unlocks: ["occupancy", "booking pace", "guest Aura"], minimum: true },
           { name: "Guesty / Hostaway / OwnerRez / Lodgify", role: "Property-management system", unlocks: ["property profit", "owner payouts", "maintenance drag"] },
         ],
@@ -178,7 +182,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         label: "Turns and maintenance",
         purpose: "Shows cleaning, laundry, supplies, repairs, and unit-level drag.",
         options: [
-          { name: "Escapia owner statement / QBO export", role: "Owner proceeds, property-level expense tagging, and payout checks.", unlocks: ["unit profitability", "maintenance drag"], minimum: true },
+          { name: "Escapia owner statement / QBO export", role: "Owner proceeds, property-level expense tagging, and payout checks.", unlocks: ["unit profitability", "maintenance drag"], minimum: true, profileId: "escapia-owner-statements" },
           { name: "Jobber / Breezeway", role: "Turnover and maintenance work", unlocks: ["turn cost", "service reliability"] },
         ],
       },

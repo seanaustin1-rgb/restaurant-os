@@ -142,8 +142,10 @@ _Data/financial spine. Owned by Codex._
   Operators/managers/consultants can read any agent; other users only resolve an agent matched to their email/source identity.
 - ✅ Verified after Codex changes: `tsc --noEmit --incremental false` passed; `vitest --run` passed (`30` files,
   `151` tests).
-- ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion adapters. These should wait until the branch PR is
-  stable and partner credentials / pilot source shapes are available.
+- ✅ Source onboarding lane started in PR #92 (`feat/source-profile-scaffolds`): added source profiles/status UI,
+  Follow Up Boss API client scaffold, credential-intake guidance, and CRM-neutral/AppFiles casing cleanup.
+- ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion jobs. The FUB client scaffold exists, but real sync
+  should wait until partner credentials / pilot source shapes are available.
 
 ## Next Actions
 
@@ -182,6 +184,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
+  Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
+  casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM
+  pipeline source in brokerage readiness/trust, and credential-intake guidance marks API keys as secure-support items
+  rather than note text.
 - **2026-07-03 [Claude]** Completed the QA lane (brokerage / vacation rental / demo funnel). Findings in
   `docs/specs/july-3-qa-findings-claude.md`. Headlines: **P1→P0** — Executive Cockpit (`/modules/brokerage/cockpit`)
   renders the named per-agent leaderboard to an INVESTOR role (no role gate; `nav.ts:21` also exposes the link),

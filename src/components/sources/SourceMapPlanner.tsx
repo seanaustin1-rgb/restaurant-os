@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check, ExternalLink, LifeBuoy, LockKeyhole, PlugZap, Save, SearchCheck, ShieldCheck } from "lucide-react";
 import { updateSourceConfig } from "@/app/settings/sources/actions";
 import type { BusinessSourceMap, SourceCategory, SourceOption } from "@/lib/source-map";
+import { sourceApiSetupLabel, sourceApiSetupState, sourceProfile, type SourceCredentialIntakeItem } from "@/lib/source-profiles";
 
 type SourceConfigSnapshot = {
   category: string;
@@ -16,6 +17,12 @@ type SourceConfigSnapshot = {
 
 type SourceDraft = { status: DataSourceStatus; notes: string };
 type SourceDrafts = Record<string, SourceDraft>;
+type SourceSetupResponse = {
+  checklist?: string[];
+  profile?: { credentialIntake?: SourceCredentialIntakeItem[] };
+  config?: { category: string; providerName: string; status: DataSourceStatus; notes: string | null };
+  error?: string;
+};
 
 const STATUS_OPTIONS: { value: DataSourceStatus; label: string }[] = [
   { value: "PLANNED", label: "Planned" },
@@ -71,6 +78,17 @@ function errMsg(error: unknown) {
 
 function providerGuide(category: SourceCategory, option: SourceOption): OnboardingGuide {
   const name = option.name.toLowerCase();
+  const profile = sourceProfile(option.profileId);
+  if (profile) {
+    return {
+      mode: "upload",
+      owner: "advisor",
+      headline: profile.connectionLabel,
+      detail: `${profile.apiReality} ${profile.csvFallback}`,
+      primaryLabel: "Plan import",
+      href: profile.category === "sales" || profile.category === "costs" ? "/import/rentals" : "/import/brokerage",
+    };
+  }
   if (name === "plaid") {
     return {
       mode: "oauth",
@@ -181,10 +199,12 @@ export function SourceMapPlanner({
   sourceMap,
   initialConfigs,
   actorRole,
+  restaurantId,
 }: {
   sourceMap: BusinessSourceMap;
   initialConfigs: SourceConfigSnapshot[];
   actorRole: string;
+  restaurantId: string;
 }) {
   const initialByKey = useMemo(() => {
     return new Map(initialConfigs.map((config) => [configKey(config.category, config.providerName), config]));
@@ -194,6 +214,9 @@ export function SourceMapPlanner({
   const [savedDrafts, setSavedDrafts] = useState<SourceDrafts>(initialDrafts);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [apiRequestingKey, setApiRequestingKey] = useState<string | null>(null);
+  const [apiChecklistByKey, setApiChecklistByKey] = useState<Record<string, string[]>>({});
+  const [credentialIntakeByKey, setCredentialIntakeByKey] = useState<Record<string, SourceCredentialIntakeItem[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const dirtySources = sourceMap.groups.flatMap((group) =>
@@ -255,6 +278,37 @@ export function SourceMapPlanner({
     });
   }
 
+  async function requestApiSetup(category: SourceCategory, option: SourceOption) {
+    if (!option.profileId) return;
+    const key = configKey(category, option.name);
+    setError(null);
+    setSavedKey(null);
+    setApiRequestingKey(key);
+    try {
+      const res = await fetch("/api/source-profiles/request", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ restaurantId, profileId: option.profileId, category, providerName: option.name }),
+      });
+      const data = (await res.json().catch(() => ({}))) as SourceSetupResponse;
+      if (!res.ok) throw new Error(data.error ?? "Could not request API setup.");
+      if (data.config) {
+        const nextDraft = { status: data.config.status, notes: data.config.notes ?? "" };
+        setDrafts((current) => ({ ...current, [key]: nextDraft }));
+        setSavedDrafts((current) => ({ ...current, [key]: nextDraft }));
+      }
+      if (data.checklist) setApiChecklistByKey((current) => ({ ...current, [key]: data.checklist ?? [] }));
+      if (data.profile?.credentialIntake) {
+        setCredentialIntakeByKey((current) => ({ ...current, [key]: data.profile?.credentialIntake ?? [] }));
+      }
+      setSavedKey(key);
+    } catch (e) {
+      setError(errMsg(e));
+    } finally {
+      setApiRequestingKey(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {error && (
@@ -306,10 +360,16 @@ export function SourceMapPlanner({
           <div className="mt-3 space-y-2">
             {group.options.map((option) => {
               const key = configKey(group.category, option.name);
+              const optionLabel = option.displayName ?? option.name;
               const draft = drafts[key] ?? { status: option.minimum ? "PLANNED" : "NOT_NEEDED", notes: "" };
               const isSaving = pending && savingKey === key;
               const guide = providerGuide(group.category, option);
+              const profile = sourceProfile(option.profileId);
               const copy = statusCopy(draft.status, guide);
+              const apiChecklist = apiChecklistByKey[key] ?? [];
+              const credentialIntake = credentialIntakeByKey[key] ?? profile?.credentialIntake ?? [];
+              const apiState = profile ? sourceApiSetupState({ profile, status: draft.status, notes: draft.notes }) : null;
+              const apiStateCopy = apiState ? sourceApiSetupLabel(apiState) : null;
               const owner = ownerCopy(guide.owner);
               const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
               const googleNeedsAuthorization = requiresGoogleAuthorization(option) && draft.status !== "CONNECTED";
@@ -319,7 +379,7 @@ export function SourceMapPlanner({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm text-ink-text">{option.name}</span>
+                        <span className="text-sm text-ink-text">{optionLabel}</span>
                         {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
                         <span className={"rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider " + owner.className}>
                           {owner.label}
@@ -347,6 +407,61 @@ export function SourceMapPlanner({
 
                   <p className="mt-2 text-[11px] leading-relaxed text-muted">Unlocks: {option.unlocks.join(", ")}</p>
 
+                  {profile && (
+                    <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border border-line bg-surface/60 px-3 py-3 text-[11px] leading-relaxed text-muted sm:grid-cols-3">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Setup path</div>
+                        <p className="mt-1 text-ink-text">{profile.connectionLabel}</p>
+                        <p className="mt-1">{profile.clientSetup}</p>
+                        {apiStateCopy && (
+                          <p className="mt-2 rounded-md border border-line bg-ink/40 px-2 py-1 text-[11px] text-ink-text">
+                            {apiStateCopy.label}: <span className="text-muted">{apiStateCopy.detail}</span>
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Imports</div>
+                        <p className="mt-1">{profile.importedEntities.slice(0, 5).join(", ")}</p>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Match keys</div>
+                        <p className="mt-1">{profile.requiredIdentity.slice(0, 5).join(", ")}</p>
+                      </div>
+                      <div className="sm:col-span-3">
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Credential intake</div>
+                        <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                          {credentialIntake.slice(0, 6).map((item) => (
+                            <div key={item.key} className="rounded-md border border-line bg-ink/40 px-2 py-1.5">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-ink-text">{item.label}</span>
+                                {item.required && <span className="rounded-full border border-copper-dim px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-copper-soft">required</span>}
+                                {item.sensitivity === "secret" && <span className="rounded-full border border-health-yellow/40 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-health-yellow">secure</span>}
+                              </div>
+                              <p className="mt-0.5 text-muted">{item.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="sm:col-span-3">
+                        <button
+                          type="button"
+                          onClick={() => requestApiSetup(group.category, option)}
+                          disabled={apiRequestingKey === key}
+                          className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+                        >
+                          <LifeBuoy size={13} /> {apiRequestingKey === key ? "Requesting..." : "Request API setup"}
+                        </button>
+                        {apiChecklist.length > 0 && (
+                          <ul className="mt-2 grid grid-cols-1 gap-1 text-[11px] text-muted sm:grid-cols-2">
+                            {apiChecklist.slice(0, 6).map((item) => (
+                              <li key={item}>- {item}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                     <div className="flex flex-wrap gap-2 sm:w-auto">
                       {draft.status === "CONNECTED" ? (
@@ -373,7 +488,7 @@ export function SourceMapPlanner({
                               notes:
                                 draft.notes ||
                                 (guide.owner === "owner"
-                                  ? `${option.name}: owner/operator authorization needed.`
+                                  ? `${optionLabel}: owner/operator authorization needed.`
                                   : guide.headline),
                             })
                           }

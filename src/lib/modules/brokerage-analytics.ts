@@ -204,7 +204,7 @@ export interface LoadBrokerageAgentCockpitForUserInput {
 }
 
 export type BrokerageAgentCoachingSeverity = "red" | "yellow";
-export type BrokerageAgentCoachingSource = "setup" | "BoldTrail" | "AppFiles" | "QBO/back office" | "CSV/export";
+export type BrokerageAgentCoachingSource = "setup" | "CRM activity" | "AppFiles" | "QBO/back office" | "CSV/export";
 
 export interface BrokerageAgentCoachingSignal {
   key:
@@ -308,6 +308,9 @@ function pct0(value: number): string {
   return `${Math.round(value)}%`;
 }
 
+const CRM_PIPELINE_SOURCE_KEYS = ["Follow Up Boss CRM / export", "BoldTrail CRM / export", "MoxiWorks / export", "Lofty / export", "kvCORE / export"];
+const COMMISSION_FILE_SOURCE_KEYS = ["BoldTrail BackOffice / Brokermint export", "appFiles transaction export", "Brokermint / Dotloop / SkySlope"];
+
 export function deriveAgentCoachingSignals(
   data: Pick<BrokerageAgentCockpitData, "production" | "forecast" | "leads" | "activity">,
 ): BrokerageAgentCoachingSignal[] {
@@ -342,8 +345,8 @@ export function deriveAgentCoachingSignals(
         data.forecast.pendingDeals === 0
           ? "No active or pending deals are currently feeding the income forecast."
           : `${money0(data.forecast.weightedPipelineGci)} of weighted pipeline is too thin to protect the next period.`,
-      action: "Update BoldTrail stages and prioritize prospecting or active-listing work this week.",
-      source: "BoldTrail",
+      action: "Update CRM stages and prioritize prospecting or active-listing work this week.",
+      source: "CRM activity",
     });
   }
 
@@ -357,7 +360,7 @@ export function deriveAgentCoachingSignals(
           ? `${money0(data.leads.spend)} in company lead spend is assigned, but closed return is not matched yet.`
           : `${data.leads.grossRoiMultiple.toFixed(1)}x gross lead ROI is below the 2.0x coaching floor.`,
       action: "Review speed-to-lead, follow-up cadence, and source attribution before assigning more company leads.",
-      source: "BoldTrail",
+      source: "CRM activity",
     });
   }
 
@@ -368,7 +371,7 @@ export function deriveAgentCoachingSignals(
       label: "Lead activity is not becoming appointments",
       readout: `${data.activity.newLeadCount} new leads show in the activity export with no booked appointments.`,
       action: "Work the current lead queue before increasing spend or routing more leads to this agent.",
-      source: "BoldTrail",
+      source: "CRM activity",
     });
   }
 
@@ -379,7 +382,7 @@ export function deriveAgentCoachingSignals(
       label: "Appointment conversion is low",
       readout: `${pct0(data.leads.appointmentConversionPct)} of new leads are becoming appointments.`,
       action: "Coach first-response scripts and booking discipline before judging the lead source itself.",
-      source: "BoldTrail",
+      source: "CRM activity",
     });
   }
 
@@ -390,7 +393,7 @@ export function deriveAgentCoachingSignals(
       label: "Speed-to-lead is missing",
       readout: `${money0(data.leads.spend)} in lead spend is active, but response-time data is not imported.`,
       action: "Connect your CRM activity or import response-time exports so coaching can separate lead quality from follow-up speed.",
-      source: "BoldTrail",
+      source: "CRM activity",
     });
   }
 
@@ -567,10 +570,10 @@ export async function loadBrokerageAnalytics(
     market,
     sourceReadiness: [
       { label: "Accounting", state: stateFor("accounting", ["QuickBooks Online", "Xero"]), detail: "Company Dollar checks, fixed OpEx, tax reserve, and advisor review." },
-      { label: "CRM pipeline", state: stateFor("pipeline", ["BoldTrail CRM / export", "Follow Up Boss / Lofty / kvCORE"]), detail: "Pending deals, source attribution, expected close date, close probability, and lead-source activity." },
+      { label: "CRM pipeline", state: stateFor("pipeline", CRM_PIPELINE_SOURCE_KEYS), detail: "Pending deals, source attribution, expected close date, close probability, and lead-source activity." },
       // "appFiles transaction export" must stay verbatim — it's the persisted
       // DataSourceConfig.providerName key from source-map.ts, matched here.
-      { label: "Commission + files", state: stateFor("pipeline", ["BoldTrail BackOffice / Brokermint export", "appFiles transaction export", "Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
+      { label: "Commission + files", state: stateFor("pipeline", COMMISSION_FILE_SOURCE_KEYS), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
       { label: "Market Aura", state: stateFor("aura", ["Google Business Profile", "Zillow / Realtor.com"]), detail: "Search intent, profile actions, reviews, portal activity, and local demand." },
     ],
     counts: {
@@ -700,15 +703,15 @@ export async function loadBrokerageCockpit(
   const bottomAgents = [...agentRows].sort((a, b) => a.companyDollar - b.companyDollar);
   const latestMarket = marketMetricRows[0] ?? null;
   const connectedCount = sourceConfigs.filter((source) => source.status === "CONNECTED").length;
-  const requiredSources = [
-    { category: "accounting", providerName: "QuickBooks Online" },
-    { category: "pipeline", providerName: "BoldTrail CRM / export" },
-    { category: "aura", providerName: "Google Business Profile" },
+  const requiredSourceGroups = [
+    { category: "accounting", label: "QuickBooks Online", providers: ["QuickBooks Online"] },
+    { category: "pipeline", label: "CRM pipeline", providers: CRM_PIPELINE_SOURCE_KEYS },
+    { category: "aura", label: "Google Business Profile", providers: ["Google Business Profile"] },
   ];
   const connectedKeys = new Set(sourceConfigs.filter((source) => source.status === "CONNECTED").map((source) => `${source.category}:${source.providerName}`));
-  const missing = requiredSources
-    .filter((source) => !connectedKeys.has(`${source.category}:${source.providerName}`))
-    .map((source) => source.providerName);
+  const missing = requiredSourceGroups
+    .filter((group) => !group.providers.some((provider) => connectedKeys.has(`${group.category}:${provider}`)))
+    .map((group) => group.label);
 
   const cashSafety: BrokerageCockpitData["cashSafety"] = {
     currentCash: cashOxygen.currentCash,
@@ -771,7 +774,7 @@ export async function loadBrokerageCockpit(
     marketPosition,
     sourceTrust: {
       connected: connectedCount,
-      required: requiredSources.length,
+      required: requiredSourceGroups.length,
       missing,
       status: missing.length === 0 ? "healthy" : "partial",
     },

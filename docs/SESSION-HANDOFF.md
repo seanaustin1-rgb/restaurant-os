@@ -4,7 +4,7 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/spec-a1-tax-vault.md` + `spec-a2-cashflow-spending.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04** block below (it's authoritative; older blocks are history). The app is live on **www.outfrontdata.com**; Spec A (ledger convergence) is the active thread. The shared ledger-first/legacy-fallback util now exists on `main` and Spec A.1 (Tax Vault convergence) is the next code work."
+> "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/MASTER-ROADMAP-2026-07-03.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04 (EOD)** block below (it's authoritative; every older dated block is history). The app is live on **www.outfrontdata.com**. Spec A ledger convergence + the demo-critical read modules are **shipped**; the live critical path is now the **operator/laptop A6 run** (clear Stone's 373 sync exceptions with the new bulk-triage tools, then verify the new modules against real data)."
 
 > **⚠️ Historical note (2026-06-12/13).** The **2026-07-04** block at the top is now authoritative; every
 > dated block below it (2026-06-15, 2026-06-13, …) is history, kept only for context. The 10 live tiles +
@@ -17,7 +17,38 @@ Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
 ---
 
-## ⏱️ RESUME HERE — 2026-07-04 (SPEC A FOUNDATION MERGED · TAX VAULT IS NEXT)
+## ⏱️ RESUME HERE — 2026-07-04 (EOD) — SPEC A + DEMO READ MODULES SHIPPED · A6 IS THE GATE
+
+**`main` tip: `a5db4c1`** (this lane's last merge was **#98 `4077094`** A10; `#96`/`#99` on top are a
+separate onboarding lane — industry deep links + source planning). Everything in the older 2026-07-04 block
+below is now history — the "Tax Vault is next" work is all merged. Auto-deploys to **www.outfrontdata.com** on merge.
+
+**✅ Merged today (all squash, each re-verified green Typecheck/Test/Build + Codex advisory):**
+- **A.1 Tax Vault** ledger-first read + source-trust (`src/lib/modules/tax-vault.ts`) — #85
+- **A.2 Cash Flow** ledger-first (`cash-flow.ts`) — #86 · **A.2 Spending** ledger-first + category map (`spending-by-category.ts`) — #87 · **A.2 coverage-gap signal** (`signals.ts` `deriveCoverageGap`) — #88
+- **A8 — Forward Cash** (`src/lib/modules/forward-cash.ts` + module/page/tile) — #94. 30-day event-based projection; surfaces the LOW-POINT (payroll + recurring + 10th/25th sweeps). Read-only; honest when unanchored.
+- **A9 — Daily Digest** (`src/lib/modules/daily-digest.ts` pure builder + `src/lib/email/daily-digest.ts` + `digest-recipients.ts` + Inngest `dailyDigestScheduler`/`sendDailyDigest` in `functions.ts`) — #95. Deterministic content from `signals.ts` + Forward Cash low-point. **External send HARD-GATED behind `DAILY_DIGEST_ENABLED=true` AND `RESEND_API_KEY`** — off until the operator opts in. Recipients = each tenant's OPERATOR → Clerk primary email.
+- **A5 — Spec C review bulk triage** (`/settings/sources/review`: `ReviewControls.tsx`, `actions.ts`, `review.ts`) — #97. Per-row approve-as-category (default = rule-engine guess) through the one `ledgerMappingForTap`; save-as-rule through the `keywordPatternProblem` guardrail; **bulk approve-all-as-category / exclude-all per vendor-signature group** (transactional, >10 confirm, requires an explicit category — never blanket-confirms low-confidence guesses). This is the tooling that makes A6 a ~10-min job.
+- **A10 — Brokerage taxonomy + vendor seed pack** (`categories.ts` `BROKERAGE_CATEGORIES`, `brokerage-seeds.ts`, `ruleSeedsFor`/`categoriesFor` businessType routing) — #98. Restaurant path is byte-identical. Codex caught + I fixed a real gap: `revenueCategoryId(tapById)` so brokerage commission inflows classify instead of dropping to null (`categorize()` no longer keys revenue off the hardcoded "Sales Deposits" name).
+
+**⛔ THE GATE — A6, an OPERATOR/LAPTOP action (not code). This is the live critical path:**
+1. `/settings/sources/review` on **Stone Grille** → use the new **bulk "Approve all as [category]" / "Exclude all"** on the largest vendor groups to clear the **373** open sync exceptions. Run `scripts/summarize-sync-exceptions.ts stone` **before and after** — that delta is a demo asset. (Runbook: `docs/fable-5/RUNBOOK-stone-triage.md`.)
+2. Clearing Stone unblocks: real-data spot-check of **Tax Vault / Cash Flow / Spending / Forward Cash** (they read ledger-first only where coverage exists — safe today, but unverified against real ledger data until Stone is clean), and **`scripts/compare-spines.ts "Stone Grille"`** parity (the acceptance gate before A.3 touches allocation math).
+3. **A10 demo verify:** `npm run seed:brokerage -- --user <clerkUserId>` against the demo DB → confirm "Cascade Realty Group" tiles read brokerage-native.
+
+**🤝 Codex lane (separate agent, do NOT step on):**
+- **PR #90** — A.1 accrued-vs-cleared reconciliation + `tax-sales-drift` signal. Adds a **`Restaurant.taxProfile` migration** → **migration must be applied by the operator before merge/deploy** (whole-dashboard blast radius: `loadTaxVault` feeds `loadDashboardData`). Also awaiting Codex to add the requested **`cleared==0` → insufficient-data guard** (avoid a 100%-variance red false-positive on a pre-triage tenant). `CODEX_HANDOFF.md` has the brief.
+- `brokerage-analytics.ts` + `signals.ts` are shared/Codex-touched — coordinate.
+
+**Open PRs (all other-lane drafts — not this lane's to land):** #90 (Codex reconciliation, migration-gated), #91 (ledger bucket-map), #63, #53.
+
+**Non-negotiables (from CLAUDE.md):** two spines, ledger-first-with-legacy-fallback (Cash Oxygen pattern), never a 3rd path · categorization only through `categorize()`/`rules.ts` · rule edits don't retro-move rows (run `recategorize-transactions.ts --commit`) · KEYWORD guardrails stay (word-start match + stopword reject) · signals stay deterministic · demo writes only ever hit `DEMO_DATABASE_URL` · never run a prod migration (operator action) · Investor role read-only.
+
+**Next candidates after A6:** A11 (rehearse investor-demo-script) · B-bucket is mostly launch-gated (B3 allocation is GATED on compare-spines output; B6 cash-floor/sweep-safety is cheap after A8; B7 payroll forward accrual feeds A8).
+
+---
+
+## ⏱️ RESUME HERE — 2026-07-04 (SPEC A FOUNDATION MERGED · TAX VAULT IS NEXT) [HISTORY — superseded by the EOD block above]
 
 **Active thread: Spec A — ledger convergence.** Converge dashboard modules off the legacy
 `Transaction → TapBucket` spine onto the clean ledger (`RawSourceEvent → NormalizedFinancialEvent →

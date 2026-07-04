@@ -1,7 +1,10 @@
 "use client";
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Database, Layers } from "lucide-react";
+import { clsx } from "clsx";
 import type { SpendingByCategoryData } from "@/lib/modules/spending-by-category";
+import type { LedgerReadSource } from "@/lib/financial-ledger/ledger-coverage";
 import { money, pct } from "@/lib/format";
 
 const PROFIT_COLOR = "#5FA777";
@@ -82,6 +85,14 @@ export function SpendingByCategoryModule({ data }: { data: SpendingByCategoryDat
           </div>
         </div>
       </div>
+
+      {/* Source-trust indicator — which spine served the figures. */}
+      <SourceTrust
+        source={data.source}
+        label={data.sourceLabel}
+        pending={data.pendingReviewCount}
+        unmapped={data.unmappedCount}
+      />
 
       {/* Donut + legend */}
       <div className="grid grid-cols-1 gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-2">
@@ -181,6 +192,43 @@ export function SpendingByCategoryModule({ data }: { data: SpendingByCategoryDat
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SourceTrust({
+  source,
+  label,
+  pending,
+  unmapped,
+}: {
+  source: LedgerReadSource;
+  label: string;
+  pending: number;
+  unmapped: number;
+}) {
+  const tone =
+    source === "ledger"
+      ? "border-health-green/30 text-health-green"
+      : source === "legacy"
+        ? "border-copper-dim text-copper-soft"
+        : "border-line text-muted";
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+      <span className={clsx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5", tone)}>
+        {source === "ledger" ? <Database size={12} /> : <Layers size={12} />}
+        Source: {label}
+      </span>
+      {unmapped > 0 && (
+        <span className="text-copper-soft">
+          {unmapped} unmapped spend line{unmapped === 1 ? "" : "s"}
+        </span>
+      )}
+      {pending > 0 && (
+        <span className="text-muted">
+          {pending} event{pending === 1 ? "" : "s"} pending review
+        </span>
+      )}
     </div>
   );
 }

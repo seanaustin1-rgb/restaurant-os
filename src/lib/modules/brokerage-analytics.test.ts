@@ -210,7 +210,7 @@ describe("deriveAgentCoachingSignals", () => {
     expect(signals[0]).toMatchObject({
       key: "cap_sprint",
       severity: "red",
-      source: "appFiles",
+      source: "AppFiles",
     });
   });
 

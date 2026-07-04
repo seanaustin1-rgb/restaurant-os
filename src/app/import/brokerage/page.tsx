@@ -25,7 +25,7 @@ export default async function BrokerageImportPage() {
           franchise fees, and referral fees when the export does not already carry it.
         </p>
       </div>
-      <SourceProfileCards ids={["boldtrail-crm", "boldtrail-backoffice", "appfiles-transactions"]} />
+      <SourceProfileCards ids={["follow-up-boss-crm", "boldtrail-crm", "boldtrail-backoffice", "appfiles-transactions"]} />
       <BrokerageImportPilot
         businesses={roles.map((role) => ({
           id: role.restaurantId,

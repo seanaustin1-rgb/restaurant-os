@@ -13,6 +13,7 @@ import {
 
 const PILOT_PROFILE_IDS: SourceProfileId[] = [
   "boldtrail-crm",
+  "follow-up-boss-crm",
   "boldtrail-backoffice",
   "appfiles-transactions",
   "escapia-operations",

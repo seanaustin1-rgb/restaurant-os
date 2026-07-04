@@ -2,6 +2,7 @@ import type { SourceCategory } from "./source-map";
 
 export type SourceProfileId =
   | "boldtrail-crm"
+  | "follow-up-boss-crm"
   | "boldtrail-backoffice"
   | "appfiles-transactions"
   | "escapia-operations"
@@ -15,7 +16,7 @@ export const API_SETUP_REQUESTED_TEXT = "API setup requested.";
 export interface SourceProfile {
   id: SourceProfileId;
   label: string;
-  vendor: "BoldTrail" | "BoldTrail BackOffice" | "AppFiles" | "Escapia";
+  vendor: "BoldTrail" | "Follow Up Boss" | "BoldTrail BackOffice" | "AppFiles" | "Escapia";
   category: SourceCategory;
   connectionPath: SourceConnectionPath;
   connectionLabel: string;
@@ -49,6 +50,26 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     riskNotes: [
       "Do not calculate final Company Dollar from CRM-only data.",
       "Agent identity must be matched to AppFiles/back-office and accounting records before ROI is trusted.",
+    ],
+  },
+  "follow-up-boss-crm": {
+    id: "follow-up-boss-crm",
+    label: "Follow Up Boss CRM",
+    vendor: "Follow Up Boss",
+    category: "pipeline",
+    connectionPath: "admin_api",
+    connectionLabel: "Admin API key or CRM export",
+    clientSetup: "Brokerage admin creates a read-only API key or exports people, deals, users, lead sources, and pipeline status.",
+    consultantSetup: "Consultant can start from CSV exports, then validate agent emails and lead-source names before the API key is used.",
+    apiReality: "Follow Up Boss supports API-key access. Use an admin/broker key only when the brokerage explicitly approves account-wide CRM access.",
+    csvFallback: "CSV first: people/leads, deals, users, assigned agent, source, stage, expected value, and expected close date.",
+    importedEntities: ["Agents", "People/leads", "Deals", "Lead sources", "Pipeline stages", "Expected close dates"],
+    requiredIdentity: ["agentId or agent email", "person/lead id", "deal id", "lead source", "pipeline stage", "expected close date"],
+    apiAccessNeeds: ["Brokerage admin approval", "Follow Up Boss API key", "Account-wide scope confirmation", "Agent user identifiers", "CSV export fallback"],
+    dashboardUnlocks: ["Commission pipeline", "Lead ROI", "Agent coaching", "45-90 day momentum"],
+    riskNotes: [
+      "CRM pipeline is forecast data, not closed cash.",
+      "An agent-level API key may only see assigned contacts; use brokerage-approved admin scope for brokerage-wide reporting.",
     ],
   },
   "boldtrail-backoffice": {

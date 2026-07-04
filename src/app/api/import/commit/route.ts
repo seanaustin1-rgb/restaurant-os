@@ -6,6 +6,7 @@ import {
   ensureDefaultCategories,
   categoryIdByName,
   categoryTapById,
+  revenueCategoryId,
   MISC_CATEGORY_NAME,
 } from "@/lib/categorization/categories";
 import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
@@ -40,10 +41,11 @@ export async function POST(req: Request) {
   await ensureDefaultCategories(prisma, role.restaurantId);
   await ensureDefaultRules(prisma, role.restaurantId);
   const nameToId = await categoryIdByName(prisma, role.restaurantId);
+  const tapById = await categoryTapById(prisma, role.restaurantId);
   const catCtx: CategorizationContext = {
     rules: await loadRules(prisma, role.restaurantId),
-    tapById: await categoryTapById(prisma, role.restaurantId),
-    revenueId: nameToId.get("Sales Deposits") ?? null,
+    tapById,
+    revenueId: nameToId.get("Sales Deposits") ?? revenueCategoryId(tapById),
     miscId: nameToId.get(MISC_CATEGORY_NAME) ?? null,
   };
 

@@ -4,9 +4,10 @@
 // transaction's merchant/description (or check number) and assigns a Category,
 // which determines the Profit First TAP. Pure matching is separated from DB I/O
 // so it can be unit-tested and reused across the import + Plaid-sync paths.
-import type { PrismaClient, RuleMatchType, TapBucket, TransactionBucket } from "@prisma/client";
+import type { BusinessType, PrismaClient, RuleMatchType, TapBucket, TransactionBucket } from "@prisma/client";
 import { VENDOR_PATTERNS, PAYROLL_CHECK_MIN } from "./vendor-map";
 import { categoryIdByName, legacyBucketToCategoryName } from "./categories";
+import { BROKERAGE_RULE_SEEDS } from "./brokerage-seeds";
 
 // ─────────────────────────────────────────────────────────────
 // TAP → legacy bucket (transitional dual-write)
@@ -71,6 +72,17 @@ const VENDOR_SEEDS: RuleSeed[] = VENDOR_PATTERNS.map((vp, i) => ({
 export const ALL_RULE_SEEDS: RuleSeed[] = [PAYROLL_CHECK_SEED, ...VENDOR_SEEDS];
 /** National vendors — seeded for every restaurant. */
 export const DEFAULT_RULE_SEEDS = ALL_RULE_SEEDS.filter((r) => r.scope === "default");
+
+/**
+ * The default (national) rule seeds for a business type. Restaurants (and the
+ * other food/retail/service types today) get the restaurant vendor seeds; a
+ * real-estate brokerage gets the brokerage pack, which targets the brokerage
+ * category taxonomy. A seed whose category isn't seeded for the tenant is skipped
+ * by `seedRules`, so a mismatched pack is inert rather than wrong.
+ */
+export function ruleSeedsFor(businessType: BusinessType | null | undefined): RuleSeed[] {
+  return businessType === "REAL_ESTATE_BROKERAGE" ? BROKERAGE_RULE_SEEDS : DEFAULT_RULE_SEEDS;
+}
 /** Customer Zero's local vendors + checkbook rule — seeded only for existing tenants. */
 export const OPERATOR_RULE_SEEDS = ALL_RULE_SEEDS.filter((r) => r.scope === "operator");
 
@@ -287,5 +299,9 @@ export async function seedRules(
 export async function ensureDefaultRules(prisma: PrismaClient, restaurantId: string): Promise<number> {
   const existing = await prisma.rule.count({ where: { restaurantId, isSystem: true } });
   if (existing > 0) return 0;
-  return seedRules(prisma, restaurantId, DEFAULT_RULE_SEEDS);
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { businessType: true },
+  });
+  return seedRules(prisma, restaurantId, ruleSeedsFor(restaurant?.businessType));
 }

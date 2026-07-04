@@ -204,7 +204,7 @@ export interface LoadBrokerageAgentCockpitForUserInput {
 }
 
 export type BrokerageAgentCoachingSeverity = "red" | "yellow";
-export type BrokerageAgentCoachingSource = "setup" | "BoldTrail" | "appFiles" | "QBO/back office" | "CSV/export";
+export type BrokerageAgentCoachingSource = "setup" | "BoldTrail" | "AppFiles" | "QBO/back office" | "CSV/export";
 
 export interface BrokerageAgentCoachingSignal {
   key:
@@ -389,7 +389,7 @@ export function deriveAgentCoachingSignals(
       severity: "yellow",
       label: "Speed-to-lead is missing",
       readout: `${money0(data.leads.spend)} in lead spend is active, but response-time data is not imported.`,
-      action: "Connect BoldTrail activity or import response-time exports so coaching can separate lead quality from follow-up speed.",
+      action: "Connect your CRM activity or import response-time exports so coaching can separate lead quality from follow-up speed.",
       source: "BoldTrail",
     });
   }
@@ -401,7 +401,7 @@ export function deriveAgentCoachingSignals(
       label: "Cap sprint opportunity",
       readout: `${money0(data.production.capRemaining)} remains before cap.`,
       action: "Prioritize files closest to closing so more future commission shifts toward agent take-home.",
-      source: "appFiles",
+      source: "AppFiles",
     });
   }
 
@@ -568,6 +568,8 @@ export async function loadBrokerageAnalytics(
     sourceReadiness: [
       { label: "Accounting", state: stateFor("accounting", ["QuickBooks Online", "Xero"]), detail: "Company Dollar checks, fixed OpEx, tax reserve, and advisor review." },
       { label: "CRM pipeline", state: stateFor("pipeline", ["BoldTrail CRM / export", "Follow Up Boss / Lofty / kvCORE"]), detail: "Pending deals, source attribution, expected close date, close probability, and lead-source activity." },
+      // "appFiles transaction export" must stay verbatim — it's the persisted
+      // DataSourceConfig.providerName key from source-map.ts, matched here.
       { label: "Commission + files", state: stateFor("pipeline", ["BoldTrail BackOffice / Brokermint export", "appFiles transaction export", "Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
       { label: "Market Aura", state: stateFor("aura", ["Google Business Profile", "Zillow / Realtor.com"]), detail: "Search intent, profile actions, reviews, portal activity, and local demand." },
     ],

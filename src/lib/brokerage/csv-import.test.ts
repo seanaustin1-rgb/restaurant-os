@@ -71,7 +71,7 @@ describe("csvToBrokerageRows", () => {
     });
   });
 
-  it("maps appFiles transaction exports into deal rows", () => {
+  it("maps AppFiles transaction exports into deal rows", () => {
     const csv = [
       "File Number,Agent Email,File Address,File Status,Commission Amount,Agent Commission,Company Dollar,Settlement Date",
       "AF-31,sam@example.com,31 Ocean Ave,Approved for Payout,14000,9800,4200,2026-06-25",

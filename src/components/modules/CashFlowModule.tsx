@@ -1,8 +1,10 @@
 "use client";
 
 import { Bar, BarChart, Cell, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Database, Layers } from "lucide-react";
+import { clsx } from "clsx";
 import type { CashFlowData } from "@/lib/modules/cash-flow";
+import type { LedgerReadSource } from "@/lib/financial-ledger/ledger-coverage";
 import { money } from "@/lib/format";
 
 const GREEN = "#5FA777";
@@ -59,6 +61,9 @@ export function CashFlowModule({ data }: { data: CashFlowData }) {
           </div>
         </div>
       </div>
+
+      {/* Source-trust indicator — which spine served the figures. */}
+      <SourceTrust source={data.source} label={data.sourceLabel} pending={data.pendingReviewCount} />
 
       {/* Daily net chart */}
       <div className="rounded-lg border border-line bg-surface p-4">
@@ -123,6 +128,28 @@ export function CashFlowModule({ data }: { data: CashFlowData }) {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function SourceTrust({ source, label, pending }: { source: LedgerReadSource; label: string; pending: number }) {
+  const tone =
+    source === "ledger"
+      ? "border-health-green/30 text-health-green"
+      : source === "legacy"
+        ? "border-copper-dim text-copper-soft"
+        : "border-line text-muted";
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+      <span className={clsx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5", tone)}>
+        {source === "ledger" ? <Database size={12} /> : <Layers size={12} />}
+        Source: {label}
+      </span>
+      {pending > 0 && (
+        <span className="text-muted">
+          {pending} event{pending === 1 ? "" : "s"} pending review
+        </span>
+      )}
     </div>
   );
 }

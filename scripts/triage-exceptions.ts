@@ -94,7 +94,9 @@ async function resolveTenant(query: string) {
   if (bySlug) return bySlug;
 
   const byName = await prisma.restaurant.findMany({
-    where: { name: { contains: query } },
+    // Case-insensitive so an operator can type --tenant stone and match
+    // "Stone Grille and Tap" (Postgres `contains` is case-sensitive by default).
+    where: { name: { contains: query, mode: "insensitive" } },
     select: { id: true, name: true, slug: true },
     orderBy: { createdAt: "asc" },
     take: 20,

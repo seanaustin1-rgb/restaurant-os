@@ -194,6 +194,7 @@ describe("deriveAgentCoachingSignals", () => {
     );
 
     expect(signals.map((signal) => signal.key)).toEqual(expect.arrayContaining(["lead_waste", "speed_to_lead_missing"]));
+    expect(signals.find((signal) => signal.key === "lead_waste")).toMatchObject({ source: "CRM activity" });
   });
 
   it("flags cap sprint when the agent is close to capping", () => {

@@ -5,6 +5,7 @@ export type SourceCategory = "cash" | "sales" | "costs" | "labor" | "pipeline" |
 
 export interface SourceOption {
   name: string;
+  displayName?: string;
   role: string;
   unlocks: string[];
   minimum?: boolean;
@@ -144,7 +145,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
           // NB: this `name` is a persisted key — it's saved as DataSourceConfig.providerName
           // and matched by stateFor(). Renaming (e.g. casing to "AppFiles") would orphan
           // tenants' saved source status, so it stays as-is pending a data migration.
-          { name: "appFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"], profileId: "appfiles-transactions" },
+          { name: "appFiles transaction export", displayName: "AppFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"], profileId: "appfiles-transactions" },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],
       },

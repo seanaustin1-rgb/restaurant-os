@@ -72,10 +72,10 @@ const HEALTH_TEXT: Record<Health, string> = {
 };
 
 const AGENT_GRID_SOURCES = [
-  { label: "Closed Company Dollar", source: "BoldTrail BackOffice/Brokermint, QBO, or CSV export" },
+  { label: "Closed Company Dollar", source: "back-office commission export, QBO, or CSV" },
   { label: "Cap remaining", source: "cap model + paid-to-date from back office/export" },
-  { label: "Weighted pipeline", source: "BoldTrail CRM + AppFiles transaction status" },
-  { label: "Lead ROI", source: "BoldTrail lead source/spend + retained Company Dollar" },
+  { label: "Weighted pipeline", source: "CRM pipeline + transaction-file status" },
+  { label: "Lead ROI", source: "CRM lead source/spend + retained Company Dollar" },
 ] as const;
 
 const word = (s: Health, g: string, y: string, r: string) => (s === "green" ? g : s === "yellow" ? y : r);
@@ -714,7 +714,7 @@ function LeadRoiPreview({ rows }: { rows: AgentPerformanceResult[] }) {
         </div>
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-muted">
-        Live version connects BoldTrail lead source and campaign spend to closed Company Dollar from QBO/back-office data. Until API access is approved, this can be imported from CSV/export and reviewed by a consultant or accountant.
+        Live version connects CRM lead source and campaign spend to closed Company Dollar from QBO/back-office data. Until API access is approved, this can be imported from CSV/export and reviewed by a consultant or accountant.
       </p>
     </div>
   );
@@ -769,7 +769,7 @@ function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) 
     },
     {
       label: "Back-office commissions",
-      source: "BoldTrail BackOffice / Brokermint or CSV",
+      source: "Back-office commission export or CSV",
       coverage: 62,
       note: "Splits, caps, referral fees, franchise fees, agent ledgers, and closed Company Dollar. Use API access when available; otherwise import exports.",
       health: "yellow" as Health,
@@ -778,7 +778,7 @@ function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) 
       label: "CRM + file workflow",
       source: softwareLabel,
       coverage: 58,
-      note: "BoldTrail supplies lead source, campaign, agent assignment, and pipeline. AppFiles supplies transaction-file status and commission worksheets when exported.",
+      note: "CRM exports supply lead source, campaign, agent assignment, and pipeline. Transaction-file exports such as AppFiles supply file status and commission worksheets when available.",
       health: "yellow" as Health,
     },
     {
@@ -807,7 +807,7 @@ function BrokerageSourceReadiness({ softwareLabel }: { softwareLabel: string }) 
             <div className="flex items-center gap-1.5 text-sm text-ink-text">
               <Database size={14} className="text-copper-soft" /> Brokerage data foundation
             </div>
-            <div className="mt-0.5 text-[11px] text-muted">Start with QBO/bank plus CSV exports. Replace exports with BoldTrail, AppFiles, or back-office APIs only after access is confirmed.</div>
+            <div className="mt-0.5 text-[11px] text-muted">Start with QBO/bank plus CSV exports. Replace exports with Follow Up Boss, BoldTrail, AppFiles, or back-office APIs only after access is confirmed.</div>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">

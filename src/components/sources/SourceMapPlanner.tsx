@@ -360,6 +360,7 @@ export function SourceMapPlanner({
           <div className="mt-3 space-y-2">
             {group.options.map((option) => {
               const key = configKey(group.category, option.name);
+              const optionLabel = option.displayName ?? option.name;
               const draft = drafts[key] ?? { status: option.minimum ? "PLANNED" : "NOT_NEEDED", notes: "" };
               const isSaving = pending && savingKey === key;
               const guide = providerGuide(group.category, option);
@@ -378,7 +379,7 @@ export function SourceMapPlanner({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm text-ink-text">{option.name}</span>
+                        <span className="text-sm text-ink-text">{optionLabel}</span>
                         {option.minimum && <span className="text-[10px] uppercase tracking-wider text-copper-soft">minimum</span>}
                         <span className={"rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wider " + owner.className}>
                           {owner.label}
@@ -487,7 +488,7 @@ export function SourceMapPlanner({
                               notes:
                                 draft.notes ||
                                 (guide.owner === "owner"
-                                  ? `${option.name}: owner/operator authorization needed.`
+                                  ? `${optionLabel}: owner/operator authorization needed.`
                                   : guide.headline),
                             })
                           }

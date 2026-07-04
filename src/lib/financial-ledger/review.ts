@@ -6,6 +6,8 @@ import type {
   TapBucket,
 } from "@prisma/client";
 import { buildLedgerDraftLines } from "./source-mapping";
+import { ledgerMappingForTap } from "./bank-transactions";
+import { signatureOf } from "@/lib/categorization/suggestions";
 
 type ReviewDb = PrismaClient | Prisma.TransactionClient;
 
@@ -63,6 +65,78 @@ export function groupPendingFinancialEvents(events: PendingFinancialEventRow[]):
   return [...groups.values()].sort(
     (a, b) => b.count - a.count || Math.abs(b.totalAmount) - Math.abs(a.totalAmount) || b.latestEventDate.getTime() - a.latestEventDate.getTime(),
   );
+}
+
+export const NO_SIGNATURE_LABEL = "(no vendor signature)";
+
+export interface SignatureGroup {
+  key: string; // `${issue} :: ${signature}` — stable id for the bulk form
+  signature: string; // the vendor keyword the group is bucketed on
+  issueLabel: string;
+  sourceSystem: string;
+  count: number;
+  totalAmount: number;
+  latestEventDate: Date;
+  sampleLabel: string;
+  eventIds: string[]; // members — the payload for a bulk approve/exclude
+}
+
+/**
+ * Group pending events by (issue, vendor signature) — the SAME signature the
+ * `scripts/summarize-sync-exceptions.ts` triage report and the rule-suggestion
+ * engine use (`signatureOf`), so the review UI's bulk groups line up 1:1 with the
+ * script's report and a bulk-apply targets exactly the rows that report describes.
+ * Pure — carries the member `eventIds` so a group is directly actionable.
+ */
+export function groupPendingBySignature(events: PendingFinancialEventRow[]): SignatureGroup[] {
+  const groups = new Map<string, SignatureGroup>();
+  for (const event of events) {
+    const signature = signatureOf(event.counterparty, event.description) ?? NO_SIGNATURE_LABEL;
+    const issueLabel = event.issueMessage ?? "Needs mapping review";
+    const key = `${issueLabel} :: ${signature}`.toLowerCase();
+    const existing = groups.get(key);
+    if (existing) {
+      existing.count++;
+      existing.totalAmount += event.amount;
+      existing.eventIds.push(event.id);
+      if (event.eventDate > existing.latestEventDate) existing.latestEventDate = event.eventDate;
+    } else {
+      groups.set(key, {
+        key,
+        signature,
+        issueLabel,
+        sourceSystem: event.sourceSystem,
+        count: 1,
+        totalAmount: event.amount,
+        latestEventDate: event.eventDate,
+        sampleLabel: reviewLabel(event),
+        eventIds: [event.id],
+      });
+    }
+  }
+  return [...groups.values()].sort(
+    (a, b) => b.count - a.count || Math.abs(b.totalAmount) - Math.abs(a.totalAmount) || b.latestEventDate.getTime() - a.latestEventDate.getTime(),
+  );
+}
+
+/**
+ * Derive a re-typed event's ledger classification from an operator-chosen category
+ * through the ONE shared tap→ledger mapping (`ledgerMappingForTap`) — never a second
+ * path. `amount` is the event's stored (positive) magnitude, so REVENUE is reached
+ * only when the chosen category's tapBucket is REVENUE (an explicit operator choice),
+ * not inferred from a lost sign. Pure — unit-tested.
+ */
+export function classificationForCategory(
+  category: { name: string; tapBucket: TapBucket },
+  amount: number,
+): { eventType: FinancialEventType; ledgerAccount: LedgerAccount; tapBucket: TapBucket } {
+  const mapping = ledgerMappingForTap({
+    tapBucket: category.tapBucket,
+    categoryName: category.name,
+    bucket: "UNCATEGORIZED",
+    amount: Math.abs(amount),
+  });
+  return { eventType: mapping.eventType, ledgerAccount: mapping.ledgerAccount, tapBucket: category.tapBucket };
 }
 
 function ledgerAccountForEventType(eventType: FinancialEventType): LedgerAccount {
@@ -157,7 +231,13 @@ export async function loadPendingFinancialEvents(
 
 export async function approveFinancialEvent(
   db: ReviewDb,
-  input: { restaurantId: string; normalizedFinancialEventId: string; approvedBy: string },
+  input: {
+    restaurantId: string;
+    normalizedFinancialEventId: string;
+    approvedBy: string;
+    /** Optional re-type: approve as this tenant category instead of the ingest guess. */
+    categoryId?: string;
+  },
 ): Promise<void> {
   const event = await db.normalizedFinancialEvent.findFirst({
     where: { id: input.normalizedFinancialEventId, restaurantId: input.restaurantId },
@@ -173,13 +253,33 @@ export async function approveFinancialEvent(
   });
   if (!event) throw new Error("financial event not found");
 
+  // Classification defaults to the event's ingest guess; an operator-chosen
+  // category re-derives it through the one shared mapping (never a second path).
+  let eventType = event.eventType;
+  let ledgerAccount = ledgerAccountForEventType(event.eventType);
+  let tapBucket = tapBucketFromMetadata(event.metadata);
+  let retypedCategoryId: string | null = null;
+
+  if (input.categoryId) {
+    const category = await db.category.findFirst({
+      where: { id: input.categoryId, restaurantId: input.restaurantId },
+      select: { name: true, tapBucket: true },
+    });
+    if (!category) throw new Error("category not found for this restaurant");
+    const classified = classificationForCategory(category, Number(event.amount));
+    eventType = classified.eventType;
+    ledgerAccount = classified.ledgerAccount;
+    tapBucket = classified.tapBucket;
+    retypedCategoryId = input.categoryId;
+  }
+
   await db.ledgerEntry.deleteMany({ where: { normalizedFinancialEventId: event.id } });
 
   const lines = buildLedgerDraftLines({
-    eventType: event.eventType,
-    ledgerAccount: ledgerAccountForEventType(event.eventType),
+    eventType,
+    ledgerAccount,
     amount: Number(event.amount),
-    tapBucket: tapBucketFromMetadata(event.metadata),
+    tapBucket,
     memo: event.description ?? "Reviewed financial event",
   });
 
@@ -204,8 +304,11 @@ export async function approveFinancialEvent(
     where: { id: event.id },
     data: {
       mappingStatus: "APPROVED",
+      eventType,
       approvedBy: input.approvedBy,
       approvedAt: new Date(),
+      // Record the operator's category choice for traceability on a re-type.
+      ...(retypedCategoryId ? { metadata: { ...mergeableMetadata(event.metadata), categoryId: retypedCategoryId } } : {}),
     },
   });
   await db.syncException.updateMany({
@@ -216,6 +319,60 @@ export async function approveFinancialEvent(
     },
     data: { resolvedAt: new Date(), resolvedBy: input.approvedBy },
   });
+}
+
+function mergeableMetadata(metadata: Prisma.JsonValue | null | undefined): Record<string, unknown> {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? (metadata as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * Bulk approve every event in `eventIds` as one operator-chosen category, in a
+ * single all-or-nothing transaction (spec: transactional per group). Each row goes
+ * through the same `approveFinancialEvent` the single-row UI uses, so a bulk clear
+ * can't diverge from a per-row review. Returns the number resolved.
+ */
+export async function bulkApproveAsCategory(
+  db: PrismaClient,
+  input: { restaurantId: string; eventIds: string[]; categoryId: string; approvedBy: string },
+): Promise<number> {
+  if (input.eventIds.length === 0) return 0;
+  await db.$transaction(
+    async (tx) => {
+      for (const id of input.eventIds) {
+        await approveFinancialEvent(tx, {
+          restaurantId: input.restaurantId,
+          normalizedFinancialEventId: id,
+          approvedBy: input.approvedBy,
+          categoryId: input.categoryId,
+        });
+      }
+    },
+    { timeout: 120_000 },
+  );
+  return input.eventIds.length;
+}
+
+/** Bulk exclude every event in `eventIds`, in a single all-or-nothing transaction. */
+export async function bulkExcludeFinancialEvents(
+  db: PrismaClient,
+  input: { restaurantId: string; eventIds: string[]; resolvedBy: string },
+): Promise<number> {
+  if (input.eventIds.length === 0) return 0;
+  await db.$transaction(
+    async (tx) => {
+      for (const id of input.eventIds) {
+        await excludeFinancialEvent(tx, {
+          restaurantId: input.restaurantId,
+          normalizedFinancialEventId: id,
+          resolvedBy: input.resolvedBy,
+        });
+      }
+    },
+    { timeout: 120_000 },
+  );
+  return input.eventIds.length;
 }
 
 export async function excludeFinancialEvent(

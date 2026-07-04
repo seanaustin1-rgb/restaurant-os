@@ -14,6 +14,9 @@ type SourceConfigSnapshot = {
   notes: string | null;
 };
 
+type SourceDraft = { status: DataSourceStatus; notes: string };
+type SourceDrafts = Record<string, SourceDraft>;
+
 const STATUS_OPTIONS: { value: DataSourceStatus; label: string }[] = [
   { value: "PLANNED", label: "Planned" },
   { value: "CONNECTED", label: "Connected" },
@@ -42,6 +45,24 @@ interface OnboardingGuide {
 
 function configKey(category: string, providerName: string) {
   return `${category}::${providerName}`;
+}
+
+function buildInitialDrafts(sourceMap: BusinessSourceMap, initialByKey: Map<string, SourceConfigSnapshot>): SourceDrafts {
+  const values: SourceDrafts = {};
+  for (const group of sourceMap.groups) {
+    for (const option of group.options) {
+      const saved = initialByKey.get(configKey(group.category, option.name));
+      values[configKey(group.category, option.name)] = {
+        status: saved?.status ?? (option.minimum ? "PLANNED" : "NOT_NEEDED"),
+        notes: saved?.notes ?? "",
+      };
+    }
+  }
+  return values;
+}
+
+function draftsEqual(a: SourceDraft | undefined, b: SourceDraft | undefined): boolean {
+  return a?.status === b?.status && (a?.notes ?? "").trim() === (b?.notes ?? "").trim();
 }
 
 function errMsg(error: unknown) {
@@ -168,23 +189,19 @@ export function SourceMapPlanner({
   const initialByKey = useMemo(() => {
     return new Map(initialConfigs.map((config) => [configKey(config.category, config.providerName), config]));
   }, [initialConfigs]);
-  const [drafts, setDrafts] = useState(() => {
-    const values: Record<string, { status: DataSourceStatus; notes: string }> = {};
-    for (const group of sourceMap.groups) {
-      for (const option of group.options) {
-        const saved = initialByKey.get(configKey(group.category, option.name));
-        values[configKey(group.category, option.name)] = {
-          status: saved?.status ?? (option.minimum ? "PLANNED" : "NOT_NEEDED"),
-          notes: saved?.notes ?? "",
-        };
-      }
-    }
-    return values;
-  });
+  const initialDrafts = useMemo(() => buildInitialDrafts(sourceMap, initialByKey), [sourceMap, initialByKey]);
+  const [drafts, setDrafts] = useState<SourceDrafts>(initialDrafts);
+  const [savedDrafts, setSavedDrafts] = useState<SourceDrafts>(initialDrafts);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const dirtySources = sourceMap.groups.flatMap((group) =>
+    group.options
+      .map((option) => ({ category: group.category, providerName: option.name, key: configKey(group.category, option.name) }))
+      .filter((source) => !draftsEqual(drafts[source.key], savedDrafts[source.key])),
+  );
+  const dirtyCount = dirtySources.length;
 
   function updateDraft(key: string, patch: Partial<{ status: DataSourceStatus; notes: string }>) {
     setSavedKey(null);
@@ -201,7 +218,35 @@ export function SourceMapPlanner({
     startTransition(async () => {
       try {
         await updateSourceConfig({ category, providerName, status: draft.status, notes: draft.notes });
+        setSavedDrafts((current) => ({ ...current, [key]: draft }));
         setSavedKey(key);
+      } catch (e) {
+        setError(errMsg(e));
+      } finally {
+        setSavingKey(null);
+      }
+    });
+  }
+
+  function saveAll() {
+    if (dirtySources.length === 0) return;
+
+    setError(null);
+    setSavingKey("__all__");
+    startTransition(async () => {
+      try {
+        for (const source of dirtySources) {
+          const draft = drafts[source.key];
+          if (!draft) continue;
+          await updateSourceConfig({
+            category: source.category,
+            providerName: source.providerName,
+            status: draft.status,
+            notes: draft.notes,
+          });
+        }
+        setSavedDrafts(drafts);
+        setSavedKey("__all__");
       } catch (e) {
         setError(errMsg(e));
       } finally {
@@ -217,6 +262,34 @@ export function SourceMapPlanner({
           {error}
         </div>
       )}
+
+      <section className="rounded-lg border border-line bg-surface p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-medium text-ink-text">Source plan changes</h2>
+            <p className="mt-1 text-xs leading-relaxed text-muted">
+              {dirtyCount > 0
+                ? `${dirtyCount} source ${dirtyCount === 1 ? "item has" : "items have"} unsaved changes. Save once before returning to setup.`
+                : savedKey === "__all__"
+                  ? "Source plan saved. You can return to setup or keep refining."
+                  : "Choose the systems in use, then save the plan when it looks right."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={saveAll}
+              disabled={pending || dirtyCount === 0}
+              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+            >
+              {pending && savingKey === "__all__" ? "Saving..." : dirtyCount > 0 ? `Save ${dirtyCount} change${dirtyCount === 1 ? "" : "s"}` : "Saved"}
+            </button>
+            <Link href="/onboarding" className="inline-flex items-center justify-center rounded-md border border-line px-3 py-2 text-xs text-ink-text hover:border-copper-dim">
+              Done for now
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {sourceMap.groups.map((group) => (
         <section key={group.category + group.label} className="rounded-lg border border-line bg-surface p-4">

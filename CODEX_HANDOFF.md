@@ -1,5 +1,39 @@
 # CODEX_HANDOFF
 
+## Latest - 2026-07-04 (from Codex) - onboarding source selection branch
+
+Current branch: `feat/onboarding-source-simplification`.
+
+Merged before this branch:
+- PR #92, "Add pilot source profile scaffolds", was merged to `main` after green typecheck, tests, build, Vercel, and Codex Review.
+
+Implemented on this branch:
+- Onboarding step 3 now includes a "Systems you already use" source picker sourced from `sourceMapFor(businessType)`.
+- Selected sources are sent through `createRestaurant` and persisted as `DataSourceConfig` rows with `status: PLANNED`.
+- The server validates selected sources against the active industry source map through `plannedSourceConfigsForOnboarding`; invalid cross-industry selections are ignored.
+- Source notes created during onboarding are intentionally soft: "selected during onboarding", not "API setup requested", so the source planner does not overstate API work.
+- Brokerage onboarding can now pre-plan BoldTrail CRM/export, Follow Up Boss, BoldTrail BackOffice/Brokermint, AppFiles, MLS, QuickBooks, Plaid, and Aura sources.
+- Vacation rental onboarding can now pre-plan Escapia operations and Escapia owner statement paths.
+
+Validation run:
+- `npx.cmd tsc --noEmit --incremental false` passed.
+- `npm.cmd test -- --run` passed: 46 files, 297 tests.
+- `npm.cmd run build` passed.
+
+Files changed:
+- `src/components/onboarding/OnboardingFlow.tsx`
+- `src/app/onboarding/actions.ts`
+- `src/lib/onboarding/source-selection.ts`
+- `src/lib/onboarding/source-selection.test.ts`
+- `src/lib/source-profiles.ts`
+- `src/lib/source-profiles.test.ts`
+
+Remaining for this lane:
+- Commit, push, and open PR.
+- Optional visual pass on `/onboarding?new=1` to confirm the expanded step 3 still feels usable on mobile.
+
+---
+
 ## ✅ LATEST — 2026-07-04 (from Claude) — Spec A read-path convergence shipped; #90 needs one guard
 
 Spec A (ledger convergence) read-path is on `main` — **B1/B2 pulled ~a month early**. All read-path

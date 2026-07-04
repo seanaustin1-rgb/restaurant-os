@@ -6,6 +6,10 @@ import type { BusinessType } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { industryTemplateFor } from "@/lib/industry-templates";
+import {
+  plannedSourceConfigsForOnboarding,
+  type OnboardingSourceSelection,
+} from "@/lib/onboarding/source-selection";
 
 function slugify(name: string): string {
   const base = name
@@ -21,6 +25,7 @@ export interface OnboardingInput {
   businessType: BusinessType;
   scaleValue?: number;
   profile?: Record<string, string | number | boolean | null>;
+  selectedSources?: OnboardingSourceSelection[];
   tier: "TIER_1" | "TIER_2" | "TIER_3" | "TIER_4";
 }
 
@@ -101,6 +106,11 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
     ...(input.profile ?? {}),
     [template.scaleAnchor.key]: scaleValue,
   };
+  const sourceConfigs = plannedSourceConfigsForOnboarding({
+    businessType: input.businessType,
+    selectedSources: input.selectedSources,
+    updatedBy: userId,
+  });
 
   await prisma.restaurant.create({
     data: {
@@ -127,6 +137,9 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
           name: account.name,
           targetPct: account.targetPct,
         })),
+      },
+      dataSourceConfigs: {
+        create: sourceConfigs,
       },
     },
   });

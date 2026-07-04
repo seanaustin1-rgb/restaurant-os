@@ -84,15 +84,19 @@ export async function assessLedgerCoverage(
   const windowDays = input.windowDays ?? DEFAULT_WINDOW_DAYS;
   const accounts = input.accounts && input.accounts.length > 0 ? [...input.accounts] : null;
 
-  // Anchor the window on the requested asOf, else the tenant's latest activity
-  // (ledger first, then legacy) so an empty ledger still yields a sane window.
+  // Anchor the window on the requested asOf, else the *later* of the tenant's
+  // latest ledger and legacy dates. Taking the max (not ledger-first) matters:
+  // if the ledger is stale but legacy has newer transactions, anchoring on the
+  // old ledger date would find ledger entries in-window and wrongly pick
+  // "ledger", hiding the newer period the ledger doesn't cover yet.
   let asOf = input.asOf ?? null;
   if (!asOf) {
     const [latestLedger, latestTxn] = await Promise.all([
       db.ledgerEntry.findFirst({ where: { restaurantId }, orderBy: { ledgerDate: "desc" }, select: { ledgerDate: true } }),
       db.transaction.findFirst({ where: { restaurantId }, orderBy: { date: "desc" }, select: { date: true } }),
     ]);
-    asOf = latestLedger?.ledgerDate ?? latestTxn?.date ?? null;
+    const dates = [latestLedger?.ledgerDate, latestTxn?.date].filter((d): d is Date => d != null);
+    asOf = dates.length > 0 ? new Date(Math.max(...dates.map((d) => d.getTime()))) : null;
   }
   if (!asOf) {
     return {

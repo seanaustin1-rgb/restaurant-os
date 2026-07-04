@@ -113,6 +113,32 @@ describe("assessLedgerCoverage", () => {
     expect(cov.source).toBe("ledger");
   });
 
+  it("anchors the default window on the later of ledger/legacy dates when the ledger is stale", async () => {
+    // Ledger stopped in January; legacy transactions continued into June. The
+    // window must anchor on the newer legacy date, not the stale ledger date —
+    // otherwise the window sits over the old ledger period, finds ledger rows,
+    // and wrongly reports "ledger" while the newer legacy period goes uncovered.
+    const staleLedger = new Date("2026-01-15T00:00:00.000Z");
+    const newerTxn = new Date("2026-06-30T00:00:00.000Z");
+    const cov = await assessLedgerCoverage(
+      fakeDb({ latestLedgerDate: staleLedger, latestTxnDate: newerTxn, ledgerCount: () => 0, txnCount: 18 }),
+      "r1",
+    );
+    expect(cov.asOfDate).toBe("2026-06-30"); // max(ledger, legacy), not the stale ledger date
+    expect(cov.source).toBe("legacy"); // no ledger rows in the newer window → fall back
+  });
+
+  it("still anchors on the ledger date when it is the later of the two", async () => {
+    const olderTxn = new Date("2026-02-01T00:00:00.000Z");
+    const newerLedger = new Date("2026-06-30T00:00:00.000Z");
+    const cov = await assessLedgerCoverage(
+      fakeDb({ latestLedgerDate: newerLedger, latestTxnDate: olderTxn, ledgerCount: () => 4 }),
+      "r1",
+    );
+    expect(cov.asOfDate).toBe("2026-06-30");
+    expect(cov.source).toBe("ledger");
+  });
+
   it("surfaces the pending-review count as a trust caveat even when reading ledger-first", async () => {
     const cov = await assessLedgerCoverage(
       fakeDb({ latestLedgerDate: ASOF, ledgerCount: () => 5, pendingCount: 8 }),

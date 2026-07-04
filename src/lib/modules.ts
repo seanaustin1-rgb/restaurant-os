@@ -25,6 +25,7 @@ export const MODULES: ModuleDef[] = [
   { key: "category-trends", name: "Category Trends & Budgets", description: "MoM spend by category + budgets", status: "live", href: "/modules/category-trends" },
   { key: "recurring", name: "Recurring & Subscriptions", description: "Repeating charges & price creep", status: "live", href: "/modules/recurring" },
   { key: "runway", name: "Cash Runway", description: "Days of cash at current burn", status: "live", href: "/modules/cash-runway" },
+  { key: "forward-cash", name: "Forward Cash", description: "30-day balance vs. upcoming bills", status: "live", href: "/modules/forward-cash" },
   { key: "payment-watch", name: "Payment Watch", description: "Double-pays & off-norm charges", status: "live", href: "/modules/payment-watch" },
   // Sales tax collected = Toast Orders API (per-check tax), synced daily. Payroll
   // tax shows pulls that cleared; forward accrual still needs a payroll feed.

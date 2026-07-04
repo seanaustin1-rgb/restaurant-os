@@ -6,8 +6,9 @@
 Open the repo and tell Claude:
 > "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/spec-a1-tax-vault.md` + `spec-a2-cashflow-spending.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04** block below (it's authoritative; older blocks are history). The app is live on **www.outfrontdata.com**; Spec A (ledger convergence) is the active thread. The shared ledger-first/legacy-fallback util now exists on `main` and Spec A.1 (Tax Vault convergence) is the next code work."
 
-> **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
-> latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
+> **⚠️ Historical note (2026-06-12/13).** The **2026-07-04** block at the top is now authoritative; every
+> dated block below it (2026-06-15, 2026-06-13, …) is history, kept only for context. The 10 live tiles +
+> Toast era integration (this doc's "Where we are")
 > and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. **PR #18 is MERGED** and
 > **Toast operational scopes are now GRANTED** (orders/cashmgmt/labor) — the era + operational APIs run on
 > TWO separate credential sets (see below).

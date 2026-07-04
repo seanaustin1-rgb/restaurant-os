@@ -1,0 +1,129 @@
+import type { SourceCategory } from "./source-map";
+
+export type SourceProfileId =
+  | "boldtrail-crm"
+  | "boldtrail-backoffice"
+  | "appfiles-transactions"
+  | "escapia-operations"
+  | "escapia-owner-statements";
+
+export type SourceConnectionPath = "oauth" | "partner_api" | "admin_api" | "csv_export";
+
+export interface SourceProfile {
+  id: SourceProfileId;
+  label: string;
+  vendor: "BoldTrail" | "BoldTrail BackOffice" | "AppFiles" | "Escapia";
+  category: SourceCategory;
+  connectionPath: SourceConnectionPath;
+  connectionLabel: string;
+  clientSetup: string;
+  consultantSetup: string;
+  apiReality: string;
+  csvFallback: string;
+  importedEntities: string[];
+  requiredIdentity: string[];
+  dashboardUnlocks: string[];
+  riskNotes: string[];
+}
+
+export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
+  "boldtrail-crm": {
+    id: "boldtrail-crm",
+    label: "BoldTrail CRM",
+    vendor: "BoldTrail",
+    category: "pipeline",
+    connectionPath: "partner_api",
+    connectionLabel: "API or CRM export",
+    clientSetup: "Brokerage admin approves access or exports leads, campaigns, agent assignment, and pipeline stages.",
+    consultantSetup: "Consultant can prep CSV exports and validate agent/source IDs before API access exists.",
+    apiReality: "Use live API/webhook access only after the brokerage admin or vendor partner access is confirmed.",
+    csvFallback: "CSV first: leads, campaigns, stages, assigned agent, source, expected value, and expected close date.",
+    importedEntities: ["Agents", "Lead sources", "Campaign spend", "Pipeline stages", "Expected close dates"],
+    requiredIdentity: ["agentId or agent email", "lead source", "campaign/source id", "pipeline stage", "expected close date"],
+    dashboardUnlocks: ["Commission pipeline", "Lead ROI", "Agent coaching", "45-90 day momentum"],
+    riskNotes: [
+      "Do not calculate final Company Dollar from CRM-only data.",
+      "Agent identity must be matched to AppFiles/back-office and accounting records before ROI is trusted.",
+    ],
+  },
+  "boldtrail-backoffice": {
+    id: "boldtrail-backoffice",
+    label: "BoldTrail BackOffice / Brokermint",
+    vendor: "BoldTrail BackOffice",
+    category: "pipeline",
+    connectionPath: "csv_export",
+    connectionLabel: "Back-office export first",
+    clientSetup: "Brokerage admin exports commission files, agent ledgers, caps, splits, and transaction payout detail.",
+    consultantSetup: "Consultant/accountant reviews split and cap fields against QBO deposits/checks before marking live.",
+    apiReality: "Treat API access as partner/admin-assisted. CSV/export is the reliable pilot path.",
+    csvFallback: "CSV first: agents, deals, GCI, split percent, cap paid, cap remaining, referral/franchise fees, payout status.",
+    importedEntities: ["Agents", "Deals", "Commission worksheets", "Caps", "Splits", "Payout status"],
+    requiredIdentity: ["agentId or agent email", "deal/file id", "GCI", "agent split", "cap paid", "closed/payout date"],
+    dashboardUnlocks: ["Company Dollar", "Cap pressure", "Agent performance", "Production pacing"],
+    riskNotes: [
+      "Cap status must be date-aware; do not assume one split rate applies to all future closings.",
+      "Closed payout data should reconcile to accounting before investor-facing use.",
+    ],
+  },
+  "appfiles-transactions": {
+    id: "appfiles-transactions",
+    label: "AppFiles transaction files",
+    vendor: "AppFiles",
+    category: "pipeline",
+    connectionPath: "csv_export",
+    connectionLabel: "Transaction export first",
+    clientSetup: "Brokerage/admin exports file status, executed contracts, compliance progress, and commission worksheets.",
+    consultantSetup: "Consultant can map file statuses and flag missing commission worksheets before a live connector exists.",
+    apiReality: "Assume export/manual import until AppFiles API/webhook access is confirmed for the brokerage.",
+    csvFallback: "CSV first: file id, address, agent, status, contract date, expected close date, approved payout, worksheet values.",
+    importedEntities: ["Transaction files", "File status", "Executed contracts", "Commission worksheets", "Approved payouts"],
+    requiredIdentity: ["file id", "agentId or agent email", "status", "contract date", "expected close date", "commission worksheet"],
+    dashboardUnlocks: ["Pipeline confidence", "Commission file confidence", "Agent take-home forecast", "Brokerage coaching"],
+    riskNotes: [
+      "File status is not cash. Keep projected and reconciled closed cash separate.",
+      "Compliance notes can be sensitive; do not expose raw file issues to investors.",
+    ],
+  },
+  "escapia-operations": {
+    id: "escapia-operations",
+    label: "Escapia operations",
+    vendor: "Escapia",
+    category: "sales",
+    connectionPath: "admin_api",
+    connectionLabel: "Escapia API or export",
+    clientSetup: "Property manager grants app/API access or exports unit, rate, fee, tax, restriction, booking, and channel data.",
+    consultantSetup: "Consultant can validate unit IDs, rate freshness, channel names, and occupancy assumptions from export files.",
+    apiReality: "Escapia Gateway can support inventory/rates/restrictions; booking/profit depth depends on account permissions.",
+    csvFallback: "CSV/JSON first: units, bookings, nightly rate, channel, fees, taxes, restrictions, and reservation dates.",
+    importedEntities: ["Properties/units", "Bookings", "Nightly rates", "Fees", "Taxes", "Restrictions", "Channels"],
+    requiredIdentity: ["unitId", "bookingId", "check-in/out", "gross rent", "fees", "taxes", "channel"],
+    dashboardUnlocks: ["Occupancy", "ADR", "RevPAR", "Booking pace", "Break-even occupancy"],
+    riskNotes: [
+      "Confirm whether ADR is gross guest rate or net manager receipts to avoid double-counting platform fees.",
+      "Rate/inventory data alone does not prove owner proceeds.",
+    ],
+  },
+  "escapia-owner-statements": {
+    id: "escapia-owner-statements",
+    label: "Escapia owner statements / QBO export",
+    vendor: "Escapia",
+    category: "costs",
+    connectionPath: "csv_export",
+    connectionLabel: "Owner statement export",
+    clientSetup: "Property manager exports owner statements, property expenses, owner payouts, and maintenance/turn costs.",
+    consultantSetup: "Accountant/consultant reconciles owner payouts and property expenses against QBO or bank records.",
+    apiReality: "Use statements/export until property-level expense and payout fields are confirmed through API access.",
+    csvFallback: "CSV first: unitId, period, gross revenue, owner payout, management fees, cleaning, maintenance, utilities, supplies.",
+    importedEntities: ["Owner statements", "Property expenses", "Maintenance", "Cleaning", "Owner payouts"],
+    requiredIdentity: ["unitId", "period start/end", "gross revenue", "owner payout", "management fee", "expense kind"],
+    dashboardUnlocks: ["Owner proceeds", "Maintenance drag", "Property profit", "Per-door performance"],
+    riskNotes: [
+      "Owner proceeds must be calculated after pass-through fees and property-level costs.",
+      "Maintenance issues need property identity; portfolio averages should not be assigned to one unit.",
+    ],
+  },
+};
+
+export function sourceProfile(id: SourceProfileId | null | undefined): SourceProfile | null {
+  return id ? SOURCE_PROFILES[id] ?? null : null;
+}

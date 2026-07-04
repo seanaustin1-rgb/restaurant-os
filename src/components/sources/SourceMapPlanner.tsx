@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check, ExternalLink, LifeBuoy, LockKeyhole, PlugZap, Save, SearchCheck, ShieldCheck } from "lucide-react";
 import { updateSourceConfig } from "@/app/settings/sources/actions";
 import type { BusinessSourceMap, SourceCategory, SourceOption } from "@/lib/source-map";
+import { sourceProfile } from "@/lib/source-profiles";
 
 type SourceConfigSnapshot = {
   category: string;
@@ -71,6 +72,17 @@ function errMsg(error: unknown) {
 
 function providerGuide(category: SourceCategory, option: SourceOption): OnboardingGuide {
   const name = option.name.toLowerCase();
+  const profile = sourceProfile(option.profileId);
+  if (profile) {
+    return {
+      mode: "upload",
+      owner: "advisor",
+      headline: profile.connectionLabel,
+      detail: `${profile.apiReality} ${profile.csvFallback}`,
+      primaryLabel: "Plan import",
+      href: profile.category === "sales" || profile.category === "costs" ? "/import/rentals" : "/import/brokerage",
+    };
+  }
   if (name === "plaid") {
     return {
       mode: "oauth",
@@ -309,6 +321,7 @@ export function SourceMapPlanner({
               const draft = drafts[key] ?? { status: option.minimum ? "PLANNED" : "NOT_NEEDED", notes: "" };
               const isSaving = pending && savingKey === key;
               const guide = providerGuide(group.category, option);
+              const profile = sourceProfile(option.profileId);
               const copy = statusCopy(draft.status, guide);
               const owner = ownerCopy(guide.owner);
               const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
@@ -346,6 +359,24 @@ export function SourceMapPlanner({
                   </div>
 
                   <p className="mt-2 text-[11px] leading-relaxed text-muted">Unlocks: {option.unlocks.join(", ")}</p>
+
+                  {profile && (
+                    <div className="mt-2 grid grid-cols-1 gap-2 rounded-md border border-line bg-surface/60 px-3 py-3 text-[11px] leading-relaxed text-muted sm:grid-cols-3">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Setup path</div>
+                        <p className="mt-1 text-ink-text">{profile.connectionLabel}</p>
+                        <p className="mt-1">{profile.clientSetup}</p>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Imports</div>
+                        <p className="mt-1">{profile.importedEntities.slice(0, 5).join(", ")}</p>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Match keys</div>
+                        <p className="mt-1">{profile.requiredIdentity.slice(0, 5).join(", ")}</p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                     <div className="flex flex-wrap gap-2 sm:w-auto">

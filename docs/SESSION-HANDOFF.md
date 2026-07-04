@@ -100,6 +100,15 @@ where coverage exists). Two ways to clear Stone, operator's choice:
 Constraints for all of the above (from the specs): **read-path only, no writes, no sync/allocation changes,
 legacy path stays intact and reachable, full Vitest suite green.**
 
+**Codex update 2026-07-04:** A.1 Features 2/3 are implemented in draft PR #90:
+`feat/tax-vault-reconciliation-drift`. It adds nullable `Restaurant.taxProfile`, migration file
+`20260704033000_add_restaurant_tax_profile`, Tax Vault accrued-vs-cleared drift math,
+tenant-profile-driven copy, and a deterministic red `tax-sales-drift` signal through `signals.ts`.
+Local gates passed: `npx.cmd prisma generate`, targeted Tax Vault/signals tests,
+`npx.cmd tsc --noEmit --incremental false`, full `npm.cmd test -- --run`, and `npm run build`.
+**Do not merge #90 until the operator applies the new migration to production/demo DBs; Codex did not run
+`prisma migrate deploy`.**
+
 ---
 
 ## ⏱️ RESUME HERE — 2026-06-15 (LIVE ON BRANDED DOMAIN + AUTO-SYNC RUNNING)

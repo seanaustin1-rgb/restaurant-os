@@ -79,7 +79,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     category: "pipeline",
     connectionPath: "admin_api",
     connectionLabel: "Admin API key or CRM export",
-    clientSetup: "Brokerage admin creates a read-only API key or exports people, deals, users, lead sources, and pipeline status.",
+    clientSetup: "Brokerage admin approves an API key or exports people, deals, users, lead sources, and pipeline status.",
     consultantSetup: "Consultant can start from CSV exports, then validate agent emails and lead-source names before the API key is used.",
     apiReality: "Follow Up Boss supports API-key access. Use an admin/broker key only when the brokerage explicitly approves account-wide CRM access.",
     csvFallback: "CSV first: people/leads, deals, users, assigned agent, source, stage, expected value, and expected close date.",

@@ -58,6 +58,17 @@ describe("navLinksForRoles — role filtering", () => {
     expect(result).not.toContain("/connections"); // owner-only
   });
 
+  it("hides the brokerage Executive Cockpit from INVESTOR (locked decision 7)", () => {
+    // The Executive Cockpit shows the named per-agent leaderboard — leadership-only.
+    const investor = hrefs(navLinksForRoles(["INVESTOR"], ["REAL_ESTATE_BROKERAGE"]));
+    expect(investor).not.toContain("/modules/brokerage/cockpit");
+    // The agent-facing links stay visible to an investor of a brokerage tenant.
+    expect(investor).toContain("/modules/brokerage/agent-cockpit");
+    // A leadership viewer still sees it.
+    const manager = hrefs(navLinksForRoles(["MANAGER"], ["REAL_ESTATE_BROKERAGE"]));
+    expect(manager).toContain("/modules/brokerage/cockpit");
+  });
+
   it("returns every link when no roles are supplied", () => {
     // Empty roles preserves the prior 'show all' behavior; no business types → no type filter.
     expect(hrefs(navLinksForRoles([]))).toEqual(hrefs(NAV_LINKS));

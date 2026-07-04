@@ -95,6 +95,21 @@ describe("tax profile and drift", () => {
       variancePct: null,
     });
   });
+
+  it("degrades when accrued tax exists but no cleared remittance channel is visible", () => {
+    const drift = calculateTaxDrift({ accrued: 1000, cleared: 0, thresholdPct: 5, windowDays: 30 });
+
+    expect(drift).toMatchObject({
+      state: "insufficient-data",
+      accrued: 1000,
+      cleared: 0,
+      variance: 1000,
+      variancePct: null,
+      thresholdPct: 5,
+      windowDays: 30,
+    });
+    expect(drift.readout).toMatch(/no cleared tax remittances/i);
+  });
 });
 
 // Minimal Prisma stand-in for the ledger-first-vs-legacy switch. `ledgerCount`

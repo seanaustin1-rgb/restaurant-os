@@ -142,6 +142,19 @@ export function calculateTaxDrift(input: {
     };
   }
 
+  if (cleared <= 0) {
+    return {
+      state: "insufficient-data",
+      accrued,
+      cleared,
+      variance,
+      variancePct: null,
+      thresholdPct,
+      windowDays,
+      readout: `No cleared tax remittances are available for the trailing ${windowDays} days. Connect or categorize DAVO/tax pulls to track drift.`,
+    };
+  }
+
   const variancePct = r2((Math.abs(variance) / accrued) * 100);
   if (variancePct > thresholdPct) {
     const direction = variance > 0 ? "below" : "above";

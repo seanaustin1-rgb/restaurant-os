@@ -31,6 +31,7 @@ describe("source profiles", () => {
       expect(profile?.importedEntities.length).toBeGreaterThan(0);
       expect(profile?.requiredIdentity.length).toBeGreaterThan(0);
       expect(profile?.apiAccessNeeds.length).toBeGreaterThan(0);
+      expect(profile?.credentialIntake.length).toBeGreaterThan(0);
       expect(profile?.dashboardUnlocks.length).toBeGreaterThan(0);
       expect(profile?.riskNotes.length).toBeGreaterThan(0);
     }
@@ -62,7 +63,7 @@ describe("source profiles", () => {
   });
 
   it("builds an API setup note and checklist without asking for raw credentials", () => {
-    const profile = sourceProfile("boldtrail-crm");
+    const profile = sourceProfile("follow-up-boss-crm");
     expect(profile).toBeTruthy();
     const note = buildSourceSetupNote(profile!);
     const checklist = sourceSetupChecklist(profile!);
@@ -70,7 +71,20 @@ describe("source profiles", () => {
     expect(note).toContain("API setup requested");
     expect(note).toContain("Fallback:");
     expect(note.toLowerCase()).not.toContain("password");
+    expect(note.toLowerCase()).not.toContain("paste");
     expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("API:"), expect.stringContaining("CSV fallback:")]));
+    expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("Intake: Follow Up Boss API key via secure_support (secret)")]));
+  });
+
+  it("routes secret credential intake through secure support", () => {
+    for (const profile of Object.values(SOURCE_PROFILES)) {
+      for (const item of profile.credentialIntake) {
+        if (item.sensitivity === "secret") {
+          expect(item.collectVia, `${profile.id} ${item.key}`).toBe("secure_support");
+          expect(item.detail.toLowerCase()).toMatch(/secure|encrypted/);
+        }
+      }
+    }
   });
 
   it("validates profile ids from API input", () => {

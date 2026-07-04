@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Check, ExternalLink, LifeBuoy, LockKeyhole, PlugZap, Save, SearchCheck, ShieldCheck } from "lucide-react";
 import { updateSourceConfig } from "@/app/settings/sources/actions";
 import type { BusinessSourceMap, SourceCategory, SourceOption } from "@/lib/source-map";
-import { sourceApiSetupLabel, sourceApiSetupState, sourceProfile } from "@/lib/source-profiles";
+import { sourceApiSetupLabel, sourceApiSetupState, sourceProfile, type SourceCredentialIntakeItem } from "@/lib/source-profiles";
 
 type SourceConfigSnapshot = {
   category: string;
@@ -19,6 +19,7 @@ type SourceDraft = { status: DataSourceStatus; notes: string };
 type SourceDrafts = Record<string, SourceDraft>;
 type SourceSetupResponse = {
   checklist?: string[];
+  profile?: { credentialIntake?: SourceCredentialIntakeItem[] };
   config?: { category: string; providerName: string; status: DataSourceStatus; notes: string | null };
   error?: string;
 };
@@ -215,6 +216,7 @@ export function SourceMapPlanner({
   const [savedKey, setSavedKey] = useState<string | null>(null);
   const [apiRequestingKey, setApiRequestingKey] = useState<string | null>(null);
   const [apiChecklistByKey, setApiChecklistByKey] = useState<Record<string, string[]>>({});
+  const [credentialIntakeByKey, setCredentialIntakeByKey] = useState<Record<string, SourceCredentialIntakeItem[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const dirtySources = sourceMap.groups.flatMap((group) =>
@@ -296,6 +298,9 @@ export function SourceMapPlanner({
         setSavedDrafts((current) => ({ ...current, [key]: nextDraft }));
       }
       if (data.checklist) setApiChecklistByKey((current) => ({ ...current, [key]: data.checklist ?? [] }));
+      if (data.profile?.credentialIntake) {
+        setCredentialIntakeByKey((current) => ({ ...current, [key]: data.profile?.credentialIntake ?? [] }));
+      }
       setSavedKey(key);
     } catch (e) {
       setError(errMsg(e));
@@ -361,6 +366,7 @@ export function SourceMapPlanner({
               const profile = sourceProfile(option.profileId);
               const copy = statusCopy(draft.status, guide);
               const apiChecklist = apiChecklistByKey[key] ?? [];
+              const credentialIntake = credentialIntakeByKey[key] ?? profile?.credentialIntake ?? [];
               const apiState = profile ? sourceApiSetupState({ profile, status: draft.status, notes: draft.notes }) : null;
               const apiStateCopy = apiState ? sourceApiSetupLabel(apiState) : null;
               const owner = ownerCopy(guide.owner);
@@ -419,6 +425,21 @@ export function SourceMapPlanner({
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-copper-soft">Match keys</div>
                         <p className="mt-1">{profile.requiredIdentity.slice(0, 5).join(", ")}</p>
+                      </div>
+                      <div className="sm:col-span-3">
+                        <div className="text-[10px] uppercase tracking-wider text-copper-soft">Credential intake</div>
+                        <div className="mt-2 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                          {credentialIntake.slice(0, 6).map((item) => (
+                            <div key={item.key} className="rounded-md border border-line bg-ink/40 px-2 py-1.5">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-ink-text">{item.label}</span>
+                                {item.required && <span className="rounded-full border border-copper-dim px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-copper-soft">required</span>}
+                                {item.sensitivity === "secret" && <span className="rounded-full border border-health-yellow/40 px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-health-yellow">secure</span>}
+                              </div>
+                              <p className="mt-0.5 text-muted">{item.detail}</p>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="sm:col-span-3">
                         <button

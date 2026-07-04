@@ -105,6 +105,7 @@ export async function POST(req: Request) {
       label: profile.label,
       connectionLabel: profile.connectionLabel,
       csvFallback: profile.csvFallback,
+      credentialIntake: profile.credentialIntake,
     },
     checklist: sourceSetupChecklist(profile),
     config,

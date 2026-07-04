@@ -30,6 +30,15 @@ export function SourceProfileCards({ ids }: { ids: SourceProfileId[] }) {
               <p className="mt-0.5 text-ink-text">{profile.requiredIdentity.slice(0, 5).join(", ")}</p>
             </div>
             <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted">Access needed</div>
+              <p className="mt-0.5 text-ink-text">
+                {profile.credentialIntake
+                  .slice(0, 4)
+                  .map((item) => `${item.label}${item.sensitivity === "secret" ? " (secure)" : ""}`)
+                  .join(", ")}
+              </p>
+            </div>
+            <div>
               <div className="text-[10px] uppercase tracking-wider text-muted">Lights up</div>
               <p className="mt-0.5 text-ink-text">{profile.dashboardUnlocks.slice(0, 5).join(", ")}</p>
             </div>

@@ -10,6 +10,9 @@ export type SourceProfileId =
 
 export type SourceConnectionPath = "oauth" | "partner_api" | "admin_api" | "csv_export";
 export type SourceApiSetupState = "csv_ready" | "api_available" | "api_requested" | "connected" | "not_needed" | "blocked";
+export type SourceCredentialIntakeKind = "approval" | "api_key" | "account_id" | "location_id" | "webhook" | "csv_export" | "identity";
+export type SourceCredentialSensitivity = "none" | "restricted" | "secret";
+export type SourceCredentialCollectionPath = "owner_oauth" | "secure_support" | "vendor_admin" | "csv_import" | "settings";
 
 export const API_SETUP_REQUESTED_TEXT = "API setup requested.";
 
@@ -27,8 +30,19 @@ export interface SourceProfile {
   importedEntities: string[];
   requiredIdentity: string[];
   apiAccessNeeds: string[];
+  credentialIntake: SourceCredentialIntakeItem[];
   dashboardUnlocks: string[];
   riskNotes: string[];
+}
+
+export interface SourceCredentialIntakeItem {
+  key: string;
+  label: string;
+  detail: string;
+  kind: SourceCredentialIntakeKind;
+  sensitivity: SourceCredentialSensitivity;
+  required: boolean;
+  collectVia: SourceCredentialCollectionPath;
 }
 
 export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
@@ -46,6 +60,12 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Agents", "Lead sources", "Campaign spend", "Pipeline stages", "Expected close dates"],
     requiredIdentity: ["agentId or agent email", "lead source", "campaign/source id", "pipeline stage", "expected close date"],
     apiAccessNeeds: ["Brokerage admin approval", "Read access to leads/pipeline/campaigns", "Agent user identifiers", "Webhook or export cadence"],
+    credentialIntake: [
+      { key: "admin-approval", label: "Brokerage admin approval", detail: "Confirms the CRM account owner approved API/export access.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "api-token", label: "API token or partner access", detail: "Use secure support or vendor admin flow; do not paste tokens into notes.", kind: "api_key", sensitivity: "secret", required: false, collectVia: "secure_support" },
+      { key: "agent-identity", label: "Agent IDs or emails", detail: "Required to match CRM activity to brokerage agents and accounting results.", kind: "identity", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+      { key: "webhook-cadence", label: "Webhook or export cadence", detail: "Defines whether activity updates are live, scheduled, or CSV-only.", kind: "webhook", sensitivity: "none", required: false, collectVia: "settings" },
+    ],
     dashboardUnlocks: ["Commission pipeline", "Lead ROI", "Agent coaching", "45-90 day momentum"],
     riskNotes: [
       "Do not calculate final Company Dollar from CRM-only data.",
@@ -66,6 +86,12 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Agents", "People/leads", "Deals", "Lead sources", "Pipeline stages", "Expected close dates"],
     requiredIdentity: ["agentId or agent email", "person/lead id", "deal id", "lead source", "pipeline stage", "expected close date"],
     apiAccessNeeds: ["Brokerage admin approval", "Follow Up Boss API key", "Account-wide scope confirmation", "Agent user identifiers", "CSV export fallback"],
+    credentialIntake: [
+      { key: "admin-approval", label: "Brokerage admin approval", detail: "Confirms account-wide CRM reporting is approved by the brokerage.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "api-key", label: "Follow Up Boss API key", detail: "Secret. Collect only through secure support or a future encrypted credential screen.", kind: "api_key", sensitivity: "secret", required: false, collectVia: "secure_support" },
+      { key: "scope", label: "Account-wide scope confirmation", detail: "Agent keys may only expose assigned contacts, so brokerage-wide reads need admin/broker scope.", kind: "approval", sensitivity: "restricted", required: true, collectVia: "vendor_admin" },
+      { key: "agent-identity", label: "Agent user IDs or emails", detail: "Used to match people, deals, and activity to brokerage agents.", kind: "identity", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+    ],
     dashboardUnlocks: ["Commission pipeline", "Lead ROI", "Agent coaching", "45-90 day momentum"],
     riskNotes: [
       "CRM pipeline is forecast data, not closed cash.",
@@ -86,6 +112,11 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Agents", "Deals", "Commission worksheets", "Caps", "Splits", "Payout status"],
     requiredIdentity: ["agentId or agent email", "deal/file id", "GCI", "agent split", "cap paid", "closed/payout date"],
     apiAccessNeeds: ["Brokerage admin approval", "Read access to transaction/commission exports", "Agent cap ledger fields", "Closed payout status"],
+    credentialIntake: [
+      { key: "admin-approval", label: "Brokerage admin approval", detail: "Confirms commission/cap exports can be used for reporting.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "transaction-export", label: "Transaction and cap export", detail: "CSV/export is the pilot path until partner API access is confirmed.", kind: "csv_export", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+      { key: "agent-ledger-fields", label: "Agent cap ledger fields", detail: "Needed to calculate retained yield and cap-cliff pressure.", kind: "identity", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+    ],
     dashboardUnlocks: ["Company Dollar", "Cap pressure", "Agent performance", "Production pacing"],
     riskNotes: [
       "Cap status must be date-aware; do not assume one split rate applies to all future closings.",
@@ -106,6 +137,11 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Transaction files", "File status", "Executed contracts", "Commission worksheets", "Approved payouts"],
     requiredIdentity: ["file id", "agentId or agent email", "status", "contract date", "expected close date", "commission worksheet"],
     apiAccessNeeds: ["Brokerage/admin approval", "Read access to file status and activity", "Commission worksheet export/API access", "Approved payout fields"],
+    credentialIntake: [
+      { key: "admin-approval", label: "Brokerage/admin approval", detail: "Confirms transaction-file data can be used for reporting.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "file-export", label: "File status export", detail: "CSV/export should include status, dates, agents, and file IDs.", kind: "csv_export", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+      { key: "commission-worksheet", label: "Commission worksheet access", detail: "Required before projected Company Dollar can be trusted.", kind: "csv_export", sensitivity: "restricted", required: false, collectVia: "csv_import" },
+    ],
     dashboardUnlocks: ["Pipeline confidence", "Commission file confidence", "Agent take-home forecast", "Brokerage coaching"],
     riskNotes: [
       "File status is not cash. Keep projected and reconciled closed cash separate.",
@@ -126,6 +162,12 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Properties/units", "Bookings", "Nightly rates", "Fees", "Taxes", "Restrictions", "Channels"],
     requiredIdentity: ["unitId", "bookingId", "check-in/out", "gross rent", "fees", "taxes", "channel"],
     apiAccessNeeds: ["Property manager approval", "Escapia Gateway/API credentials or export rights", "Property manager id", "Distributed unit ids", "Booking/rate permission scope"],
+    credentialIntake: [
+      { key: "pm-approval", label: "Property manager approval", detail: "Confirms the property manager approved Escapia Gateway/API or export access.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "api-credentials", label: "Escapia Gateway credentials", detail: "Secret. Use secure support or future encrypted credential screen, not notes.", kind: "api_key", sensitivity: "secret", required: false, collectVia: "secure_support" },
+      { key: "property-manager-id", label: "Property manager ID", detail: "Required to identify the enabled Escapia account.", kind: "account_id", sensitivity: "restricted", required: true, collectVia: "settings" },
+      { key: "unit-ids", label: "Distributed unit IDs", detail: "Required to map imported inventory, bookings, and owner statements to properties.", kind: "identity", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+    ],
     dashboardUnlocks: ["Occupancy", "ADR", "RevPAR", "Booking pace", "Break-even occupancy"],
     riskNotes: [
       "Confirm whether ADR is gross guest rate or net manager receipts to avoid double-counting platform fees.",
@@ -146,6 +188,11 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     importedEntities: ["Owner statements", "Property expenses", "Maintenance", "Cleaning", "Owner payouts"],
     requiredIdentity: ["unitId", "period start/end", "gross revenue", "owner payout", "management fee", "expense kind"],
     apiAccessNeeds: ["Property manager/accounting approval", "Owner statement exports", "Property-level expense tags", "QBO/bank reconciliation access"],
+    credentialIntake: [
+      { key: "accounting-approval", label: "Accounting approval", detail: "Confirms owner statements and property expenses are approved for import.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "owner-statement-export", label: "Owner statement export", detail: "CSV/export should include unit, period, owner payout, fees, and expenses.", kind: "csv_export", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+      { key: "property-expense-tags", label: "Property expense tags", detail: "Needed to keep maintenance, cleaning, utilities, and supplies tied to the right unit.", kind: "identity", sensitivity: "restricted", required: true, collectVia: "csv_import" },
+    ],
     dashboardUnlocks: ["Owner proceeds", "Maintenance drag", "Property profit", "Per-door performance"],
     riskNotes: [
       "Owner proceeds must be calculated after pass-through fees and property-level costs.",
@@ -174,6 +221,7 @@ export function buildSourceSetupNote(profile: SourceProfile): string {
 export function sourceSetupChecklist(profile: SourceProfile): string[] {
   return [
     ...profile.apiAccessNeeds.map((item) => `API: ${item}`),
+    ...profile.credentialIntake.map((item) => `Intake: ${item.label} via ${item.collectVia}${item.sensitivity === "secret" ? " (secret)" : ""}`),
     ...profile.requiredIdentity.map((item) => `Match key: ${item}`),
     `CSV fallback: ${profile.csvFallback}`,
   ];

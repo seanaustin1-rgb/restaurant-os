@@ -190,31 +190,31 @@ async function main() {
       try {
         if (d.action === "approve" && d.eventType) {
           const eventId = row.eventId;
-          const targetEventType = d.eventType;
-          const targetTap = d.tapBucket;
-          await prisma.$transaction(async (tx) => {
-            // Re-map to the current-rules classification, then post through the
-            // same approve path the per-row UI uses.
-            const current = await tx.normalizedFinancialEvent.findUnique({
-              where: { id: eventId },
-              select: { metadata: true },
-            });
-            const metadata =
-              current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
-                ? (current.metadata as Prisma.JsonObject)
-                : {};
-            await tx.normalizedFinancialEvent.update({
-              where: { id: eventId },
-              data: {
-                eventType: targetEventType,
-                metadata: { ...metadata, tapBucket: targetTap ?? null } as Prisma.InputJsonValue,
-              },
-            });
-            await approveFinancialEvent(tx, {
-              restaurantId: tenant.id,
-              normalizedFinancialEventId: eventId,
-              approvedBy: args.actor,
-            });
+          // Re-map to the current-rules classification, then post through the same
+          // approve path the per-row UI uses. Run sequentially (not an interactive
+          // $transaction) to match this repo's Supabase-pooler convention — see the
+          // "never interactive" note on reorderRules in settings/rules/actions.ts.
+          // Both steps are idempotent (approve deletes+recreates its ledger lines),
+          // so a re-run after a mid-way failure self-heals.
+          const current = await prisma.normalizedFinancialEvent.findUnique({
+            where: { id: eventId },
+            select: { metadata: true },
+          });
+          const metadata =
+            current?.metadata && typeof current.metadata === "object" && !Array.isArray(current.metadata)
+              ? (current.metadata as Prisma.JsonObject)
+              : {};
+          await prisma.normalizedFinancialEvent.update({
+            where: { id: eventId },
+            data: {
+              eventType: d.eventType,
+              metadata: { ...metadata, tapBucket: d.tapBucket ?? null } as Prisma.InputJsonValue,
+            },
+          });
+          await approveFinancialEvent(prisma, {
+            restaurantId: tenant.id,
+            normalizedFinancialEventId: eventId,
+            approvedBy: args.actor,
           });
           row.applied = true;
           approved += 1;

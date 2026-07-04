@@ -22,6 +22,7 @@ export interface SourceProfile {
   csvFallback: string;
   importedEntities: string[];
   requiredIdentity: string[];
+  apiAccessNeeds: string[];
   dashboardUnlocks: string[];
   riskNotes: string[];
 }
@@ -40,6 +41,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     csvFallback: "CSV first: leads, campaigns, stages, assigned agent, source, expected value, and expected close date.",
     importedEntities: ["Agents", "Lead sources", "Campaign spend", "Pipeline stages", "Expected close dates"],
     requiredIdentity: ["agentId or agent email", "lead source", "campaign/source id", "pipeline stage", "expected close date"],
+    apiAccessNeeds: ["Brokerage admin approval", "Read access to leads/pipeline/campaigns", "Agent user identifiers", "Webhook or export cadence"],
     dashboardUnlocks: ["Commission pipeline", "Lead ROI", "Agent coaching", "45-90 day momentum"],
     riskNotes: [
       "Do not calculate final Company Dollar from CRM-only data.",
@@ -59,6 +61,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     csvFallback: "CSV first: agents, deals, GCI, split percent, cap paid, cap remaining, referral/franchise fees, payout status.",
     importedEntities: ["Agents", "Deals", "Commission worksheets", "Caps", "Splits", "Payout status"],
     requiredIdentity: ["agentId or agent email", "deal/file id", "GCI", "agent split", "cap paid", "closed/payout date"],
+    apiAccessNeeds: ["Brokerage admin approval", "Read access to transaction/commission exports", "Agent cap ledger fields", "Closed payout status"],
     dashboardUnlocks: ["Company Dollar", "Cap pressure", "Agent performance", "Production pacing"],
     riskNotes: [
       "Cap status must be date-aware; do not assume one split rate applies to all future closings.",
@@ -78,6 +81,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     csvFallback: "CSV first: file id, address, agent, status, contract date, expected close date, approved payout, worksheet values.",
     importedEntities: ["Transaction files", "File status", "Executed contracts", "Commission worksheets", "Approved payouts"],
     requiredIdentity: ["file id", "agentId or agent email", "status", "contract date", "expected close date", "commission worksheet"],
+    apiAccessNeeds: ["Brokerage/admin approval", "Read access to file status and activity", "Commission worksheet export/API access", "Approved payout fields"],
     dashboardUnlocks: ["Pipeline confidence", "Commission file confidence", "Agent take-home forecast", "Brokerage coaching"],
     riskNotes: [
       "File status is not cash. Keep projected and reconciled closed cash separate.",
@@ -97,6 +101,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     csvFallback: "CSV/JSON first: units, bookings, nightly rate, channel, fees, taxes, restrictions, and reservation dates.",
     importedEntities: ["Properties/units", "Bookings", "Nightly rates", "Fees", "Taxes", "Restrictions", "Channels"],
     requiredIdentity: ["unitId", "bookingId", "check-in/out", "gross rent", "fees", "taxes", "channel"],
+    apiAccessNeeds: ["Property manager approval", "Escapia Gateway/API credentials or export rights", "Property manager id", "Distributed unit ids", "Booking/rate permission scope"],
     dashboardUnlocks: ["Occupancy", "ADR", "RevPAR", "Booking pace", "Break-even occupancy"],
     riskNotes: [
       "Confirm whether ADR is gross guest rate or net manager receipts to avoid double-counting platform fees.",
@@ -116,6 +121,7 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     csvFallback: "CSV first: unitId, period, gross revenue, owner payout, management fees, cleaning, maintenance, utilities, supplies.",
     importedEntities: ["Owner statements", "Property expenses", "Maintenance", "Cleaning", "Owner payouts"],
     requiredIdentity: ["unitId", "period start/end", "gross revenue", "owner payout", "management fee", "expense kind"],
+    apiAccessNeeds: ["Property manager/accounting approval", "Owner statement exports", "Property-level expense tags", "QBO/bank reconciliation access"],
     dashboardUnlocks: ["Owner proceeds", "Maintenance drag", "Property profit", "Per-door performance"],
     riskNotes: [
       "Owner proceeds must be calculated after pass-through fees and property-level costs.",
@@ -124,6 +130,27 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
   },
 };
 
+export function isSourceProfileId(value: unknown): value is SourceProfileId {
+  return typeof value === "string" && value in SOURCE_PROFILES;
+}
+
 export function sourceProfile(id: SourceProfileId | null | undefined): SourceProfile | null {
   return id ? SOURCE_PROFILES[id] ?? null : null;
+}
+
+export function buildSourceSetupNote(profile: SourceProfile): string {
+  return [
+    `${profile.label}: API setup requested.`,
+    `Path: ${profile.connectionLabel}.`,
+    `Needs: ${profile.apiAccessNeeds.join("; ")}.`,
+    `Fallback: ${profile.csvFallback}`,
+  ].join(" ");
+}
+
+export function sourceSetupChecklist(profile: SourceProfile): string[] {
+  return [
+    ...profile.apiAccessNeeds.map((item) => `API: ${item}`),
+    ...profile.requiredIdentity.map((item) => `Match key: ${item}`),
+    `CSV fallback: ${profile.csvFallback}`,
+  ];
 }

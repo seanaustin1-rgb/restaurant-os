@@ -17,6 +17,11 @@ type SourceConfigSnapshot = {
 
 type SourceDraft = { status: DataSourceStatus; notes: string };
 type SourceDrafts = Record<string, SourceDraft>;
+type SourceSetupResponse = {
+  checklist?: string[];
+  config?: { category: string; providerName: string; status: DataSourceStatus; notes: string | null };
+  error?: string;
+};
 
 const STATUS_OPTIONS: { value: DataSourceStatus; label: string }[] = [
   { value: "PLANNED", label: "Planned" },
@@ -193,10 +198,12 @@ export function SourceMapPlanner({
   sourceMap,
   initialConfigs,
   actorRole,
+  restaurantId,
 }: {
   sourceMap: BusinessSourceMap;
   initialConfigs: SourceConfigSnapshot[];
   actorRole: string;
+  restaurantId: string;
 }) {
   const initialByKey = useMemo(() => {
     return new Map(initialConfigs.map((config) => [configKey(config.category, config.providerName), config]));
@@ -206,6 +213,8 @@ export function SourceMapPlanner({
   const [savedDrafts, setSavedDrafts] = useState<SourceDrafts>(initialDrafts);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [apiRequestingKey, setApiRequestingKey] = useState<string | null>(null);
+  const [apiChecklistByKey, setApiChecklistByKey] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const dirtySources = sourceMap.groups.flatMap((group) =>
@@ -267,6 +276,34 @@ export function SourceMapPlanner({
     });
   }
 
+  async function requestApiSetup(category: SourceCategory, option: SourceOption) {
+    if (!option.profileId) return;
+    const key = configKey(category, option.name);
+    setError(null);
+    setSavedKey(null);
+    setApiRequestingKey(key);
+    try {
+      const res = await fetch("/api/source-profiles/request", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ restaurantId, profileId: option.profileId, category, providerName: option.name }),
+      });
+      const data = (await res.json().catch(() => ({}))) as SourceSetupResponse;
+      if (!res.ok) throw new Error(data.error ?? "Could not request API setup.");
+      if (data.config) {
+        const nextDraft = { status: data.config.status, notes: data.config.notes ?? "" };
+        setDrafts((current) => ({ ...current, [key]: nextDraft }));
+        setSavedDrafts((current) => ({ ...current, [key]: nextDraft }));
+      }
+      if (data.checklist) setApiChecklistByKey((current) => ({ ...current, [key]: data.checklist ?? [] }));
+      setSavedKey(key);
+    } catch (e) {
+      setError(errMsg(e));
+    } finally {
+      setApiRequestingKey(null);
+    }
+  }
+
   return (
     <div className="space-y-4">
       {error && (
@@ -323,6 +360,7 @@ export function SourceMapPlanner({
               const guide = providerGuide(group.category, option);
               const profile = sourceProfile(option.profileId);
               const copy = statusCopy(draft.status, guide);
+              const apiChecklist = apiChecklistByKey[key] ?? [];
               const owner = ownerCopy(guide.owner);
               const canStartAuthorization = guide.owner !== "owner" || actorRole === "OPERATOR";
               const googleNeedsAuthorization = requiresGoogleAuthorization(option) && draft.status !== "CONNECTED";
@@ -374,6 +412,23 @@ export function SourceMapPlanner({
                       <div>
                         <div className="text-[10px] uppercase tracking-wider text-copper-soft">Match keys</div>
                         <p className="mt-1">{profile.requiredIdentity.slice(0, 5).join(", ")}</p>
+                      </div>
+                      <div className="sm:col-span-3">
+                        <button
+                          type="button"
+                          onClick={() => requestApiSetup(group.category, option)}
+                          disabled={apiRequestingKey === key}
+                          className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
+                        >
+                          <LifeBuoy size={13} /> {apiRequestingKey === key ? "Requesting..." : "Request API setup"}
+                        </button>
+                        {apiChecklist.length > 0 && (
+                          <ul className="mt-2 grid grid-cols-1 gap-1 text-[11px] text-muted sm:grid-cols-2">
+                            {apiChecklist.slice(0, 6).map((item) => (
+                              <li key={item}>- {item}</li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     </div>
                   )}

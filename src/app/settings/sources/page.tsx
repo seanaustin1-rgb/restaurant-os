@@ -373,7 +373,12 @@ export default async function SourceMapPage({
         </section>
       )}
 
-      <SourceMapPlanner sourceMap={sourceMap} initialConfigs={configs} actorRole={role.role} />
+      <SourceMapPlanner
+        sourceMap={sourceMap}
+        initialConfigs={configs}
+        actorRole={role.role}
+        restaurantId={role.restaurantId}
+      />
 
       <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-surface p-4">
         <div>

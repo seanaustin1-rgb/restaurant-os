@@ -10,6 +10,11 @@ component structure. Live visual spot-checks still advised before design lock.
 **Severity:** P0 = blocks investor/early-adopter demo · P1 = fix before design lock · P2 = polish / later.
 **Lane note:** items touching source labels or auth/governance are flagged **coordinate with Codex**.
 
+> **Update (2026-07-04):** Finding #1 (the P0 — Executive Cockpit rendering the per-agent leaderboard to an INVESTOR
+> role) is **resolved on `main` in PR #78**: the nav link and the route query are both gated to leadership
+> (OPERATOR/MANAGER/CONSULTANT), with a decision-7 regression test in `nav.test.ts`. Findings #4/#5 (demo funnel) ship
+> in this PR. Findings #2/#3 (BoldTrail/appFiles source labels) remain open for the Codex lane.
+
 ---
 
 ## Task 1 — Brokerage
@@ -23,6 +28,7 @@ component structure. Live visual spot-checks still advised before design lock.
   the cockpit link for `ALL_ROLES` (includes INVESTOR).
 - **Fix:** gate the page to `OPERATOR`/`MANAGER`/`CONSULTANT` (mirror the agent-cockpit `canSelectAgents` check); remove
   INVESTOR from the nav entry's roles (or gate the link).
+- **Status:** ✅ **Resolved in PR #78** (2026-07-04) — exactly this fix landed.
 - **Lane:** page.tsx is Claude's, but it enforces a governance decision → **coordinate with Codex**.
 
 ### [P1] "BoldTrail" hardcoded as the CRM in Agent Cockpit empty/pending states
@@ -94,13 +100,13 @@ component structure. Live visual spot-checks still advised before design lock.
 
 ## Summary
 
-| # | Sev | Area | Item | Lane |
-|---|-----|------|------|------|
-| 1 | P1→P0 | Brokerage | Executive Cockpit shows per-agent leaderboard to INVESTOR | Claude + coordinate |
-| 2 | P1 | Brokerage | BoldTrail hardcoded as the CRM in Agent Cockpit | coordinate w/ Codex |
-| 3 | P2 | Brokerage | "appFiles" undefined / inconsistent casing | coordinate w/ Codex |
-| 4 | P1 | Demo | `/demo` defaults to restaurant estimator → make chooser | Claude |
-| 5 | P2 | Demo | `/demo` encoding mojibake in title/comments | Claude |
+| # | Sev | Area | Item | Lane | Status |
+|---|-----|------|------|------|--------|
+| 1 | P1→P0 | Brokerage | Executive Cockpit shows per-agent leaderboard to INVESTOR | Claude + coordinate | ✅ Fixed in #78 |
+| 2 | P1 | Brokerage | BoldTrail hardcoded as the CRM in Agent Cockpit | coordinate w/ Codex | open |
+| 3 | P2 | Brokerage | "appFiles" undefined / inconsistent casing | coordinate w/ Codex | open |
+| 4 | P1 | Demo | `/demo` defaults to restaurant estimator → make chooser | Claude | ships in this PR |
+| 5 | P2 | Demo | `/demo` encoding mojibake in title/comments | Claude | ships in this PR |
 
-Claude is applying #4 and #5 on this branch. #1 needs a governance-aware auth gate (coordinate before editing
-`nav.ts`); #2 and #3 are Codex-owned source labels.
+Claude is applying #4 and #5 on this branch. #1 was resolved separately in **PR #78** (leadership-gated cockpit);
+#2 and #3 are Codex-owned source labels.

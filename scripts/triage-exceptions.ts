@@ -1,15 +1,16 @@
 /**
  * Bulk-triage open clean-ledger sync exceptions for one tenant.
+ * --tenant accepts a name substring or an exact slug (e.g. "Stone Grille" or stone).
  *
  * Dry run (default — writes nothing):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --dry-run --report out/stone-triage-dryrun.json
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --dry-run --report out/stone-triage-dryrun.json
  *
  * Snapshots (read-only):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --count-only
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --ledger-count
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --count-only
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --ledger-count
  *
  * Live run (mutates — review the dry-run report first):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --execute --report out/stone-triage-live.json
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --execute --report out/stone-triage-live.json
  *
  * Policy lives in src/lib/financial-ledger/triage.ts (pure, unit-tested). Only a
  * *positive* current-rules match is auto-actionable; everything else stays
@@ -79,23 +80,44 @@ interface TriageRow {
   applied: boolean;
 }
 
-async function resolveTenant(slug: string) {
-  const tenant = await prisma.restaurant.findFirst({
-    where: { slug },
+// Accept either an exact slug or a name substring (so an operator can pass a
+// human name — e.g. --tenant "Stone Grille" — without hunting for the slug).
+// The resolved tenant scopes every read AND every --execute mutation, so this
+// must never silently pick the wrong business: an exact (unique) slug wins
+// outright, and a name search refuses to guess when it's ambiguous.
+async function resolveTenant(query: string) {
+  // slug is @unique — an exact match is unambiguous, so it always wins.
+  const bySlug = await prisma.restaurant.findUnique({
+    where: { slug: query },
     select: { id: true, name: true, slug: true },
   });
-  if (!tenant) {
-    console.error(`No business found with slug "${slug}".`);
-    process.exit(1);
+  if (bySlug) return bySlug;
+
+  const byName = await prisma.restaurant.findMany({
+    // Case-insensitive so an operator can type --tenant stone and match
+    // "Stone Grille and Tap" (Postgres `contains` is case-sensitive by default).
+    where: { name: { contains: query, mode: "insensitive" } },
+    select: { id: true, name: true, slug: true },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+  });
+  if (byName.length === 1) return byName[0];
+  if (byName.length === 0) {
+    console.error(`No business found matching "${query}" (tried exact slug and name).`);
+  } else {
+    console.error(
+      `"${query}" is ambiguous — matched ${byName.length} businesses: ` +
+        `${byName.map((r) => `${r.name} (${r.slug})`).join(", ")}. Re-run with an exact --tenant <slug>.`,
+    );
   }
-  return tenant;
+  process.exit(1);
 }
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   if (!args.tenant) {
-    console.error("A tenant is required. Pass --tenant <slug> (never run --execute across all tenants).");
+    console.error('A tenant is required. Pass --tenant "<name or slug>" (never run --execute across all tenants).');
     process.exit(1);
   }
   const tenant = await resolveTenant(args.tenant);

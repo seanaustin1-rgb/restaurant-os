@@ -179,6 +179,21 @@ export async function categoryIdByName(prisma: PrismaClient, restaurantId: strin
   return new Map(cats.map((c) => [c.name, c.id]));
 }
 
+/**
+ * The tenant's REVENUE-bucket category id (inflows map here by sign in
+ * `categorize`). Restaurants name it "Sales Deposits"; brokerages "Commission
+ * Income" — so callers resolve it generically off the tap map instead of a
+ * hardcoded name, and a vertical without "Sales Deposits" still classifies
+ * deposits instead of dropping them to null. Returns the first REVENUE category
+ * (each seeded taxonomy has exactly one).
+ */
+export function revenueCategoryId(tapById: Map<string, TapBucket>): string | null {
+  for (const [id, tap] of tapById) {
+    if (tap === "REVENUE") return id;
+  }
+  return null;
+}
+
 /** categoryId -> tapBucket map for a restaurant (used for the legacy bucket dual-write). */
 export async function categoryTapById(prisma: PrismaClient, restaurantId: string): Promise<Map<string, TapBucket>> {
   const cats = await prisma.category.findMany({

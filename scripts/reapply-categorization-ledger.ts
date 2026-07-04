@@ -1,5 +1,5 @@
 import { prisma } from "../src/lib/prisma";
-import { categoryIdByName, categoryTapById, ensureDefaultCategories, legacyBucketToCategoryName, MISC_CATEGORY_NAME } from "../src/lib/categorization/categories";
+import { categoryIdByName, categoryTapById, ensureDefaultCategories, legacyBucketToCategoryName, revenueCategoryId, MISC_CATEGORY_NAME } from "../src/lib/categorization/categories";
 import { categorize, loadRules, type CategorizationContext } from "../src/lib/categorization/rules";
 import { isWeakSignature } from "../src/lib/categorization/suggestions";
 import { VENDOR_PATTERNS } from "../src/lib/categorization/vendor-map";
@@ -69,7 +69,7 @@ async function main() {
   const ctx: CategorizationContext = {
     rules,
     tapById,
-    revenueId: nameToId.get("Sales Deposits") ?? null,
+    revenueId: nameToId.get("Sales Deposits") ?? revenueCategoryId(tapById),
     miscId: nameToId.get(MISC_CATEGORY_NAME) ?? null,
   };
 

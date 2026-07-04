@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { plaidClient } from "@/lib/plaid";
 import { decrypt } from "@/lib/crypto";
-import { ensureDefaultCategories, categoryTapById, MISC_CATEGORY_NAME, categoryIdByName } from "@/lib/categorization/categories";
+import { ensureDefaultCategories, categoryTapById, MISC_CATEGORY_NAME, categoryIdByName, revenueCategoryId } from "@/lib/categorization/categories";
 import { ensureDefaultRules, loadRules, categorize, type CategorizationContext } from "@/lib/categorization/rules";
 import {
   mirrorBankTransactionToLedger,
@@ -59,7 +59,7 @@ export async function runPlaidSync(
   const catCtx: CategorizationContext = {
     rules,
     tapById,
-    revenueId: nameToId.get("Sales Deposits") ?? null,
+    revenueId: nameToId.get("Sales Deposits") ?? revenueCategoryId(tapById),
     miscId: nameToId.get(MISC_CATEGORY_NAME) ?? null,
   };
 

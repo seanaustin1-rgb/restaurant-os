@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { BROKERAGE_RULE_SEEDS } from "./brokerage-seeds";
 import { keywordPatternProblem } from "./suggestions";
-import { BROKERAGE_CATEGORIES, DEFAULT_CATEGORIES, categoriesFor } from "./categories";
+import { BROKERAGE_CATEGORIES, DEFAULT_CATEGORIES, categoriesFor, revenueCategoryId } from "./categories";
 import { ruleSeedsFor, DEFAULT_RULE_SEEDS } from "./rules";
+import type { TapBucket } from "@prisma/client";
 
 describe("brokerage rule seeds", () => {
   it("every KEYWORD seed passes the keyword guardrail (no generic/short tokens)", () => {
@@ -50,5 +51,22 @@ describe("business-type taxonomy + seed selection", () => {
     // Commission income is the only revenue line; agent splits are people cost (LABOR).
     expect(BROKERAGE_CATEGORIES.find((c) => c.name === "Commission Income")?.tapBucket).toBe("REVENUE");
     expect(BROKERAGE_CATEGORIES.find((c) => c.name === "Agent Commission Split")?.tapBucket).toBe("LABOR");
+  });
+});
+
+describe("revenueCategoryId (inflows resolve their revenue category by bucket, not a hardcoded name)", () => {
+  it("finds the REVENUE category so brokerage 'Commission Income' isn't dropped to null", () => {
+    // A brokerage tap map has no "Sales Deposits" — the deposit must still land on
+    // the one REVENUE category (Commission Income) rather than becoming uncategorized.
+    const tapById = new Map<string, TapBucket>([
+      ["commission-income-id", "REVENUE"],
+      ["opex-id", "OPEX"],
+      ["labor-id", "LABOR"],
+    ]);
+    expect(revenueCategoryId(tapById)).toBe("commission-income-id");
+  });
+
+  it("returns null when no category is a REVENUE bucket", () => {
+    expect(revenueCategoryId(new Map<string, TapBucket>([["opex-id", "OPEX"]]))).toBeNull();
   });
 });

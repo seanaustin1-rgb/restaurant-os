@@ -4,7 +4,7 @@
 
 ## Resume a session
 Open the repo and tell Claude:
-> "Read the README, `docs/SESSION-HANDOFF.md`, and `docs/specs/allocation-variance-engine.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-06-15** block below (it's authoritative). The app is live on the branded domain **www.outfrontdata.com**, Inngest production auto-sync is registered and running, the Toast env vars + both prod-DB backfills are done, and a Plaid bank is attached. A Labor categorization bug was fixed and shipped. The one open task is the **logo swap** — drop a true-transparent PNG at `public/logo.png` and push."
+> "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/spec-a1-tax-vault.md` + `spec-a2-cashflow-spending.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04** block below (it's authoritative; older blocks are history). The app is live on **www.outfrontdata.com**; Spec A (ledger convergence) is the active thread. The shared ledger-first/legacy-fallback util now exists on `main` and Spec A.1 (Tax Vault convergence) is the next code work."
 
 > **⚠️ Two sessions have worked this repo (2026-06-12/13).** The 2026-06-13 RESUME HERE block reflects the
 > latest state and is authoritative. The 10 live tiles + Toast era integration (this doc's "Where we are")
@@ -13,6 +13,60 @@ Open the repo and tell Claude:
 > TWO separate credential sets (see below).
 
 Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
+
+---
+
+## ⏱️ RESUME HERE — 2026-07-04 (SPEC A FOUNDATION MERGED · TAX VAULT IS NEXT)
+
+**Active thread: Spec A — ledger convergence.** Converge dashboard modules off the legacy
+`Transaction → TapBucket` spine onto the clean ledger (`RawSourceEvent → NormalizedFinancialEvent →
+LedgerEntry`), **ledger-first with legacy fallback**, the pattern Cash Oxygen established. See
+`docs/fable-5/spec-a1-tax-vault.md` and `spec-a2-cashflow-spending.md` (authoritative), and the
+`MASTER-ROADMAP-2026-07-03.md`.
+
+**✅ Merged to `main` today (all squash-merged, each re-verified green — Typecheck/Test/Build + Codex):**
+- **#83 — `src/lib/financial-ledger/ledger-coverage.ts`** — the Spec A **linchpin**. Reusable ledger-first /
+  legacy-fallback decision: `pickReadSource` (pure), `assessLedgerCoverage(db, restaurantId, {accounts,
+  windowDays, asOf})`, `describeLedgerSource` (source-trust caption). Extracted so Tax Vault (A.1) and Cash
+  Flow / Spending (A.2) inherit ONE coverage heuristic instead of copying Cash Oxygen's narrow `hasFixedBurn`.
+  Default window anchors on the **later** of latest ledger/legacy dates (a Codex-caught fix — a stale ledger
+  with newer legacy txns must not falsely read "ledger"). Fully unit-tested with a fake DB (11 tests).
+- **#82 — `spine-compare.ts` + `scripts/compare-spines.ts`** — **Spec A.2 Feature 3 already done ahead of
+  order**: the cross-spine parity acceptance instrument. Read-only; totals each canonical bucket from both
+  spines for a tenant+period and prints deltas. `npx dotenv -e .env.local -o -- tsx scripts/compare-spines.ts
+  "Stone Grille"`. When deltas are ~0 across a trailing month the spines have converged and legacy deletion
+  becomes safe to schedule.
+- **#81** — brokerage CRM copy fixes (BoldTrail→CRM genericization, appFiles→AppFiles). Closes July-3 QA #2/#3.
+
+**These are foundation/tooling only — no live module wired yet, no schema/migration, no runtime behavior
+change.** They're the tested primitives Spec A execution consumes next.
+
+**⛔ HARD GATE for A.1 to *ship/verify* against real data — Stone's SyncExceptions must be ~0.** This is an
+operator action; the code build below does NOT need it (fallback is the default, so ledger-first only engages
+where coverage exists). Two ways to clear Stone, operator's choice:
+- **App UI (no secrets needed):** `/settings/sources/review` — same `review.ts` approve/exclude the CLI uses,
+  grouped for batch clearing. This is the recommended path when working without a local `.env.local`.
+- **CLI (needs prod `DATABASE_URL`):** dry-run first, then `--execute`. See `docs/fable-5/RUNBOOK-stone-triage.md`.
+  `scripts/triage-exceptions.ts` only auto-clears a positive current-rules match; revenue re-class and excludes
+  are never auto-applied; ambiguous rows stay `PENDING_REVIEW`. `scripts/summarize-sync-exceptions.ts stone`
+  gives the pre-triage picture.
+
+**⏭️ NEXT — Spec A execution, code-only and mobile-reviewable (each a small PR, Codex-reviewed):**
+1. **A.1 Tax Vault ledger-first read + source-trust indicator** (spec-a1 Features 1 & 4) — wire
+   `assessLedgerCoverage` into `src/lib/modules/tax-vault.ts`; render `describeLedgerSource`. Pure code +
+   fixtures; safe to merge (fallback default). *Real-data spot-check waits on the Stone gate above.*
+2. **A.1 accrued-vs-cleared reconciliation + drift signal** (Features 2 & 3) — accrued (Toast per-check tax)
+   vs cleared (DAVO pulls in ledger); >5%/30-day drift → `signals.ts`. Needs a per-tenant tax-profile field
+   (schema change → migration is an **operator-apply** step; build + review here, coordinate the apply).
+3. **A.2 Cash Flow ledger-first read** (spec-a2 F1) — wire the shared util into `cash-flow.ts`. If the util
+   needs changing to fit, STOP — A.1's extraction was too narrow. Pure code.
+4. **A.2 Spending ledger-first read + explicit category-mapping table** (F2) — no silent coercion; unmappable
+   → "Unmapped" with a count. Pure code + mapping-completeness tests.
+5. **A.2 coverage-gap signal** (F4) — low-priority `signals.ts` signal when fallback engages for a gap window;
+   silent for tenants with no ledger source at all. Pure code.
+
+Constraints for all of the above (from the specs): **read-path only, no writes, no sync/allocation changes,
+legacy path stays intact and reachable, full Vitest suite green.**
 
 ---
 

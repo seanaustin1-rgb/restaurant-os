@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { applyRules, compileRule, keywordMatchesText, sortRules, type RuleInput } from "./rules";
-import { signatureOf } from "./suggestions";
+import { keywordPatternProblem, signatureOf } from "./suggestions";
 import { categorizeTransaction } from "./vendor-map";
 
 // Helper: build a single-KEYWORD engine and ask what it matches.
@@ -87,5 +87,38 @@ describe("operator vendor patterns", () => {
     expect(categorizeTransaction("Commwlthofpapath Pastsaletx Txp", "COMMWLTHOFPAPATH/PASTSALETX TXP SLS").bucket).toBe(
       "TAX_SALES",
     );
+  });
+});
+
+describe("keywordPatternProblem guards the manual rules form", () => {
+  it("rejects the exact rule class behind the June 2026 labor bug", () => {
+    // Operator-typed keywords that substring/prefix-matched everything.
+    expect(keywordPatternProblem("THE")).not.toBeNull();
+    expect(keywordPatternProblem("payroll")).not.toBeNull();
+    expect(keywordPatternProblem("OVER")).not.toBeNull();
+    expect(keywordPatternProblem("EVER")).not.toBeNull();
+    expect(keywordPatternProblem("TOAST")).toBeNull(); // vendor name — allowed; boundary match already contains it
+  });
+
+  it("rejects generic banking words regardless of case", () => {
+    expect(keywordPatternProblem("deposit")).not.toBeNull();
+    expect(keywordPatternProblem("Ach")).not.toBeNull();
+    expect(keywordPatternProblem("CHECK")).not.toBeNull();
+  });
+
+  it("rejects too-short keywords", () => {
+    expect(keywordPatternProblem("PA")).not.toBeNull();
+    expect(keywordPatternProblem(" a ")).not.toBeNull();
+  });
+
+  it("allows genuine vendor tokens, including short-but-real ones", () => {
+    expect(keywordPatternProblem("WILSBACH")).toBeNull();
+    expect(keywordPatternProblem("PLCB")).toBeNull();
+    expect(keywordPatternProblem("ACE")).toBeNull(); // ACE HARDWARE — safe now that KEYWORD matches at word starts
+    expect(keywordPatternProblem("Sysco")).toBeNull();
+  });
+
+  it("allows multi-word phrases whose whole value is distinctive", () => {
+    expect(keywordPatternProblem("THE UPS STORE")).toBeNull();
   });
 });

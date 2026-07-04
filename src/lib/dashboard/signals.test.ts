@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DashboardData } from "@/lib/dashboard/data";
-import { deriveAttention, deriveSourceTrust, deriveTopPressure } from "@/lib/dashboard/signals";
+import { deriveAttention, deriveCoverageGap, deriveSourceTrust, deriveTopPressure } from "@/lib/dashboard/signals";
 
 function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
   return {
@@ -199,5 +199,36 @@ describe("dashboard signals", () => {
     );
 
     expect(trust).toMatchObject({ status: "partial", escalate: true });
+  });
+});
+
+describe("deriveCoverageGap", () => {
+  it("fires a low-priority signal for a ledger tenant with a coverage hole", () => {
+    // 5-day ledger hole in a 30-day window, tenant has a ledger source.
+    const gap = deriveCoverageGap({ windowDays: 30, ledgerDaysInWindow: 25, hasLedgerSource: true });
+    expect(gap).toMatchObject({ state: "gap", gapDays: 5, windowDays: 30, severity: "info" });
+    if (gap.state === "gap") expect(gap.readout).toMatch(/legacy data/i);
+  });
+
+  it("treats a fully-legacy window as a gap when the tenant has a ledger source", () => {
+    const gap = deriveCoverageGap({ windowDays: 30, ledgerDaysInWindow: 0, hasLedgerSource: true });
+    expect(gap).toMatchObject({ state: "gap", gapDays: 30 });
+  });
+
+  it("stays silent for a tenant with no ledger source (legacy is normal, not a gap)", () => {
+    const gap = deriveCoverageGap({ windowDays: 30, ledgerDaysInWindow: 0, hasLedgerSource: false });
+    expect(gap).toEqual({ state: "none" });
+  });
+
+  it("stays silent at full ledger coverage", () => {
+    expect(deriveCoverageGap({ windowDays: 30, ledgerDaysInWindow: 30, hasLedgerSource: true })).toEqual({
+      state: "none",
+    });
+  });
+
+  it("does not fire on an empty window", () => {
+    expect(deriveCoverageGap({ windowDays: 0, ledgerDaysInWindow: 0, hasLedgerSource: true })).toEqual({
+      state: "none",
+    });
   });
 });

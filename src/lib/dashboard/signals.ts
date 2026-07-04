@@ -171,3 +171,43 @@ export function deriveSourceTrust(data: DashboardData): SourceTrust {
     escalate: !met,
   };
 }
+
+/**
+ * Coverage-gap signal (Spec A.2 Feature 4). A LOW-PRIORITY, informational nudge —
+ * deliberately NOT part of the red/yellow attention ranking, so it never competes
+ * with real operating pressure in "The One Thing". Fires when a tenant that HAS a
+ * ledger source is still being served some/all of a period from the legacy spine
+ * (ledger coverage incomplete for the window), pointing at the gap so the operator
+ * resolves the blocking sync exceptions. Silent for tenants with no ledger source
+ * at all — legacy is their normal state, not a gap — and silent at full coverage.
+ * Pure: the caller supplies how many days the ledger covers + whether a ledger
+ * source exists.
+ */
+export interface CoverageGapInput {
+  /** Length of the period the view covers, in days. */
+  windowDays: number;
+  /** Distinct days within that window that have ledger coverage. */
+  ledgerDaysInWindow: number;
+  /** Whether the tenant has any ledger source configured. If not, legacy is normal. */
+  hasLedgerSource: boolean;
+}
+
+export type CoverageGap =
+  | { state: "none" }
+  | { state: "gap"; gapDays: number; windowDays: number; severity: "info"; readout: string };
+
+export function deriveCoverageGap(input: CoverageGapInput): CoverageGap {
+  const { windowDays, ledgerDaysInWindow, hasLedgerSource } = input;
+  // No ledger source → the module always reads legacy; that's expected, not a gap.
+  if (!hasLedgerSource) return { state: "none" };
+  if (windowDays <= 0) return { state: "none" };
+  const gapDays = Math.max(0, windowDays - Math.max(0, ledgerDaysInWindow));
+  if (gapDays <= 0) return { state: "none" };
+  return {
+    state: "gap",
+    gapDays,
+    windowDays,
+    severity: "info",
+    readout: `${gapDays} of the last ${windowDays} days in this view ${gapDays === 1 ? "is" : "are"} served from legacy data — resolve open sync exceptions to move them onto the ledger.`,
+  };
+}

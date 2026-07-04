@@ -11,16 +11,13 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 
   return (
     <div className="space-y-6">
-      {/* Honest source banner. */}
       <p className="flex items-start gap-2 rounded-lg border border-line bg-surface/60 px-4 py-3 text-xs text-muted">
         <Info size={14} className="mt-0.5 shrink-0 text-copper-soft" />
         <span>{data.note}</span>
       </p>
 
-      {/* Source-trust indicator — which spine served the cleared-pull figures. */}
       <SourceTrust source={data.source} label={data.sourceLabel} pending={data.pendingReviewCount} />
 
-      {/* Sales tax — reserve OK / SHORT. */}
       <section>
         <h2 className="mb-2 font-display text-lg text-ink-text">Sales tax</h2>
         <div
@@ -34,11 +31,11 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
           )}
         >
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Stat label="Collected" value={sourced ? money(sales.collected) : "—"} />
-            <Stat label="Pulled (Davo)" value={money(sales.pulled)} />
+            <Stat label="Accrued from Toast" value={sourced ? money(sales.collected) : "--"} />
+            <Stat label="Cleared by DAVO" value={money(sales.pulled)} />
             <Stat
-              label="Reserve"
-              value={sourced ? money(sales.reserve) : "—"}
+              label="Vault balance"
+              value={sourced ? money(sales.reserve) : "--"}
               tone={!sourced ? undefined : short ? "red" : "green"}
             />
             <div>
@@ -58,16 +55,24 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
               )}
             </div>
           </div>
+
           {sourced && sales.effectiveRatePct !== null && (
             <p className="mt-3 text-[11px] text-muted">
               Effective rate <span className="tnum text-ink-text">{pct(sales.effectiveRatePct, 2)}</span> of net
-              sales — below PA&rsquo;s 6% because alcohol is sales-tax exempt (no liquor-by-drink tax in York County).
+              sales. <span className="text-ink-text">{data.taxProfile.label}:</span> {data.taxProfile.effectiveRateNote}
             </p>
           )}
+
+          {sales.drift.state === "drift" && (
+            <p className="mt-3 flex items-start gap-1.5 rounded-md border border-health-red/30 bg-health-red/10 px-3 py-2 text-[11px] leading-relaxed text-health-red">
+              <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+              {sales.drift.readout}
+            </p>
+          )}
+          {sales.drift.state === "ok" && <p className="mt-3 text-[11px] text-muted">{sales.drift.readout}</p>}
         </div>
       </section>
 
-      {/* Payroll tax — pulls only (honest about the missing accrual feed). */}
       <section>
         <h2 className="mb-2 font-display text-lg text-ink-text">Payroll tax</h2>
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
@@ -76,13 +81,12 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
             <span className="tnum text-base text-ink-text">{money(payroll.pulled)}</span>
           </div>
           <p className="mt-2 text-[11px] text-muted">
-            Forward payroll-tax accrual (employer FICA/FUTA/SUTA + withholdings per pay run) needs a payroll feed —
-            not yet connected. Shown here: payroll-tax debits that cleared the bank.
+            Forward payroll-tax accrual (employer FICA/FUTA/SUTA + withholdings per pay run) needs a payroll feed.
+            Shown here: payroll-tax debits that cleared the bank.
           </p>
         </div>
       </section>
 
-      {/* Daily collected — small bar list (only when sourced). */}
       {sourced && data.daily.length > 0 && (
         <section>
           <h2 className="mb-2 font-display text-lg text-ink-text">Collected by day</h2>
@@ -107,7 +111,6 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
 }
 
 function SourceTrust({ source, label, pending }: { source: LedgerReadSource; label: string; pending: number }) {
-  // Cleared-pull provenance: ledger-backed vs. legacy fallback vs. needs setup.
   const tone =
     source === "ledger"
       ? "border-health-green/30 text-health-green"

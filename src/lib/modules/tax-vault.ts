@@ -39,6 +39,27 @@ export interface TaxPulls {
   payrollPulled: number;
 }
 
+export interface TaxProfile {
+  label: string;
+  taxableRatePct: number | null;
+  effectiveRateNote: string;
+  driftThresholdPct: number;
+  driftWindowDays: number;
+}
+
+export type TaxDriftState = "ok" | "drift" | "insufficient-data";
+
+export interface TaxDrift {
+  state: TaxDriftState;
+  accrued: number;
+  cleared: number;
+  variance: number;
+  variancePct: number | null;
+  thresholdPct: number;
+  windowDays: number;
+  readout: string;
+}
+
 export interface TaxVaultData {
   periodLabel: string;
   hasData: boolean;
@@ -58,11 +79,94 @@ export interface TaxVaultData {
     status: TaxReserveStatus;
     /** collected / netSales as a %, for sanity (PA: <6% — alcohol is exempt). */
     effectiveRatePct: number | null;
+    drift: TaxDrift;
   };
   payroll: { pulled: number };
+  taxProfile: TaxProfile;
   netSales: number;
   daily: TaxDayRow[];
   note: string;
+}
+
+export const DEFAULT_TAX_PROFILE: TaxProfile = {
+  label: "Generic sales-tax profile",
+  taxableRatePct: null,
+  effectiveRateNote: "Compare this effective rate with the tenant's configured taxable-sales profile.",
+  driftThresholdPct: 5,
+  driftWindowDays: 30,
+};
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+export function parseTaxProfile(value: unknown): TaxProfile {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return DEFAULT_TAX_PROFILE;
+  const raw = value as Record<string, unknown>;
+  const threshold = finiteNumber(raw.driftThresholdPct);
+  const windowDays = finiteNumber(raw.driftWindowDays);
+  return {
+    label: typeof raw.label === "string" && raw.label.trim() ? raw.label.trim() : DEFAULT_TAX_PROFILE.label,
+    taxableRatePct: finiteNumber(raw.taxableRatePct),
+    effectiveRateNote:
+      typeof raw.effectiveRateNote === "string" && raw.effectiveRateNote.trim()
+        ? raw.effectiveRateNote.trim()
+        : DEFAULT_TAX_PROFILE.effectiveRateNote,
+    driftThresholdPct: threshold != null && threshold > 0 ? threshold : DEFAULT_TAX_PROFILE.driftThresholdPct,
+    driftWindowDays: windowDays != null && windowDays > 0 ? Math.round(windowDays) : DEFAULT_TAX_PROFILE.driftWindowDays,
+  };
+}
+
+export function calculateTaxDrift(input: {
+  accrued: number;
+  cleared: number;
+  thresholdPct: number;
+  windowDays: number;
+}): TaxDrift {
+  const accrued = r2(input.accrued);
+  const cleared = r2(input.cleared);
+  const variance = r2(accrued - cleared);
+  const thresholdPct = input.thresholdPct > 0 ? input.thresholdPct : DEFAULT_TAX_PROFILE.driftThresholdPct;
+  const windowDays = input.windowDays > 0 ? Math.round(input.windowDays) : DEFAULT_TAX_PROFILE.driftWindowDays;
+
+  if (accrued <= 0) {
+    return {
+      state: "insufficient-data",
+      accrued,
+      cleared,
+      variance,
+      variancePct: null,
+      thresholdPct,
+      windowDays,
+      readout: `No accrued Toast sales tax is available for the trailing ${windowDays} days.`,
+    };
+  }
+
+  const variancePct = r2((Math.abs(variance) / accrued) * 100);
+  if (variancePct > thresholdPct) {
+    const direction = variance > 0 ? "below" : "above";
+    return {
+      state: "drift",
+      accrued,
+      cleared,
+      variance,
+      variancePct,
+      thresholdPct,
+      windowDays,
+      readout: `Cleared DAVO pulls are ${variancePct.toFixed(1)}% ${direction} Toast accrued tax over the trailing ${windowDays} days.`,
+    };
+  }
+
+  return {
+    state: "ok",
+    accrued,
+    cleared,
+    variance,
+    variancePct,
+    thresholdPct,
+    windowDays,
+    readout: `DAVO pulls are within ${thresholdPct.toFixed(1)}% of Toast accrued tax over the trailing ${windowDays} days.`,
+  };
 }
 
 /**
@@ -105,10 +209,63 @@ export function splitLegacyTaxPulls(
   return { salesPulled, payrollPulled };
 }
 
+async function loadTaxPulls(
+  restaurantId: string,
+  start: Date,
+  end: Date,
+  db: PrismaClient,
+): Promise<TaxPulls> {
+  const asOf = new Date(end.getTime() - DAY_MS);
+  const windowDays = Math.round((end.getTime() - start.getTime()) / DAY_MS);
+  const coverage = await assessLedgerCoverage(db, restaurantId, {
+    accounts: ["TAX_VAULT"],
+    asOf,
+    windowDays,
+  });
+
+  if (coverage.source === "ledger") {
+    const lines = await db.ledgerEntry.findMany({
+      where: { restaurantId, ledgerAccount: "TAX_VAULT", ledgerDate: { gte: start, lt: end } },
+      select: { allocationBucket: true, debit: true },
+    });
+    return splitLedgerTaxPulls(lines);
+  }
+
+  const cats = await db.category.findMany({
+    where: { restaurantId },
+    select: { id: true, tapBucket: true },
+  });
+  const tapByCat = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
+  const txns = await db.transaction.findMany({
+    where: { restaurantId, date: { gte: start, lt: end } },
+    select: { amount: true, categoryId: true },
+  });
+  return splitLegacyTaxPulls(txns, tapByCat);
+}
+
+async function loadAccruedSalesTax(
+  restaurantId: string,
+  start: Date,
+  end: Date,
+  db: PrismaClient,
+): Promise<number> {
+  const rows = await db.dailySales.findMany({
+    where: { restaurantId, date: { gte: start, lt: end } },
+    select: { salesTaxCollected: true },
+  });
+  return rows.reduce((sum, row) => sum + n(row.salesTaxCollected), 0);
+}
+
 export async function loadTaxVault(
   restaurantId: string,
   db: PrismaClient = prisma,
 ): Promise<TaxVaultData> {
+  const restaurant = await db.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { taxProfile: true },
+  });
+  const taxProfile = parseTaxProfile(restaurant?.taxProfile);
+
   // Period = month of the latest DailySales row.
   const latest = await db.dailySales.findFirst({
     where: { restaurantId },
@@ -147,29 +304,23 @@ export async function loadTaxVault(
     windowDays,
   });
 
-  let pulls: TaxPulls;
-  if (coverage.source === "ledger") {
-    const lines = await db.ledgerEntry.findMany({
-      where: { restaurantId, ledgerAccount: "TAX_VAULT", ledgerDate: { gte: start, lt: end } },
-      select: { allocationBucket: true, debit: true },
-    });
-    pulls = splitLedgerTaxPulls(lines);
-  } else {
-    const cats = await db.category.findMany({
-      where: { restaurantId },
-      select: { id: true, tapBucket: true },
-    });
-    const tapByCat = new Map(cats.map((c) => [c.id, c.tapBucket as string]));
-    const txns = await db.transaction.findMany({
-      where: { restaurantId, date: { gte: start, lt: end } },
-      select: { amount: true, categoryId: true },
-    });
-    pulls = splitLegacyTaxPulls(txns, tapByCat);
-  }
+  const pulls = await loadTaxPulls(restaurantId, start, end, db);
   const { salesPulled, payrollPulled } = pulls;
 
   const sourced = collected > 0;
   const reserve = collected - salesPulled;
+  const driftEnd = new Date((latest?.date ?? asOf).getTime() + DAY_MS);
+  const driftStart = new Date(driftEnd.getTime() - taxProfile.driftWindowDays * DAY_MS);
+  const [driftAccrued, driftPulls] = await Promise.all([
+    loadAccruedSalesTax(restaurantId, driftStart, driftEnd, db),
+    loadTaxPulls(restaurantId, driftStart, driftEnd, db),
+  ]);
+  const drift = calculateTaxDrift({
+    accrued: driftAccrued,
+    cleared: driftPulls.salesPulled,
+    thresholdPct: taxProfile.driftThresholdPct,
+    windowDays: taxProfile.driftWindowDays,
+  });
 
   return {
     periodLabel,
@@ -184,8 +335,10 @@ export async function loadTaxVault(
       reserve: r2(reserve),
       status: taxReserveStatus(collected, salesPulled),
       effectiveRatePct: netSales > 0 && sourced ? r2((collected / netSales) * 100) : null,
+      drift,
     },
     payroll: { pulled: r2(payrollPulled) },
+    taxProfile,
     netSales: r2(netSales),
     daily,
     note: sourced

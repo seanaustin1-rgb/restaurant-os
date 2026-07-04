@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { businessTypeFromOnboardingParam } from "@/lib/onboarding/business-type-param";
 import { loadOwnerSetupChecklist, type OwnerSetupChecklist, type OwnerSetupStep } from "@/lib/onboarding/setup-checklist";
 import { prisma } from "@/lib/prisma";
 
@@ -112,7 +113,7 @@ export default async function OnboardingPage({
 }) {
   const roles = await loadRoles();
   const addingBusiness = searchParams?.new === "1";
-  const initialBusinessType = searchParams?.type === "real-estate" ? "REAL_ESTATE_BROKERAGE" : "RESTAURANT";
+  const initialBusinessType = businessTypeFromOnboardingParam(searchParams?.type);
   if (roles.length === 0 || addingBusiness) {
     return (
       <main className="min-h-screen bg-ink px-4 py-8 text-ink-text sm:px-6">

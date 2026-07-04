@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SOURCE_MAPS } from "./source-map";
 import {
   SOURCE_PROFILES,
+  buildSourceSelectedNote,
   buildSourceSetupNote,
   isSourceProfileId,
   sourceApiSetupLabel,
@@ -74,6 +75,17 @@ describe("source profiles", () => {
     expect(note.toLowerCase()).not.toContain("paste");
     expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("API:"), expect.stringContaining("CSV fallback:")]));
     expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("Intake: Follow Up Boss API key via secure_support (secret)")]));
+  });
+
+  it("builds an onboarding selected note without marking API setup requested", () => {
+    const profile = sourceProfile("boldtrail-crm");
+    expect(profile).toBeTruthy();
+    const note = buildSourceSelectedNote(profile!);
+
+    expect(note).toContain("selected during onboarding");
+    expect(note).toContain("Fallback:");
+    expect(note).not.toContain("API setup requested");
+    expect(sourceApiSetupState({ profile: profile!, status: "PLANNED", notes: note })).toBe("api_available");
   });
 
   it("routes secret credential intake through secure support", () => {

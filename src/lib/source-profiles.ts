@@ -9,12 +9,13 @@ export type SourceProfileId =
   | "escapia-owner-statements";
 
 export type SourceConnectionPath = "oauth" | "partner_api" | "admin_api" | "csv_export";
-export type SourceApiSetupState = "csv_ready" | "api_available" | "api_requested" | "connected" | "not_needed" | "blocked";
+export type SourceApiSetupState = "csv_ready" | "import_requested" | "api_available" | "api_requested" | "connected" | "not_needed" | "blocked";
 export type SourceCredentialIntakeKind = "approval" | "api_key" | "account_id" | "location_id" | "webhook" | "csv_export" | "identity";
 export type SourceCredentialSensitivity = "none" | "restricted" | "secret";
 export type SourceCredentialCollectionPath = "owner_oauth" | "secure_support" | "vendor_admin" | "csv_import" | "settings";
 
 export const API_SETUP_REQUESTED_TEXT = "API setup requested.";
+export const IMPORT_SETUP_REQUESTED_TEXT = "Import setup requested.";
 
 export interface SourceProfile {
   id: SourceProfileId;
@@ -210,8 +211,9 @@ export function sourceProfile(id: SourceProfileId | null | undefined): SourcePro
 }
 
 export function buildSourceSetupNote(profile: SourceProfile): string {
+  const requestedText = profile.connectionPath === "csv_export" ? IMPORT_SETUP_REQUESTED_TEXT : API_SETUP_REQUESTED_TEXT;
   return [
-    `${profile.label}: ${API_SETUP_REQUESTED_TEXT}`,
+    `${profile.label}: ${requestedText}`,
     `Path: ${profile.connectionLabel}.`,
     `Needs: ${profile.apiAccessNeeds.join("; ")}.`,
     `Fallback: ${profile.csvFallback}`,
@@ -244,6 +246,7 @@ export function sourceApiSetupState(input: {
   if (input.status === "BLOCKED") return "blocked";
   if (input.status === "NOT_NEEDED") return "not_needed";
   if ((input.notes ?? "").includes(API_SETUP_REQUESTED_TEXT)) return "api_requested";
+  if ((input.notes ?? "").includes(IMPORT_SETUP_REQUESTED_TEXT)) return "import_requested";
   return input.profile.connectionPath === "csv_export" ? "csv_ready" : "api_available";
 }
 
@@ -257,6 +260,8 @@ export function sourceApiSetupLabel(state: SourceApiSetupState): { label: string
       return { label: "Skipped", detail: "This source is not needed for the current setup path." };
     case "api_requested":
       return { label: "API requested", detail: "Setup request is saved. Use CSV/import while vendor or admin access is pending." };
+    case "import_requested":
+      return { label: "Import planned", detail: "Import setup is saved. Use the CSV/export path before a live API is available." };
     case "api_available":
       return { label: "API path available", detail: "Request setup to capture the required access checklist; use CSV/import until approved." };
     case "csv_ready":

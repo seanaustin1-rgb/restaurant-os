@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
-import { AlertTriangle, ShieldCheck, Info } from "lucide-react";
+import { AlertTriangle, ShieldCheck, Info, Database, Layers } from "lucide-react";
 import type { TaxVaultData } from "@/lib/modules/tax-vault";
+import type { LedgerReadSource } from "@/lib/financial-ledger/ledger-coverage";
 import { money, pct } from "@/lib/format";
 
 export function TaxVaultModule({ data }: { data: TaxVaultData }) {
@@ -15,6 +16,9 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
         <Info size={14} className="mt-0.5 shrink-0 text-copper-soft" />
         <span>{data.note}</span>
       </p>
+
+      {/* Source-trust indicator — which spine served the cleared-pull figures. */}
+      <SourceTrust source={data.source} label={data.sourceLabel} pending={data.pendingReviewCount} />
 
       {/* Sales tax — reserve OK / SHORT. */}
       <section>
@@ -97,6 +101,29 @@ export function TaxVaultModule({ data }: { data: TaxVaultData }) {
             ))}
           </div>
         </section>
+      )}
+    </div>
+  );
+}
+
+function SourceTrust({ source, label, pending }: { source: LedgerReadSource; label: string; pending: number }) {
+  // Cleared-pull provenance: ledger-backed vs. legacy fallback vs. needs setup.
+  const tone =
+    source === "ledger"
+      ? "border-health-green/30 text-health-green"
+      : source === "legacy"
+        ? "border-copper-dim text-copper-soft"
+        : "border-line text-muted";
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[11px]">
+      <span className={clsx("inline-flex items-center gap-1 rounded-full border px-2 py-0.5", tone)}>
+        {source === "ledger" ? <Database size={12} /> : <Layers size={12} />}
+        Cleared pulls: {label}
+      </span>
+      {pending > 0 && (
+        <span className="text-muted">
+          {pending} tax event{pending === 1 ? "" : "s"} pending review
+        </span>
       )}
     </div>
   );

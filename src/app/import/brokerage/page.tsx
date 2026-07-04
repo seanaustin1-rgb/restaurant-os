@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BrokerageImportPilot } from "@/components/import/BrokerageImportPilot";
+import { SourceProfileCards } from "@/components/sources/SourceProfileCards";
 
 export default async function BrokerageImportPage() {
   const { userId } = await auth();
@@ -24,6 +25,7 @@ export default async function BrokerageImportPage() {
           franchise fees, and referral fees when the export does not already carry it.
         </p>
       </div>
+      <SourceProfileCards ids={["boldtrail-crm", "boldtrail-backoffice", "appfiles-transactions"]} />
       <BrokerageImportPilot
         businesses={roles.map((role) => ({
           id: role.restaurantId,

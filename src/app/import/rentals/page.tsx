@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { RentalImportPilot } from "@/components/import/RentalImportPilot";
+import { SourceProfileCards } from "@/components/sources/SourceProfileCards";
 
 export default async function RentalImportPage() {
   const { userId } = await auth();
@@ -33,6 +34,7 @@ export default async function RentalImportPage() {
           View import history
         </Link>
       </div>
+      <SourceProfileCards ids={["escapia-operations", "escapia-owner-statements"]} />
       <RentalImportPilot businesses={roles.map((role) => ({ id: role.restaurantId, name: role.restaurant.name }))} />
     </main>
   );

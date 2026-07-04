@@ -568,7 +568,9 @@ export async function loadBrokerageAnalytics(
     sourceReadiness: [
       { label: "Accounting", state: stateFor("accounting", ["QuickBooks Online", "Xero"]), detail: "Company Dollar checks, fixed OpEx, tax reserve, and advisor review." },
       { label: "CRM pipeline", state: stateFor("pipeline", ["BoldTrail CRM / export", "Follow Up Boss / Lofty / kvCORE"]), detail: "Pending deals, source attribution, expected close date, close probability, and lead-source activity." },
-      { label: "Commission + files", state: stateFor("pipeline", ["BoldTrail BackOffice / Brokermint export", "AppFiles transaction export", "Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
+      // "appFiles transaction export" must stay verbatim — it's the persisted
+      // DataSourceConfig.providerName key from source-map.ts, matched here.
+      { label: "Commission + files", state: stateFor("pipeline", ["BoldTrail BackOffice / Brokermint export", "appFiles transaction export", "Brokermint / Dotloop / SkySlope"]), detail: "Splits, caps, referral fees, franchise fees, agent ledgers, and transaction-file confidence." },
       { label: "Market Aura", state: stateFor("aura", ["Google Business Profile", "Zillow / Realtor.com"]), detail: "Search intent, profile actions, reviews, portal activity, and local demand." },
     ],
     counts: {

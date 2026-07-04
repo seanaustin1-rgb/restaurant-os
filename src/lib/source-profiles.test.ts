@@ -112,9 +112,11 @@ describe("source profiles", () => {
     expect(sourceApiSetupState({ profile: apiProfile, status: "PLANNED", notes: null })).toBe("api_available");
     expect(sourceApiSetupState({ profile: csvProfile, status: "PLANNED", notes: null })).toBe("csv_ready");
     expect(sourceApiSetupState({ profile: apiProfile, status: "PLANNED", notes: buildSourceSetupNote(apiProfile) })).toBe("api_requested");
+    expect(sourceApiSetupState({ profile: csvProfile, status: "PLANNED", notes: buildSourceSetupNote(csvProfile) })).toBe("import_requested");
     expect(sourceApiSetupState({ profile: apiProfile, status: "CONNECTED", notes: null })).toBe("connected");
     expect(sourceApiSetupState({ profile: apiProfile, status: "BLOCKED", notes: null })).toBe("blocked");
     expect(sourceApiSetupState({ profile: apiProfile, status: "NOT_NEEDED", notes: null })).toBe("not_needed");
     expect(sourceApiSetupLabel("api_requested").label).toBe("API requested");
+    expect(sourceApiSetupLabel("import_requested").label).toBe("Import planned");
   });
 });

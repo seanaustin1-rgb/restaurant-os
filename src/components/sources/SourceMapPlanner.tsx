@@ -195,6 +195,10 @@ function requiresGoogleAuthorization(option: SourceOption): boolean {
   return option.name.toLowerCase().includes("google business profile");
 }
 
+function profileSetupButtonLabel(profile: NonNullable<ReturnType<typeof sourceProfile>>): string {
+  return profile.connectionPath === "csv_export" ? "Plan import setup" : "Request API setup";
+}
+
 export function SourceMapPlanner({
   sourceMap,
   initialConfigs,
@@ -449,7 +453,7 @@ export function SourceMapPlanner({
                           disabled={apiRequestingKey === key}
                           className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-3 py-2 text-xs text-copper-soft hover:bg-copper/20 disabled:opacity-50"
                         >
-                          <LifeBuoy size={13} /> {apiRequestingKey === key ? "Requesting..." : "Request API setup"}
+                          <LifeBuoy size={13} /> {apiRequestingKey === key ? "Saving..." : profileSetupButtonLabel(profile)}
                         </button>
                         {apiChecklist.length > 0 && (
                           <ul className="mt-2 grid grid-cols-1 gap-1 text-[11px] text-muted sm:grid-cols-2">

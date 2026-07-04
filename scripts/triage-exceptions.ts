@@ -80,19 +80,35 @@ interface TriageRow {
   applied: boolean;
 }
 
-// Accept either an exact slug or a name substring (matching the sibling ops
-// scripts like reapply-categorization-ledger.ts), so an operator can pass a
-// human name — e.g. --tenant "Stone Grille" — without hunting for the slug.
+// Accept either an exact slug or a name substring (so an operator can pass a
+// human name — e.g. --tenant "Stone Grille" — without hunting for the slug).
+// The resolved tenant scopes every read AND every --execute mutation, so this
+// must never silently pick the wrong business: an exact (unique) slug wins
+// outright, and a name search refuses to guess when it's ambiguous.
 async function resolveTenant(query: string) {
-  const tenant = await prisma.restaurant.findFirst({
-    where: { OR: [{ slug: query }, { name: { contains: query } }] },
+  // slug is @unique — an exact match is unambiguous, so it always wins.
+  const bySlug = await prisma.restaurant.findUnique({
+    where: { slug: query },
     select: { id: true, name: true, slug: true },
   });
-  if (!tenant) {
-    console.error(`No business found matching "${query}" (tried slug and name).`);
-    process.exit(1);
+  if (bySlug) return bySlug;
+
+  const byName = await prisma.restaurant.findMany({
+    where: { name: { contains: query } },
+    select: { id: true, name: true, slug: true },
+    orderBy: { createdAt: "asc" },
+    take: 20,
+  });
+  if (byName.length === 1) return byName[0];
+  if (byName.length === 0) {
+    console.error(`No business found matching "${query}" (tried exact slug and name).`);
+  } else {
+    console.error(
+      `"${query}" is ambiguous — matched ${byName.length} businesses: ` +
+        `${byName.map((r) => `${r.name} (${r.slug})`).join(", ")}. Re-run with an exact --tenant <slug>.`,
+    );
   }
-  return tenant;
+  process.exit(1);
 }
 
 async function main() {

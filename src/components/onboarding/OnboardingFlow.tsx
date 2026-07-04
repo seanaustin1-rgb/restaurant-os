@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { createRestaurant, type OnboardingInput } from "@/app/onboarding/actions";
 import type { BusinessType } from "@prisma/client";
 import { INDUSTRY_TEMPLATES, type ProfileQuestion } from "@/lib/industry-templates";
 import { sourceMapFor } from "@/lib/source-map";
+import { sourceProfile } from "@/lib/source-profiles";
+import {
+  defaultOnboardingSourceSelections,
+  onboardingSourceKey,
+  type OnboardingSourceSelection,
+} from "@/lib/onboarding/source-selection";
 
 const BUSINESS_TYPES = [
   INDUSTRY_TEMPLATES.RESTAURANT,
@@ -89,12 +95,19 @@ export function OnboardingFlow({
   const [sizeSignal, setSizeSignal] = useState("");
   const [profile, setProfile] = useState<Record<string, string | number | boolean | null>>({});
   const [tier, setTier] = useState<OnboardingInput["tier"]>("TIER_2");
+  const [selectedSources, setSelectedSources] = useState<OnboardingSourceSelection[]>(() =>
+    defaultOnboardingSourceSelections(initialBusinessType),
+  );
   const [pending, startTransition] = useTransition();
   const selectedTemplate = INDUSTRY_TEMPLATES[businessType];
   const selectedSourceMap = sourceMapFor(businessType);
   const tiers = setupTiers(businessType);
 
   const canContinue = name.trim().length > 1;
+
+  useEffect(() => {
+    setSelectedSources(defaultOnboardingSourceSelections(businessType));
+  }, [businessType]);
 
   function submit() {
     const profileWithDefaults = Object.fromEntries(
@@ -104,7 +117,14 @@ export function OnboardingFlow({
     ) as Record<string, string | number | boolean | null>;
 
     startTransition(async () => {
-      await createRestaurant({ name: name.trim(), businessType, scaleValue: Number(sizeSignal) || undefined, profile: profileWithDefaults, tier });
+      await createRestaurant({
+        name: name.trim(),
+        businessType,
+        scaleValue: Number(sizeSignal) || undefined,
+        profile: profileWithDefaults,
+        selectedSources,
+        tier,
+      });
     });
   }
 
@@ -118,6 +138,16 @@ export function OnboardingFlow({
       return;
     }
     setProfile((current) => ({ ...current, [question.key]: value }));
+  }
+
+  function toggleSource(source: OnboardingSourceSelection) {
+    const key = onboardingSourceKey(source.category, source.providerName);
+    setSelectedSources((current) => {
+      if (current.some((item) => onboardingSourceKey(item.category, item.providerName) === key)) {
+        return current.filter((item) => onboardingSourceKey(item.category, item.providerName) !== key);
+      }
+      return [...current, source];
+    });
   }
 
   return (
@@ -207,6 +237,55 @@ export function OnboardingFlow({
           <div className="rounded-md border border-line bg-ink px-3 py-3">
             <p className="text-xs uppercase tracking-wider text-muted">{selectedTemplate.label}</p>
             <p className="mt-1 text-sm leading-relaxed text-ink-text">{selectedSourceMap.minimumAutoInput}</p>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted">Systems you already use</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Choose what is available now. We will save a setup plan only; credentials stay in the secure
+                authorization or support path later.
+              </p>
+            </div>
+            <div className="space-y-3">
+              {selectedSourceMap.groups.map((group) => (
+                <div key={group.category} className="rounded-md border border-line bg-ink/70 p-3">
+                  <p className="text-sm text-ink-text">{group.label}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">{group.purpose}</p>
+                  <div className="mt-3 space-y-2">
+                    {group.options.map((option) => {
+                      const key = onboardingSourceKey(group.category, option.name);
+                      const checked = selectedSources.some((item) => onboardingSourceKey(item.category, item.providerName) === key);
+                      const profile = sourceProfile(option.profileId);
+                      return (
+                        <label
+                          key={key}
+                          className={
+                            "flex cursor-pointer gap-3 rounded-md border px-3 py-2 text-left transition " +
+                            (checked ? "border-copper bg-copper/10" : "border-line bg-ink hover:border-copper-dim")
+                          }
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleSource({ category: group.category, providerName: option.name })}
+                            className="mt-1 h-4 w-4 accent-copper"
+                          />
+                          <span className="min-w-0 flex-1">
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm text-ink-text">{option.displayName ?? option.name}</span>
+                              {option.minimum && <span className="rounded-full border border-copper-dim px-2 py-0.5 text-[10px] text-copper-soft">minimum</span>}
+                              {profile && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">{profile.connectionLabel}</span>}
+                            </span>
+                            <span className="mt-1 block text-xs leading-relaxed text-muted">{option.role}</span>
+                            {profile && <span className="mt-1 block text-[11px] leading-relaxed text-muted">CSV/import fallback: {profile.csvFallback}</span>}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <Field label={selectedTemplate.scaleAnchor.label}>
             <input

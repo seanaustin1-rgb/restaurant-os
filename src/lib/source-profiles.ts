@@ -218,6 +218,14 @@ export function buildSourceSetupNote(profile: SourceProfile): string {
   ].join(" ");
 }
 
+export function buildSourceSelectedNote(profile: SourceProfile): string {
+  return [
+    `${profile.label}: selected during onboarding.`,
+    `Path: ${profile.connectionLabel}.`,
+    `Fallback: ${profile.csvFallback}`,
+  ].join(" ");
+}
+
 export function sourceSetupChecklist(profile: SourceProfile): string[] {
   return [
     ...profile.apiAccessNeeds.map((item) => `API: ${item}`),

@@ -3,7 +3,7 @@
 // holds the default seed set + the legacy-bucket → category mapping used to
 // backfill existing transactions. Pure data + helpers (the seed/lookup functions
 // take a Prisma client so this module stays import-safe everywhere).
-import type { PrismaClient, TapBucket } from "@prisma/client";
+import type { BusinessType, PrismaClient, TapBucket } from "@prisma/client";
 
 export const MISC_CATEGORY_NAME = "Misc";
 
@@ -74,6 +74,54 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   { name: MISC_CATEGORY_NAME, tapBucket: "OPEX", sortOrder: 999 },
 ];
 
+// Real-estate brokerage taxonomy. Same two-level model — brokerage-native
+// category names rolling up into the EXISTING TapBucket set (no schema change):
+//   • Commission Income → REVENUE (the brokerage's earned GCI deposits)
+//   • Agent Commission Split / Staff Payroll → LABOR (the people the brokerage pays;
+//     matches how the demo seeder already buckets agent payouts)
+//   • Escrow / Internal Transfers → EXCLUDED (held/earmarked, never P&L)
+//   • dues, franchise, lead-gen, listing, licensing, E&O, software, rent → OPEX
+// Distinct brokerage buckets (DIRECT_COST / ESCROW) would need new TapBucket enum
+// values (a migration) — deferred; these existing rollups keep the dashboards honest.
+export const BROKERAGE_CATEGORIES: DefaultCategory[] = [
+  { name: "Commission Income", tapBucket: "REVENUE", sortOrder: 1 },
+  { name: "Escrow / Earnest Money (Held)", tapBucket: "EXCLUDED", sortOrder: 2 },
+
+  { name: "Agent Commission Split", tapBucket: "LABOR", sortOrder: 10 },
+  { name: "Staff Payroll", tapBucket: "LABOR", sortOrder: 11 },
+  { name: "Owner Pay / Draw", tapBucket: "OWNER_PAY", sortOrder: 20 },
+
+  { name: "Franchise Fee", tapBucket: "OPEX", sortOrder: 30 },
+  { name: "MLS & Board Dues", tapBucket: "OPEX", sortOrder: 31 },
+  { name: "Association Dues", tapBucket: "OPEX", sortOrder: 32 },
+  { name: "Licensing & Compliance", tapBucket: "OPEX", sortOrder: 33 },
+  { name: "Lead Generation", tapBucket: "OPEX", sortOrder: 34 },
+  { name: "Listing Costs", tapBucket: "OPEX", sortOrder: 35 },
+  { name: "E&O Insurance", tapBucket: "OPEX", sortOrder: 36 },
+  { name: "Technology / Software", tapBucket: "OPEX", sortOrder: 37 },
+  { name: "Office Rent", tapBucket: "OPEX", sortOrder: 38 },
+  { name: "Utilities", tapBucket: "OPEX", sortOrder: 39 },
+  { name: "Telecom / Internet", tapBucket: "OPEX", sortOrder: 40 },
+  { name: "Professional Services", tapBucket: "OPEX", sortOrder: 41 },
+  { name: "Merchant / Bank Fees", tapBucket: "OPEX", sortOrder: 42 },
+
+  { name: "Sales Tax", tapBucket: "TAX_SALES", sortOrder: 80 },
+  { name: "Payroll Tax", tapBucket: "TAX_PAYROLL", sortOrder: 81 },
+
+  { name: "Internal Transfers", tapBucket: "EXCLUDED", sortOrder: 90 },
+
+  { name: MISC_CATEGORY_NAME, tapBucket: "OPEX", sortOrder: 999 },
+];
+
+/**
+ * The default category taxonomy for a business type. Restaurants (and the other
+ * food/retail/service types today) keep `DEFAULT_CATEGORIES` exactly; real-estate
+ * brokerages get the brokerage-native set. Extend here as new verticals land.
+ */
+export function categoriesFor(businessType: BusinessType | null | undefined): DefaultCategory[] {
+  return businessType === "REAL_ESTATE_BROKERAGE" ? BROKERAGE_CATEGORIES : DEFAULT_CATEGORIES;
+}
+
 // Legacy flat TransactionBucket -> default category name. Used to backfill the
 // existing `Transaction.bucket` values (incl. manual overrides, which already
 // live in the bucket) onto categories with no data loss.
@@ -99,10 +147,19 @@ export function legacyBucketToCategoryName(bucket: string | null | undefined): s
   return (bucket && LEGACY_BUCKET_TO_CATEGORY[bucket]) || MISC_CATEGORY_NAME;
 }
 
-/** Idempotently seed the default categories for a restaurant (system rows). */
+/**
+ * Idempotently seed the default categories for a restaurant (system rows). The
+ * taxonomy follows the tenant's business type — restaurants are unchanged; a
+ * real-estate brokerage gets the brokerage-native set. `skipDuplicates` keeps it
+ * safe to re-run and additive if a tenant's type ever changes.
+ */
 export async function ensureDefaultCategories(prisma: PrismaClient, restaurantId: string): Promise<void> {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { businessType: true },
+  });
   await prisma.category.createMany({
-    data: DEFAULT_CATEGORIES.map((c) => ({
+    data: categoriesFor(restaurant?.businessType).map((c) => ({
       restaurantId,
       name: c.name,
       tapBucket: c.tapBucket,

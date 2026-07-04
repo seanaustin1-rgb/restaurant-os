@@ -28,8 +28,8 @@ import { commitBrokerageImport } from "../src/lib/brokerage/import-commit";
 import {
   ensureDefaultCategories,
   categoryIdByName,
-  legacyBucketToCategoryName,
 } from "../src/lib/categorization/categories";
+import { ensureDefaultRules } from "../src/lib/categorization/rules";
 import { buildBrokeragePayload, BROKERAGE_MARKETS } from "./generate-brokerage-pilot-payload";
 
 function arg(flag: string): string | undefined {
@@ -65,57 +65,58 @@ const DEMO_PROFILE: Record<string, string | number | boolean> = {
 const CASH_ANCHOR = 184_500;
 
 // ── Brokerage bank transactions (one month) ────────────────────────────────────
-// The vendor map is restaurant-tuned, so we assign explicit buckets that roll up
-// into the brokerage TAP accounts (Agent Splits, Lead Gen/Marketing, Staff
-// Payroll, OpEx, Owner Pay, Tax Reserve). Legacy TransactionBucket → Category →
-// TapBucket via legacyBucketToCategoryName, exactly like seedDemoData.
+// Each seeds a real Transaction with an explicit brokerage `category` (a
+// BROKERAGE_CATEGORIES name) for the categoryId, plus the coarse legacy `bucket`
+// (TransactionBucket) for the dual-write. The category names match the brokerage
+// taxonomy this tenant is now seeded with, so the tiles read brokerage-native.
 interface TxnSeed {
   vendor: string;
   amount: number;
   day: number;
   bucket: TransactionBucket;
+  category: string; // BROKERAGE_CATEGORIES name → categoryId
   recurring?: boolean;
 }
 
 const TXNS: TxnSeed[] = [
-  // Lead generation / marketing → OPEX_SUPPLIES (Marketing/Tech rolls into OpEx TAP)
-  { vendor: "Zillow Premier Agent", amount: 3850, day: 3, bucket: "OPEX_SUPPLIES", recurring: true },
-  { vendor: "Realtor.com Connections", amount: 2300, day: 5, bucket: "OPEX_SUPPLIES", recurring: true },
-  { vendor: "Google Ads", amount: 1750, day: 8, bucket: "OPEX_SUPPLIES", recurring: true },
-  { vendor: "Meta Ads (Facebook)", amount: 900, day: 12, bucket: "OPEX_SUPPLIES", recurring: true },
+  // Lead generation / marketing
+  { vendor: "Zillow Premier Agent", amount: 3850, day: 3, bucket: "OPEX_SUPPLIES", category: "Lead Generation", recurring: true },
+  { vendor: "Realtor.com Connections", amount: 2300, day: 5, bucket: "OPEX_SUPPLIES", category: "Lead Generation", recurring: true },
+  { vendor: "Google Ads", amount: 1750, day: 8, bucket: "OPEX_SUPPLIES", category: "Lead Generation", recurring: true },
+  { vendor: "Meta Ads (Facebook)", amount: 900, day: 12, bucket: "OPEX_SUPPLIES", category: "Lead Generation", recurring: true },
 
-  // Agent commission payouts → LABOR (Agent Commission Splits / payroll-style outflow)
-  { vendor: "Agent Commission Payout — Whitaker", amount: 7400, day: 6, bucket: "LABOR" },
-  { vendor: "Agent Commission Payout — DeLuca", amount: 6100, day: 6, bucket: "LABOR" },
-  { vendor: "Agent Commission Payout — Reyes", amount: 5200, day: 14, bucket: "LABOR" },
-  { vendor: "Agent Commission Payout — Brooks", amount: 4800, day: 14, bucket: "LABOR" },
-  { vendor: "Agent Commission Payout — Vasquez", amount: 5600, day: 22, bucket: "LABOR" },
+  // Agent commission payouts (people the brokerage pays → LABOR)
+  { vendor: "Agent Commission Payout — Whitaker", amount: 7400, day: 6, bucket: "LABOR", category: "Agent Commission Split" },
+  { vendor: "Agent Commission Payout — DeLuca", amount: 6100, day: 6, bucket: "LABOR", category: "Agent Commission Split" },
+  { vendor: "Agent Commission Payout — Reyes", amount: 5200, day: 14, bucket: "LABOR", category: "Agent Commission Split" },
+  { vendor: "Agent Commission Payout — Brooks", amount: 4800, day: 14, bucket: "LABOR", category: "Agent Commission Split" },
+  { vendor: "Agent Commission Payout — Vasquez", amount: 5600, day: 22, bucket: "LABOR", category: "Agent Commission Split" },
 
-  // Office rent → OPEX_RENT
-  { vendor: "Crossroads Office Park — Rent", amount: 6800, day: 1, bucket: "OPEX_RENT", recurring: true },
+  // Office rent
+  { vendor: "Crossroads Office Park — Rent", amount: 6800, day: 1, bucket: "OPEX_RENT", category: "Office Rent", recurring: true },
 
-  // MLS / board / association dues → OPEX_SUPPLIES (OpEx)
-  { vendor: "Intermountain MLS Dues", amount: 540, day: 4, bucket: "OPEX_SUPPLIES", recurring: true },
-  { vendor: "Boise Regional REALTORS Board Dues", amount: 420, day: 4, bucket: "OPEX_SUPPLIES", recurring: true },
+  // MLS / board / association dues
+  { vendor: "Intermountain MLS Dues", amount: 540, day: 4, bucket: "OPEX_SUPPLIES", category: "MLS & Board Dues", recurring: true },
+  { vendor: "Boise Regional REALTORS Board Dues", amount: 420, day: 4, bucket: "OPEX_SUPPLIES", category: "Association Dues", recurring: true },
 
-  // E&O insurance → OPEX_INSURANCE
-  { vendor: "Pearl E&O Insurance", amount: 1150, day: 9, bucket: "OPEX_INSURANCE", recurring: true },
+  // E&O insurance
+  { vendor: "Pearl E&O Insurance", amount: 1150, day: 9, bucket: "OPEX_INSURANCE", category: "E&O Insurance", recurring: true },
 
-  // Staff / admin payroll → LABOR
-  { vendor: "Gusto Payroll — Admin Staff", amount: 9200, day: 15, bucket: "LABOR", recurring: true },
-  { vendor: "Gusto Payroll — Admin Staff", amount: 9200, day: 30, bucket: "LABOR", recurring: true },
+  // Staff / admin payroll
+  { vendor: "Gusto Payroll — Admin Staff", amount: 9200, day: 15, bucket: "LABOR", category: "Staff Payroll", recurring: true },
+  { vendor: "Gusto Payroll — Admin Staff", amount: 9200, day: 30, bucket: "LABOR", category: "Staff Payroll", recurring: true },
 
-  // Office utilities / software → OPEX_UTILITIES / OPEX_SUPPLIES
-  { vendor: "Idaho Power", amount: 410, day: 10, bucket: "OPEX_UTILITIES", recurring: true },
-  { vendor: "Follow Up Boss CRM", amount: 760, day: 11, bucket: "OPEX_SUPPLIES", recurring: true },
-  { vendor: "Dotloop Transaction Mgmt", amount: 320, day: 11, bucket: "OPEX_SUPPLIES", recurring: true },
+  // Office utilities / software
+  { vendor: "Idaho Power", amount: 410, day: 10, bucket: "OPEX_UTILITIES", category: "Utilities", recurring: true },
+  { vendor: "Follow Up Boss CRM", amount: 760, day: 11, bucket: "OPEX_SUPPLIES", category: "Technology / Software", recurring: true },
+  { vendor: "Dotloop Transaction Mgmt", amount: 320, day: 11, bucket: "OPEX_SUPPLIES", category: "Technology / Software", recurring: true },
 
-  // Tax reserve set-aside → TAX_PAYROLL (reserve outflow)
-  { vendor: "Estimated Tax Reserve Transfer", amount: 4200, day: 17, bucket: "TAX_PAYROLL", recurring: true },
+  // Tax reserve set-aside
+  { vendor: "Estimated Tax Reserve Transfer", amount: 4200, day: 17, bucket: "TAX_PAYROLL", category: "Payroll Tax", recurring: true },
 
-  // Owner draw → OWNER_PAY
-  { vendor: "Owner Draw", amount: 7500, day: 15, bucket: "OWNER_PAY" },
-  { vendor: "Owner Draw", amount: 7500, day: 30, bucket: "OWNER_PAY" },
+  // Owner draw
+  { vendor: "Owner Draw", amount: 7500, day: 15, bucket: "OWNER_PAY", category: "Owner Pay / Draw" },
+  { vendor: "Owner Draw", amount: 7500, day: 30, bucket: "OWNER_PAY", category: "Owner Pay / Draw" },
 ];
 
 interface SeedSummary {
@@ -295,6 +296,9 @@ async function seedDataSourceConfigs(db: PrismaClient, restaurantId: string): Pr
 // ── Bank transactions (category-linked) ────────────────────────────────────────
 async function seedBrokerageTransactions(db: PrismaClient, restaurantId: string): Promise<number> {
   await ensureDefaultCategories(db, restaurantId);
+  // Seed the brokerage vendor rules so this tenant self-categorizes future imports
+  // (and the review flow can suggest them). No-op if system rules already exist.
+  await ensureDefaultRules(db, restaurantId);
   const catIdByName = await categoryIdByName(db, restaurantId);
 
   const start = dateOf(1);
@@ -317,7 +321,7 @@ async function seedBrokerageTransactions(db: PrismaClient, restaurantId: string)
     merchantName: t.vendor,
     description: t.vendor,
     bucket: t.bucket,
-    categoryId: catIdByName.get(legacyBucketToCategoryName(t.bucket)) ?? null,
+    categoryId: catIdByName.get(t.category) ?? null,
     isRecurring: t.recurring ?? false,
     confidence: 1,
     isManualOverride: false,

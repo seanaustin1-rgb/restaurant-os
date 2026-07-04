@@ -1,15 +1,16 @@
 /**
  * Bulk-triage open clean-ledger sync exceptions for one tenant.
+ * --tenant accepts a name substring or an exact slug (e.g. "Stone Grille" or stone).
  *
  * Dry run (default — writes nothing):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --dry-run --report out/stone-triage-dryrun.json
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --dry-run --report out/stone-triage-dryrun.json
  *
  * Snapshots (read-only):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --count-only
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --ledger-count
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --count-only
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --ledger-count
  *
  * Live run (mutates — review the dry-run report first):
- *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant stone --execute --report out/stone-triage-live.json
+ *   npx dotenv -e .env.local -o -- tsx scripts/triage-exceptions.ts --tenant "Stone Grille" --execute --report out/stone-triage-live.json
  *
  * Policy lives in src/lib/financial-ledger/triage.ts (pure, unit-tested). Only a
  * *positive* current-rules match is auto-actionable; everything else stays
@@ -79,13 +80,16 @@ interface TriageRow {
   applied: boolean;
 }
 
-async function resolveTenant(slug: string) {
+// Accept either an exact slug or a name substring (matching the sibling ops
+// scripts like reapply-categorization-ledger.ts), so an operator can pass a
+// human name — e.g. --tenant "Stone Grille" — without hunting for the slug.
+async function resolveTenant(query: string) {
   const tenant = await prisma.restaurant.findFirst({
-    where: { slug },
+    where: { OR: [{ slug: query }, { name: { contains: query } }] },
     select: { id: true, name: true, slug: true },
   });
   if (!tenant) {
-    console.error(`No business found with slug "${slug}".`);
+    console.error(`No business found matching "${query}" (tried slug and name).`);
     process.exit(1);
   }
   return tenant;
@@ -95,7 +99,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   if (!args.tenant) {
-    console.error("A tenant is required. Pass --tenant <slug> (never run --execute across all tenants).");
+    console.error('A tenant is required. Pass --tenant "<name or slug>" (never run --execute across all tenants).');
     process.exit(1);
   }
   const tenant = await resolveTenant(args.tenant);

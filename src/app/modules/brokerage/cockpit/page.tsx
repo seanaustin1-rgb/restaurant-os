@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ExecutiveCockpit } from "@/components/cockpit/ExecutiveCockpit";
 import { loadBrokerageCockpit } from "@/lib/modules/brokerage-analytics";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { prisma } from "@/lib/prisma";
 
 export default async function BrokerageExecutiveCockpitPage({
@@ -14,9 +15,14 @@ export default async function BrokerageExecutiveCockpitPage({
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
+  // Leadership-only (locked decision 7): the Executive Cockpit renders the named
+  // per-agent leaderboard, which INVESTOR must never see. Scope the lookup to
+  // leadership roles so an investor gets the empty state, never the data — even
+  // if they reach this route directly.
   const role = await prisma.userRestaurantRole.findFirst({
     where: {
       clerkUserId: userId,
+      role: { in: [...ADJUSTMENT_ROLES] },
       ...(searchParams?.restaurantId ? { restaurantId: searchParams.restaurantId } : {}),
       restaurant: { businessType: "REAL_ESTATE_BROKERAGE" },
     },

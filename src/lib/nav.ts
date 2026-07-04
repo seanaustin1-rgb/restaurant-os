@@ -18,7 +18,9 @@ export interface NavLink {
 export const NAV_LINKS: NavLink[] = [
   { href: "/dashboard", label: "Dashboard", roles: ALL_ROLES },
   { href: "/modules/brokerage", label: "Brokerage", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
-  { href: "/modules/brokerage/cockpit", label: "Executive Cockpit", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
+  // Executive Cockpit is leadership-only (locked decision 7): it renders the named
+  // per-agent leaderboard, which INVESTOR must never see.
+  { href: "/modules/brokerage/cockpit", label: "Executive Cockpit", roles: ADJUSTMENT_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
   { href: "/modules/brokerage/agent-cockpit", label: "Agent Cockpit", roles: ALL_ROLES, businessTypes: ["REAL_ESTATE_BROKERAGE"] },
   { href: "/modules/rentals/cockpit", label: "Property Cockpit", roles: ALL_ROLES, businessTypes: ["VACATION_RENTAL"] },
   { href: "/investor", label: "Investor Matrix", roles: ALL_ROLES },

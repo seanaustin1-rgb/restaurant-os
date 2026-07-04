@@ -1,6 +1,54 @@
 # CODEX_HANDOFF
 
-## ✅ LATEST — 2026-07-02 (from Claude) — Cockpit surfaces shipped to `main`
+## ✅ LATEST — 2026-07-04 (from Claude) — Spec A read-path convergence shipped; #90 needs one guard
+
+Spec A (ledger convergence) read-path is on `main` — **B1/B2 pulled ~a month early**. All read-path
+only: fallback-default everywhere, nothing renders both spines to a customer, source-trust badges +
+coverage-gap keep it honest. Everything in this section is Codex-facing coordination for the Spec A +
+Tax Vault lane; the cockpit section further down still stands for its own lane.
+
+**Shipped this session (8 PRs, all green: `tsc` / `npm test` / `npm run build` + advisory Codex clean):**
+- **#83 — `src/lib/financial-ledger/ledger-coverage.ts`** — the shared coverage heuristic
+  (`assessLedgerCoverage` / `pickReadSource` / `describeLedgerSource`). **The one decision; do not fork**
+  (if it needs changing to fit a module, the extraction was too narrow — stop and flag).
+- **#82 — `spine-compare.ts` + `scripts/compare-spines.ts`** — Spec A.2 acceptance instrument (per-bucket
+  parity, both spines). The gate before A.3 touches allocation math.
+- **#85 — Tax Vault** ledger-first cleared-pulls + source-trust (A.1 F1/F4).
+- **#86 — Cash Flow** ledger-first via `cashEffect` (A.2 F1).
+- **#87 — Spending** ledger-first + explicit `LEDGER_SPEND_ACCOUNTS` map (LedgerAccount→group; unmapped
+  → "Unmapped" with a count; completeness test over the enum) (A.2 F2).
+- **#88 — `deriveCoverageGap` in `signals.ts`** (A.2 F4) — pure, low-priority, **NOT** part of the
+  red/yellow `deriveAttention` ranking (never competes with real pressure in "The One Thing").
+
+**`signals.ts` — both lanes touched it this session, additive + compatible.** Claude added
+`deriveCoverageGap` (standalone). Your #90 adds the `tax-sales-drift` item *into* `deriveAttention`
+(PRIORITY 0). No conflict — heads-up on the current shape so we don't collide.
+
+**Roadmap (MASTER-ROADMAP-2026-07-03):** B1 (A.1) and B2 (A.2) are **code-complete**; B3 (A.3
+Break-even/Prime Cost/Allocation) stays correctly gated on `compare-spines` output + A6 (Stone triage,
+operator). Real-data DoD (Stone deltas <1%) is pending A6.
+
+**#90 (your A.1 F2/F3 reconciliation + drift) — one change requested before merge** (left as a PR
+review on #90):
+- **Drift false-positive when `cleared == 0`.** `calculateTaxDrift` guards only `accrued <= 0`. A tenant
+  with Toast tax (`accrued > 0`) but no cleared pulls — DAVO not connected, or remittances not yet
+  categorized into ledger/legacy — gives `variancePct = 100 → state "drift"` → red `tax-sales-drift`
+  promoted to top pressure. Misfires on Stone pre-triage and overclaims (asserts DAVO underperformance
+  when DAVO may not be the channel). **Fix:** `cleared == 0` → `insufficient-data` (symmetric to the
+  `accrued <= 0` guard) + a unit test for `accrued > 0, cleared = 0`.
+- **Correct as-is, no change:** nullable additive `Restaurant.taxProfile` migration held as draft;
+  `assessLedgerCoverage` reused, not forked. **Merge order:** apply the migration → *then* merge —
+  `loadTaxVault` now feeds `loadDashboardData`, so a pre-migration merge breaks the whole dashboard, not
+  just the Tax Vault tile.
+
+**Lane split next:** Codex owns #90 (guard fix) + the rest of A.1 reconciliation. Claude may pick up
+**A8 (30-day forward cash — "assembly not build": Recurring + payroll-cadence inference + sweep dates)**
+if the operator greenlights — read-path, no prod, doesn't touch your files. A6 (Stone triage) is
+operator/laptop.
+
+---
+
+## ✅ 2026-07-02 (from Claude) — Cockpit surfaces shipped to `main`
 
 Three PRs merged to `main` (all green: `tsc` / `npm test` / `npm run build`; the advisory Codex job
 also ran the gates itself on #60 and reported clean — 177 tests). All **view-lane only** — no data

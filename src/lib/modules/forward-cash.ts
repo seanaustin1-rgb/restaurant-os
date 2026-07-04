@@ -1,5 +1,3 @@
-import type { PrismaClient } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { loadCashRunway } from "@/lib/modules/cash-runway";
 import { loadRecurring, type RecurringVendor } from "@/lib/modules/recurring";
 import { getLedgerSnapshot } from "@/lib/profit-first/ledger";
@@ -177,8 +175,11 @@ export function estimateSweepOutflow(
   return r2(mean("profit") + mean("owner_pay"));
 }
 
-export async function loadForwardCash(restaurantId: string, db: PrismaClient = prisma): Promise<ForwardCashData> {
+export async function loadForwardCash(restaurantId: string): Promise<ForwardCashData> {
   // Starting cash + as-of date come from Cash Runway (anchor + net flow since).
+  // Not db-injectable: the sub-loaders (Cash Runway / Recurring / ledger snapshot)
+  // read the prisma singleton directly. Correctness lives in the pure functions
+  // above, which ARE unit-tested; this is thin assembly over already-tested loaders.
   const runway = await loadCashRunway(restaurantId);
 
   const base: ForwardCashData = {

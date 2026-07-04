@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { BusinessType } from "@prisma/client";
-import { csvToBrokerageRows, type BrokerageCsvProfile, type BrokerageEntity } from "@/lib/brokerage/csv-import";
+import { csvToBrokerageRows, sampleBrokerageCsv, type BrokerageCsvProfile, type BrokerageEntity } from "@/lib/brokerage/csv-import";
 
 const SAMPLE = `{
   "agents": [
@@ -183,6 +183,17 @@ export function BrokerageImportPilot({ businesses = [] }: { businesses?: ImportB
             className="rounded-lg border border-line bg-surface px-4 py-2 text-sm text-ink-text hover:border-copper-dim disabled:opacity-50"
           >
             Convert export
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCsvText(sampleBrokerageCsv(csvEntity, csvProfile));
+              setCsvNote(null);
+              setError(null);
+            }}
+            className="rounded-lg border border-line bg-surface px-4 py-2 text-sm text-ink-text hover:border-copper-dim"
+          >
+            Load sample
           </button>
         </div>
         <textarea

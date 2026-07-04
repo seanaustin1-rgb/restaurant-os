@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { parseCsv, csvToBrokerageRows, csvToBrokeragePayload } from "./csv-import";
+import {
+  parseCsv,
+  csvToBrokerageRows,
+  csvToBrokeragePayload,
+  sampleBrokerageCsv,
+  type BrokerageCsvProfile,
+  type BrokerageEntity,
+} from "./csv-import";
 import { normalizeBrokerageImport } from "./normalized-import";
 
 describe("parseCsv", () => {
@@ -148,5 +155,31 @@ describe("csvToBrokerageRows", () => {
     expect(deals).toHaveLength(1);
     expect(deals[0].externalDealId).toBe("L47-1");
     expect(deals[0].companyDollar).toBe(2700);
+  });
+
+  it("ships profile-specific sample CSVs that parse under their selected profile", () => {
+    const cases: Array<[BrokerageCsvProfile, BrokerageEntity]> = [
+      ["generic", "agents"],
+      ["generic", "deals"],
+      ["generic", "leadSpend"],
+      ["boldtrail", "agents"],
+      ["boldtrail", "deals"],
+      ["boldtrail", "leadSpend"],
+      ["appfiles", "agents"],
+      ["appfiles", "deals"],
+      ["lone_wolf", "agents"],
+      ["lone_wolf", "deals"],
+      ["skyslope", "deals"],
+      ["loft47", "agents"],
+      ["loft47", "deals"],
+    ];
+
+    for (const [profile, entity] of cases) {
+      const csv = sampleBrokerageCsv(entity, profile);
+      const result = csvToBrokerageRows(entity, csv, profile);
+      expect(csv, `${profile}/${entity} sample exists`).toContain(",");
+      expect(result.rows.length, `${profile}/${entity} rows`).toBeGreaterThan(0);
+      expect(Object.keys(result.mapped).length, `${profile}/${entity} mapped fields`).toBeGreaterThan(1);
+    }
   });
 });

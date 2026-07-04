@@ -148,6 +148,44 @@ const PROFILE_ALIASES: Partial<
   },
 };
 
+const SAMPLE_CSVS: Record<BrokerageCsvProfile, Partial<Record<BrokerageEntity, string>>> = {
+  generic: {
+    agents: "Agent ID,Name,Email,Default Split %,Annual Cap,Cap Paid\nA-1,Dana Reyes,dana@example.com,70,24000,18500",
+    deals:
+      "Deal ID,Agent,Property Address,Stage,GCI,Agent Split %,Closed Date\nD-101,A-1,412 Oak St,CLOSED,8750,70,2026-05-20",
+    leadSpend: "Campaign ID,Source,Agent,Period Start,Period End,Spend,Attributed GCI,Deals\nC-1,Google PPC,A-1,2026-05-01,2026-05-31,1500,8750,1",
+  },
+  boldtrail: {
+    agents: "User ID,Agent Name,Agent Email\nBT-1,Dana Reyes,dana@example.com",
+    deals:
+      "Transaction ID,User ID,Property Address,Pipeline Stage,Expected Close Date,Sale Price,Estimated Commission,Probability\nBT-D-101,BT-1,412 Oak St,Pending,2026-07-15,350000,8750,80",
+    leadSpend: "Campaign ID,Campaign,User ID,Ad Spend,Attributed Commission,Closed Deals\nBT-C-1,Google PPC,BT-1,1500,8750,1",
+  },
+  appfiles: {
+    agents: "Agent ID,Agent,Agent Email\nAF-1,Dana Reyes,dana@example.com",
+    deals:
+      "File ID,Agent Email,Property Address,File Status,Scheduled Closing Date,Sale Price,Gross Commission,Agent Split,Agent Commission,Company Dollar\nAF-101,dana@example.com,412 Oak St,Approved for Payout,2026-05-20,350000,8750,70,6125,2625",
+  },
+  lone_wolf: {
+    agents: "Associate ID,Associate\nLW-1,Dana Reyes",
+    deals:
+      "Transaction Number,Associate ID,Civic Address,Completion Date,Gross Comm,Commission Paid,Company Net\nLW-101,LW-1,412 Oak St,2026-05-20,8750,6125,2625",
+  },
+  skyslope: {
+    deals:
+      "SkySlope ID,Agent Email,Listing Address,Transaction Status,Estimated Close Date,Purchase Price,Commission Amount\nSS-101,dana@example.com,412 Oak St,Pending,2026-07-15,350000,8750",
+  },
+  loft47: {
+    agents: "Agent ID,Advisor\nL47-1,Dana Reyes",
+    deals:
+      "Deal ID,Address,Completion Date,Gross Commission Income,Agent Net,Company Dollar\nL47-101,412 Oak St,2026-05-20,8750,6125,2625",
+  },
+};
+
+export function sampleBrokerageCsv(entity: BrokerageEntity, profile: BrokerageCsvProfile = "generic"): string {
+  return SAMPLE_CSVS[profile][entity] ?? SAMPLE_CSVS.generic[entity] ?? "";
+}
+
 const norm = (h: string): string => h.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 function specsFor(entity: BrokerageEntity, profile: BrokerageCsvProfile): FieldSpec[] {

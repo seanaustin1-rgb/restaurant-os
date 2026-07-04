@@ -19,20 +19,20 @@ export type RealEstateSoftware =
   | "other";
 
 const SOFTWARE_LABELS: Record<RealEstateSoftware, string> = {
-  boldtrail_appfiles: "BoldTrail + appFiles",
+  boldtrail_appfiles: "BoldTrail + AppFiles",
   followupboss: "Follow Up Boss",
   boldtrail: "BoldTrail CRM",
   sierra: "Sierra Interactive",
   lofty: "Lofty (Chime)",
   brokermint: "BoldTrail BackOffice / Brokermint",
-  appfiles: "appFiles",
+  appfiles: "AppFiles",
   quickbooks: "QuickBooks",
   spreadsheet: "Spreadsheet / none",
   other: "Other CRM / back office",
 };
 
 const SOFTWARE_NOTES: Record<RealEstateSoftware, string> = {
-  boldtrail_appfiles: "Best pilot stack: BoldTrail for leads/pipeline, appFiles for transaction-file status, plus QBO/export data for Company Dollar.",
+  boldtrail_appfiles: "Best pilot stack: BoldTrail for leads/pipeline, AppFiles for transaction-file status, plus QBO/export data for Company Dollar.",
   followupboss: "Strong for pipeline and agent activity; pair with accounting + a back office for splits and Company Dollar.",
   boldtrail: "Lead-to-close pipeline, source attribution, and agent production; use API access when available or export first.",
   sierra: "Good for lead gen and pipeline velocity; connect accounting for the money side.",

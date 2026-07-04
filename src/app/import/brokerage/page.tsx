@@ -18,7 +18,7 @@ export default async function BrokerageImportPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Import brokerage data</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
-          Paste a BoldTrail, appFiles, back-office, or generic brokerage export to preview agents, closed and pending
+          Paste a BoldTrail, AppFiles, back-office, or generic brokerage export to preview agents, closed and pending
           deals, splits, caps, and lead spend before anything is saved. API access can replace this later; CSV/export is
           the first safe path when vendor access is gated. Company Dollar is derived from GCI minus agent splits,
           franchise fees, and referral fees when the export does not already carry it.

@@ -127,7 +127,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
   },
   REAL_ESTATE_BROKERAGE: {
     businessType: "REAL_ESTATE_BROKERAGE",
-    minimumAutoInput: "Bank + QuickBooks/Xero plus a brokerage export. CSV gets the first Company Dollar read live; BoldTrail, BoldTrail BackOffice/Brokermint, and appFiles can replace exports when API or partner access is available.",
+    minimumAutoInput: "Bank + QuickBooks/Xero plus a brokerage export. CSV gets the first Company Dollar read live; BoldTrail, BoldTrail BackOffice/Brokermint, and AppFiles can replace exports when API or partner access is available.",
     groups: [
       commonCash,
       commonAccounting,
@@ -138,6 +138,9 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         options: [
           { name: "BoldTrail CRM / export", role: "Lead source, campaigns, agent assignment, and early pipeline; API if admin-enabled, CSV/export first.", unlocks: ["commission pipeline", "lead ROI"] },
           { name: "BoldTrail BackOffice / Brokermint export", role: "Commission management, splits, caps, agent ledgers, and QBO checks; API access or export.", unlocks: ["Company Dollar", "cap pressure"] },
+          // NB: this `name` is a persisted key — it's saved as DataSourceConfig.providerName
+          // and matched by stateFor(). Renaming (e.g. casing to "AppFiles") would orphan
+          // tenants' saved source status, so it stays as-is pending a data migration.
           { name: "appFiles transaction export", role: "Transaction file status, executed contracts, compliance progress, and commission worksheets when present.", unlocks: ["pending closings", "file confidence"] },
           { name: "MLS export", role: "Listings and statuses", unlocks: ["listing pace", "pipeline confidence"] },
         ],

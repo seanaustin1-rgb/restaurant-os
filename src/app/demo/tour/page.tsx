@@ -94,7 +94,7 @@ export default function DemoTourSelectorPage() {
         <div className="mt-8 text-center text-sm">
           <p className="text-muted">Prefer to enter your own rough numbers?</p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
-            <Link href="/demo" className="text-copper-soft hover:text-copper">
+            <Link href="/demo/restaurant" className="text-copper-soft hover:text-copper">
               Restaurant estimate
             </Link>
             <Link href="/demo/service" className="text-copper-soft hover:text-copper">

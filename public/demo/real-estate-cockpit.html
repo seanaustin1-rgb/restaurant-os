@@ -1,0 +1,1071 @@
+<title>OutFront Data — Real Estate Demo</title>
+<style>
+
+  :root{
+    --ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;
+    --muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;
+    --green:#5FA777;--yellow:#D9A35E;--red:#C8643A;
+    --green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);
+    --font-display:'Cormorant Garamond','Palatino Linotype',Palatino,'Iowan Old Style',Georgia,serif;
+    --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --maxw:1120px;
+  }
+  
+  :root[data-theme="dark"]{--ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;--muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;--green:#5FA777;--yellow:#D9A35E;--red:#C8643A;--green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);}
+  
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:20px 18px 56px;}
+  .tnum{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+  .eyebrow{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.09em;color:var(--muted);display:inline-flex;align-items:center;gap:7px;}
+
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;justify-content:space-between;margin-bottom:20px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:26px;height:26px;border-radius:6px;border:1px solid var(--copper-dim);display:grid;place-items:center;color:var(--copper-soft);background:var(--copper-wash);}
+  .brand-name{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);}
+  .brand-name b{color:var(--copper-soft);}
+  .verticals{display:inline-flex;padding:4px;gap:4px;border:1px solid var(--line);border-radius:999px;background:var(--surface);}
+  .verticals button{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:6px 13px;border-radius:999px;transition:color .15s,background .15s;}
+  .verticals button:hover{color:var(--text);}
+  .verticals button[aria-selected="true"]{color:var(--ink);background:var(--copper-soft);font-weight:600;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--surface);}
+  .chip.demo{color:var(--copper-soft);border-color:var(--copper-dim);background:var(--copper-wash);}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .card{border:1px solid var(--line);background:var(--surface);border-radius:12px;}
+  .pad{padding:18px;}
+  .header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  .header h1{margin:4px 0 0;font-family:var(--font-display);font-size:clamp(26px,4vw,36px);color:var(--text);line-height:1.03;}
+  .header .sub{color:var(--muted);font-size:13px;margin-top:3px;}
+  .badge{font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid;white-space:nowrap;}
+  .badge.partial{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 35%,transparent);background:var(--yellow-wash);}
+
+  /* one thing — one tight line */
+  .onething{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--copper-dim);background:var(--copper-wash);border-radius:11px;padding:12px 14px;margin-top:16px;}
+  .onething svg{width:15px;height:15px;color:var(--copper-soft);flex:none;margin-top:2px;}
+  .onething p{margin:0;font-size:13.5px;color:var(--text);line-height:1.45;}
+  .onething b{color:var(--copper-soft);font-weight:600;}
+
+  /* GAUGE CLUSTER */
+  .gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;margin-top:12px;}
+  .gauge{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 8px 9px;display:flex;flex-direction:column;align-items:center;text-align:center;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,background .15s;}
+  .gauge:hover{border-color:var(--copper-dim);}
+  .gauge:focus-visible{outline:2px solid var(--copper-soft);outline-offset:2px;}
+  .gauge[aria-expanded="true"]{border-color:var(--copper-soft);background:var(--copper-wash);}
+  .gauge .glabel{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);line-height:1.2;}
+  .gauge .info{position:absolute;top:7px;right:8px;width:13px;height:13px;color:var(--muted);opacity:.45;}
+  .gauge:hover .info{opacity:.8;} .gauge[aria-expanded="true"] .info{opacity:0;}
+  .gexplain{margin-top:12px;border:1px solid var(--copper-dim);background:var(--panel);border-radius:12px;padding:15px 17px;animation:drop .2s ease both;}
+  @keyframes drop{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .gexplain h3{margin:0;font-family:var(--font-display);font-size:20px;color:var(--text);}
+  .gexplain .def{margin-top:6px;font-size:13.5px;color:var(--text-soft);line-height:1.55;max-width:70ch;}
+  .gexplain .read{margin-top:10px;font-size:13px;color:var(--muted);line-height:1.55;max-width:70ch;}
+  .gexplain .read b{color:var(--text);font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:400;}
+  .gexplain .so{margin-top:11px;font-size:13px;color:var(--copper-soft);display:flex;gap:8px;align-items:flex-start;}
+  .gexplain .so svg{width:14px;height:14px;flex:none;margin-top:2px;}
+  @media (prefers-reduced-motion: reduce){ .gexplain{animation:none;} }
+  .gwrap{position:relative;width:88px;height:88px;margin-top:7px;}
+  .gwrap svg{width:100%;height:100%;display:block;}
+  .gval{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .gval .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:19px;letter-spacing:-0.02em;line-height:1;}
+  .gval .u{font-size:8.5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+  .word{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;margin-top:6px;}
+  .word svg{width:11px;height:11px;}
+  .g-green{color:var(--green);} .g-yellow{color:var(--yellow);} .g-red{color:var(--red);} .g-copper{color:var(--copper-soft);}
+
+  /* momentum mini */
+  .spark{width:100%;height:34px;display:block;margin-top:5px;}
+  /* wide screens: let the instruments spread laterally */
+  @media (min-width:820px){ .gauges{gap:14px;} .gwrap{width:108px;height:108px;} .gval .v{font-size:23px;} .gval .u{font-size:9.5px;} .word{font-size:11px;margin-top:8px;} .gauge{padding:14px 10px 12px;} .spark{height:42px;} }
+
+  /* market analysis: momentum meter + $/sqft tiers */
+  .mi{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;margin-top:10px;}
+  .meter-word{font-family:var(--font-display);font-size:26px;line-height:1;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+  .meter-word .mgo{color:var(--green);} .meter-word .sub{font-family:var(--font-body);font-size:12px;color:var(--muted);}
+  .mtrack{position:relative;height:12px;border-radius:999px;margin:14px 0 6px;background:linear-gradient(90deg,color-mix(in srgb,var(--red) 45%,var(--surface)),color-mix(in srgb,var(--yellow) 45%,var(--surface)),color-mix(in srgb,var(--green) 55%,var(--surface)));}
+  .mtrack .div{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--line);}
+  .mtrack .mk{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.4);}
+  .mzones{display:flex;justify-content:space-between;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .mzones b{color:var(--green);font-weight:600;}
+  .mcap{margin-top:11px;font-size:12px;color:var(--muted);line-height:1.5;}
+  .mcap b{color:var(--text);font-family:var(--font-mono);font-weight:400;}
+  .tiers{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:13px;margin-top:12px;}
+  .tier{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft);}
+  .tier:first-of-type{border-top:0;}
+  .tier .tl{font-size:12.5px;color:var(--text-soft);}
+  .tier .tl small{display:block;color:var(--muted);font-size:10.5px;}
+  .tier .tv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:17px;color:var(--text);}
+  .tier .tr{font-size:11px;font-weight:600;white-space:nowrap;}
+  .tr.up{color:var(--green);} .tr.down{color:var(--red);}
+
+  /* market ticker tape (scrolls; tap to drop down the full analysis) */
+  .ticker{width:100%;display:flex;align-items:center;margin-top:10px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden;cursor:pointer;font:inherit;color:inherit;height:42px;transition:border-color .15s;}
+  .ticker:hover{border-color:var(--copper-dim);}
+  .ticker:focus-visible{outline:2px solid var(--copper-soft);outline-offset:2px;}
+  .ticker-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--copper-soft);padding:0 12px;border-right:1px solid var(--line);height:100%;background:var(--surface);white-space:nowrap;flex:none;}
+  .ticker-tag svg{width:13px;height:13px;}
+  .ticker-win{flex:1;min-width:0;overflow:hidden;position:relative;height:100%;display:flex;align-items:center;-webkit-mask-image:linear-gradient(90deg,transparent,#000 20px,#000 calc(100% - 20px),transparent);mask-image:linear-gradient(90deg,transparent,#000 20px,#000 calc(100% - 20px),transparent);}
+  .ticker-track{display:inline-flex;align-items:center;white-space:nowrap;animation:tickerscroll 52s linear infinite;will-change:transform;}
+  .ticker:hover .ticker-track,.ticker[aria-expanded="true"] .ticker-track{animation-play-state:paused;}
+  @keyframes tickerscroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  .tick{font-size:12.5px;color:var(--text-soft);padding:0 4px;font-variant-numeric:tabular-nums;font-family:var(--font-mono);}
+  .tick b{font-family:var(--font-body);color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.04em;margin-right:5px;}
+  .tup{color:var(--green);font-family:var(--font-body);} .tdn{color:var(--red);font-family:var(--font-body);}
+  .tsep{color:var(--copper-dim);padding:0 10px;}
+  .ticker-chev{display:inline-flex;align-items:center;padding:0 11px;color:var(--muted);height:100%;border-left:1px solid var(--line);background:var(--surface);flex:none;}
+  .ticker-chev svg{width:16px;height:16px;transition:transform .2s;}
+  .ticker[aria-expanded="true"] .ticker-chev svg{transform:rotate(180deg);color:var(--copper-soft);}
+  .mkt-detail{animation:drop .2s ease both;}
+  @media (prefers-reduced-motion: reduce){ .ticker-track{animation:none;} }
+
+  /* GCI -> company dollar flow */
+  .flow{margin-top:14px;border:1px solid var(--line);border-radius:12px;background:var(--ink);padding:15px 16px;}
+  .flow .fr{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .flow .end{display:flex;flex-direction:column;}
+  .flow .end .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+  .flow .end .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:clamp(24px,4vw,32px);letter-spacing:-0.02em;margin-top:4px;}
+  .flow .bar{flex:1;min-width:160px;height:26px;border-radius:6px;background:var(--surface);border:1px solid var(--line);position:relative;overflow:hidden;}
+  .flow .bar > i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--copper-dim),var(--copper-soft));}
+  .flow .bar .pct{position:absolute;top:50%;transform:translateY(-50%);left:10px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--ink);font-weight:600;}
+  .flow .cap{margin-top:9px;font-size:11.5px;color:var(--muted);}
+
+  .section{margin-top:16px;}
+  .section .st{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .section .desc{font-size:12px;color:var(--muted);margin-top:3px;}
+
+  /* pipeline */
+  .pl-track{position:relative;height:104px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:12px;}
+  .pl-bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:3.4%;padding:0 2%;}
+  .pl-bar{position:relative;flex:1;display:flex;align-items:flex-end;justify-content:center;height:100%;}
+  .pl-bar > i{width:58%;max-width:32px;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--copper-soft),var(--copper-dim));}
+  .pl-bar.sweep > i{background:repeating-linear-gradient(135deg,var(--red) 0 6px,color-mix(in srgb,var(--red) 60%,transparent) 6px 12px);}
+  .pl-val{position:absolute;bottom:calc(100% + 3px);font-size:10px;}
+  .pl-caps{display:flex;gap:3.4%;padding:6px 2% 0;}
+  .pl-caps span{flex:1;text-align:center;font-size:10px;color:var(--muted);}
+  .lowpoint{margin-top:11px;display:flex;gap:9px;align-items:center;border:1px solid color-mix(in srgb,var(--red) 30%,var(--line));background:var(--red-wash);border-radius:9px;padding:10px 12px;font-size:12.5px;color:var(--text);}
+  .lowpoint svg{width:15px;height:15px;color:var(--red);flex:none;}
+  .lowpoint b{color:var(--red);}
+
+  /* agent table */
+  .agents{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);}
+  .thead,.amain{display:grid;grid-template-columns:18px minmax(140px,1.6fr) 88px 88px 104px 16px;gap:10px;align-items:center;}
+  @media (max-width:600px){ .thead,.amain{grid-template-columns:18px 1fr 104px 16px;} .col-hide{display:none;} }
+  .thead{padding:10px 15px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel);}
+  .thead .r,.amain .r{text-align:right;}
+  .arow{border-bottom:1px solid var(--line-soft);}
+  .arow:last-child{border-bottom:0;}
+  .amain{width:100%;padding:10px 15px;background:transparent;border:0;color:inherit;font:inherit;cursor:pointer;text-align:left;}
+  .amain:hover{background:var(--raise);}
+  .amain:focus-visible{outline:2px solid var(--copper-soft);outline-offset:-2px;}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .dot.g{background:var(--green);} .dot.y{background:var(--yellow);} .dot.r{background:var(--red);}
+  .aname{display:flex;align-items:center;gap:8px;min-width:0;}
+  .aname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:13.5px;}
+  /* triple mini-bar health strip (conv / speed / close) */
+  .tri{display:flex;gap:4px;align-items:center;justify-content:center;}
+  .tri .seg{width:34px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;position:relative;}
+  .tri .seg > i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;}
+  .cell-num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;text-align:right;color:var(--text);}
+  .chev{transition:transform .18s ease;color:var(--muted);justify-self:end;}
+  .arow[aria-expanded="true"] .chev{transform:rotate(90deg);color:var(--copper-soft);}
+  .detail{display:none;padding:2px 15px 14px 46px;}
+  .arow[aria-expanded="true"] .detail{display:block;}
+  .minis{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:340px;}
+  .mini{display:flex;flex-direction:column;align-items:center;}
+  .mwrap{position:relative;width:74px;height:74px;}
+  .mwrap svg{width:100%;height:100%;}
+  .mval{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;}
+  .mk{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:5px;}
+  .fix{margin-top:10px;font-size:12px;color:var(--text-soft);display:inline-flex;gap:6px;align-items:center;}
+  .fix b{color:var(--copper-soft);font-weight:600;}
+  .fix svg{width:13px;height:13px;color:var(--copper-soft);flex:none;}
+
+  .footnote{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px;}
+  .footnote b{color:var(--text-soft);}
+
+  /* roster rows + flags + CPI */
+  .rrow{width:100%;border:0;border-bottom:1px solid var(--line-soft);}
+  .rrow:last-child{border-bottom:0;}
+  .pill{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:999px;border:1px solid;flex:none;}
+  .pill.r{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);background:var(--red-wash);}
+  .pill.y{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 40%,transparent);background:var(--yellow-wash);}
+  .cpi{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+  .cpiv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:14px;}
+  .cpibar{width:100%;max-width:70px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;}
+  .cpibar > i{display:block;height:100%;border-radius:3px;}
+
+  /* side-drawer */
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;}
+  .backdrop.show{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(430px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:50;transform:translateX(101%);transition:transform .26s cubic-bezier(.22,1,.36,1);overflow-y:auto;padding:22px 20px 40px;}
+  .drawer.show{transform:none;}
+  .dclose{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;display:grid;place-items:center;}
+  .dclose:hover{color:var(--text);border-color:var(--copper-dim);}
+  .dclose svg{width:15px;height:15px;}
+  .dhd{display:flex;gap:11px;align-items:flex-start;padding-right:36px;border-bottom:1px solid var(--line);padding-bottom:15px;}
+  .dflag{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none;}
+  .dflag.r{background:var(--red);} .dflag.y{background:var(--yellow);} .dflag.g{background:var(--green);}
+  .dhd h3{margin:0;font-family:var(--font-display);font-size:24px;color:var(--text);line-height:1.05;}
+  .dreason{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45;}
+  .dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+  .dstats > div{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:10px 11px;}
+  .dstats .dk{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .dstats .dv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:17px;margin-top:5px;display:block;color:var(--text);}
+  .dsec{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:20px 0 4px;}
+  .drow{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--line-soft);padding:13px 0;}
+  .drow:last-child{border-bottom:1px solid var(--line-soft);}
+  .drow .dk{font-size:12.5px;color:var(--text-soft);}
+  .drow .dnote{font-size:11px;color:var(--muted);margin-top:2px;}
+  .drow .dbig{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:22px;text-align:right;white-space:nowrap;}
+  .drow .dbig .du{font-size:11px;color:var(--muted);margin-left:3px;}
+  @media (prefers-reduced-motion: reduce){ .drawer,.backdrop{transition:none;} }
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+
+  :root{
+    --ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;
+    --muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;
+    --green:#5FA777;--yellow:#D9A35E;--red:#C8643A;
+    --green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);
+    --font-display:'Cormorant Garamond','Palatino Linotype',Palatino,'Iowan Old Style',Georgia,serif;
+    --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --maxw:1120px;
+  }
+  
+  :root[data-theme="dark"]{--ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;--muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;--green:#5FA777;--yellow:#D9A35E;--red:#C8643A;--green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);}
+  
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:20px 18px 56px;}
+  .tnum{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+  .eyebrow{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:inline-flex;align-items:center;gap:7px;}
+
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;justify-content:space-between;margin-bottom:18px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:26px;height:26px;border-radius:6px;border:1px solid var(--copper-dim);display:grid;place-items:center;color:var(--copper-soft);background:var(--copper-wash);}
+  .brand-name{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);}
+  .brand-name b{color:var(--copper-soft);}
+  .persona{display:inline-flex;padding:4px;gap:4px;border:1px solid var(--line);border-radius:999px;background:var(--surface);}
+  .persona button{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:6px 13px;border-radius:999px;display:inline-flex;gap:6px;align-items:center;transition:color .15s,background .15s;}
+  .persona button:hover{color:var(--text);}
+  .persona button[aria-selected="true"]{color:var(--ink);background:var(--copper-soft);font-weight:600;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--surface);}
+  .chip.demo{color:var(--copper-soft);border-color:var(--copper-dim);background:var(--copper-wash);}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .greet{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px;}
+  .greet .hi{font-family:var(--font-display);font-size:clamp(25px,4vw,33px);color:var(--text);line-height:1.03;}
+  .greet .hi span{color:var(--copper-soft);}
+  .greet .date{color:var(--muted);font-size:13px;margin-top:3px;}
+  .greet .glance{font-size:13px;color:var(--text-soft);max-width:42ch;text-align:right;}
+  @media (max-width:620px){ .greet .glance{text-align:left;} }
+
+  .section{margin-top:16px;}
+  .section > .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .section .desc{font-size:12px;color:var(--muted);}
+
+  /* daily summary cards */
+  .queue{display:flex;flex-direction:column;gap:10px;}
+  .qcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;}
+  .qcard.r{border-color:color-mix(in srgb,var(--red) 35%,var(--line));}
+  .qcard.y{border-color:color-mix(in srgb,var(--yellow) 32%,var(--line));}
+  .qhead{width:100%;display:flex;gap:12px;align-items:center;padding:13px 15px;background:transparent;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer;}
+  .qhead:hover{background:var(--raise);}
+  .qhead:focus-visible{outline:2px solid var(--copper-soft);outline-offset:-2px;}
+  .qic{width:36px;height:36px;border-radius:9px;flex:none;display:grid;place-items:center;border:1px solid var(--line);background:var(--panel);color:var(--copper-soft);}
+  .qcard.r .qic{color:var(--red);border-color:color-mix(in srgb,var(--red) 35%,transparent);background:var(--red-wash);}
+  .qcard.y .qic{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 35%,transparent);background:var(--yellow-wash);}
+  .qmid{flex:1;min-width:0;}
+  .qtype{font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
+  .qtitle{font-size:15px;color:var(--text);margin-top:1px;}
+  .qmeta{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .qwarn{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;margin-top:5px;color:var(--red);}
+  .qwarn svg{width:12px;height:12px;}
+  .qcard.y .qwarn{color:var(--yellow);}
+  .qright{display:flex;align-items:center;gap:12px;flex:none;}
+  .qtime{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--copper-soft);white-space:nowrap;}
+  .qchev{color:var(--muted);transition:transform .18s ease;}
+  .qhead[aria-expanded="true"] .qchev{transform:rotate(90deg);color:var(--copper-soft);}
+  .qbody{display:none;padding:2px 15px 15px 63px;}
+  .qhead[aria-expanded="true"] + .qbody{display:block;}
+  .task{display:flex;gap:9px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line-soft);font-size:13px;}
+  .task:first-child{border-top:0;}
+  .tbox{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--muted);flex:none;margin-top:1px;display:grid;place-items:center;}
+  .tbox.done{background:var(--green);border-color:var(--green);color:var(--ink);}
+  .tbox.miss{border-color:var(--red);}
+  .tbox svg{width:11px;height:11px;}
+  .task .tt{color:var(--text-soft);} .task.done .tt{color:var(--muted);text-decoration:line-through;}
+  .task .file{display:block;font-family:var(--font-mono);font-size:11px;color:var(--red);margin-top:2px;}
+
+  /* market intelligence */
+  .mi{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px;}
+  /* momentum meter */
+  .meter-word{font-family:var(--font-display);font-size:26px;line-height:1;display:flex;align-items:baseline;gap:9px;}
+  .meter-word .st{color:var(--green);} .meter-word .sub{font-family:var(--font-body);font-size:12px;color:var(--muted);}
+  .mtrack{position:relative;height:12px;border-radius:999px;margin:14px 0 6px;background:linear-gradient(90deg,color-mix(in srgb,var(--red) 45%,var(--surface)),color-mix(in srgb,var(--yellow) 45%,var(--surface)),color-mix(in srgb,var(--green) 55%,var(--surface)));}
+  .mtrack .div{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--line);}
+  .mtrack .mk{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:var(--text);border:2px solid var(--surface);transform:translate(-50%,-50%);box-shadow:0 1px 4px rgba(0,0,0,.4);}
+  .mzones{display:flex;justify-content:space-between;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .mzones b{color:var(--green);font-weight:600;}
+  .mcap{margin-top:11px;font-size:12px;color:var(--muted);line-height:1.5;}
+  .mcap b{color:var(--text);font-family:var(--font-mono);font-weight:400;}
+
+  .subgrid{display:grid;grid-template-columns:1.3fr 1fr;gap:12px;margin-top:12px;}
+  @media (max-width:760px){ .subgrid{grid-template-columns:1fr;} }
+  /* $/sqft tiers */
+  .tiers{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:13px;}
+  .tier{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line-soft);}
+  .tier:first-of-type{border-top:0;}
+  .tier .tl{font-size:12.5px;color:var(--text-soft);}
+  .tier .tl small{display:block;color:var(--muted);font-size:10.5px;}
+  .tier .tv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:17px;color:var(--text);}
+  .tier .tr{font-size:11px;font-weight:600;white-space:nowrap;}
+  .tr.up{color:var(--green);} .tr.down{color:var(--red);}
+  /* small dials */
+  .dials{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .dial{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:11px 8px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .dial .dl{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .dwrap{position:relative;width:78px;height:78px;margin-top:6px;}
+  .dwrap svg{width:100%;height:100%;}
+  .dv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .dv .n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:16px;}
+  .dv .u{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+
+  /* lead action center */
+  .lead{border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:13px 14px;margin-top:10px;}
+  .lead.r{border-color:color-mix(in srgb,var(--red) 40%,var(--line));background:var(--red-wash);}
+  .lead.y{border-color:color-mix(in srgb,var(--yellow) 38%,var(--line));}
+  .lhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap;}
+  .lnm{font-size:14.5px;color:var(--text);}
+  .lflag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:inline-flex;align-items:center;gap:5px;}
+  .lflag.r{color:var(--red);} .lflag.y{color:var(--yellow);} .lflag.g{color:var(--green);}
+  .lflag svg{width:12px;height:12px;}
+  .lmeta{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .lwhy{font-size:12.5px;color:var(--text-soft);margin-top:8px;line-height:1.5;}
+  .lact{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .btn{font:inherit;font-size:12.5px;font-weight:600;border-radius:8px;padding:7px 13px;cursor:pointer;border:1px solid;display:inline-flex;align-items:center;gap:6px;transition:filter .15s;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn:focus-visible{outline:2px solid var(--copper-soft);outline-offset:2px;}
+  .btn.primary{background:var(--copper-soft);border-color:var(--copper-soft);color:var(--ink);}
+  .btn.urgent{background:var(--red);border-color:var(--red);color:#fff;}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--text-soft);}
+  .btn svg{width:13px;height:13px;}
+  .lead.done{opacity:.5;} .lead.done .lact{pointer-events:none;}
+  .thresholds{font-size:11px;color:var(--muted);margin-top:8px;}
+
+  /* calendar guard */
+  .guard{border:1px solid color-mix(in srgb,var(--red) 40%,var(--line));background:var(--red-wash);border-radius:12px;padding:15px;}
+  .guard .gh{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--red);}
+  .guard .gb{font-size:14px;color:var(--text);margin-top:9px;line-height:1.5;}
+  .guard .gb b{color:var(--text);}
+  .guard .conflict{display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;}
+  .cslot{flex:1;min-width:160px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:11px 12px;}
+  .cslot .ct{font-family:var(--font-mono);font-size:11px;color:var(--red);}
+  .cslot .cn{font-size:13px;color:var(--text);margin-top:3px;}
+  .cslot .cx{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .cal-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;}
+  .cal-item{display:flex;gap:10px;font-size:13px;align-items:baseline;}
+  .cal-item .tm{font-family:var(--font-mono);font-size:11.5px;color:var(--copper-soft);white-space:nowrap;min-width:62px;}
+  .cal-item .cx2{color:var(--text-soft);}
+
+  .footnote{margin-top:18px;font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px;}
+  .footnote b{color:var(--text-soft);}
+  .demo-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;background:var(--surface);border:1px solid var(--copper-dim);color:var(--text);font-size:13px;padding:10px 15px;border-radius:10px;transition:opacity .2s,transform .2s;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:20;max-width:90vw;}
+  .demo-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+
+
+  :root{
+    --ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;
+    --muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;
+    --green:#5FA777;--yellow:#D9A35E;--red:#C8643A;--vault:#6E8FA3;--vault-soft:#8FB0C2;--vault-dim:#3C5563;
+    --green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);--vault-wash:rgba(110,143,163,0.12);
+    --font-display:'Cormorant Garamond','Palatino Linotype',Palatino,'Iowan Old Style',Georgia,serif;
+    --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+    --font-mono:'Space Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --maxw:1120px;
+  }
+  
+  :root[data-theme="dark"]{--ink:#0B0D0B;--surface:#141614;--panel:#0F110F;--raise:#191C19;--line:#232623;--line-soft:#1B1E1B;--muted:#8A8F89;--text:#E6E8E4;--text-soft:#CFD2CC;--copper:#C8873A;--copper-soft:#D9A35E;--copper-dim:#7A5526;--green:#5FA777;--yellow:#D9A35E;--red:#C8643A;--vault:#6E8FA3;--vault-soft:#8FB0C2;--vault-dim:#3C5563;--green-wash:rgba(95,167,119,0.10);--yellow-wash:rgba(217,163,94,0.10);--red-wash:rgba(200,100,58,0.10);--copper-wash:rgba(200,135,58,0.12);--vault-wash:rgba(110,143,163,0.12);}
+  
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--ink);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.45;}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:20px 18px 56px;}
+  .tnum{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-0.01em;}
+  .eyebrow{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);display:inline-flex;align-items:center;gap:7px;}
+
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;justify-content:space-between;margin-bottom:20px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{width:26px;height:26px;border-radius:6px;border:1px solid var(--copper-dim);display:grid;place-items:center;color:var(--copper-soft);background:var(--copper-wash);}
+  .brand-name{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);}
+  .brand-name b{color:var(--copper-soft);}
+  .verticals{display:inline-flex;padding:4px;gap:4px;border:1px solid var(--line);border-radius:999px;background:var(--surface);}
+  .verticals button{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:6px 13px;border-radius:999px;transition:color .15s,background .15s;}
+  .verticals button:hover{color:var(--text);}
+  .verticals button[aria-selected="true"]{color:var(--ink);background:var(--copper-soft);font-weight:600;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--surface);}
+  .chip.demo{color:var(--copper-soft);border-color:var(--copper-dim);background:var(--copper-wash);}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+  .card{border:1px solid var(--line);background:var(--surface);border-radius:12px;}
+  .pad{padding:18px;}
+  .header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:16px;}
+  .header h1{margin:4px 0 0;font-family:var(--font-display);font-size:clamp(26px,4vw,36px);color:var(--text);line-height:1.03;}
+  .header .sub{color:var(--muted);font-size:13px;margin-top:3px;}
+  .badge{font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid;white-space:nowrap;color:var(--green);border-color:color-mix(in srgb,var(--green) 35%,transparent);background:var(--green-wash);}
+
+  .onething{display:flex;gap:10px;align-items:flex-start;border:1px solid color-mix(in srgb,var(--red) 40%,var(--line));background:var(--red-wash);border-radius:11px;padding:12px 14px;margin-top:16px;}
+  .onething svg{width:15px;height:15px;color:var(--red);flex:none;margin-top:2px;}
+  .onething p{margin:0;font-size:13.5px;color:var(--text);line-height:1.45;}
+  .onething b{color:var(--red);font-weight:600;}
+
+  /* portfolio tiles/dials */
+  .ptiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px;}
+  .ptile{border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:12px 12px 11px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .ptile .pl{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+  .ptile .pv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:24px;margin-top:8px;color:var(--text);}
+  .ptile .ps{font-size:11px;color:var(--muted);margin-top:5px;}
+  .dwrap{position:relative;width:86px;height:86px;margin-top:6px;}
+  .dwrap svg{width:100%;height:100%;}
+  .dv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .dv .n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:19px;}
+  .dv .u{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+  @media (min-width:820px){ .dwrap{width:100px;height:100px;} .dv .n{font-size:22px;} }
+
+  .section{margin-top:16px;}
+  .section .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .section .desc{font-size:11.5px;color:var(--muted);}
+
+  /* property roster */
+  .roster{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);}
+  .thead,.prow{display:grid;grid-template-columns:18px minmax(140px,1.7fr) 84px 84px 90px 16px;gap:10px;align-items:center;}
+  .thead{padding:10px 15px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);border-bottom:1px solid var(--line);background:var(--panel);}
+  .thead .r,.prow .r{text-align:right;}
+  @media (max-width:600px){ .thead,.prow{grid-template-columns:18px 1fr 84px 16px;} .col-hide{display:none;} }
+  .prow{width:100%;border:0;border-bottom:1px solid var(--line-soft);background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;padding:11px 15px;}
+  .prow:last-child{border-bottom:0;}
+  .prow:hover{background:var(--raise);}
+  .prow:focus-visible{outline:2px solid var(--copper-soft);outline-offset:-2px;}
+  .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .dot.g{background:var(--green);} .dot.y{background:var(--yellow);} .dot.r{background:var(--red);}
+  .pname{display:flex;align-items:center;gap:8px;min-width:0;}
+  .pname .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:13.5px;}
+  .pill{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:999px;border:1px solid;flex:none;}
+  .pill.r{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);background:var(--red-wash);}
+  .pill.y{color:var(--yellow);border-color:color-mix(in srgb,var(--yellow) 40%,transparent);background:var(--yellow-wash);}
+  .pill.g{color:var(--muted);border-color:var(--line);}
+  .cell-num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;text-align:right;color:var(--text);}
+  .chev{color:var(--muted);justify-self:end;}
+
+  /* drawer */
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40;}
+  .backdrop.show{opacity:1;pointer-events:auto;}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:50;transform:translateX(101%);transition:transform .26s cubic-bezier(.22,1,.36,1);overflow-y:auto;padding:22px 20px 40px;}
+  .drawer.show{transform:none;}
+  .dclose{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer;display:grid;place-items:center;}
+  .dclose:hover{color:var(--text);}
+  .dclose svg{width:15px;height:15px;}
+  .dhd{display:flex;gap:11px;align-items:flex-start;padding-right:36px;border-bottom:1px solid var(--line);padding-bottom:15px;}
+  .dflag{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none;}
+  .dflag.r{background:var(--red);} .dflag.y{background:var(--yellow);} .dflag.g{background:var(--green);}
+  .dhd h3{margin:0;font-family:var(--font-display);font-size:23px;color:var(--text);line-height:1.05;}
+  .dreason{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45;}
+  .dstats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+  .dstats > div{border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:10px 11px;text-align:center;}
+  .dstats .dk{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .dstats .dv2{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:17px;margin-top:5px;display:block;color:var(--text);}
+  .dsec{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:20px 0 8px;}
+  .mrow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line-soft);font-size:12.5px;}
+  .mrow:first-of-type{border-top:0;}
+  .mtag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:999px;flex:none;margin-top:1px;}
+  .mtag.crit{color:var(--red);border:1px solid color-mix(in srgb,var(--red) 40%,transparent);background:var(--red-wash);}
+  .mtag.std{color:var(--muted);border:1px solid var(--line);}
+  .mrow .mt{color:var(--text-soft);} .mrow .ms{color:var(--muted);font-size:11px;margin-top:1px;}
+  .revbox{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:12px;}
+  .revbox .rr{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:26px;}
+  .revbox .rn{font-size:12px;color:var(--muted);line-height:1.4;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:2px;}
+  .seg button{font:inherit;font-size:11.5px;padding:8px 10px;border:0;background:transparent;color:var(--muted);cursor:pointer;border-right:1px solid var(--line);flex:1;transition:background .15s,color .15s;}
+  .seg button:last-child{border-right:0;}
+  .seg button[aria-pressed="true"]{color:var(--ink);background:var(--copper-soft);font-weight:600;}
+  .strat-note{margin-top:10px;font-size:12.5px;line-height:1.5;border-radius:9px;padding:11px 12px;}
+  .strat-note.drop{border:1px solid color-mix(in srgb,var(--yellow) 40%,var(--line));background:var(--yellow-wash);color:var(--text);}
+  .strat-note.suppress{border:1px solid var(--vault-dim);background:var(--vault-wash);color:var(--text);}
+  .strat-note.ok{border:1px solid var(--line);background:var(--panel);color:var(--text-soft);}
+  .strat-note b{color:var(--text);}
+  .ownerbox{margin-top:12px;border:1px solid var(--vault-dim);background:var(--vault-wash);border-radius:10px;padding:13px;}
+  .ownerbox .ot{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--vault-soft);}
+  .ownerbox .oq{font-size:13px;color:var(--text);margin-top:7px;line-height:1.55;font-style:italic;}
+  .btn{font:inherit;font-size:12px;font-weight:600;border-radius:8px;padding:8px 12px;cursor:pointer;border:1px solid var(--copper-soft);background:var(--copper-soft);color:var(--ink);margin-top:11px;display:inline-flex;align-items:center;gap:6px;}
+  .btn svg{width:13px;height:13px;}
+  @media (prefers-reduced-motion: reduce){ .drawer,.backdrop{transition:none;} }
+
+  .footnote{margin-top:16px;font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px;}
+  .footnote b{color:var(--text-soft);}
+  .demo-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(12px);opacity:0;pointer-events:none;background:var(--surface);border:1px solid var(--copper-dim);color:var(--text);font-size:13px;padding:10px 15px;border-radius:10px;transition:opacity .2s,transform .2s;box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:60;max-width:90vw;}
+  .demo-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+
+  :root{ color-scheme: dark; }  /* locked dark */
+  /* ---- unified nav + views ---- */
+  .unav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ink) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);}
+  .unav-in{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:14px 18px;justify-content:space-between;flex-wrap:wrap;padding:12px 18px;}
+  .unav .brand{display:flex;align-items:center;gap:10px;}
+  .unav .bm{width:26px;height:26px;border-radius:6px;border:1px solid var(--copper-dim);display:grid;place-items:center;color:var(--copper-soft);background:var(--copper-wash);}
+  .unav .bn{font-family:var(--font-display);font-size:20px;font-weight:600;color:var(--text);}
+  .unav .bn b{color:var(--copper-soft);}
+  .utabs{display:inline-flex;padding:4px;gap:4px;border:1px solid var(--line);border-radius:999px;background:var(--surface);flex-wrap:wrap;}
+  .utabs button{font:inherit;font-size:12.5px;color:var(--muted);background:transparent;border:0;cursor:pointer;padding:7px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;transition:color .15s,background .15s;white-space:nowrap;}
+  .utabs button:hover{color:var(--text);}
+  .utabs button[aria-selected="true"]{color:var(--ink);background:var(--copper-soft);font-weight:600;}
+  .utabs button:focus-visible{outline:2px solid var(--copper-soft);outline-offset:2px;}
+  .uchip{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:5px 10px;border:1px solid var(--copper-dim);border-radius:999px;color:var(--copper-soft);background:var(--copper-wash);}
+  .uchip .d{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  /* hide each module's own topbar — the unified nav replaces it */
+  .view > .topbar, .view .topbar{display:none !important;}
+  .view[hidden]{display:none !important;}
+  .view{animation:ufade .22s ease both;}
+  @keyframes ufade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion: reduce){ .view{animation:none;} }
+
+</style>
+
+<div class="unav">
+  <div class="unav-in">
+    <div class="brand"><span class="bm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="bn">OutFront<b>Data</b></span></div>
+    <div class="utabs" role="tablist" aria-label="Dashboards">
+      <button role="tab" aria-selected="true" data-view="broker"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Broker cockpit</button>
+      <button role="tab" aria-selected="false" data-view="agent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>Agent app</button>
+      <button role="tab" aria-selected="false" data-view="rental"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Rental</button>
+    </div>
+    <span class="uchip"><span class="d"></span>Generated demo data</span>
+  </div>
+</div>
+<section id="view-broker" class="view">
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="brand-name">OutFront<b>Data</b></span></div>
+    <div class="verticals" role="tablist" aria-label="Vertical"><button role="tab" aria-selected="true">Brokerage</button><button role="tab" aria-selected="false">Rental</button></div>
+    <span class="chip demo"><span class="dot"></span>Generated demo data</span>
+  </div>
+
+  <div class="card pad">
+    <div class="header">
+      <div><span class="eyebrow" style="color:var(--copper-soft)">Executive Cockpit</span><h1>Cascade Realty Group</h1><div class="sub">June 2026 · Boise, ID · 12 agents</div></div>
+      <span class="badge partial"><span class="tnum">3/4</span> sources</span>
+    </div>
+
+    <div class="onething">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2zM9 21h6M10 17v4M14 17v4"/></svg>
+      <p><b>Compliance red flag:</b> Whitaker Cole has missing legal disclosures on a Pending file — 26h in, past the 24h deadline. Clear it before it's a liability, then Chloe Bennett's stalled pipeline.</p>
+    </div>
+
+    <!-- FINANCIAL GAUGE CLUSTER -->
+    <div class="gauges" id="bk-gauges"></div>
+    <div id="bk-gexplain" class="gexplain" hidden></div>
+
+    <!-- MARKET INTELLIGENCE / MLS -->
+    <div class="section">
+      <div class="st"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l4-2M19 21V7l-4-2M9 5V3h6v2M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></svg>Market intelligence · MLS · Boise, ID</span><span style="font-size:10.5px;color:var(--muted);opacity:.8">seeded · live MLS/RESO feed on roadmap</span></div>
+      <button class="ticker" id="bk-mkt-ticker" aria-expanded="false" aria-controls="mkt-detail" aria-label="Market ticker — tap to expand the full analysis">
+        <span class="ticker-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg>MLS</span>
+        <span class="ticker-win"><span class="ticker-track" id="bk-ticker-track"></span></span>
+        <span class="ticker-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span>
+      </button>
+      <div class="mi mkt-detail" id="bk-mkt-detail" hidden>
+        <span class="eyebrow">Market momentum meter</span>
+        <div class="meter-word" style="margin-top:8px"><span class="mgo">Accelerating</span> <span class="sub">14-day list-to-sale rolling avg</span></div>
+        <div class="mtrack"><span class="div" style="left:33.33%"></span><span class="div" style="left:66.66%"></span><span class="mk" style="left:84%"></span></div>
+        <div class="mzones"><span>Decelerating</span><span>Stable</span><b>Accelerating</b></div>
+        <div class="mcap">List-to-sale ratio <b>99.4%</b> and rising; DOM down <b>7 days</b> in 14. Across the market, homes are selling faster and closer to ask.</div>
+        <div class="tiers">
+          <span class="eyebrow">Price per sq ft · by size tier</span>
+          <div class="tier"><div class="tl">Under 2,000 sq ft<small>starter / entry</small></div><div class="tv">$284</div><div class="tr up">▲ 2.1%</div></div>
+          <div class="tier"><div class="tl">2,000–4,000 sq ft<small>move-up</small></div><div class="tv">$312</div><div class="tr up">▲ 3.6%</div></div>
+          <div class="tier"><div class="tl">Over 4,000 sq ft<small>large homes</small></div><div class="tv">$268</div><div class="tr down">▼ 1.2%</div></div>
+        </div>
+        <div class="gauges" id="bk-mls-gauges" style="margin-top:12px"></div>
+        <div id="bk-mls-explain" class="gexplain" hidden></div>
+      </div>
+    </div>
+
+    <!-- GCI -> company dollar -->
+    <div class="flow">
+      <div class="fr">
+        <div class="end"><span class="k">Closed GCI</span><span class="v" style="color:var(--text)">$152.4k</span></div>
+        <div class="bar"><i style="width:28.4%"></i><span class="pct">28.4% kept</span></div>
+        <div class="end" style="text-align:right"><span class="k">Company dollar</span><span class="v" style="color:var(--yellow)">$43.3k</span></div>
+      </div>
+      <div class="cap"><span class="tnum">$6.1M</span> volume · <span class="tnum">14</span> sides · <span class="tnum">$286k</span> pipeline</div>
+    </div>
+
+    <!-- pipeline -->
+    <div class="section">
+      <div class="st"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Commission pipeline · 30 days</span></div>
+      <div class="pl-track"><div class="pl-bars">
+        <div class="pl-bar"><span class="pl-val tnum" style="color:var(--copper-soft)">$38k</span><i style="height:52%"></i></div>
+        <div class="pl-bar"><span class="pl-val tnum" style="color:var(--copper-soft)">$21k</span><i style="height:30%"></i></div>
+        <div class="pl-bar sweep"><span class="pl-val tnum" style="color:var(--red)">−$18k</span><i style="height:26%"></i></div>
+        <div class="pl-bar"><span class="pl-val tnum" style="color:var(--copper-soft)">$52k</span><i style="height:72%"></i></div>
+        <div class="pl-bar"><span class="pl-val tnum" style="color:var(--copper-soft)">$29k</span><i style="height:40%"></i></div>
+        <div class="pl-bar"><span class="pl-val tnum" style="color:var(--copper-soft)">$61k</span><i style="height:86%"></i></div>
+      </div></div>
+      <div class="pl-caps"><span>Jun 12</span><span>Jun 18</span><span>Jun 25 sweep</span><span>Jun 27</span><span>Jul 3</span><span>Jul 9</span></div>
+      <div class="lowpoint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span><b>Low point Jun 24 · $92.3k</b> — 3 days before the Highland closing ($61k).</span></div>
+    </div>
+
+    <!-- agent roster -->
+    <div class="section">
+      <div class="st"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>Agent roster · red flags first</span><span style="font-size:10.5px;color:var(--muted)">tap a row → deep drawer</span></div>
+      <div class="agents"><div class="thead"><span></span><span>Agent</span><span class="r col-hide">YTD volume</span><span class="r col-hide">Pipeline</span><span class="r">CPI</span><span></span></div><div id="bk-roster"></div></div>
+    </div>
+
+    <!-- side-drawer -->
+    <div id="bk-drawer-backdrop" class="backdrop"></div>
+    <aside id="bk-drawer" class="drawer" role="dialog" aria-modal="true" aria-label="Agent detail" aria-hidden="true"></aside>
+
+    <div class="footnote">Every figure is <b>generated demo data</b>. Live MLS/RESO and CRM (per-agent conversion &amp; speed) are roadmap — modeled here from the demo set.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  function polar(cx,cy,r,deg){var a=(deg-90)*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+  function arc(cx,cy,r,a0,a1){var p0=polar(cx,cy,r,a0),p1=polar(cx,cy,r,a1);var large=(a1-a0)>180?1:0;return "M "+p0.x.toFixed(2)+" "+p0.y.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+p1.x.toFixed(2)+" "+p1.y.toFixed(2);}
+  var TONE={green:"var(--green)",yellow:"var(--yellow)",red:"var(--red)",copper:"var(--copper-soft)"};
+  // 270deg gauge, gap at bottom: start 225 -> 495
+  function gaugeSVG(size,r,sw,frac,tone,targetFrac,ticks){
+    frac=Math.max(0,Math.min(1,frac));
+    var c=size/2;
+    var s='<svg viewBox="0 0 '+size+' '+size+'" fill="none">';
+    s+='<path d="'+arc(c,c,r,225,495)+'" stroke="var(--line)" stroke-width="'+sw+'" stroke-linecap="round"/>';
+    if(frac>0.001) s+='<path d="'+arc(c,c,r,225,225+270*frac)+'" stroke="'+TONE[tone]+'" stroke-width="'+sw+'" stroke-linecap="round"/>';
+    if(ticks){ for(var i=0;i<=8;i++){ var ang=225+270*(i/8); var o=polar(c,c,r+sw/2+2,ang), inn=polar(c,c,r-sw/2-2,ang); s+='<line x1="'+o.x.toFixed(1)+'" y1="'+o.y.toFixed(1)+'" x2="'+inn.x.toFixed(1)+'" y2="'+inn.y.toFixed(1)+'" stroke="var(--line-soft)" stroke-width="1.4"/>'; } }
+    if(targetFrac!=null){ var ta=225+270*targetFrac; var t1=polar(c,c,r+sw/2+3,ta), t2=polar(c,c,r-sw/2-3,ta); s+='<line x1="'+t1.x.toFixed(1)+'" y1="'+t1.y.toFixed(1)+'" x2="'+t2.x.toFixed(1)+'" y2="'+t2.y.toFixed(1)+'" stroke="var(--text-soft)" stroke-width="2"/>'; }
+    return s+'</svg>';
+  }
+  function word(tone,txt){var ic = tone==='green'?'<path d="M20 6 9 17l-5-5"/>':(tone==='red'?'<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>':'<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>');return '<span class="word g-'+tone+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg>'+txt+'</span>';}
+
+  var whyHint='<svg class="info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
+  function dialInner(g){ return '<div class="glabel">'+g.label+'</div><div class="gwrap">'+gaugeSVG(88,36,7,g.frac,g.tone,g.target,true)+'<div class="gval"><span class="v g-'+g.tone+'">'+g.v+'</span><span class="u">'+g.u+'</span></div></div>'+word(g.word[0],g.word[1])+whyHint; }
+  function trendInner(g){ return '<div class="glabel">'+g.label+'</div><div style="width:100%;text-align:center;margin-top:8px"><span class="tnum" style="font-size:19px;color:var(--text)">'+g.v+'</span><div style="font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px">'+g.u+'</div></div>'+(g.spark||'')+word(g.word[0],g.word[1])+whyHint; }
+  function spark(id,line,area){ return '<svg class="spark" viewBox="0 0 160 46" preserveAspectRatio="none"><defs><linearGradient id="'+id+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--green)" stop-opacity="0.26"/><stop offset="1" stop-color="var(--green)" stop-opacity="0"/></linearGradient></defs><path d="'+area+'" fill="url(#'+id+')"/><path d="'+line+'" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }
+  function buildBank(gaugesEl,panelEl,items){
+    var bs=[];
+    function openEx(btn,label,ex){
+      if(btn.getAttribute('aria-expanded')==='true'){ btn.setAttribute('aria-expanded','false'); panelEl.hidden=true; return; }
+      bs.forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+      btn.setAttribute('aria-expanded','true');
+      panelEl.innerHTML='<h3>'+label+'</h3><div class="def">'+ex.def+'</div><div class="read">'+ex.read+'</div>'+(ex.so?'<div class="so"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>'+ex.so+'</span></div>':'');
+      panelEl.hidden=false;
+    }
+    items.forEach(function(g){
+      var el=document.createElement('button'); el.type='button'; el.className='gauge'; el.setAttribute('aria-expanded','false'); el.setAttribute('aria-controls',panelEl.id);
+      el.innerHTML = g.trend ? trendInner(g) : dialInner(g);
+      el.addEventListener('click',function(){ openEx(el,g.label,g.ex); });
+      bs.push(el); gaugesEl.appendChild(el);
+    });
+  }
+
+  var FIN=[
+    {label:"Company-dollar retention",v:"28.4",u:"%",frac:0.284/0.36,tone:"yellow",target:0.30/0.36,word:["yellow","Watch"],
+      ex:{def:"Of every dollar of commission the brokerage earns (GCI), how much it keeps after agent splits, caps, and lead spend.",read:"<b>28.4%</b> kept vs a <b>30%</b> target (the tick). That gap is ≈<b>$2.4k</b> of company dollar this month, and <b>$9.4k</b> is at risk as three agents near cap.",so:"Coach or reallocate the two lowest-ROI agents' lead budgets this week."}},
+    {label:"Cash oxygen",v:"47",u:"days",frac:47/90,tone:"green",target:30/90,word:["green","On track"],
+      ex:{def:"Operating cash divided by average daily fixed burn — how many days you could run with zero new closings.",read:"<b>47</b> days, above your <b>30</b>-day floor (the tick). <b>+$11.9k</b> net this period; the floor holds through the Jun 25 sweep.",so:"Healthy — watch it as the sweep and payroll stack up late-month."}},
+    {label:"Lead ROI",v:"4.2×",u:"return",frac:4.2/8,tone:"green",target:3/8,word:["green","On track"],
+      ex:{def:"Company dollar generated per $1 of lead spend, blended across all agents.",read:"<b>4.2×</b> vs a <b>3.0×</b> target (the tick). Two agents drag the blend — their lead ROI is under <b>1×</b>.",so:"The portfolio's healthy; the fix is agent-level, not a budget cut."}},
+    {label:"Reputation",v:"4.6",u:"of 5",frac:4.6/5,tone:"green",target:4.0/5,word:["green","On track"],
+      ex:{def:"Blended Google + Zillow rating across the brokerage's listings and agents.",read:"<b>4.6</b> of 5 from <b>218</b> reviews; average response time <b>3.4h</b>.",so:"A quiet trust asset — lead with it in listing pitches."}}
+  ];
+  buildBank(document.getElementById('bk-gauges'),document.getElementById('bk-gexplain'),FIN);
+
+  var MLS=[
+    {label:"Median days on market",v:"24d",u:"median DOM",trend:true,tone:"green",word:["green","−7d vs Mar"],
+      spark:spark('sgdom','M2,10 L28,12 L54,17 L80,22 L106,28 L132,34 L158,39','M2,10 L28,12 L54,17 L80,22 L106,28 L132,34 L158,39 L158,46 L2,46 Z'),
+      ex:{def:"Median number of days a listing sits before going pending, straight from the MLS.",read:"<b>24</b> days, down from <b>31</b> in March — homes are moving ~<b>23%</b> faster.",so:"Push your Ridgeline sellers to list while it's hot."}},
+    {label:"Months of supply",v:"2.1",u:"months",frac:2.1/6,tone:"green",target:3/6,word:["green","Seller's mkt"],
+      ex:{def:"Months to sell all active inventory at the current pace. Under 3 (the tick) is a seller's market.",read:"<b>2.1</b> months — tight inventory; buyers are competing.",so:"Favor listing-side pitches; expect multiple offers."}},
+    {label:"Sale-to-list price",v:"99.1",u:"% of list",frac:99.1/105,tone:"green",target:97/105,word:["green","At ask"],
+      ex:{def:"Median sale price as a percent of last list price — how close homes sell to asking.",read:"<b>99.1%</b> — homes selling right at ask, some over.",so:"Set seller expectations high; low-ball offers aren't landing."}},
+    {label:"Median sale price",v:"$512k",u:"median close",trend:true,tone:"green",word:["green","+3.4% MoM"],
+      spark:spark('sgpr','M2,38 L28,34 L54,31 L80,26 L106,22 L132,15 L158,9','M2,38 L28,34 L54,31 L80,26 L106,22 L132,15 L158,9 L158,46 L2,46 Z'),
+      ex:{def:"Median closed sale price in your market, from the MLS.",read:"<b>$512k</b>, up <b>3.4%</b> month-over-month; <b>+9.1%</b> year-over-year.",so:"Appreciation supports your sellers' pricing."}}
+  ];
+  buildBank(document.getElementById('bk-mls-gauges'),document.getElementById('bk-mls-explain'),MLS);
+
+  // ---- broker roster (single line, red-first) + side-drawer ----
+  function miniGauge(v,u,frac,tone){ return '<div class="mini"><div class="mwrap">'+gaugeSVG(74,29,6,frac,tone,null,false)+'<div class="mval g-'+tone+'">'+v+'</div></div><div class="mk">'+u+'</div></div>'; }
+  var agents=[
+    {n:"Whitaker Cole",flag:"r",reason:"Missing legal disclosures — Pending 26h on 88 Cole Ave (24h deadline passed).",ytd:"$3.2M",pipe:"$410k",cpi:34,resp:88,l2o:9,o2p:28,p2c:55,close:58},
+    {n:"Chloe Bennett",flag:"r",reason:"Pipeline stagnation — 0 new files opened in 21 days.",ytd:"$4.1M",pipe:"$0",cpi:41,resp:73,l2o:11,o2p:32,p2c:62,close:64},
+    {n:"Tomás Herrera",flag:"y",reason:"Weekly activity down 40%; 41-min average lead response.",ytd:"$9.8M",pipe:"$1.1M",cpi:63,resp:41,l2o:19,o2p:44,p2c:70,close:78},
+    {n:"Owen Brooks",flag:"y",reason:"Checklist milestones delayed on the Fairview file near close.",ytd:"$7.9M",pipe:"$820k",cpi:58,resp:52,l2o:17,o2p:39,p2c:68,close:74},
+    {n:"Sofia Antonelli",flag:"y",reason:"Activity dip and slow follow-up (47-min average).",ytd:"$6.4M",pipe:"$640k",cpi:55,resp:47,l2o:16,o2p:37,p2c:64,close:71},
+    {n:"Marisol Vega",flag:"g",reason:"Meeting all benchmarks; zero compliance bottlenecks.",ytd:"$18.4M",pipe:"$2.1M",cpi:92,resp:8,l2o:34,o2p:61,p2c:88,close:91},
+    {n:"Daniel Okafor",flag:"g",reason:"Meeting all benchmarks; zero compliance bottlenecks.",ytd:"$15.1M",pipe:"$1.7M",cpi:86,resp:12,l2o:31,o2p:58,p2c:85,close:88},
+    {n:"Priya Raman",flag:"g",reason:"Meeting all benchmarks.",ytd:"$13.2M",pipe:"$1.4M",cpi:81,resp:15,l2o:29,o2p:55,p2c:82,close:85},
+    {n:"Grace Lindqvist",flag:"g",reason:"On track.",ytd:"$11.0M",pipe:"$980k",cpi:74,resp:18,l2o:27,o2p:52,p2c:80,close:82},
+    {n:"Ava Nakamura",flag:"g",reason:"On track.",ytd:"$10.2M",pipe:"$860k",cpi:71,resp:20,l2o:25,o2p:50,p2c:78,close:80},
+    {n:"Reuben Vasquez",flag:"g",reason:"On track.",ytd:"$9.4M",pipe:"$740k",cpi:68,resp:22,l2o:24,o2p:49,p2c:77,close:79},
+    {n:"Marcus Diallo",flag:"g",reason:"On track.",ytd:"$8.6M",pipe:"$620k",cpi:66,resp:24,l2o:23,o2p:48,p2c:76,close:77}
+  ];
+  var RANK={r:0,y:1,g:2}, FLAGWORD={r:"Red",y:"Yellow",g:"Green"};
+  function volNum(s){ var n=parseFloat(s.replace(/[$Mk]/g,''))||0; return s.indexOf('M')>-1?n*1e6:(s.indexOf('k')>-1?n*1e3:n); }
+  // Red → Yellow → Green; biggest YTD volume within a tier.
+  agents.sort(function(a,b){ return RANK[a.flag]!==RANK[b.flag] ? RANK[a.flag]-RANK[b.flag] : volNum(b.ytd)-volNum(a.ytd); });
+  function cpiTone(c){ return c>=70?"green":(c>=55?"yellow":"red"); }
+  function respTone(m){ return m<15?"green":(m<=30?"yellow":"red"); }
+  function closeTone(c){ return c>=80?"green":(c>=70?"yellow":"red"); }
+  function convTone(v,g,o){ return v>=g?"green":(v>=o?"yellow":"red"); }
+  var CHEV='<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+
+  var roster=document.getElementById('bk-roster');
+  agents.forEach(function(a){
+    var ct=cpiTone(a.cpi);
+    var pill = a.flag==='g' ? '' : '<span class="pill '+a.flag+'">'+FLAGWORD[a.flag]+'</span>';
+    var row=document.createElement('button'); row.type='button'; row.className='amain rrow'; row.setAttribute('aria-label','Open detail for '+a.n);
+    row.innerHTML='<span class="dot '+a.flag+'"></span>'
+      +'<span class="aname"><span class="nm">'+a.n+'</span>'+pill+'</span>'
+      +'<span class="cell-num r col-hide">'+a.ytd+'</span>'
+      +'<span class="cell-num r col-hide">'+a.pipe+'</span>'
+      +'<span class="cpi"><span class="cpiv g-'+ct+'">'+a.cpi+'</span><span class="cpibar"><i style="width:'+a.cpi+'%;background:'+TONE[ct]+'"></i></span></span>'
+      +CHEV;
+    row.addEventListener('click',function(){ openDrawer(a); });
+    roster.appendChild(row);
+  });
+
+  var drawer=document.getElementById('bk-drawer'), backdrop=document.getElementById('bk-drawer-backdrop'), lastFocus=null;
+  function openDrawer(a){
+    var ct=cpiTone(a.cpi), rt=respTone(a.resp), clt=closeTone(a.close);
+    drawer.innerHTML='<button class="dclose" aria-label="Close detail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+      +'<div class="dhd"><span class="dflag '+a.flag+'"></span><div><h3>'+a.n+'</h3><div class="dreason">'+a.reason+'</div></div></div>'
+      +'<div class="dstats"><div><span class="dk">YTD volume</span><span class="dv">'+a.ytd+'</span></div><div><span class="dk">Active pipeline</span><span class="dv">'+a.pipe+'</span></div><div><span class="dk">CPI</span><span class="dv g-'+ct+'">'+a.cpi+'</span></div></div>'
+      +'<div class="dsec">Conversion funnel</div><div class="minis">'
+        +miniGauge(a.l2o+'%','Lead→Opp',a.l2o/40,convTone(a.l2o,24,15))
+        +miniGauge(a.o2p+'%','Opp→Pending',a.o2p/70,convTone(a.o2p,50,38))
+        +miniGauge(a.p2c+'%','Pending→Closed',a.p2c/100,convTone(a.p2c,78,65))
+      +'</div>'
+      +'<div class="dsec">Responsiveness &amp; execution</div>'
+      +'<div class="drow"><div><div class="dk">Avg lead response</div><div class="dnote">brokerage-assigned leads · &lt;15m target</div></div><div class="dbig g-'+rt+'">'+a.resp+'<span class="du">min</span></div></div>'
+      +'<div class="drow"><div><div class="dk">Closing ratio</div><div class="dnote">contracts reaching escrow vs terminated</div></div><div class="dbig g-'+clt+'">'+a.close+'<span class="du">%</span></div></div>';
+    drawer.querySelector('.dclose').addEventListener('click',closeDrawer);
+    lastFocus=document.activeElement;
+    backdrop.classList.add('show'); drawer.classList.add('show'); drawer.setAttribute('aria-hidden','false'); drawer.scrollTop=0;
+    drawer.querySelector('.dclose').focus();
+  }
+  function closeDrawer(){ backdrop.classList.remove('show'); drawer.classList.remove('show'); drawer.setAttribute('aria-hidden','true'); if(lastFocus){ lastFocus.focus(); } }
+  backdrop.addEventListener('click',closeDrawer);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawer.classList.contains('show')){ closeDrawer(); } });
+
+  // ---- market ticker tape ----
+  var tickItems=[
+    {l:"Momentum",v:"Accelerating",a:"up"},{l:"Median DOM",v:"24d",a:"downgood"},{l:"Months supply",v:"2.1 mo",a:null},
+    {l:"Sale-to-list",v:"99.1%",a:null},{l:"Median price",v:"$512k",a:"up"},{l:"$/sf <2k",v:"$284",a:"up"},
+    {l:"$/sf 2–4k",v:"$312",a:"up"},{l:"$/sf >4k",v:"$268",a:"down"},{l:"Absorption",v:"2.1 mo",a:null},
+    {l:"Active:Pending",v:"1.8×",a:null},{l:"New listings",v:"62/wk",a:"up"}
+  ];
+  function tickHtml(t){ var ar=t.a==='up'?' <span class="tup">▲</span>':(t.a==='down'?' <span class="tdn">▼</span>':(t.a==='downgood'?' <span class="tup">▼7</span>':'')); return '<span class="tick"><b>'+t.l+'</b>'+t.v+ar+'</span>'; }
+  var track=document.getElementById('bk-ticker-track');
+  if(track){ var block=tickItems.map(tickHtml).join('<span class="tsep">•</span>')+'<span class="tsep">•</span>'; track.innerHTML=block+block; }
+  var tk=document.getElementById('bk-mkt-ticker'), tkd=document.getElementById('bk-mkt-detail');
+  if(tk){ tk.addEventListener('click',function(){ var o=tk.getAttribute('aria-expanded')==='true'; tk.setAttribute('aria-expanded',o?'false':'true'); tkd.hidden=o; }); }
+})();
+</script>
+</section>
+<section id="view-agent" class="view" hidden>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="brand-name">OutFront<b>Data</b></span></div>
+    <div class="persona" role="tablist" aria-label="Brokerage view">
+      <button role="tab" aria-selected="false" data-p="broker"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Broker cockpit</button>
+      <button role="tab" aria-selected="true" data-p="agent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/></svg>Agent app</button>
+    </div>
+    <span class="chip demo"><span class="dot"></span>Generated demo data</span>
+  </div>
+
+  <div class="greet">
+    <div><div class="hi">Good morning, <span>Marisol</span>.</div><div class="date">Tuesday, June 10 · Cascade Realty Group · Boise, ID</div></div>
+    <div class="glance">One closing needs compliance action before it funds, an inspection at 10, and a hot lead past its response window. Your day, ranked.</div>
+  </div>
+
+  <!-- DAILY SUMMARY -->
+  <div class="section">
+    <div class="sh"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Today · priority queue</span><span class="desc">closings, inspections &amp; messages — expand for the task list</span></div>
+    <div class="queue" id="ag-queue"></div>
+  </div>
+
+  <!-- MARKET INTELLIGENCE -->
+  <div class="section">
+    <div class="sh"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18M7 15l4-4 3 2 5-6"/></svg>Market intelligence · Boise, ID</span><span class="desc" style="opacity:.85">seeded · live MLS via SkySlope on roadmap</span></div>
+    <div class="mi">
+      <span class="eyebrow">Market momentum meter</span>
+      <div class="meter-word" style="margin-top:8px"><span class="st">Accelerating</span> <span class="sub">14-day list-to-sale rolling avg</span></div>
+      <div class="mtrack"><span class="div" style="left:33.33%"></span><span class="div" style="left:66.66%"></span><span class="mk" style="left:84%"></span></div>
+      <div class="mzones"><span>Decelerating</span><span>Stable</span><b>Accelerating</b></div>
+      <div class="mcap">List-to-sale ratio <b>99.4%</b> and rising; DOM down <b>7 days</b> in 14. Homes are selling faster and closer to ask — a good window to convert your Ridgeline sellers to signed listings.</div>
+
+      <div class="subgrid">
+        <div class="tiers">
+          <span class="eyebrow">Price per sq ft · by size tier</span>
+          <div class="tier"><div class="tl">Under 2,000 sq ft<small>starter / entry</small></div><div class="tv">$284</div><div class="tr up">▲ 2.1%</div></div>
+          <div class="tier"><div class="tl">2,000–4,000 sq ft<small>move-up</small></div><div class="tv">$312</div><div class="tr up">▲ 3.6%</div></div>
+          <div class="tier"><div class="tl">Over 4,000 sq ft<small>large homes</small></div><div class="tv">$268</div><div class="tr down">▼ 1.2%</div></div>
+        </div>
+        <div class="dials" id="ag-dials"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAD ACTION CENTER -->
+  <div class="section">
+    <div class="sh"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>Lead action center</span><span class="desc">response clock: <span style="color:var(--green)">&lt;15m</span> · <span style="color:var(--yellow)">15–30m</span> · <span style="color:var(--red)">&gt;30m</span></span></div>
+    <div id="ag-leads"></div>
+  </div>
+
+  <!-- CALENDAR GUARD -->
+  <div class="section">
+    <div class="sh"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>Calendar guard</span><span class="desc">scans your calendar against transaction deadlines</span></div>
+    <div class="guard" id="ag-guard">
+      <div class="gh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Hard block · double-booked</div>
+      <div class="gb"><b>Saturday 2:00 PM</b> — a Maple Row showing overlaps the Ridgeline open house, and both sit on top of the Highland Park <b>inspection window</b>. You can't be in three places.</div>
+      <div class="conflict">
+        <div class="cslot"><div class="ct">Sat 2:00–3:00 PM</div><div class="cn">9 Maple Row · buyer showing</div><div class="cx">you · confirmed</div></div>
+        <div class="cslot"><div class="ct">Sat 2:00–4:00 PM</div><div class="cn">77 Ridgeline · open house</div><div class="cx">you · confirmed</div></div>
+      </div>
+      <div class="lact" style="margin-top:12px"><button class="btn urgent" data-guard>Reschedule · reassign open house to Daniel</button><button class="btn ghost" data-guard>Keep both</button></div>
+    </div>
+    <div class="cal-list">
+      <div class="cal-item"><span class="tm">Wed 9:00</span><span class="cx2">Listing appointment — 88 Cedar Bluff</span></div>
+      <div class="cal-item"><span class="tm">Thu 1:00</span><span class="cx2">Closing — 214 Highland Park signing</span></div>
+      <div class="cal-item"><span class="tm">Fri 11:00</span><span class="cx2">Buyer tour — 3 homes, Boise foothills</span></div>
+    </div>
+  </div>
+
+  <div class="footnote"><b>Generated demo data.</b> Closings/inspections pull from transaction file checklists, market from the MLS (SkySlope), lead timers from CRM, and the calendar guard from your connected calendar — <b>the live integrations are the design-partner roadmap</b>. Nothing here is a live production account.</div>
+</div>
+
+<div class="demo-toast" id="ag-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var toast=document.getElementById('ag-toast'), tt;
+  function say(m){ toast.textContent=m; toast.classList.add('show'); clearTimeout(tt); tt=setTimeout(function(){toast.classList.remove('show');},2400); }
+
+  // ---- small dial helper ----
+  function polar(cx,cy,r,deg){var a=(deg-90)*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+  function arc(cx,cy,r,a0,a1){var p0=polar(cx,cy,r,a0),p1=polar(cx,cy,r,a1);var large=(a1-a0)>180?1:0;return "M "+p0.x.toFixed(2)+" "+p0.y.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+p1.x.toFixed(2)+" "+p1.y.toFixed(2);}
+  var TONE={green:"var(--green)",yellow:"var(--yellow)",red:"var(--red)"};
+  function dialSVG(size,r,sw,frac,tone){var c=size/2,s='<svg viewBox="0 0 '+size+' '+size+'" fill="none">';s+='<path d="'+arc(c,c,r,225,495)+'" stroke="var(--line)" stroke-width="'+sw+'" stroke-linecap="round"/>';if(frac>0.001)s+='<path d="'+arc(c,c,r,225,225+270*Math.max(0,Math.min(1,frac)))+'" stroke="'+TONE[tone]+'" stroke-width="'+sw+'" stroke-linecap="round"/>';return s+'</svg>';}
+  var dials=[
+    {l:"Absorption rate",n:"2.1",u:"mo supply",frac:2.1/6,tone:"green"},
+    {l:"Median DOM",n:"24d",u:"−7 in 14d",frac:1-24/60,tone:"green"}
+  ];
+  var dh=document.getElementById('ag-dials');
+  dials.forEach(function(d){ var el=document.createElement('div'); el.className='dial'; el.innerHTML='<div class="dl">'+d.l+'</div><div class="dwrap">'+dialSVG(78,31,6,d.frac,d.tone)+'<div class="dv"><span class="n" style="color:'+TONE[d.tone]+'">'+d.n+'</span><span class="u">'+d.u+'</span></div></div>'; dh.appendChild(el); });
+
+  // ---- daily summary queue ----
+  var ICON={Closing:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4"/>',Inspection:'<path d="M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM21 21l-4.3-4.3"/>',Messages:'<path d="M4 4h16v12H5.2L4 17.5z"/>'};
+  var queue=[
+    {type:"Closing",flag:"r",title:"214 Highland Park",meta:"Funds today · $610k · your GCI $9,150",time:"2:00 PM",warn:"2 compliance items missing within 48h of close",
+      tasks:[{s:"miss",t:"Seller disclosure — signature",f:"SPDS_214Highland.pdf · unsigned"},{s:"miss",t:"Final walkthrough form",f:"walkthrough_214.pdf · not uploaded"},{s:"done",t:"Title commitment cleared"},{s:"done",t:"Wire instructions verified"}]},
+    {type:"Inspection",flag:"g",title:"1102 Alderwood",meta:"Buyer inspection · inspector confirmed · you needn't attend",time:"10:00 AM",
+      tasks:[{s:"done",t:"Inspection scheduled"},{s:"done",t:"Lockbox code sent to inspector"},{s:"open",t:"Repair-request template ready to send"}]},
+    {type:"Closing",flag:"y",title:"88 Cedar Bluff",meta:"Funds in 3 days · Jun 13 · $445k",time:"Jun 13",warn:"Checklist 80% — 1 admin task open",
+      tasks:[{s:"done",t:"Appraisal received"},{s:"done",t:"Loan clear-to-close"},{s:"open",t:"HOA estoppel requested"}]},
+    {type:"Messages",flag:"g",title:"3 unread messages",meta:"1 lead gone quiet · 2 client updates",time:"oldest 4h",
+      tasks:[{s:"open",t:"Jordan Blake — “are we still on for Saturday?”"},{s:"open",t:"Osei family — inspection questions"},{s:"open",t:"Pioneer Title — confirm closing time"}]}
+  ];
+  var qh=document.getElementById('ag-queue');
+  queue.forEach(function(c){
+    var card=document.createElement('div'); card.className='qcard '+c.flag;
+    var warn = c.warn ? '<div class="qwarn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>'+c.warn+'</div>' : '';
+    var tasks = c.tasks.map(function(t){
+      var box = t.s==='done' ? '<span class="tbox done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>'
+              : t.s==='miss' ? '<span class="tbox miss"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>'
+              : '<span class="tbox"></span>';
+      return '<div class="task '+(t.s==='done'?'done':'')+'">'+box+'<span class="tt">'+t.t+(t.f?'<span class="file">'+t.f+'</span>':'')+'</span></div>';
+    }).join('');
+    card.innerHTML='<button class="qhead" aria-expanded="false"><span class="qic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICON[c.type]+'</svg></span>'
+      +'<span class="qmid"><span class="qtype">'+c.type+'</span><div class="qtitle">'+c.title+'</div><div class="qmeta">'+c.meta+'</div>'+warn+'</span>'
+      +'<span class="qright"><span class="qtime">'+c.time+'</span><span class="qchev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></span></button>'
+      +'<div class="qbody">'+tasks+'</div>';
+    var head=card.querySelector('.qhead');
+    head.addEventListener('click',function(){ head.setAttribute('aria-expanded',head.getAttribute('aria-expanded')==='true'?'false':'true'); });
+    qh.appendChild(card);
+  });
+
+  // ---- lead action center (15/30 thresholds) ----
+  var leads=[
+    {nm:"Sam Ortega",flag:"r",mins:41,meta:"Referral from Priya · new 41 min ago",why:"Past the 30-minute red line. Referrals contacted within 10 minutes close 3× more often.",primary:{t:"Call now",u:true},ghost:"Send SMS template"},
+    {nm:"The Whitfields",flag:"y",mins:22,meta:"Zillow inquiry · 22 min ago",why:"In the 15–30 min yellow window — still recoverable if you touch it now.",primary:{t:"Send email template"},ghost:"Text"},
+    {nm:"Marcus Lindqvist",flag:"g",mins:6,meta:"Open-house sign-in · 6 min ago",why:"Fresh and under the 15-min target — a quick intro locks it in.",primary:{t:"Send intro"},ghost:"Snooze"},
+    {nm:"Dana Whitfield (past client)",flag:"y",mins:0,meta:"60-day nurture · re-engage",why:"Two new Ridgeline listings match her saved search — the automated match sequence works here.",primary:{t:"Send listing match"},ghost:"Skip"}
+  ];
+  var FL={r:["r","Red · &gt;30m",'<path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/>'],y:["y","Yellow · 15–30m",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],g:["g","Green · &lt;15m",'<path d="M20 6 9 17l-5-5"/>']};
+  var lh=document.getElementById('ag-leads'), open=0;
+  leads.forEach(function(l){
+    var f=FL[l.flag];
+    var el=document.createElement('div'); el.className='lead '+l.flag;
+    var cls=l.primary.u?'btn urgent':'btn primary';
+    el.innerHTML='<div class="lhead"><span class="lnm">'+l.nm+'</span><span class="lflag '+f[0]+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+f[2]+'</svg>'+f[1]+'</span></div>'
+      +'<div class="lmeta">'+l.meta+'</div><div class="lwhy">'+l.why+'</div>'
+      +'<div class="lact"><button class="'+cls+'">'+l.primary.t+'</button><button class="btn ghost">'+l.ghost+'</button></div>';
+    lh.appendChild(el);
+  });
+  lh.addEventListener('click',function(e){ var b=e.target.closest('.btn'); if(!b) return; var lead=b.closest('.lead'); if(lead.classList.contains('done'))return; if(b.classList.contains('ghost')){ say('Queued.'); return;} lead.classList.add('done'); b.textContent='✓ Sent'; say('Follow-up fired from template — logged to the lead.'); });
+
+  document.querySelectorAll('[data-guard]').forEach(function(b){ b.addEventListener('click',function(){ var g=document.getElementById('ag-guard'); g.style.borderColor='color-mix(in srgb,var(--green) 40%,var(--line))'; g.style.background='var(--green-wash)'; g.innerHTML='<div class="gh" style="color:var(--green)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Resolved · Saturday clear</div><div class="gb">Ridgeline open house reassigned to Daniel Okafor. Your 2:00 showing and the Highland inspection window no longer collide.</div>'; say('Calendar conflict resolved.'); }); });
+
+  document.querySelectorAll('.persona button').forEach(function(b){ b.addEventListener('click',function(){ if(b.getAttribute('aria-selected')==='true')return; if(b.dataset.p==='broker') say('Broker cockpit — leadership roster + drawer (companion mock).'); }); });
+})();
+</script>
+</section>
+<section id="view-rental" class="view" hidden>
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span><span class="brand-name">OutFront<b>Data</b></span></div>
+    <div class="verticals" role="tablist" aria-label="Vertical"><button role="tab" aria-selected="false">Brokerage</button><button role="tab" aria-selected="true">Rental</button></div>
+    <span class="chip demo"><span class="dot"></span>Generated demo data</span>
+  </div>
+
+  <div class="card pad">
+    <div class="header">
+      <div><span class="eyebrow" style="color:var(--copper-soft)">Vacation-Rental Cockpit</span><h1>Sawtooth Retreats</h1><div class="sub">June 2026 · McCall &amp; Sun Valley, ID · 7 properties · 6 owners</div></div>
+      <span class="badge"><span class="tnum">Escapia</span> connected</span>
+    </div>
+
+    <div class="onething">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <p><b>Brundage Chalet is red:</b> a Critical furnace work order has been open 52h (past 48h) and a fresh 3.2★ review just posted. A guest checks in Thursday — dispatch and respond today.</p>
+    </div>
+
+    <!-- portfolio -->
+    <div class="ptiles" id="re-ptiles"></div>
+
+    <!-- property roster -->
+    <div class="section">
+      <div class="sh"><span class="eyebrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Property roster · exceptions first</span><span class="desc">one line per asset · tap for the drawer</span></div>
+      <div class="roster"><div class="thead"><span></span><span>Property</span><span class="r col-hide">Occupancy</span><span class="r col-hide">ADR</span><span class="r">RevPAR</span><span></span></div><div id="re-proster"></div></div>
+    </div>
+
+    <div class="footnote"><b>Generated demo data.</b> Occupancy/ADR/RevPAR, maintenance tickets, reviews, and booking pace map to the Escapia GraphQL feed; strategy profiles &amp; owner floors are stored per property. Live <b>Escapia gateway sync</b> is the design-partner roadmap — nothing here is a live production account.</div>
+  </div>
+
+  <div id="re-drawer-backdrop" class="backdrop"></div>
+  <aside id="re-drawer" class="drawer" role="dialog" aria-modal="true" aria-label="Property detail" aria-hidden="true"></aside>
+</div>
+
+<div class="demo-toast" id="re-toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var toast=document.getElementById('re-toast'), tt;
+  function say(m){ toast.textContent=m; toast.classList.add('show'); clearTimeout(tt); tt=setTimeout(function(){toast.classList.remove('show');},2400); }
+
+  function polar(cx,cy,r,deg){var a=(deg-90)*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+  function arc(cx,cy,r,a0,a1){var p0=polar(cx,cy,r,a0),p1=polar(cx,cy,r,a1);var large=(a1-a0)>180?1:0;return "M "+p0.x.toFixed(2)+" "+p0.y.toFixed(2)+" A "+r+" "+r+" 0 "+large+" 1 "+p1.x.toFixed(2)+" "+p1.y.toFixed(2);}
+  var TONE={green:"var(--green)",yellow:"var(--yellow)",red:"var(--red)"};
+  function dialSVG(size,r,sw,frac,tone){var c=size/2,s='<svg viewBox="0 0 '+size+' '+size+'" fill="none">';s+='<path d="'+arc(c,c,r,225,495)+'" stroke="var(--line)" stroke-width="'+sw+'" stroke-linecap="round"/>';if(frac>0.001)s+='<path d="'+arc(c,c,r,225,225+270*Math.max(0,Math.min(1,frac)))+'" stroke="'+TONE[tone]+'" stroke-width="'+sw+'" stroke-linecap="round"/>';return s+'</svg>';}
+
+  // portfolio
+  var pt=document.getElementById('re-ptiles');
+  pt.innerHTML=''
+    +'<div class="ptile"><div class="pl">Portfolio occupancy</div><div class="dwrap">'+dialSVG(86,35,7,0.72,'yellow')+'<div class="dv"><span class="n" style="color:var(--yellow)">72%</span><span class="u">7 units</span></div></div></div>'
+    +'<div class="ptile"><div class="pl">Average daily rate</div><div class="pv">$417</div><div class="ps">blended ADR</div></div>'
+    +'<div class="ptile"><div class="pl">RevPAR</div><div class="pv">$295</div><div class="ps">per available night</div></div>'
+    +'<div class="ptile"><div class="pl">Booking pace</div><div class="dwrap">'+dialSVG(86,35,7,0.42,'yellow')+'<div class="dv"><span class="n" style="color:var(--yellow)">−5%</span><span class="u">vs 3-yr</span></div></div></div>';
+
+  // properties (Escapia-mapped)
+  var props=[
+    {n:"Brundage Chalet",flag:"r",reason:"Critical maintenance open 52h (furnace) + a 3.2★ review below the 3.5 threshold.",occ:61,adr:340,revpar:207,pace:-8,profile:"Medium",floor:null,
+      maint:[{tier:"Critical",st:"Open · 52h",t:"Furnace not igniting — guest-reported"},{tier:"Standard",st:"In progress · 1d",t:"Hot tub pH low"}],rating:3.2,rnote:"“Cold first night, slow to respond.” — 2 days ago"},
+    {n:"Foothills Loft",flag:"r",reason:"Guest review 3.1★ — below the 3.5 red threshold.",occ:80,adr:280,revpar:224,pace:2,profile:"High",floor:null,
+      maint:[{tier:"Standard",st:"None open",t:"All work orders resolved"}],rating:3.1,rnote:"“Cleaning turnaround was missed at check-in.” — 4 days ago"},
+    {n:"Payette Lake Cabin",flag:"y",reason:"Repeated maintenance — 4 work orders in the last 30 days.",occ:74,adr:447,revpar:331,pace:-3,profile:"Medium",floor:null,
+      maint:[{tier:"Standard",st:"Open · 2d",t:"Dock board loose"},{tier:"Standard",st:"Resolved",t:"+3 prior entries this month"}],rating:4.6,rnote:"“Perfect lake access, spotless.” — 6 days ago"},
+    {n:"Sun Valley Studio",flag:"y",reason:"Pacing 22% behind benchmark on a High-Aggressiveness profile → price-drop flag.",occ:66,adr:330,revpar:218,pace:-22,profile:"High",floor:null,priceDrop:true,
+      maint:[{tier:"Standard",st:"None open",t:"All work orders resolved"}],rating:4.4,rnote:"“Great location, easy check-in.” — 1 week ago"},
+    {n:"Sawtooth Summit Lodge",flag:"g",reason:"On track — price-drop flags suppressed by the owner's floor. Zero noise, by design.",occ:58,adr:714,revpar:414,pace:-18,profile:"Low",floor:"$5,000/wk",suppressed:true,
+      maint:[{tier:"Standard",st:"None open",t:"All work orders resolved"}],rating:4.8,rnote:"“Worth every penny — impeccable.” — 3 days ago",
+      owner:"Your asset is priced 24% above market for comparable >4,000 sq ft homes. This premium strategy has held occupancy 19% below local momentum — exactly as you directed."},
+    {n:"Cedar Creek House",flag:"g",reason:"On track — top RevPAR in the portfolio.",occ:83,adr:440,revpar:365,pace:7,profile:"Medium",floor:null,
+      maint:[{tier:"Standard",st:"None open",t:"All work orders resolved"}],rating:4.9,rnote:"“Immaculate, will rebook.” — 2 days ago"},
+    {n:"Ridgeline A-Frame",flag:"g",reason:"On track.",occ:82,adr:370,revpar:303,pace:5,profile:"Medium",floor:null,
+      maint:[{tier:"Standard",st:"None open",t:"All work orders resolved"}],rating:4.7,rnote:"“Loved the views.” — 5 days ago"}
+  ];
+  var RANK={r:0,y:1,g:2}, FLAGWORD={r:"Red",y:"Yellow",g:"OK"};
+  props.sort(function(a,b){ return RANK[a.flag]!==RANK[b.flag] ? RANK[a.flag]-RANK[b.flag] : b.revpar-a.revpar; });
+  function occTone(o){ return o>=75?"green":(o>=65?"yellow":"red"); }
+
+  var pr=document.getElementById('re-proster');
+  props.forEach(function(p){
+    var pill='<span class="pill '+p.flag+'">'+FLAGWORD[p.flag]+'</span>';
+    var row=document.createElement('button'); row.type='button'; row.className='prow'; row.setAttribute('aria-label','Open '+p.n);
+    row.innerHTML='<span class="dot '+p.flag+'"></span>'
+      +'<span class="pname"><span class="nm">'+p.n+'</span>'+pill+'</span>'
+      +'<span class="cell-num r col-hide" style="color:var(--'+occTone(p.occ)+')">'+p.occ+'%</span>'
+      +'<span class="cell-num r col-hide">$'+p.adr+'</span>'
+      +'<span class="cell-num r">$'+p.revpar+'</span>'
+      +'<span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+    row.addEventListener('click',function(){ openDrawer(p); });
+    pr.appendChild(row);
+  });
+
+  var drawer=document.getElementById('re-drawer'), backdrop=document.getElementById('re-drawer-backdrop'), lastFocus=null;
+  var PROFILES=["Low","Medium","High"];
+  function openDrawer(p){
+    var rTone = p.rating<3.5?"red":(p.rating<4.2?"yellow":"green");
+    var maint = p.maint.map(function(m){
+      var crit=m.tier==='Critical';
+      return '<div class="mrow"><span class="mtag '+(crit?'crit':'std')+'">'+m.tier+'</span><div><div class="mt">'+m.t+'</div><div class="ms">'+m.st+'</div></div></div>';
+    }).join('');
+    var seg = PROFILES.map(function(x){ return '<button aria-pressed="'+(x===p.profile?'true':'false')+'">'+x+'</button>'; }).join('');
+    var strat;
+    if(p.suppressed) strat='<div class="strat-note suppress"><b>Price-drop flags suppressed.</b> Owner floor '+p.floor+' (Low Aggressiveness). Pacing '+p.pace+'% behind, but the system respects the owner\'s rule and shows zero noise on the roster.</div>';
+    else if(p.priceDrop) strat='<div class="strat-note drop"><b>Price drop recommended.</b> Pacing '+p.pace+'% behind seasonal benchmark on a High-Aggressiveness profile — drop the nightly rate to protect occupancy.</div>';
+    else strat='<div class="strat-note ok">Pacing '+(p.pace>=0?'+':'')+p.pace+'% vs 3-year seasonal benchmark — within tolerance for a '+p.profile+'-Aggressiveness profile.</div>';
+    var ownerHtml = p.owner ? '<div class="dsec">Automated owner report · value-add</div><div class="ownerbox"><div class="ot">Draft advisory line</div><div class="oq">“'+p.owner+'”</div><button class="btn" data-owner><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>Generate &amp; send monthly report</button></div>' : '';
+
+    drawer.innerHTML='<button class="dclose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
+      +'<div class="dhd"><span class="dflag '+p.flag+'"></span><div><h3>'+p.n+'</h3><div class="dreason">'+p.reason+'</div></div></div>'
+      +'<div class="dstats"><div><span class="dk">Occupancy</span><span class="dv2" style="color:var(--'+occTone(p.occ)+')">'+p.occ+'%</span></div><div><span class="dk">ADR</span><span class="dv2">$'+p.adr+'</span></div><div><span class="dk">RevPAR</span><span class="dv2">$'+p.revpar+'</span></div></div>'
+      +'<div class="dsec">Maintenance</div>'+maint
+      +'<div class="dsec">Guest reviews</div><div class="revbox"><span class="rr g-'+rTone+'" style="color:var(--'+rTone+')">'+p.rating.toFixed(1)+'★</span><span class="rn">'+p.rnote+(p.rating<3.5?' <b style="color:var(--red)">· below 3.5 threshold</b>':'')+'</span></div>'
+      +'<div class="dsec">Price aggressiveness'+(p.floor?' · floor '+p.floor:'')+'</div><div class="seg" role="group" aria-label="Pricing strategy">'+seg+'</div>'+strat
+      +ownerHtml;
+    drawer.querySelector('.dclose').addEventListener('click',closeDrawer);
+    var od=drawer.querySelector('[data-owner]'); if(od) od.addEventListener('click',function(){ say('Monthly owner report generated and queued to send.'); });
+    // strategy control is illustrative in the mock
+    drawer.querySelectorAll('.seg button').forEach(function(b){ b.addEventListener('click',function(){ drawer.querySelectorAll('.seg button').forEach(function(x){x.setAttribute('aria-pressed','false');}); b.setAttribute('aria-pressed','true'); say('Strategy set to '+b.textContent+' Aggressiveness (mock).'); }); });
+    lastFocus=document.activeElement;
+    backdrop.classList.add('show'); drawer.classList.add('show'); drawer.setAttribute('aria-hidden','false'); drawer.scrollTop=0; drawer.querySelector('.dclose').focus();
+  }
+  function closeDrawer(){ backdrop.classList.remove('show'); drawer.classList.remove('show'); drawer.setAttribute('aria-hidden','true'); if(lastFocus){lastFocus.focus();} }
+  backdrop.addEventListener('click',closeDrawer);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && drawer.classList.contains('show')){ closeDrawer(); } });
+
+  document.querySelectorAll('.verticals button').forEach(function(b){ b.addEventListener('click',function(){ if(b.getAttribute('aria-selected')==='true')return; if(b.textContent.trim()==='Brokerage') say('Brokerage — the broker cockpit + agent app (companion mocks).'); }); });
+})();
+</script>
+</section>
+
+<script>
+(function(){
+  var views={broker:document.getElementById('view-broker'),agent:document.getElementById('view-agent'),rental:document.getElementById('view-rental')};
+  document.querySelectorAll('.utabs button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.utabs button').forEach(function(x){x.setAttribute('aria-selected','false');});
+      b.setAttribute('aria-selected','true');
+      var v=b.dataset.view;
+      Object.keys(views).forEach(function(k){ views[k].hidden=(k!==v); });
+      window.scrollTo(0,0);
+    });
+  });
+})();
+</script>

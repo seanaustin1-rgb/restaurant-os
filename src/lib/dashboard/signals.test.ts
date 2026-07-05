@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DashboardData } from "@/lib/dashboard/data";
-import { deriveAttention, deriveCoverageGap, deriveSourceTrust, deriveTopPressure } from "@/lib/dashboard/signals";
+import { deriveAttention, deriveCashFloorBreach, deriveCoverageGap, deriveSourceTrust, deriveTopPressure } from "@/lib/dashboard/signals";
 
 function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
   return {
@@ -230,5 +230,53 @@ describe("deriveCoverageGap", () => {
     expect(deriveCoverageGap({ windowDays: 0, ledgerDaysInWindow: 0, hasLedgerSource: true })).toEqual({
       state: "none",
     });
+  });
+});
+
+describe("deriveCashFloorBreach", () => {
+  it("fires red breach-now when estimated cash is already below the floor", () => {
+    const b = deriveCashFloorBreach({ floor: 20000, currentCash: 12000, projectedLowPoint: 5000 });
+    expect(b).toMatchObject({ state: "breach-now", floor: 20000, currentCash: 12000, shortfall: 8000, severity: "red" });
+    if (b.state === "breach-now") expect(b.readout).toMatch(/\$12,000 is below your \$20,000 floor by \$8,000/);
+  });
+
+  it("fires red breach-projected (the pre-sweep warn) when the 30-day low-point dips below the floor", () => {
+    const b = deriveCashFloorBreach({ floor: 20000, currentCash: 31000, projectedLowPoint: 14500 });
+    expect(b).toMatchObject({ state: "breach-projected", floor: 20000, projectedLowPoint: 14500, shortfall: 5500, severity: "red" });
+    if (b.state === "breach-projected") expect(b.readout).toMatch(/scheduled sweep/i);
+  });
+
+  it("prefers breach-now over a projected dip when both hold", () => {
+    const b = deriveCashFloorBreach({ floor: 20000, currentCash: 15000, projectedLowPoint: 3000 });
+    expect(b.state).toBe("breach-now");
+  });
+
+  it("stays silent when cash and the projected low-point both clear the floor", () => {
+    expect(deriveCashFloorBreach({ floor: 20000, currentCash: 40000, projectedLowPoint: 25000 })).toEqual({
+      state: "none",
+    });
+  });
+
+  it("stays silent when no floor is configured", () => {
+    expect(deriveCashFloorBreach({ floor: null, currentCash: 100, projectedLowPoint: -500 })).toEqual({
+      state: "none",
+    });
+  });
+
+  it("stays silent on a non-positive floor", () => {
+    expect(deriveCashFloorBreach({ floor: 0, currentCash: -100, projectedLowPoint: -500 })).toEqual({
+      state: "none",
+    });
+  });
+
+  it("stays silent when there is no anchor (current cash unknown), even with a projection", () => {
+    expect(deriveCashFloorBreach({ floor: 20000, currentCash: null, projectedLowPoint: 1000 })).toEqual({
+      state: "none",
+    });
+  });
+
+  it("does not require a projection to fire breach-now", () => {
+    const b = deriveCashFloorBreach({ floor: 10000, currentCash: 4000, projectedLowPoint: null });
+    expect(b).toMatchObject({ state: "breach-now", shortfall: 6000 });
   });
 });

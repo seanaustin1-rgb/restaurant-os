@@ -237,6 +237,11 @@ model Restaurant {
   // exists (statement import skips balance lines; no Plaid balance stored).
   cashBalanceAnchor     Decimal?     @db.Decimal(12, 2)
   cashBalanceAnchorDate DateTime?    @db.Date
+  // Cash floor (B6): operator-set minimum operating cash to keep on hand. Drives a
+  // deterministic breach signal and a pre-sweep warning (when the 30-day Forward
+  // Cash low-point — which already includes the scheduled 10th/25th sweep — dips
+  // below it). Null = not configured (the signal stays silent).
+  minCashFloor          Decimal?     @db.Decimal(12, 2)
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 

@@ -3,7 +3,37 @@
 > Safe to email — contains **no secrets**. Bring your `.env.local` separately.
 
 ## Resume a session
-Open the repo and tell Claude:
+
+**Paste this into a fresh session to resume (laptop / next session):**
+
+```text
+Read CLAUDE.md, docs/PRODUCT-MAP.md, and docs/SESSION-HANDOFF.md, and check your project
+memory for Restaurant OS. Start from the ⏱️ RESUME HERE — 2026-07-04 (EOD) block (it's
+authoritative; every older dated block is history). The app is live on www.outfrontdata.com
+and main auto-deploys on merge.
+
+Spec A ledger convergence + the demo-critical read modules are all SHIPPED (A.1 Tax Vault,
+A.2 Cash Flow/Spending/coverage-gap, A5 Spec C bulk triage, A8 Forward Cash, A9 Daily Digest,
+A10 brokerage taxonomy). The live critical path is the A6 operator/laptop run:
+
+  1. Open /settings/sources/review on Stone Grille and use the new bulk "Approve all as
+     [category]" / "Exclude all" on the largest vendor groups to clear the 373 open sync
+     exceptions. Run scripts/summarize-sync-exceptions.ts stone BEFORE and AFTER — that delta
+     is a demo asset. (Runbook: docs/fable-5/RUNBOOK-stone-triage.md.) This step needs NO
+     secrets — it's the app UI.
+  2. Once Stone is clean, spot-check Tax Vault / Cash Flow / Spending / Forward Cash against
+     real data, then run scripts/compare-spines.ts "Stone Grille" for spine parity (the gate
+     before A.3 touches allocation math).
+  3. A10 demo verify: npm run seed:brokerage -- --user <clerkUserId> against the demo DB →
+     confirm "Cascade Realty Group" tiles read brokerage-native.
+
+Do NOT touch the Codex lane: PR #90 (accrued-vs-cleared reconciliation) is migration-gated
+(Restaurant.taxProfile) and awaiting a cleared==0 guard. The CLI steps (summarize / compare-
+spines / seed:brokerage) need your local .env.local (DB URL); the A6 exception-clearing does
+not. Grab <clerkUserId> from the Clerk dashboard.
+```
+
+Or, in prose:
 > "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/MASTER-ROADMAP-2026-07-03.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04 (EOD)** block below (it's authoritative; every older dated block is history). The app is live on **www.outfrontdata.com**. Spec A ledger convergence + the demo-critical read modules are **shipped**; the live critical path is now the **operator/laptop A6 run** (clear Stone's 373 sync exceptions with the new bulk-triage tools, then verify the new modules against real data)."
 
 > **⚠️ Historical note (2026-06-12/13).** The **2026-07-04** block at the top is now authoritative; every

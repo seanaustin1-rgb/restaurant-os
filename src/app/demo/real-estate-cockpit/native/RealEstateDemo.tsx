@@ -11,6 +11,7 @@
  */
 import { useEffect, useState } from "react";
 import AgentApp from "./AgentApp";
+import RentalCockpit from "./RentalCockpit";
 
 type Tone = "green" | "yellow" | "red" | "copper";
 const TONE: Record<Tone, string> = {
@@ -434,11 +435,20 @@ export default function RealEstateDemo() {
           </div>
         )}
         {tab === "rental" && (
-          <div className="card pad stub">
-            <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
-              Rental cockpit
-            </span>
-            <p>Native port in progress — the property roster + exception engine lands in the next increment.</p>
+          <div className="card pad">
+            <div className="header">
+              <div>
+                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
+                  Vacation-Rental Cockpit
+                </span>
+                <h1>Sawtooth Retreats</h1>
+                <div className="sub">June 2026 · McCall &amp; Sun Valley, ID · 7 properties · 6 owners</div>
+              </div>
+              <span className="badge partial">
+                <span className="tnum">Escapia</span> connected
+              </span>
+            </div>
+            <RentalCockpit />
           </div>
         )}
       </div>

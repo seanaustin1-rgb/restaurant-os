@@ -10,6 +10,7 @@
  * demo-DB tenant.
  */
 import { useEffect, useState } from "react";
+import AgentApp from "./AgentApp";
 
 type Tone = "green" | "yellow" | "red" | "copper";
 const TONE: Record<Tone, string> = {
@@ -416,11 +417,20 @@ export default function RealEstateDemo() {
       <div className="wrap">
         {tab === "broker" && <BrokerCockpit />}
         {tab === "agent" && (
-          <div className="card pad stub">
-            <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
-              Agent app
-            </span>
-            <p>Native port in progress — the agent frontline cockpit lands in the next increment.</p>
+          <div className="card pad">
+            <div className="header">
+              <div>
+                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
+                  Agent frontline
+                </span>
+                <h1>Good morning, Priya</h1>
+                <div className="sub">Wednesday, June 11 · Boise, ID · 3 active files</div>
+              </div>
+              <span className="badge partial">
+                <span className="tnum">2</span> need you now
+              </span>
+            </div>
+            <AgentApp />
           </div>
         )}
         {tab === "rental" && (

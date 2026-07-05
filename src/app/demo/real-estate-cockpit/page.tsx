@@ -1,14 +1,17 @@
 /**
  * Public real-estate demo — the three-page cockpit (Broker · Agent · Rental).
  *
- * Phase 1: served full-bleed from the self-contained, design-approved asset in
- * `/public/demo/real-estate-cockpit.html` so it renders exactly as reviewed, with
- * zero SSR/hydration risk. `/demo(.*)` is already public in `src/middleware.ts`.
+ * Now served by the native React port (`native/RealEstateDemo`), driven by
+ * generated demo data with scoped styled-jsx so nothing leaks into the app.
+ * `/demo(.*)` is already public in `src/middleware.ts`.
  *
- * Phase 2 (next): port this to native React components in the Tailwind design
- * system, driven by generated demo data, then wired to a demo-DB brokerage/rental
- * tenant. Until then this static overlay is the live demo on outfrontdata.com.
+ * The original design-approved static asset is retained at
+ * `/demo/real-estate-cockpit.html` as a directly-reachable reference / instant
+ * rollback. Next step (operator-gated): wire the generated data to a demo-DB
+ * brokerage/rental tenant (DEMO_DATABASE_URL only).
  */
+import RealEstateDemo from "./native/RealEstateDemo";
+
 export const metadata = {
   title: "OutFront Data — Real Estate Demo",
   description:
@@ -16,12 +19,5 @@ export const metadata = {
 };
 
 export default function RealEstateCockpitDemoPage() {
-  return (
-    <iframe
-      src="/demo/real-estate-cockpit.html"
-      title="OutFront Data — Real Estate Demo"
-      className="fixed inset-0 h-full w-full border-0"
-      style={{ zIndex: 100 }}
-    />
-  );
+  return <RealEstateDemo />;
 }

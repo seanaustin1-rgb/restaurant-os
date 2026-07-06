@@ -21,6 +21,8 @@ enum UserRole {
   CONSULTANT
   INVESTOR
   MANAGER
+  BROKER
+  AGENT
 }
 
 enum PosProvider {
@@ -284,6 +286,9 @@ model Restaurant {
   syncExceptions                  SyncException[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
+  leads                           Lead[]
+  callEvents                      CallEvent[]
+  messageEvents                   MessageEvent[]
 }
 
 model UserRestaurantRole {
@@ -945,6 +950,9 @@ model BrokerageAgent {
   leadSpend         BrokerageLeadSpend[]
   sourceIdentities  BrokerageAgentSourceIdentity[]
   activitySnapshots BrokerageAgentActivitySnapshot[]
+  leads             Lead[]
+  calls             CallEvent[]
+  messages          MessageEvent[]
 
   @@unique([restaurantId, externalAgentId])
   @@index([restaurantId])
@@ -1136,19 +1144,19 @@ model NormalizedFinancialEvent {
 }
 
 model LedgerEntry {
-  id                         String    @id @default(cuid())
+  id                         String        @id @default(cuid())
   restaurantId               String
   normalizedFinancialEventId String?
-  ledgerDate                 DateTime  @db.Date
+  ledgerDate                 DateTime      @db.Date
   ledgerAccount              LedgerAccount
-  debit                      Decimal   @default(0) @db.Decimal(14, 2)
-  credit                     Decimal   @default(0) @db.Decimal(14, 2)
-  cashEffect                 Decimal   @default(0) @db.Decimal(14, 2)
-  taxEffect                  Decimal   @default(0) @db.Decimal(14, 2)
+  debit                      Decimal       @default(0) @db.Decimal(14, 2)
+  credit                     Decimal       @default(0) @db.Decimal(14, 2)
+  cashEffect                 Decimal       @default(0) @db.Decimal(14, 2)
+  taxEffect                  Decimal       @default(0) @db.Decimal(14, 2)
   allocationBucket           TapBucket?
   memo                       String?
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
 
   restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
@@ -1289,4 +1297,208 @@ model MetricNote {
 enum NoteAudience {
   INTERNAL
   INVESTOR
+}
+
+// ─────────────────────────────────────────────────────────────
+// Real-estate speed-to-lead pipeline (v1, buyer-side)
+//
+// A brokerage is a Restaurant row with businessType REAL_ESTATE_BROKERAGE.
+// BoldTrail leads land first as RawSourceEvent (audit/idempotency), then
+// normalize into Lead. The response clock is receivedAt -> firstTouchAt;
+// CallEvent / MessageEvent are the touch channels (calls, SMS, email) and
+// stamp firstTouchAt on the ATTEMPT (a call to voicemail still counts).
+// Agents are BrokerageAgent (shared with deals/leadSpend/roster) — not a
+// separate identity — so leads feed the existing performance engine.
+// ─────────────────────────────────────────────────────────────
+
+// Marketing channel a lead originated from (distinct from the delivering
+// system, which is BrokerageSourceSystem). Drives lead-source ROI reporting.
+enum LeadSource {
+  ZILLOW
+  REALTOR_COM
+  IDX_WEBSITE
+  FACEBOOK
+  REFERRAL
+  OPEN_HOUSE
+  OTHER
+}
+
+enum LeadStatus {
+  NEW
+  ASSIGNED
+  CONTACTED
+  ENGAGED
+  CONVERTED
+  LOST
+}
+
+// How far the speed-to-lead alert has climbed (leakage tracking).
+enum LeadEscalation {
+  PRIMARY
+  BACKUP
+  BROKER
+}
+
+enum TouchChannel {
+  CALL
+  SMS
+  EMAIL
+}
+
+enum CallDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum CallStatus {
+  QUEUED
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  NO_ANSWER
+  BUSY
+  FAILED
+  CANCELED
+}
+
+enum MessageChannel {
+  SMS
+  EMAIL
+}
+
+enum MessageDirection {
+  OUTBOUND
+  INBOUND
+}
+
+enum MessageStatus {
+  DRAFT
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  RECEIVED
+}
+
+model Lead {
+  id           String @id @default(cuid())
+  restaurantId String
+
+  // Provenance / idempotency
+  sourceSystem BrokerageSourceSystem @default(BOLDTRAIL) // integration that delivered it
+  externalId   String? // BoldTrail lead id
+  origin       LeadSource? // marketing channel, for ROI
+  rawEventId   String? // soft link to the RawSourceEvent that created it (audit/replay)
+
+  // Contact
+  fullName String?
+  email    String?
+  phone    String? // E.164 for Twilio dialing
+
+  // The response clock
+  receivedAt        DateTime // webhook/campaign lead-created time — clock STARTS
+  agentId           String? // assigned BrokerageAgent
+  assignedAt        DateTime?
+  firstTouchAt      DateTime? // first ATTEMPTED touch (call initiated / sms|email sent) — clock STOPS
+  firstTouchChannel TouchChannel?
+  responseSeconds   Int? // denormalized firstTouchAt − receivedAt (fast reporting)
+
+  // Escalation / leakage
+  escalation  LeadEscalation @default(PRIMARY)
+  escalatedAt DateTime?
+
+  status    LeadStatus @default(NEW)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  agent      BrokerageAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  calls      CallEvent[]
+  messages   MessageEvent[]
+
+  @@unique([restaurantId, sourceSystem, externalId]) // idempotent upsert; mirrors BrokerageAgentSourceIdentity
+  @@index([restaurantId])
+  @@index([restaurantId, receivedAt])
+  @@index([restaurantId, agentId])
+  @@index([restaurantId, status])
+}
+
+model CallEvent {
+  id           String  @id @default(cuid())
+  restaurantId String
+  leadId       String?
+  agentId      String? // BrokerageAgent who placed/received it
+
+  direction CallDirection @default(OUTBOUND)
+
+  // Twilio cell-bridge legs — NO recording in v1
+  agentNumber   String // agent's dedicated Twilio number (local presence)
+  leadNumber    String // E.164 dialed
+  conferenceSid String? @unique // parent bridge SID
+  agentCallSid  String? // leg 1 — Twilio rings the agent's cell
+  leadCallSid   String? // leg 2 — bridged to the lead
+
+  status CallStatus @default(QUEUED)
+
+  // Metadata-only logging: duration, timestamps, connection status
+  initiatedAt     DateTime // agent tapped → bridge started (the first-touch instant)
+  agentAnsweredAt DateTime?
+  leadConnectedAt DateTime? // both legs bridged
+  endedAt         DateTime?
+  durationSec     Int? // talk time from Twilio status callback
+  connected       Boolean   @default(false) // did the lead leg actually connect?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  lead       Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  agent      BrokerageAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([restaurantId, agentId])
+  @@index([leadId])
+  @@index([restaurantId, leadId, initiatedAt]) // accelerated speed-to-lead audit queries
+  @@index([agentCallSid])
+  @@index([leadCallSid])
+}
+
+// SMS + email touches, and the AI draft-and-approve lifecycle in one table:
+// a draft is status DRAFT + aiDrafted + approvedAt null; sending stamps sentAt
+// (and Lead.firstTouchAt when it's the first touch).
+model MessageEvent {
+  id           String  @id @default(cuid())
+  restaurantId String
+  leadId       String?
+  agentId      String? // BrokerageAgent who owns it
+
+  channel   MessageChannel
+  direction MessageDirection @default(OUTBOUND)
+
+  // Draft-and-approve
+  aiDrafted  Boolean   @default(false) // was the body AI-generated?
+  aiModel    String? // which Claude model drafted it (usage/audit)
+  approvedAt DateTime? // human approved before send; null = still a draft
+
+  subject     String? // email only
+  body        String  @db.Text
+  toAddress   String? // E.164 phone or email address
+  fromAddress String? // agent's connected mailbox / Twilio number
+
+  status     MessageStatus @default(DRAFT)
+  providerId String?       @unique // Twilio message SID / Gmail message id (idempotency)
+  sentAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  lead       Lead?           @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  agent      BrokerageAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([restaurantId])
+  @@index([restaurantId, agentId])
+  @@index([leadId])
+  @@index([restaurantId, leadId, sentAt]) // symmetric clock-audit index (mirrors CallEvent)
+  @@index([status])
 }

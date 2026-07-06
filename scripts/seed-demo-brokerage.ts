@@ -538,6 +538,24 @@ async function main() {
   const transactions = await seedBrokerageTransactions(prisma, restaurantId);
   const leadPipeline = await seedLeadPipeline(prisma, restaurantId);
 
+  // Link the seed user to the first agent so /realestate/agent renders for them
+  // (they see the broker roster via OPERATOR and the agent app via this link).
+  let linkedAgentName: string | null = null;
+  if (userId) {
+    const first = await prisma.brokerageAgent.findFirst({
+      where: { restaurantId },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    });
+    if (first) {
+      await prisma.brokerageAgent.update({
+        where: { id: first.id },
+        data: { clerkUserId: userId, phone: "+12085550100" },
+      });
+      linkedAgentName = first.name;
+    }
+  }
+
   const summary: SeedSummary = {
     restaurantId,
     agents: commit.summary.agents,
@@ -564,7 +582,11 @@ async function main() {
   if (commit.rejected.length > 0) {
     console.log(`  ⚠ rejected import rows: ${commit.rejected.length}`);
   }
-  console.log("Open /dashboard to see the populated brokerage tiles.");
+  if (linkedAgentName) {
+    console.log(`  agent link:     ${linkedAgentName} → your login`);
+  }
+  console.log("Open /dashboard for brokerage tiles, /realestate/broker for the speed-to-lead roster,");
+  console.log(linkedAgentName ? "and /realestate/agent for the agent app (Today + Live)." : "and pass --user to also link the agent app.");
 }
 
 main()

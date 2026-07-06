@@ -31,6 +31,8 @@ import {
 } from "../src/lib/categorization/categories";
 import { ensureDefaultRules } from "../src/lib/categorization/rules";
 import { buildBrokeragePayload, BROKERAGE_MARKETS } from "./generate-brokerage-pilot-payload";
+import type { LeadSource, LeadStatus, TouchChannel } from "@prisma/client";
+import { stampFirstTouch, deriveEscalation } from "../src/lib/realestate/response-clock";
 
 function arg(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
@@ -127,6 +129,9 @@ interface SeedSummary {
   marketMetrics: number;
   sourceConfigs: number;
   transactions: number;
+  leads: number;
+  calls: number;
+  messages: number;
 }
 
 // ── Tenant creation (replicates createRestaurant for REAL_ESTATE_BROKERAGE) ─────
@@ -330,6 +335,166 @@ async function seedBrokerageTransactions(db: PrismaClient, restaurantId: string)
   return txns.length;
 }
 
+// ── Lead pipeline (speed-to-lead) ──────────────────────────────────────────────
+// Seeds Lead / CallEvent / MessageEvent with a realistic response-time spread so
+// the broker roster renders worst-first (leakage → slow → fast) and the agent
+// Live tab has real leads. Uses the response-clock engine (stampFirstTouch /
+// deriveEscalation) so the seeded numbers are internally consistent. Assigns to
+// the BrokerageAgents already committed for this tenant. Idempotent (seedlead-
+// scoped). All fictitious.
+interface LeadSeed {
+  name: string;
+  origin: LeadSource;
+  agentIdx: number; // into the tenant's agents (clamped)
+  agedMin: number; // minutes since the lead arrived
+  responseSeconds: number | null; // null = still untouched (drives escalation)
+  channel: TouchChannel; // channel of first touch (when touched)
+  status: LeadStatus;
+}
+
+const LEAD_SEEDS: LeadSeed[] = [
+  // Agent 2 — leaky (untouched, climbed the ladder) → sorts to top of the roster
+  { name: "Sam Ortega", origin: "REFERRAL", agentIdx: 2, agedMin: 41, responseSeconds: null, channel: "CALL", status: "NEW" },
+  { name: "The Whitfields", origin: "ZILLOW", agentIdx: 2, agedMin: 22, responseSeconds: null, channel: "SMS", status: "NEW" },
+  // Agent 1 — slow (breaches the 2-min SLA)
+  { name: "Jordan Blake", origin: "IDX_WEBSITE", agentIdx: 1, agedMin: 200, responseSeconds: 280, channel: "EMAIL", status: "CONTACTED" },
+  { name: "Elena Ruiz", origin: "FACEBOOK", agentIdx: 1, agedMin: 320, responseSeconds: 520, channel: "CALL", status: "CONTACTED" },
+  // Agent 0 — fast/best (well within SLA)
+  { name: "Dana Whitfield", origin: "FACEBOOK", agentIdx: 0, agedMin: 120, responseSeconds: 62, channel: "CALL", status: "CONTACTED" },
+  { name: "Osei Family", origin: "REFERRAL", agentIdx: 0, agedMin: 90, responseSeconds: 78, channel: "CALL", status: "ENGAGED" },
+  { name: "Priya Nair", origin: "ZILLOW", agentIdx: 0, agedMin: 60, responseSeconds: 95, channel: "SMS", status: "CONTACTED" },
+  // Agent 3 — mixed (one fast, one still in the 5-min reminder window)
+  { name: "Tom Becker", origin: "REFERRAL", agentIdx: 3, agedMin: 30, responseSeconds: 55, channel: "CALL", status: "CONTACTED" },
+  { name: "Marcus Lindqvist", origin: "IDX_WEBSITE", agentIdx: 3, agedMin: 8, responseSeconds: null, channel: "EMAIL", status: "NEW" },
+  // Agent 4 — a fresh untouched lead just crossing into BACKUP
+  { name: "The Ahmeds", origin: "ZILLOW", agentIdx: 4, agedMin: 16, responseSeconds: null, channel: "SMS", status: "NEW" },
+];
+
+async function seedLeadPipeline(
+  db: PrismaClient,
+  restaurantId: string,
+): Promise<{ leads: number; calls: number; messages: number }> {
+  const agents = await db.brokerageAgent.findMany({
+    where: { restaurantId },
+    orderBy: { name: "asc" },
+    select: { id: true },
+  });
+  if (agents.length === 0) return { leads: 0, calls: 0, messages: 0 };
+  const agentAt = (i: number) => agents[Math.min(i, agents.length - 1)].id;
+
+  // Idempotent clear (children first — leadId is SET NULL on delete, not cascade).
+  const seededLead = { restaurantId, lead: { externalId: { startsWith: "seedlead-" } } };
+  await db.messageEvent.deleteMany({ where: seededLead });
+  await db.callEvent.deleteMany({ where: seededLead });
+  await db.lead.deleteMany({ where: { restaurantId, externalId: { startsWith: "seedlead-" } } });
+
+  const created: { id: string; touched: boolean }[] = [];
+  let n = 0;
+  for (const s of LEAD_SEEDS) {
+    const receivedAt = new Date(NOW.getTime() - s.agedMin * 60_000);
+    let touch: Partial<{ firstTouchAt: Date; firstTouchChannel: TouchChannel; responseSeconds: number }> = {};
+    let escalation;
+    if (s.responseSeconds != null) {
+      const firstTouchAt = new Date(receivedAt.getTime() + s.responseSeconds * 1000);
+      touch = stampFirstTouch(receivedAt, firstTouchAt, s.channel);
+      escalation = deriveEscalation(s.responseSeconds);
+    } else {
+      const elapsed = Math.round((NOW.getTime() - receivedAt.getTime()) / 1000);
+      escalation = deriveEscalation(elapsed);
+    }
+    const lead = await db.lead.create({
+      data: {
+        restaurantId,
+        sourceSystem: "BOLDTRAIL",
+        externalId: `seedlead-${restaurantId}-${n}`,
+        origin: s.origin,
+        fullName: s.name,
+        email: `${s.name.toLowerCase().replace(/[^a-z]+/g, ".")}@example.com`,
+        phone: `+1208555${String(2000 + n).slice(-4)}`,
+        receivedAt,
+        agentId: agentAt(s.agentIdx),
+        assignedAt: receivedAt,
+        escalation,
+        status: s.status,
+        ...touch,
+      },
+      select: { id: true },
+    });
+    created.push({ id: lead.id, touched: s.responseSeconds != null });
+    n++;
+  }
+
+  let calls = 0;
+  let messages = 0;
+
+  // A completed cell-bridge call on the first touched lead (metadata only, no recording).
+  const callLead = created.find((c) => c.touched);
+  if (callLead) {
+    await db.callEvent.create({
+      data: {
+        restaurantId,
+        leadId: callLead.id,
+        agentId: agentAt(0),
+        direction: "OUTBOUND",
+        agentNumber: "+12085550100",
+        leadNumber: "+12085552004",
+        conferenceSid: `seedconf-${restaurantId}-1`,
+        agentCallSid: `seedleg-agent-${restaurantId}-1`,
+        leadCallSid: `seedleg-lead-${restaurantId}-1`,
+        status: "COMPLETED",
+        initiatedAt: NOW,
+        agentAnsweredAt: NOW,
+        leadConnectedAt: NOW,
+        endedAt: NOW,
+        durationSec: 214,
+        connected: true,
+      },
+    });
+    calls++;
+  }
+
+  // One sent AI-drafted email, and one pending DRAFT (the approve-and-send demo).
+  if (created[4]) {
+    await db.messageEvent.create({
+      data: {
+        restaurantId,
+        leadId: created[4].id,
+        agentId: agentAt(0),
+        channel: "EMAIL",
+        direction: "OUTBOUND",
+        aiDrafted: true,
+        aiModel: "claude-sonnet-5",
+        approvedAt: NOW,
+        subject: "Great to connect",
+        body: "Hi Dana — great to connect. Two new Ridgeline listings match your saved search; want me to send them over?",
+        status: "SENT",
+        sentAt: NOW,
+      },
+    });
+    messages++;
+  }
+  const draftLead = created.find((c) => !c.touched);
+  if (draftLead) {
+    await db.messageEvent.create({
+      data: {
+        restaurantId,
+        leadId: draftLead.id,
+        agentId: agentAt(2),
+        channel: "EMAIL",
+        direction: "OUTBOUND",
+        aiDrafted: true,
+        aiModel: "claude-sonnet-5",
+        subject: "Following up on your search",
+        body: "Hi — following up on the homes you were looking at. Happy to set up a few showings this week if you're ready.",
+        status: "DRAFT",
+      },
+    });
+    messages++;
+  }
+
+  return { leads: created.length, calls, messages };
+}
+
 async function main() {
   const userId = arg("--user") ?? process.env.CLERK_USER_ID;
   let restaurantId = arg("--restaurant");
@@ -371,6 +536,7 @@ async function main() {
   const marketMetrics = await seedMarketMetrics(prisma, restaurantId);
   const sourceConfigs = await seedDataSourceConfigs(prisma, restaurantId);
   const transactions = await seedBrokerageTransactions(prisma, restaurantId);
+  const leadPipeline = await seedLeadPipeline(prisma, restaurantId);
 
   const summary: SeedSummary = {
     restaurantId,
@@ -380,6 +546,9 @@ async function main() {
     marketMetrics,
     sourceConfigs,
     transactions,
+    leads: leadPipeline.leads,
+    calls: leadPipeline.calls,
+    messages: leadPipeline.messages,
   };
 
   console.log("Seeded Cascade Realty Group demo:");
@@ -390,6 +559,8 @@ async function main() {
   console.log(`  market metrics: ${summary.marketMetrics} rows`);
   console.log(`  source configs: ${summary.sourceConfigs} demo-connected providers, no live tokens stored`);
   console.log(`  transactions:   ${summary.transactions} (current month, category-linked)`);
+  console.log(`  leads:          ${summary.leads} (response-clock spread: leaked / slow / fast)`);
+  console.log(`  calls:          ${summary.calls} · messages: ${summary.messages} (1 sent + 1 draft)`);
   if (commit.rejected.length > 0) {
     console.log(`  ⚠ rejected import rows: ${commit.rejected.length}`);
   }

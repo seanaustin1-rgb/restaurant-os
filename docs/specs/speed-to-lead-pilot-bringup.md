@@ -47,7 +47,7 @@ Two helpers decide this at runtime:
 | AI reply drafting     | Anthropic  | ✅ (you likely already have a key) | `ANTHROPIC_API_KEY`, optional `REALESTATE_DRAFT_MODEL` |
 | Cell-bridge dialer    | Twilio     | ✅ free trial | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` |
 | SMS alerts            | Twilio     | ✅ same account | (same three) |
-| Push alerts           | OneSignal  | ✅ free tier | `ONESIGNAL_APP_ID`, `ONESIGNAL_API_KEY`, `NEXT_PUBLIC_ONESIGNAL_APP_ID` |
+| Push alerts           | OneSignal  | ✅ free tier | `ONESIGNAL_API_KEY` (App ID already committed) |
 | Webhook auth          | (you set)  | ✅ pick a secret | `BOLDTRAIL_WEBHOOK_SECRET` |
 
 Optional: `NEXT_PUBLIC_APP_URL` (your deployed origin) so a push tap deep-links
@@ -98,13 +98,18 @@ fine for the demo — calls originate from your Twilio number.
 
 ### 3. OneSignal (≈10 min, free tier)
 
-1. Sign up at onesignal.com → create an app (Web Push is enough for the PWA).
-2. Copy the **App ID** and a **REST API Key** from *Settings → Keys & IDs*.
+1. Sign up at onesignal.com → create an app → add a **Web** platform ("Typical
+   Site"): Site URL = your origin, leave the service-worker settings on defaults
+   (a root `OneSignalSDKWorker.js` already ships in `public/`).
+2. Copy the **REST API Key** from *Settings → Keys & IDs*.
+
+The pilot **App ID (`fa9269c1-f248-4e5d-a489-91f5f17b933b`) is already committed**
+in `src/lib/realestate/onesignal.ts` (it's a public identifier), so the only env
+var you must set is the secret:
 
 ```
-ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx
-ONESIGNAL_API_KEY=xxxxxxxx
-NEXT_PUBLIC_ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx   # same App ID, exposed to the browser SDK
+ONESIGNAL_API_KEY=xxxxxxxx                         # REQUIRED — secret, server only
+NEXT_PUBLIC_ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx    # optional — only to override the committed App ID
 ```
 
 How it wires up (already built):

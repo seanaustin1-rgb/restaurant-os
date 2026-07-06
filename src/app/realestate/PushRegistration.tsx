@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ONESIGNAL_APP_ID, ONESIGNAL_PAGE_SDK } from "@/lib/realestate/onesignal";
 import { confirmAgentPush } from "./actions";
 
 // Registers the signed-in agent's device for OneSignal web push and ties the
@@ -30,12 +31,10 @@ declare global {
   }
 }
 
-const SDK_SRC = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-
 function loadSdk(): void {
-  if (document.querySelector(`script[src="${SDK_SRC}"]`)) return;
+  if (document.querySelector(`script[src="${ONESIGNAL_PAGE_SDK}"]`)) return;
   const s = document.createElement("script");
-  s.src = SDK_SRC;
+  s.src = ONESIGNAL_PAGE_SDK;
   s.defer = true;
   document.head.appendChild(s);
 }
@@ -44,7 +43,7 @@ export function PushRegistration({ agentId }: { agentId: string }) {
   const started = useRef(false);
 
   useEffect(() => {
-    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+    const appId = ONESIGNAL_APP_ID;
     if (!appId || started.current) return;
     started.current = true;
 

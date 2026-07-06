@@ -9,6 +9,8 @@
 // still logged for the broker's escalation trail. Twilio SMS fallback is a
 // separate follow-up gated on the agent's mobile number.
 
+import { ONESIGNAL_APP_ID, pushDispatchAvailable } from "./onesignal";
+
 export type AlertLevel = "new" | "reminder" | "backup" | "broker";
 
 export interface LeadAlert {
@@ -20,7 +22,7 @@ export interface LeadAlert {
 }
 
 export function notificationsAvailable(): boolean {
-  return !!(process.env.ONESIGNAL_APP_ID && process.env.ONESIGNAL_API_KEY);
+  return pushDispatchAvailable();
 }
 
 // Human-facing push copy per escalation rung.
@@ -48,7 +50,7 @@ export async function sendLeadAlert(alert: LeadAlert): Promise<{ delivered: bool
   const tag = `[lead-alert:${alert.level}]`;
   const who = `restaurant=${alert.restaurantId} lead=${alert.leadId} agent=${alert.agentId ?? "?"}`;
 
-  const appId = process.env.ONESIGNAL_APP_ID;
+  const appId = ONESIGNAL_APP_ID;
   const apiKey = process.env.ONESIGNAL_API_KEY;
   if (!appId || !apiKey) {
     console.log(`${tag} ${who} (${alert.leadName ?? ""}) — notifications not configured; logged only`);

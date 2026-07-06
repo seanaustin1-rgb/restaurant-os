@@ -1,5 +1,6 @@
 import type { RosterData } from "@/lib/realestate/load-roster";
 import { SPEED_TO_LEAD_TARGET_SEC } from "@/lib/realestate/lead-metrics";
+import { FireTestLeadButton } from "./FireTestLeadButton";
 
 function fmtDuration(sec: number | null): string {
   if (sec == null) return "—";
@@ -27,17 +28,28 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   );
 }
 
-export function RosterView({ brokerageName, data }: { brokerageName: string; data: RosterData }) {
+export function RosterView({
+  brokerageName,
+  restaurantId,
+  data,
+}: {
+  brokerageName: string;
+  restaurantId: string;
+  data: RosterData;
+}) {
   const { rows, overall, totalLeads } = data;
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-8">
-      <header className="mb-6">
-        <div className="text-xs uppercase tracking-wide text-neutral-500">{brokerageName}</div>
-        <h1 className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Speed-to-Lead Roster</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          First response measured from lead arrival. Target: under {Math.round(SPEED_TO_LEAD_TARGET_SEC / 60)} minutes.
-        </p>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-xs uppercase tracking-wide text-neutral-500">{brokerageName}</div>
+          <h1 className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-neutral-100">Speed-to-Lead Roster</h1>
+          <p className="mt-1 text-sm text-neutral-500">
+            First response measured from lead arrival. Target: under {Math.round(SPEED_TO_LEAD_TARGET_SEC / 60)} minutes.
+          </p>
+        </div>
+        <FireTestLeadButton restaurantId={restaurantId} />
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

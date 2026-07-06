@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { AgentAppData } from "@/lib/realestate/load-agent-app";
-import { initiateCall, approveMessage } from "../actions";
+import { initiateCall, approveMessage, draftForLead } from "../actions";
 
 const BAND: Record<string, string> = {
   green: "text-emerald-600 dark:text-emerald-400",
@@ -33,6 +33,14 @@ export function AgentAppView({ data }: { data: AgentAppData }) {
   const run = (fn: () => Promise<unknown>) =>
     startTransition(async () => {
       await fn();
+      router.refresh();
+    });
+
+  // Draft, then jump to Today so the agent lands on the draft to review/approve.
+  const draft = (leadId: string) =>
+    startTransition(async () => {
+      await draftForLead(leadId);
+      setTab("today");
       router.refresh();
     });
 
@@ -90,18 +98,32 @@ export function AgentAppView({ data }: { data: AgentAppData }) {
                       </span>
                     </div>
                   </div>
-                  {!l.touched && l.phone ? (
-                    <button
-                      type="button"
-                      disabled={pending}
-                      onClick={() => run(() => initiateCall(l.id))}
-                      className="flex-none rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
-                    >
-                      Call now
-                    </button>
-                  ) : l.touched ? (
+                  {l.touched ? (
                     <span className="flex-none text-xs text-emerald-600 dark:text-emerald-400">✓ touched</span>
-                  ) : null}
+                  ) : (
+                    <div className="flex flex-none items-center gap-2">
+                      {data.draftingEnabled ? (
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => draft(l.id)}
+                          className="rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-700 disabled:opacity-50 dark:border-neutral-700 dark:text-neutral-200"
+                        >
+                          Draft reply
+                        </button>
+                      ) : null}
+                      {l.phone ? (
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => run(() => initiateCall(l.id))}
+                          className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-white dark:text-neutral-900"
+                        >
+                          Call now
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
                 </div>
               </div>
             ))

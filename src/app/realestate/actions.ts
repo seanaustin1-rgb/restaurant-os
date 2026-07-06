@@ -1,9 +1,17 @@
 "use server";
 
+import { randomUUID } from "crypto";
+import type { UserRole } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { stampFirstTouch } from "@/lib/realestate/response-clock";
 import { bridgeCall } from "@/lib/realestate/dial";
+import {
+  draftMessage,
+  toMessageEventDraft,
+  realestateDraftingAvailable,
+} from "@/lib/realestate/draft-message";
+import { ingestBoldTrailLead } from "@/lib/realestate/lead-webhook";
 
 // Require the signed-in user to belong to the lead's brokerage tenant with a
 // write-capable role. INVESTOR is read-only per the non-negotiables and must
@@ -13,6 +21,19 @@ async function requireTenantMember(restaurantId: string): Promise<string> {
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
     where: { clerkUserId: userId, restaurantId, role: { not: "INVESTOR" } },
+    select: { id: true },
+  });
+  if (!role) throw new Error("forbidden");
+  return userId;
+}
+
+// Stricter gate for tenant-administrative actions (e.g. firing a test lead):
+// only the listed roles pass.
+async function requireTenantRole(restaurantId: string, roles: UserRole[]): Promise<string> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("unauthorized");
+  const role = await prisma.userRestaurantRole.findFirst({
+    where: { clerkUserId: userId, restaurantId, role: { in: roles } },
     select: { id: true },
   });
   if (!role) throw new Error("forbidden");
@@ -126,4 +147,128 @@ export async function approveMessage(
   }
 
   return { sent: true, firstTouchStamped };
+}
+
+/**
+ * Generate an AI first-outreach draft for a lead and persist it as a DRAFT
+ * MessageEvent (nothing sends — it lands in the agent's "Drafts to approve").
+ * Gated on ANTHROPIC_API_KEY: throws a clear error when drafting isn't
+ * configured, so the UI only offers this when the key is present.
+ */
+export async function draftForLead(
+  leadId: string,
+  channel: "EMAIL" | "SMS" = "EMAIL",
+): Promise<{ draftId: string }> {
+  if (!realestateDraftingAvailable()) {
+    throw new Error("AI drafting is not configured (ANTHROPIC_API_KEY unset)");
+  }
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    select: {
+      id: true,
+      restaurantId: true,
+      agentId: true,
+      fullName: true,
+      origin: true,
+      agent: { select: { name: true } },
+    },
+  });
+  if (!lead) throw new Error("Lead not found");
+  await requireTenantMember(lead.restaurantId);
+
+  const draft = await draftMessage({
+    channel,
+    style: { agentName: lead.agent?.name ?? "Your agent" },
+    lead: { fullName: lead.fullName, origin: lead.origin, note: null },
+    intent:
+      "First outreach to a new buyer lead — introduce yourself, acknowledge their inquiry, and invite a quick call. Keep it human.",
+  });
+
+  const created = await prisma.messageEvent.create({
+    data: toMessageEventDraft({
+      restaurantId: lead.restaurantId,
+      leadId: lead.id,
+      agentId: lead.agentId,
+      channel,
+      draft,
+    }),
+    select: { id: true },
+  });
+  return { draftId: created.id };
+}
+
+/**
+ * Fire a synthetic lead through the real BoldTrail ingest pipeline so the whole
+ * speed-to-lead loop (RawSourceEvent → Lead → Inngest alert/escalation ladder →
+ * agent app → broker roster) can be exercised without a live BoldTrail webhook.
+ * Broker/operator/manager only — it writes data. Assigns the new lead to the
+ * tenant's first agent so it surfaces in the agent app.
+ */
+export async function fireTestLead(
+  restaurantId: string,
+): Promise<{ leadId: string | null; created: boolean }> {
+  await requireTenantRole(restaurantId, ["BROKER", "OPERATOR", "MANAGER"]);
+
+  const tenant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { businessType: true },
+  });
+  if (!tenant || tenant.businessType !== "REAL_ESTATE_BROKERAGE") {
+    throw new Error("Not a brokerage tenant");
+  }
+
+  const suffix = randomUUID().slice(0, 8);
+  const payload = {
+    lead: {
+      id: `test-${suffix}`,
+      first_name: "Test",
+      last_name: `Lead ${suffix}`,
+      email: `test+${suffix}@example.com`,
+      phone: "+15551234567",
+      source: "IDX Website",
+      created: new Date().toISOString(),
+    },
+  };
+
+  const res = await ingestBoldTrailLead(prisma, restaurantId, payload);
+
+  // Route the test lead to an agent so the agent app shows it (real assignment
+  // /round-robin isn't modeled yet — this is test-only convenience).
+  if (res.created && res.leadId) {
+    const firstAgent = await prisma.brokerageAgent.findFirst({
+      where: { restaurantId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true },
+    });
+    if (firstAgent) {
+      await prisma.lead.update({
+        where: { id: res.leadId },
+        data: { agentId: firstAgent.id },
+      });
+    }
+  }
+
+  return { leadId: res.leadId, created: res.created };
+}
+
+/**
+ * Record that the signed-in agent has enabled push on this device. The client
+ * OneSignal SDK associates the subscription with the agent id via
+ * OneSignal.login(agentId); this stores that external id on the BrokerageAgent
+ * so notify.ts can target it, and so the broker can see push adoption. Only the
+ * agent themselves (matching clerkUserId) may enroll their own device.
+ */
+export async function confirmAgentPush(agentId: string): Promise<{ ok: boolean }> {
+  const { userId } = await auth();
+  if (!userId) throw new Error("unauthorized");
+  const agent = await prisma.brokerageAgent.findFirst({
+    where: { id: agentId, clerkUserId: userId },
+    select: { id: true },
+  });
+  if (!agent) throw new Error("forbidden");
+  await prisma.brokerageAgent.update({
+    where: { id: agent.id },
+    data: { pushExternalId: agentId },
+  });
+  return { ok: true };
 }

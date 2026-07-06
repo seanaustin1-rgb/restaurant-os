@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { loadAgentApp } from "@/lib/realestate/load-agent-app";
 import { AgentAppView } from "./AgentAppView";
+import { PushRegistration } from "../PushRegistration";
 
 // The agent app (Today + Live). Resolves the signed-in user to their
 // BrokerageAgent via clerkUserId. Users not linked to an agent fall back to
@@ -21,5 +22,10 @@ export default async function AgentAppPage() {
   const data = await loadAgentApp(agent.id);
   if (!data) redirect("/dashboard");
 
-  return <AgentAppView data={data} />;
+  return (
+    <>
+      <PushRegistration agentId={agent.id} />
+      <AgentAppView data={data} />
+    </>
+  );
 }

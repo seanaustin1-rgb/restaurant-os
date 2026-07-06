@@ -19,5 +19,5 @@ export default async function BrokerRosterPage() {
   if (!role) redirect("/dashboard");
 
   const data = await loadAgentRoster(role.restaurantId);
-  return <RosterView brokerageName={role.restaurant.name} data={data} />;
+  return <RosterView brokerageName={role.restaurant.name} restaurantId={role.restaurantId} data={data} />;
 }

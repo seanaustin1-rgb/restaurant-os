@@ -26,11 +26,17 @@ Two helpers decide this at runtime:
 - `notificationsAvailable()` — true once `ONESIGNAL_APP_ID` + `ONESIGNAL_API_KEY`
   are set (`src/lib/realestate/notify.ts`).
 
-> Note: setting the env vars flips the adapters to the "dispatch" branch, which
-> today still logs (the provider SDK calls are the `TODO(pilot)` lines). The keys
-> are step one; wiring the SDK call is the small follow-up I do once the keys
-> exist and I can test against a live account. This runbook gets the keys in
-> place and the accounts ready so that follow-up is minutes, not a hunt.
+> Status of each dispatch path (what "add the key" actually does today):
+> - **AI drafting — fully wired.** The moment `ANTHROPIC_API_KEY` is set, the
+>   agent app shows a **Draft reply** button that calls Claude and drops a real
+>   DRAFT into "Drafts to approve." No further code needed.
+> - **OneSignal push — fully wired.** With the keys set, the agent app registers
+>   the device (`PushRegistration` → `OneSignal.login(agentId)`) and the
+>   escalation ladder pushes for real via the OneSignal REST API, targeting the
+>   agent by external id. No further code needed.
+> - **Twilio dialer/SMS — key + one small wire-up.** The keys flip the adapter to
+>   the dispatch branch; the actual Twilio call is the remaining `TODO(pilot)`
+>   line I finish once I can test against your live account (minutes).
 
 ---
 
@@ -41,8 +47,11 @@ Two helpers decide this at runtime:
 | AI reply drafting     | Anthropic  | ✅ (you likely already have a key) | `ANTHROPIC_API_KEY`, optional `REALESTATE_DRAFT_MODEL` |
 | Cell-bridge dialer    | Twilio     | ✅ free trial | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` |
 | SMS alerts            | Twilio     | ✅ same account | (same three) |
-| Push alerts           | OneSignal  | ✅ free tier | `ONESIGNAL_APP_ID`, `ONESIGNAL_API_KEY` |
+| Push alerts           | OneSignal  | ✅ free tier | `ONESIGNAL_APP_ID`, `ONESIGNAL_API_KEY`, `NEXT_PUBLIC_ONESIGNAL_APP_ID` |
 | Webhook auth          | (you set)  | ✅ pick a secret | `BOLDTRAIL_WEBHOOK_SECRET` |
+
+Optional: `NEXT_PUBLIC_APP_URL` (your deployed origin) so a push tap deep-links
+straight into `/realestate/agent`.
 
 ## What truly needs the design partner
 
@@ -95,12 +104,21 @@ fine for the demo — calls originate from your Twilio number.
 ```
 ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx
 ONESIGNAL_API_KEY=xxxxxxxx
+NEXT_PUBLIC_ONESIGNAL_APP_ID=xxxxxxxx-xxxx-xxxx   # same App ID, exposed to the browser SDK
 ```
 
-Push targets the agent by `external_user_id = agentId`. That means the agent's
-device has to be registered against their `BrokerageAgent` id — the
-`BrokerageAgent.pushExternalId` column exists for exactly this; wiring the PWA
-subscribe call is part of the OneSignal follow-up.
+How it wires up (already built):
+- The agent app renders `PushRegistration`, which loads the OneSignal v16 SDK
+  (from their CDN — no npm dep), calls `OneSignal.login(agentId)` to bind the
+  device to the agent, prompts for permission, and persists enrollment via the
+  `confirmAgentPush` server action (sets `BrokerageAgent.pushExternalId`).
+- The escalation ladder's `sendLeadAlert` POSTs to the OneSignal REST API with
+  `include_external_user_ids: [agentId]`, so each rung (new → reminder → backup
+  → broker) pushes to the right agent. Unassigned leads log instead of pushing.
+- The service worker lives at `public/OneSignalSDKWorker.js`.
+
+All of it no-ops cleanly until `NEXT_PUBLIC_ONESIGNAL_APP_ID` (client) and
+`ONESIGNAL_APP_ID`/`ONESIGNAL_API_KEY` (server) are present.
 
 ### 4. Anthropic (already yours)
 
@@ -123,8 +141,14 @@ drafts instead of the gated stub.
 
 ## Fire a test lead (proves the loop end-to-end, no BoldTrail)
 
-Once the secret + tenant exist, POST a lead the same way BoldTrail will. Replace
-`<tenant>` with a `REAL_ESTATE_BROKERAGE` Restaurant id and `<secret>` with your
+**Easiest: the in-app button.** On `/realestate/broker` (signed in as
+broker/operator/manager) there's a **Fire test lead** button — it pushes a
+synthetic lead through the *real* ingest pipeline, assigns it to the tenant's
+first agent, and refreshes the roster. No curl, no secret handling. Use this for
+demos.
+
+**Or by curl** (simulates exactly what BoldTrail POSTs). Replace `<tenant>` with a
+`REAL_ESTATE_BROKERAGE` Restaurant id and `<secret>` with your
 `BOLDTRAIL_WEBHOOK_SECRET`.
 
 ```bash

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { deriveResponseBand, type ResponseBand } from "./response-clock";
 import { computeResponseStats, type ResponseStats } from "./lead-metrics";
+import { realestateDraftingAvailable } from "./draft-message";
 
 // Loader for the agent app (Today + Live tabs). Resolves the agent's own leads
 // and pending AI drafts, and colors each lead by the response clock. The band is
@@ -32,6 +33,7 @@ export interface AgentAppData {
   leads: AgentLeadRow[];
   drafts: AgentDraftRow[];
   stats: ResponseStats;
+  draftingEnabled: boolean; // AI draft button offered only when ANTHROPIC_API_KEY is set
 }
 
 export async function loadAgentApp(agentId: string): Promise<AgentAppData | null> {
@@ -106,5 +108,6 @@ export async function loadAgentApp(agentId: string): Promise<AgentAppData | null
         escalation: "PRIMARY" as const,
       })),
     ),
+    draftingEnabled: realestateDraftingAvailable(),
   };
 }

@@ -67,7 +67,9 @@ export async function sendLeadAlert(alert: LeadAlert): Promise<{ delivered: bool
       method: "POST",
       headers: {
         "content-type": "application/json",
-        authorization: `Basic ${apiKey}`,
+        // OneSignal's current key format (os_v2_app_…) uses the "Key" scheme;
+        // legacy REST API keys used "Basic". We're on the new format.
+        authorization: `Key ${apiKey}`,
       },
       body: JSON.stringify({
         app_id: appId,

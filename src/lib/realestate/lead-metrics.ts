@@ -56,3 +56,55 @@ export function computeResponseStats(
     escalatedToBroker: leads.filter((l) => l.escalation === "BROKER").length,
   };
 }
+
+// ── Broker roster ──────────────────────────────────────────────────────────
+
+export interface RosterLeadStat extends LeadStat {
+  agentId: string | null;
+  agentName?: string | null;
+}
+
+export interface AgentRosterRow {
+  agentId: string | null; // null row = unassigned leads
+  agentName: string | null;
+  stats: ResponseStats;
+}
+
+const UNASSIGNED = "__unassigned__";
+
+/**
+ * Group leads by agent into per-agent scorecards for the broker cockpit roster,
+ * sorted worst-first (most leaked-to-broker, then slowest median) so the agents
+ * needing attention surface at the top — matching the cockpit's "red first" rule.
+ * Leads with no agent collapse into a single unassigned row (agentId null).
+ */
+export function computeAgentRoster(
+  leads: RosterLeadStat[],
+  targetSec: number = SPEED_TO_LEAD_TARGET_SEC,
+): AgentRosterRow[] {
+  const groups = new Map<string, { name: string | null; leads: LeadStat[] }>();
+  for (const l of leads) {
+    const key = l.agentId ?? UNASSIGNED;
+    const group = groups.get(key) ?? { name: l.agentName ?? null, leads: [] };
+    if (group.name == null && l.agentName != null) group.name = l.agentName;
+    group.leads.push({ responseSeconds: l.responseSeconds, escalation: l.escalation });
+    groups.set(key, group);
+  }
+
+  const rows: AgentRosterRow[] = [...groups.entries()].map(([key, g]) => ({
+    agentId: key === UNASSIGNED ? null : key,
+    agentName: g.name,
+    stats: computeResponseStats(g.leads, targetSec),
+  }));
+
+  rows.sort((a, b) => {
+    if (b.stats.escalatedToBroker !== a.stats.escalatedToBroker) {
+      return b.stats.escalatedToBroker - a.stats.escalatedToBroker;
+    }
+    const am = a.stats.medianResponseSec ?? -1;
+    const bm = b.stats.medianResponseSec ?? -1;
+    return bm - am;
+  });
+
+  return rows;
+}

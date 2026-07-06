@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { LeadEscalation } from "@prisma/client";
-import { median, computeResponseStats, SPEED_TO_LEAD_TARGET_SEC } from "./lead-metrics";
+import {
+  median,
+  computeResponseStats,
+  computeAgentRoster,
+  SPEED_TO_LEAD_TARGET_SEC,
+  type RosterLeadStat,
+} from "./lead-metrics";
 
 const lead = (responseSeconds: number | null, escalation: LeadEscalation = "PRIMARY") => ({
   responseSeconds,
@@ -62,5 +68,42 @@ describe("computeResponseStats", () => {
   it("respects a custom target", () => {
     const stats = computeResponseStats([lead(200), lead(400)], 300);
     expect(stats.pctWithinTarget).toBe(50); // only the 200s lead is within 300s
+  });
+});
+
+describe("computeAgentRoster", () => {
+  const rlead = (
+    agentId: string | null,
+    responseSeconds: number | null,
+    escalation: LeadEscalation = "PRIMARY",
+    agentName?: string,
+  ): RosterLeadStat => ({ agentId, agentName, responseSeconds, escalation });
+
+  it("groups leads per agent with their own stats", () => {
+    const rows = computeAgentRoster([
+      rlead("a1", 60, "PRIMARY", "Dana"),
+      rlead("a1", 120, "PRIMARY", "Dana"),
+      rlead("a2", 45, "PRIMARY", "Marcus"),
+    ]);
+    const dana = rows.find((r) => r.agentId === "a1");
+    expect(dana?.agentName).toBe("Dana");
+    expect(dana?.stats.total).toBe(2);
+    expect(dana?.stats.medianResponseSec).toBe(90);
+  });
+
+  it("collapses agentless leads into a single unassigned row", () => {
+    const rows = computeAgentRoster([rlead(null, null), rlead(null, 30)]);
+    const unassigned = rows.find((r) => r.agentId === null);
+    expect(unassigned).toBeDefined();
+    expect(unassigned?.stats.total).toBe(2);
+  });
+
+  it("sorts worst-first: most broker-escalated, then slowest median", () => {
+    const rows = computeAgentRoster([
+      rlead("fast", 30, "PRIMARY", "Fast"),
+      rlead("leaky", null, "BROKER", "Leaky"),
+      rlead("slow", 600, "PRIMARY", "Slow"),
+    ]);
+    expect(rows.map((r) => r.agentId)).toEqual(["leaky", "slow", "fast"]);
   });
 });

@@ -80,3 +80,48 @@ export async function initiateCall(
 
   return { callId: call.id, firstTouchStamped };
 }
+
+/**
+ * Approve an AI-drafted MessageEvent and send it. The actual transmit (agent's
+ * connected mailbox / Twilio SMS) is gated — until wired, this marks the message
+ * approved + sent and logs. Stamps the lead's first touch when it's the first
+ * outreach (send counts as an attempt).
+ */
+export async function approveMessage(
+  messageId: string,
+): Promise<{ sent: boolean; firstTouchStamped: boolean }> {
+  const msg = await prisma.messageEvent.findUnique({
+    where: { id: messageId },
+    select: {
+      id: true,
+      restaurantId: true,
+      status: true,
+      channel: true,
+      leadId: true,
+      lead: { select: { receivedAt: true, firstTouchAt: true } },
+    },
+  });
+  if (!msg) throw new Error("Message not found");
+  await requireTenantMember(msg.restaurantId);
+  if (msg.status !== "DRAFT") throw new Error("Message is not a draft");
+
+  const now = new Date();
+  // TODO(pilot): transmit via the agent's connected mailbox (Gmail/Outlook OAuth)
+  // or Twilio SMS. Gated until those integrations exist; mark approved + sent.
+  await prisma.messageEvent.update({
+    where: { id: msg.id },
+    data: { status: "SENT", approvedAt: now, sentAt: now },
+  });
+
+  let firstTouchStamped = false;
+  if (msg.leadId && msg.lead && !msg.lead.firstTouchAt) {
+    const channel = msg.channel === "SMS" ? "SMS" : "EMAIL";
+    await prisma.lead.update({
+      where: { id: msg.leadId },
+      data: { status: "CONTACTED", ...stampFirstTouch(msg.lead.receivedAt, now, channel) },
+    });
+    firstTouchStamped = true;
+  }
+
+  return { sent: true, firstTouchStamped };
+}

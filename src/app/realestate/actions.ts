@@ -5,12 +5,14 @@ import { prisma } from "@/lib/prisma";
 import { stampFirstTouch } from "@/lib/realestate/response-clock";
 import { bridgeCall } from "@/lib/realestate/dial";
 
-// Require the signed-in user to belong to the lead's brokerage tenant (any role).
+// Require the signed-in user to belong to the lead's brokerage tenant with a
+// write-capable role. INVESTOR is read-only per the non-negotiables and must
+// never reach a write action, even if attached to the tenant.
 async function requireTenantMember(restaurantId: string): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurantId },
+    where: { clerkUserId: userId, restaurantId, role: { not: "INVESTOR" } },
     select: { id: true },
   });
   if (!role) throw new Error("forbidden");

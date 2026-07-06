@@ -15,12 +15,15 @@ import { ingestBoldTrailLead } from "@/lib/realestate/lead-webhook";
 export async function POST(req: NextRequest) {
   const url = new URL(req.url);
 
+  // Fail closed: an unauthenticated write endpoint that creates rows + fires
+  // events must never be open. If the secret isn't configured, reject.
   const secret = process.env.BOLDTRAIL_WEBHOOK_SECRET;
-  if (secret) {
-    const provided = req.headers.get("x-webhook-secret") ?? url.searchParams.get("secret");
-    if (provided !== secret) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "webhook not configured" }, { status: 503 });
+  }
+  const provided = req.headers.get("x-webhook-secret") ?? url.searchParams.get("secret");
+  if (provided !== secret) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const restaurantId = url.searchParams.get("tenant");

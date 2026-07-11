@@ -1,7 +1,10 @@
-# Brokerage "Cockpit" — Living Coordination Doc (Claude ⇄ Codex)
+# Project Raven — Command Center
 
-**Single source of truth for the tandem brokerage build.** Update your own lane section + append to the
-Progress Log after every step, so the other agent always knows what's done and where we are.
+_Formerly "Brokerage 'Cockpit' — Living Coordination Doc (Claude ⇄ Codex)." Promoted 2026-07-11 to the **primary Project
+Raven Command Center**. The **`## Product Decision Log`** below is the canonical record of product truth._
+
+**Single source of truth for Project Raven.** Update your own lane section + append to the
+Progress Log after every step, so the other agents always know what's done and where we are.
 
 **Editing rule (agreed):**
 - **Claude** edits `## Claude Lane Status`.
@@ -14,9 +17,82 @@ Progress Log after every step, so the other agent always knows what's done and w
 **Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`,
 `project-raven-cockpit-ux-audit.md`, `project-raven-pilot-interaction-spec.md`.
 
-> **This document is the Project Raven Command Center** (2026-07-11). It is the single authoritative project doc — no
-> separate roadmap. Each agent updates only its own lane; product decisions go in **`## Sean Decisions Required`** below
-> (agents surface them, they do not decide). Read the current sprint before starting work.
+> **This document is the Project Raven Command Center** (promoted 2026-07-11). The **`## Product Decision Log`** below is
+> the canonical record of product truth — every major product decision is recorded there (as a numbered PD) **before**
+> implementation begins (PD-012). Open questions still awaiting Sean live in **`## Sean Decisions Required`**. Each agent
+> updates only its own lane. Read the current milestone (PD-011: **Luke First Login**) before starting work.
+
+---
+
+## Product Decision Log
+
+> **Canonical record of Project Raven product truth.** Every major product decision is recorded here as a numbered **PD**
+> **before** implementation begins (PD-012). Append-only: supersede a decision rather than delete it. Status values:
+> **Active** · Superseded · Retired.
+
+### PD-001 — Mission
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Raven is an **Executive Operating System**. It is **not a CRM**. Success is measured by **daily adoption**. Current pilot customer: **Luke**.
+- **Rationale:** The product wins when Luke runs his business through it every day ("this helps me run my business"), not when it merely displays data.
+
+### PD-002 — Product Principles
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** (1) The cockpit **always loads first**. (2) AI **never replaces** the cockpit. (3) The Morning Brief is **voice-first**. (4) **Typing is always available.** (5) **Skip is always available.**
+- **Rationale:** The operator stays in control; the assistant augments the cockpit, never gates it.
+
+### PD-003 — Morning Brief Flow (locked)
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The Morning Brief sequence is **locked**: **Cockpit → Greeting → Executive Brief → One Thing First → Return to Cockpit.**
+- **Rationale:** A predictable, repeatable ritual that always returns the user to their cockpit.
+
+### PD-004 — One Thing First
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Every Morning Brief ends with **exactly one** recommended action. **Never multiple priorities.**
+- **Rationale:** A single next action drives execution; competing priorities create paralysis.
+
+### PD-005 — Integration Priority
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Integration order is **(1) Google Workspace, (2) BoldTrail, (3) Escapia, (4) QuickBooks Online.** Future integrations occur **only after pilot validation**.
+- **Rationale:** Sequence integrations behind proven pilot value.
+
+### PD-006 — Connect → Show Value → Expand
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The activation path is **Connect → Show Value → Expand.** **Never require users to connect multiple systems before demonstrating value.**
+- **Rationale:** Time-to-value must precede any ask for more setup.
+
+### PD-007 — Pilot Goal
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Luke connects **Google Workspace**, receives a **personalized Morning Brief**, **knows exactly what action to take next**, and **returns voluntarily the next morning**.
+- **Rationale:** A concrete, observable success condition for the pilot.
+
+### PD-008 — Vacation Rentals are a First-Class Business Type
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Vacation rentals are a **first-class business type**, not a secondary feature of brokerage. Brokerages managing vacation rentals experience a **consistent Executive Cockpit across agents and properties.** **Property-owner reporting is a core capability.** **Automated monthly owner reports are required** and follow the same automation philosophy used for executive briefings, agent coaching, and follow-up workflows. Treat as **foundational architecture**.
+- **Rationale:** Luke runs a large vacation-rental division; owner reporting and a consistent cockpit are core to his daily use, not an add-on.
+
+### PD-009 — Team Roles
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:**
+  - **Sean — CEO:** product vision, Luke relationship, business decisions.
+  - **GPT — Head of Product:** roadmap, acceptance criteria, sprint priorities, product governance.
+  - **Claude — Design Authority:** UX, pilot validation, PASS / REFINE / PILOT BLOCKER.
+  - **Codex — Engineering:** implementation, testing, repository, documentation.
+- **Rationale:** Clear separation of authority prevents lane overlap.
+
+### PD-010 — Review Process
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The flow is **Engineering → Design Review → Product Approval → Customer Validation → Next Sprint.** **No sprint begins until the previous sprint has completed review.**
+- **Rationale:** Quality gate; no parallel sprint churn.
+
+### PD-011 — Current Milestone: Luke First Login
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The current milestone is **Luke First Login.** Everything currently ships toward this milestone.
+- **Rationale:** A single focusing objective for all lanes.
+
+### PD-012 — Governance Rule
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** From this point forward, **every major product decision must be recorded in the Product Decision Log before implementation begins.** The Product Decision Log is the **canonical record of product truth**.
+- **Rationale:** Prevents decisions from being lost or contradicted; the PDL is the single source.
 
 ---
 
@@ -29,8 +105,8 @@ See `project-raven-pilot-interaction-spec.md` for full context.
 
 | # | Decision | Claude's recommendation | Status |
 |---|---|---|---|
-| R1 | Voice: forced, or opt-in? | Text-first, **voice opt-in** (browser Web Speech; no infra cost) | OPEN |
-| R2 | Morning Brief entry: auto-open modal, or non-blocking greeting bar with cockpit visible first? | **Non-blocking bar** (cockpit-first, matches the mission) | OPEN |
+| R1 | Voice: forced, or opt-in? | **RESOLVED → PD-002:** voice-first, with typing + skip always available. | RESOLVED |
+| R2 | Morning Brief entry: auto-open modal, or non-blocking (cockpit first)? | **RESOLVED → PD-001 / PD-002 / PD-003:** cockpit always loads first; AI never replaces it. | RESOLVED |
 | R3 | Approve the one net-new capability — a scoped LLM follow-up answer over the brief's already-loaded data (reuses the existing Anthropic path)? | **Approve**, bounded to brief context | OPEN |
 | R4 | Learned automations (e.g. auto-send a trusted agent's drafts): opt-in only, or auto-enable? | **Opt-in only**, never silent | OPEN |
 | R5 | Agent-rhythm "automatic CRM write-back": pilot week one, or deferred? | **Defer** until pilot CRM creds land (Codex ingestion lane) | OPEN |
@@ -320,6 +396,15 @@ _Data/financial spine. Owned by Codex._
 - ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion jobs. The FUB client scaffold exists, but real sync
   should wait until partner credentials / pilot source shapes are available.
 
+### Engineering delivered this session (2026-07-11, Claude-built — for Codex ownership per PD-009)
+_Logged here so the Engineering picture is complete; Codex to absorb/own. Full history is in the Progress Log; nothing overwritten._
+- Speed-to-lead **agent app** (`/realestate/agent`) and **broker roster** (`/realestate/broker`) view routes.
+- **OneSignal Web SDK** integration (pilot App ID committed; `Key` auth for new-format key; root service worker) — push gated on `ONESIGNAL_API_KEY`.
+- **No-terminal pilot bootstrap** endpoint (`GET /api/realestate/dev/bootstrap`, token-gated, fail-closed) — creates a brokerage tenant + links the user + seeds sample leads.
+- **Auto-apply migrations** on Vercel production build (`scripts/vercel-migrate.mjs`, production-guarded, idempotent).
+- AI **draft-for-lead** and **fire-test-lead** server actions.
+- ⚠ **Note vs PD-005:** this session's push/Twilio/OneSignal work predates the integration priority (Google Workspace #1, BoldTrail #2). See Recommendations in the handoff report — resequencing may be warranted before Luke First Login.
+
 ## Next Actions
 
 - **[Human/either] Open PR** `feat/heartbeat-landing → main`, confirm CI green. Last item to ship this vertical.
@@ -357,6 +442,13 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** **Established the Project Raven Command Center + Product Decision Log.** Promoted this doc (new
+  H1, governance note) to the primary Command Center and added a top-level **`## Product Decision Log`** with twelve
+  numbered decisions **PD-001…PD-012** (mission; product principles; locked Morning Brief flow; One Thing First;
+  integration priority; connect→value→expand; pilot goal; vacation-rentals-first-class; team roles; review process;
+  Luke-First-Login milestone; governance rule), each with Status/Date/Decision/Rationale. Marked Sean-decision rows
+  **R1/R2 RESOLVED** (→ PD-002, PD-001/003); R3–R6 remain open. Merged today's engineering notes into the Codex/Engineering
+  section for absorption (history preserved). **Documentation/governance only — no application code touched.**
 - **2026-07-11 [Claude]** Continued the Pilot Acceptance lane (no external change to review — branch unchanged, no Codex
   delivery, R1–R6 still open). Pre-staged **acceptance criteria** for the first slice (Morning Brief owner-voice + always-on
   one-thing) with objective PASS / PILOT BLOCKER / REFINE conditions, marking sub-behaviors gated on R1–R3. Extended

@@ -94,6 +94,56 @@ Consolidated in **`## Sean Decisions Required`** (rows R1–R6) at the top of th
 
 ---
 
+## Pilot Acceptance Reviews (Claude-owned)
+
+_Claude is in **Product Design / Pilot Acceptance**. As Codex delivers implementation, Claude reviews it against this
+Command Center + the Raven UX principles (`project-raven-pilot-interaction-spec.md`) from the lens of **Luke's first week**._
+
+**Success bar:** the work passes when it moves Luke toward *"This helps me run my business,"* not *"nice dashboard."*
+
+**Verdict rubric — findings are classified ONLY as:**
+- **PASS** — matches the spec + owner-voice principles; ready for Luke.
+- **REFINE** — works, but needs a specific copy/UX change to feel like an assistant. Claude gives the **exact** replacement.
+- **PILOT BLOCKER** — would break Luke's first-week trust or adoption; must fix before pilot.
+
+Scope guardrail: reviews address adoption, clarity, and executive flow. Claude flags backend/schema/integration only when it
+**directly** changes the UX, and routes those to Codex as a dependency — never edits them.
+
+| Date | Feature / PR | Verdict | Finding | Exact fix |
+|---|---|---|---|---|
+| — | _Awaiting first Codex implementation delivery._ | — | Nothing to review yet; Codex has not shipped Raven-lane implementation. | — |
+
+---
+
+## Pilot Learnings (Claude-owned)
+
+_Standing, observation-only log — hypotheses to validate with **Luke**, not feature requests. Populated as features become
+usable. Five lenses per surface: **Expected behavior · Assumptions to test · Questions to observe · Adoption signals ·
+Potential friction.** Success metric: Luke says "this helps me run my business."_
+
+### Broker roster / speed-to-lead — `/realestate/broker` (usable now)
+- **Expected behavior:** Luke glances each morning to see whether agents are responding to leads; reads worst-first; acts on the "leaked to broker" count.
+- **Assumptions to test:** that lead-leakage (untouched > 30 min) is the metric he actually cares about; that worst-first matches his mental model; that he'll *act* (nudge an agent), not just observe.
+- **Questions to observe:** Does he open it daily or only when something's wrong? Does he trust the response-time numbers? Does he know what to *do* about a slow agent from this screen?
+- **Adoption signals:** he cites a specific agent's response time in a team conversation; checks it unprompted; median response improves week over week.
+- **Potential friction:** numbers with no "so what"; no one-tap nudge from here; an empty state early on can read as "broken."
+
+### Agent daily app — `/realestate/agent` (usable now; drives the data Luke sees)
+- **Expected behavior:** agent opens it on their phone, sees untouched leads first, taps Call now / Draft reply, approves drafts.
+- **Assumptions to test:** agents will adopt a new surface vs. living in BoldTrail; the cell-bridge "Call now" feels natural; AI drafts are good enough to send with light edits.
+- **Questions to observe:** Do agents open it unprompted? Do they trust the draft? Does push reach them fast enough? Do they *double-enter* into BoldTrail anyway (the friction CRM write-back would remove)?
+- **Adoption signals:** 90%+ of first touches flow through the app; agents approve drafts rather than writing their own; median first response under 2 min.
+- **Potential friction:** yet-another-app fatigue; iOS push needs a home-screen install; one off-tone draft erodes trust fast; no CRM write-back = double entry.
+
+### Morning Brief (pending build — log once usable)
+- **Expected behavior:** Luke reads/hears the brief, acts on the one thing, returns to the cockpit.
+- **Assumptions to test:** the "one thing" is the *right* one; owner-voice reads as an assistant, not a gimmick; he wants a brief at all vs. just glancing at the cockpit.
+- **Questions to observe:** Begin or Skip? Does he ask a follow-up? Does he act on the recommended action or ignore it?
+- **Adoption signals:** he starts the brief unprompted; acts on the recommendation; asks a follow-up; says it saved him time.
+- **Potential friction:** one wrong "one thing" erodes trust; too chatty; anything that feels like an interruption.
+
+---
+
 ## 2026-07-03 Tandem Setup - Current Working Plan
 
 **Current repo state from Codex:** local `main` is aligned with `origin/main`. PR #70 is merged and shipped to `main`.
@@ -192,7 +242,12 @@ Codex will handle the repo/data integrity side:
 
 ## Claude Lane Status
 
-_View/UX (Cockpit). Owned by Claude._
+_Product Design / Pilot Acceptance (view/UX + copy). Owned by Claude._
+- 🎯 **Role (2026-07-11):** Pilot Acceptance. Review Codex implementations against this Command Center + the Raven UX
+  principles through Luke's first-week lens; classify findings **PASS / REFINE / PILOT BLOCKER** with exact replacement
+  copy/UX in `## Pilot Acceptance Reviews`. No new broad audits; no major redesigns.
+- 📓 **Standing:** maintain `## Pilot Learnings` — observations to validate with Luke as features become usable.
+- ⏳ **Now:** no Codex Raven-lane delivery to review yet; six design decisions (R1–R6) open with Sean. Holding for either.
 - ✅ **Project Raven pilot-adoption audit** (`project-raven-cockpit-ux-audit.md`): KEEP/REFINE/MOVE/REMOVE for every
   cockpit screen + P0/P1/P2 punch list + CRM-vs-AI-OS inventory.
 - ✅ **Project Raven pilot interaction spec** (`project-raven-pilot-interaction-spec.md`): Morning Brief flow, owner-voice
@@ -271,6 +326,12 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** Entered **Product Design / Pilot Acceptance**. Added two Claude-owned standing sections:
+  `## Pilot Acceptance Reviews` (PASS / REFINE / PILOT BLOCKER rubric + review log; empty until Codex ships Raven-lane
+  implementation) and `## Pilot Learnings` (observation-only hypotheses to validate with Luke across the usable
+  speed-to-lead broker roster + agent app, and the pending Morning Brief). Updated Claude Lane Status to the acceptance
+  role. No audit, no redesign, no code, no Codex-owned file touched. Holding to review Codex deliveries and/or resolved
+  Sean decisions (R1–R6).
 - **2026-07-11 [Claude]** Adopted the **Command Center** operating model: this doc is the single authoritative Project
   Raven roadmap (no separate roadmap file; `PROJECT_RAVEN_MASTER.md` not created). Added a top-level
   `## Sean Decisions Required` section and consolidated the six open Raven design decisions (R1–R6) there — agents surface

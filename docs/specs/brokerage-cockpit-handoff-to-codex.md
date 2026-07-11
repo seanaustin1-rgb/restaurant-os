@@ -14,6 +14,28 @@ Progress Log after every step, so the other agent always knows what's done and w
 **Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`,
 `project-raven-cockpit-ux-audit.md`, `project-raven-pilot-interaction-spec.md`.
 
+> **This document is the Project Raven Command Center** (2026-07-11). It is the single authoritative project doc — no
+> separate roadmap. Each agent updates only its own lane; product decisions go in **`## Sean Decisions Required`** below
+> (agents surface them, they do not decide). Read the current sprint before starting work.
+
+---
+
+## Sean Decisions Required
+
+_Open product decisions. Agents add rows here instead of deciding; Sean resolves. Newest lane first._
+
+**Raven pilot interaction design (Claude lane, 2026-07-11)** — needed before Claude-lane view implementation begins.
+See `project-raven-pilot-interaction-spec.md` for full context.
+
+| # | Decision | Claude's recommendation | Status |
+|---|---|---|---|
+| R1 | Voice: forced, or opt-in? | Text-first, **voice opt-in** (browser Web Speech; no infra cost) | OPEN |
+| R2 | Morning Brief entry: auto-open modal, or non-blocking greeting bar with cockpit visible first? | **Non-blocking bar** (cockpit-first, matches the mission) | OPEN |
+| R3 | Approve the one net-new capability — a scoped LLM follow-up answer over the brief's already-loaded data (reuses the existing Anthropic path)? | **Approve**, bounded to brief context | OPEN |
+| R4 | Learned automations (e.g. auto-send a trusted agent's drafts): opt-in only, or auto-enable? | **Opt-in only**, never silent | OPEN |
+| R5 | Agent-rhythm "automatic CRM write-back": pilot week one, or deferred? | **Defer** until pilot CRM creds land (Codex ingestion lane) | OPEN |
+| R6 | Consolidate the three brokerage doors into one front door now, or after the first pilot week? | **Now** (low-risk view change) | OPEN |
+
 ---
 
 ## 2026-07-11 — Claude Lane: Pilot Interaction Design
@@ -67,9 +89,8 @@ only Claude-owned view/route files.
   "what Raven learned" (spec §6). Setting/store only; Claude surfaces + confirms, Codex persists.
 - **[Codex] `nav.ts` coordination** — if the door-consolidation (spec §4) touches nav, Codex applies or blesses the change.
 
-### ⚑ Sean decisions (minimal — see spec for detail)
-Voice default (text-first, voice opt-in) · brief entry as non-blocking bar vs modal · approve scoped follow-up Q&A LLM call ·
-opt-in-only for learned automations · CRM write-back in week one vs deferred · door consolidation now vs after pilot.
+### Sean decisions
+Consolidated in **`## Sean Decisions Required`** (rows R1–R6) at the top of this Command Center. Not repeated here.
 
 ---
 
@@ -250,6 +271,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** Adopted the **Command Center** operating model: this doc is the single authoritative Project
+  Raven roadmap (no separate roadmap file; `PROJECT_RAVEN_MASTER.md` not created). Added a top-level
+  `## Sean Decisions Required` section and consolidated the six open Raven design decisions (R1–R6) there — agents surface
+  decisions, Sean resolves. Claude edits only its own lane; will not edit Codex's engineering lane except to flag
+  dependencies/blockers; reads the current sprint before starting work. No code touched.
 - **2026-07-11 [Claude]** Opened the **Pilot Interaction Design** lane (Project Raven). **Completed:** the interaction spec
   `docs/specs/project-raven-pilot-interaction-spec.md` (Morning Brief first-3-minutes flow with begin/skip/interrupt/ask/
   end/return; owner-voice copy states each ending in one action; always-on "One thing first" incl. a healthy-state

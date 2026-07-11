@@ -10,8 +10,66 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Codex ·
-**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-11 by Claude ·
+**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`,
+`project-raven-cockpit-ux-audit.md`, `project-raven-pilot-interaction-spec.md`.
+
+---
+
+## 2026-07-11 — Claude Lane: Pilot Interaction Design
+
+**Mission.** Turn the current cockpit experience into a coherent **first-week pilot for Luke** — a brokerage owner who
+also runs a large vacation-rental division — without redesigning the product or changing backend contracts. Luke needs a
+direct, concise **executive-assistant** experience that says what matters, what to do next, and why.
+
+**Status:** design specs delivered (see below); **no code written yet** — awaiting design approval before Claude-lane
+view implementation. This lane does **not** overlap Codex: it produces UX/copy/interaction specs and (on approval) edits
+only Claude-owned view/route files.
+
+### Claude owns (this lane)
+1. Morning Executive Brief interaction design — the first 3 minutes; cockpit-visible-first; greet → ready prompt; flows for
+   begin / skip / interrupt / ask follow-up / end / return-to-cockpit; owner voice; **separate consultant brief preserved
+   for `CONSULTANT`**.
+2. Owner-voice copy spec — replaces "Ask the operator…" interrogation language; exact copy for healthy / one urgent /
+   multiple / incomplete-data / positive-signal / recommended-action; every item ends in one action.
+3. Always-on "One thing first" — red / yellow / **healthy fallback that still orients** (never disappears).
+4. Screen-to-screen pilot flow — cockpit → brief → needs-attention → agent coaching detail → rental-property detail →
+   communication action → back to cockpit; reuse current screens; **minimum** routing/hierarchy changes only.
+5. Agent first-week rhythm — morning brief / daily execution / AI email-text / automatic CRM update / evening review /
+   tomorrow preview; no new modules.
+6. Evening Debrief — 3-minute optional conversational wrap (wins / unfinished / what Raven learned / tomorrow / one
+   confirmation only when needed); voice optional.
+7. AI behavior + tone standard — concise, calm, direct, transparent, never chatty/repetitive, asks only when necessary,
+   executes obvious reversible actions automatically, surfaces uncertainty.
+
+**Full spec:** `docs/specs/project-raven-pilot-interaction-spec.md`. **Audit input:** `docs/specs/project-raven-cockpit-ux-audit.md`.
+
+### Files Claude may touch (view/route/copy only — on approval)
+- `src/components/dashboard/AdvisorBrief.tsx` (owner-voice role branch + brief state machine)
+- `src/components/dashboard/**` (new client-side brief/debrief state machine components)
+- `src/components/cockpit/ExecutiveCockpit.tsx`, `PropertyCockpit.tsx` (always-on one-thing fallback; clickable needs-attention/property rows; back-to-cockpit)
+- `src/app/modules/brokerage/**`, `src/app/modules/rentals/**` (routing/hierarchy wiring, view only)
+- `src/app/realestate/agent/AgentAppView.tsx` (morning/evening bookend views)
+
+### Files Claude must avoid (Codex/backend lane)
+- `prisma/schema.prisma`, `prisma/migrations/**`
+- `src/lib/modules/brokerage-analytics.ts`, `property-portfolio.ts`, `rental-property-rollup.ts`
+- `src/lib/brokerage/**`, contract types, identity/activity logic, CSV vendor profiles
+- ingestion adapters (FUB/Moxi/BoldTrail), API/import routes, auth, shared backend services
+- `nav.ts` — **coordinate first** (July-3 log flags it Codex-sensitive)
+
+### Concrete next actions for Codex (after Sean approves the design)
+- **[Codex] CRM write-back adapter** — the agent rhythm's "automatic CRM update" needs an outbound push of touches
+  (`CallEvent`/`MessageEvent` already recorded internally) to the brokerage CRM (BoldTrail/FUB). Ingestion lane; gated on pilot creds.
+- **[Codex, optional] Deterministic "top positive signal" helper** in the data layer, if we'd rather the healthy-state
+  one-thing fallback (spec §3) be data-owned than view-picked. Not required for v1.
+- **[Codex] Persist opt-in automation rules** — e.g. an "auto-send agent X's drafts" flag surfaced by the Evening Debrief's
+  "what Raven learned" (spec §6). Setting/store only; Claude surfaces + confirms, Codex persists.
+- **[Codex] `nav.ts` coordination** — if the door-consolidation (spec §4) touches nav, Codex applies or blesses the change.
+
+### ⚑ Sean decisions (minimal — see spec for detail)
+Voice default (text-first, voice opt-in) · brief entry as non-blocking bar vs modal · approve scoped follow-up Q&A LLM call ·
+opt-in-only for learned automations · CRM write-back in week one vs deferred · door consolidation now vs after pilot.
 
 ---
 
@@ -114,6 +172,14 @@ Codex will handle the repo/data integrity side:
 ## Claude Lane Status
 
 _View/UX (Cockpit). Owned by Claude._
+- ✅ **Project Raven pilot-adoption audit** (`project-raven-cockpit-ux-audit.md`): KEEP/REFINE/MOVE/REMOVE for every
+  cockpit screen + P0/P1/P2 punch list + CRM-vs-AI-OS inventory.
+- ✅ **Project Raven pilot interaction spec** (`project-raven-pilot-interaction-spec.md`): Morning Brief flow, owner-voice
+  copy states, always-on one-thing, screen-to-screen flow, agent first-week rhythm, Evening Debrief, AI tone standard.
+- ⏳ **Awaiting Sean approval** on the six minimal design decisions (voice default, brief entry, follow-up Q&A, learned
+  automations, CRM write-back timing, door consolidation) before Claude-lane view implementation begins.
+- 💡 **First implementation slice on approval:** owner-voice + role branch in `AdvisorBrief.tsx` and the always-on
+  one-thing green fallback — pure view work, no contract change.
 - ✅ Tile-set spec + strawman contract (`executive-cockpit-tile-set.md`).
 - ✅ Executive Cockpit built, then **wired to real `loadBrokerageCockpit`** (`d028942`). Reputation/Market rendered as
   two tiles (a VIEW split; both source the contract's single `marketAura`).
@@ -184,6 +250,16 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** Opened the **Pilot Interaction Design** lane (Project Raven). **Completed:** the interaction spec
+  `docs/specs/project-raven-pilot-interaction-spec.md` (Morning Brief first-3-minutes flow with begin/skip/interrupt/ask/
+  end/return; owner-voice copy states each ending in one action; always-on "One thing first" incl. a healthy-state
+  fallback that still orients; screen-to-screen pilot flow reusing current routes; agent first-week rhythm over the
+  existing `/realestate/agent` app; 3-minute optional Evening Debrief; and an executive-assistant AI tone standard), plus
+  this dated top section and lane status. Design branches the brief **by role** — owners get the direct conversational
+  voice, `CONSULTANT` keeps the existing "Client conversation brief" in `AdvisorBrief.tsx`. **No code written; no contract,
+  schema, or Codex-owned file touched.** **Ready for Codex (post-approval):** CRM write-back adapter for the agent rhythm,
+  optional data-owned "top positive signal" helper, persistence for opt-in learned automations, and `nav.ts` coordination
+  for door consolidation. **Needs Sean:** the six minimal design decisions listed in the top section / spec §⚑.
 - **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
   Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
   casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM

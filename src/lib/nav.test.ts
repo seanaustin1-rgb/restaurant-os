@@ -18,6 +18,7 @@ describe("navLinksForRoles — business-type filtering", () => {
     }
     // Universal links are unaffected.
     expect(result).toContain("/dashboard");
+    expect(result).toContain("/morning-brief");
     expect(result).toContain("/investor");
   });
 
@@ -56,6 +57,7 @@ describe("navLinksForRoles — role filtering", () => {
     expect(result).toContain("/dashboard");
     expect(result).not.toContain("/transactions"); // adjustment-only
     expect(result).not.toContain("/connections"); // owner-only
+    expect(result).not.toContain("/morning-brief"); // owner-only
   });
 
   it("hides the brokerage Executive Cockpit from INVESTOR (locked decision 7)", () => {

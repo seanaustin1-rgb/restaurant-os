@@ -119,6 +119,7 @@ See `project-raven-pilot-interaction-spec.md` for full context.
 | R7 | Which `businessType` lands on which cockpit at login? | Brokerage + vacation-rental owner (Luke) → **one consistent Executive Cockpit** across agents + properties (PD-008). | OPEN |
 | R8 | Onboarding: enforced value-gate, or stay skippable? | A **light value-gate** — connect Google → first brief — then skippable once value is shown (PD-006). | OPEN |
 | R9 | Resolve the sign-in vs sign-up + env-config landing conflict. | **Unify** both to the cockpit-first landing (PD-002/PD-003); fix `.env*` divergence. | OPEN |
+| R10 | What role is pilot owner **Luke** provisioned as, and which roles are "owner-mode"? | Owner-mode must include **BROKER + MANAGER** (not just OPERATOR); confirm Luke's role. Surfaced by REV-1 pilot blocker. | OPEN |
 
 ---
 
@@ -210,9 +211,36 @@ decision are marked (R#)._
 
 ### Review log
 
-| Date | Feature / PR | Verdict | Finding | Exact fix |
-|---|---|---|---|---|
-| — | _Awaiting first Codex implementation delivery._ | — | Nothing to review yet; Codex has not shipped Raven-lane implementation. | — |
+| Date | Feature / branch @ SHA | Verdict | Headline |
+|---|---|---|---|
+| 2026-07-11 | Morning Brief owner voice · `codex/prepare-for-luke-pilot-execution @ 9db06a3` | **PILOT BLOCKER** (1 blocker; strong work behind it → flips to REFINE fast) | Owner-mode brief is `OPERATOR`-only; brokerage owner Luke (provisioned `BROKER`) is locked out of the milestone centerpiece. |
+
+#### Review REV-1 — Morning Brief owner voice (`9db06a3`)
+
+**Journey tested:** owner opens `/morning-brief` → One Thing First → voice/type/skip capture → "Also watching" context → return to dashboard. (Code read from the Codex branch; not run — no DB for this tenant here.)
+
+**Product-decision compliance:**
+- ✅ PD-002 (voice-first; typing + skip always available): real `SpeechRecognition`, graceful "not available in this browser → type or skip," `[Skip for now]` always present.
+- ✅ PD-006: onboarding source cards now show "First value: …" and a connect→value→expand line.
+- ✅ Honesty: Google Workspace added as **planned/OAuth-after-scope-approval** (no false "connected"), with riskNotes ("do not read email bodies…"). GPT product-approved this strategy (CODEX_HANDOFF).
+- 🟡 PD-004: exactly one "One Thing First" is shown (good, singular) — but it is **static text**, not an action (no Do/Defer/Dismiss, no persistence).
+- 🔴 PD-002/003: the brief is a **full-screen route that replaces the view**, reached from a nav link off the (non-cockpit) dashboard — not "cockpit loads first, brief layered on top, return to cockpit." One Thing First also renders **above** the executive context, inverting the locked sequence (Executive Brief → One Thing First).
+
+**PILOT BLOCKER (must fix first):**
+- **Screen/state:** `/morning-brief` page + nav link. **Problem:** owner-mode = `OPERATOR` only (`morning-brief/page.tsx` `OWNER_MODE_ROLES=["OPERATOR"]`; `nav.ts` `OWNER_ROLES=["OPERATOR"]`). **Why it matters:** Luke is a brokerage owner; the `BROKER` role exists for exactly this persona and the pilot bootstrap provisions the owner as `BROKER` — so Luke is redirected to `/dashboard` and never sees the Morning Brief (the milestone centerpiece). **Required change:** include `BROKER` (and `MANAGER`) in owner-mode for both the page gate and the nav link; confirm Luke's provisioned role (R10). **Acceptance:** a `BROKER`-role owner reaches `/morning-brief` and sees their brief.
+
+**REFINE (before PASS):**
+- **Spoken briefing missing.** Voice today is **input** (Luke dictates his plan via STT); there is no **TTS reading the brief aloud**. PD-002/directive emphasize a *voice-first briefing* (Raven speaks). *Required:* add spoken delivery of One Thing First + watch items with obvious Play/Pause/Stop. *Acceptance:* Luke can hear the brief hands-free; written stays fully usable.
+- **No greeting by name.** Header shows the business name, not "Good morning, Luke." *Required:* greet the signed-in owner by name (Clerk `currentUser`). *Acceptance:* personal greeting renders.
+- **One Thing First is not actionable / not persistent.** *Required:* the single action needs Do/Defer/Dismiss and must persist into the cockpit (per required-states + PD-004 steps 10-11). *Acceptance:* completing/deferring/dismissing persists and the cockpit reflects it. (Larger item — acceptable to stage, but flag as not-yet-done for the full journey.)
+- **Structural: brief replaces the cockpit.** *Required:* move toward cockpit-first with the brief as an overlay/return (depends on the net-new cockpit router, R7/R9). *Acceptance:* cockpit visible first; brief never a hard takeover; sequence Executive Brief → One Thing First.
+- **Empty-data copy** says "connect a source" generically; per PD-005/007 it should point to **Google** first. *Acceptance:* empty state names Google Workspace as the first connect.
+
+**Strengths (PASS-worthy):** voice-first-not-mandatory is correctly implemented; honest source-trust footer; Google Workspace privacy posture (no email-body reads) is exemplary; deterministic digest degrades honestly with no data.
+
+**Coordination note:** Codex branched from `main` (`3eb01b0`), so its work does **not** include this Command Center's Product Decision Log, and this branch does not include Codex's code — the two will need reconciliation before merge.
+
+**Recommendation for Product Approval:** Not yet. Fix the role blocker (tiny), then this is REFINE-level and pilot-viable for the brief slice. Spoken briefing + actionable/persistent One Thing First are the substantive remaining gaps for the full milestone.
 
 ---
 
@@ -473,7 +501,10 @@ _Product Design / Pilot Acceptance (view/UX + copy). Owned by Claude._
   **Headline: 9 of 12 journey steps are net-new** (no cockpit-first router, no Gmail/Calendar OAuth, no owner brief, no
   voice, no persistent single action). Surfaced R7–R9 for Sean/GPT. No verdict issued — no Codex delivery yet.
 - 📓 **Standing:** maintain `## Pilot Learnings` — observations to validate with Luke as features become usable.
-- ⏳ **Now:** no Codex Raven-lane delivery to review yet; six design decisions (R1–R6) open with Sean. Holding for either.
+- ✅ **Reviewed Codex Sprint 3** (`codex/prepare-for-luke-pilot-execution @ 9db06a3`, Morning Brief owner voice): verdict
+  **PILOT BLOCKER** (owner-mode is OPERATOR-only → brokerage owner Luke, provisioned BROKER, locked out) with strong work
+  behind it. Full REV-1 in `## Pilot Acceptance Reviews`; surfaced R10. Not authorizing next sprint — awaiting Product
+  Approval (GPT) + business approval (Sean).
 - ✅ **Project Raven pilot-adoption audit** (`project-raven-cockpit-ux-audit.md`): KEEP/REFINE/MOVE/REMOVE for every
   cockpit screen + P0/P1/P2 punch list + CRM-vs-AI-OS inventory.
 - ✅ **Project Raven pilot interaction spec** (`project-raven-pilot-interaction-spec.md`): Morning Brief flow, owner-voice
@@ -561,6 +592,16 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** **Design review of Codex Sprint 3** (`codex/prepare-for-luke-pilot-execution @ 9db06a3` — Morning
+  Brief owner voice). **Verdict: PILOT BLOCKER** — owner-mode is gated to `OPERATOR` only (`morning-brief/page.tsx`,
+  `nav.ts`), but the brokerage-owner persona uses the `BROKER` role (the pilot bootstrap provisions BROKER), so Luke is
+  redirected off the milestone centerpiece. Minimum fix: add BROKER (+ MANAGER) to owner-mode. Behind the blocker the work
+  is strong (real voice-first with typing/skip fallback; honest Google Workspace planned-source posture with privacy
+  riskNotes; connect→value→expand in onboarding) and flips to REFINE fast. REFINE items: no spoken (TTS) briefing — only
+  voice input; no greeting by name; One Thing First is static (no Do/Defer/Dismiss, no persistence); brief full-screen
+  replaces the cockpit (PD-002/003). Full REV-1 recorded in `## Pilot Acceptance Reviews`; surfaced R10. **Coordination:**
+  Codex branched from `main`, so it lacks this Command Center's Product Decision Log — reconciliation needed before merge.
+  **Not authorizing the next sprint** — awaiting Product Approval (GPT) + Sean. Review only; no app code touched.
 - **2026-07-11 [Claude]** **Design Authority readiness review — Luke First Login** (immediate work while Codex builds).
   Ran a source-of-truth audit (three parallel code reads, file:line-grounded) of the entry→connect-Google→brief→one-action
   journey and recorded it in the new **`## Design Review — Luke First Login`** section: existing-UX audit, intended 12-step

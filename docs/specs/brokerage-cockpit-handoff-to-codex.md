@@ -109,6 +109,23 @@ Command Center + the Raven UX principles (`project-raven-pilot-interaction-spec.
 Scope guardrail: reviews address adoption, clarity, and executive flow. Claude flags backend/schema/integration only when it
 **directly** changes the UX, and routes those to Codex as a dependency — never edits them.
 
+### Pre-staged acceptance criteria — first slice
+
+_Objective PASS conditions defined **before** implementation so review is fast and consistent. Slice = the first Claude-lane
+build once approved: **Morning Brief owner-voice reframe + always-on "One thing first."** Criteria gated on an open Sean
+decision are marked (R#)._
+
+**A. Morning Brief — owner voice** (`AdvisorBrief.tsx`, owner/operator path)
+- **PASS** when: greets Luke by name; the `CONSULTANT` path is **unchanged**; **zero** consultant/interrogation strings survive in the owner path (no "Ask the operator…", "Advisor mode", "Client conversation brief", "confirm the operator agrees"); each briefing item ends in **exactly one** action; a healthy day still says something useful (never renders empty); jargon replaced per the audit glossary.
+- **PILOT BLOCKER** when: owner sees any "Ask the operator…"/advisor framing; the "one thing" is wrong or empty; the brief blocks the cockpit when the decision says non-blocking (R2).
+- **Gated:** voice on/off (R1) · non-blocking bar vs modal (R2) · follow-up Q&A capability (R3) — those sub-behaviors reviewed only once the decision lands.
+
+**B. Always-on "One thing first"** (exec + property cockpits)
+- **PASS** when: red/yellow render as today **and** the healthy/green state renders a useful positive-orientation line (never blank); copy follows spec §3; an action affordance is present (optional on green).
+- **REFINE** triggers: a metric with no "so what"; a glossary jargon term; missing/duplicated action.
+
+### Review log
+
 | Date | Feature / PR | Verdict | Finding | Exact fix |
 |---|---|---|---|---|
 | — | _Awaiting first Codex implementation delivery._ | — | Nothing to review yet; Codex has not shipped Raven-lane implementation. | — |
@@ -134,6 +151,20 @@ Potential friction.** Success metric: Luke says "this helps me run my business."
 - **Questions to observe:** Do agents open it unprompted? Do they trust the draft? Does push reach them fast enough? Do they *double-enter* into BoldTrail anyway (the friction CRM write-back would remove)?
 - **Adoption signals:** 90%+ of first touches flow through the app; agents approve drafts rather than writing their own; median first response under 2 min.
 - **Potential friction:** yet-another-app fatigue; iOS push needs a home-screen install; one off-tone draft erodes trust fast; no CRM write-back = double entry.
+
+### Executive Cockpit — `/modules/brokerage/cockpit` (usable now)
+- **Expected behavior:** Luke opens it as his 30-second read on brokerage health; looks first at whether volume is reaching the company (deal-vs-ledger) and whether cash is safe.
+- **Assumptions to test:** that "company dollar retention" and "cash oxygen" are decisions he acts on, not just numbers he notes; that he reads the hero gap the way we intend ("volume only matters if it reaches the company").
+- **Questions to observe:** Does he land here first, or on the brief? Which tile does his eye go to? Does he understand the tiles without us explaining them? Does he ever act, or only observe?
+- **Adoption signals:** he quotes the retention or cash-days number to his team; he asks "why did this move" (wants the drill-in); he checks it before a leadership decision.
+- **Potential friction:** jargon (company dollar / cash oxygen / DOM) with no plain gloss; dead "connect MLS / gathering snapshots" tiles reading as broken setup; no path from a worrying tile to the detail behind it.
+
+### Property Cockpit — `/modules/rentals/cockpit` (usable now)
+- **Expected behavior:** Luke checks whether his rentals are performing and which properties need attention; cares about what the *owner keeps*, not gross bookings.
+- **Assumptions to test:** that "owner proceeds" framing lands better than occupancy/ADR/RevPAR; that the "needs attention" property is the one he'd actually chase; that he wants portfolio-level first, property-level on demand.
+- **Questions to observe:** Does he trust the proceeds number? Does he tap a flagged property expecting detail (today a dead end)? Does "Guest Aura" mean anything to him?
+- **Adoption signals:** he acts on a flagged property (calls the cleaner/manager); he references owner proceeds when talking to a property owner; he checks it weekly.
+- **Potential friction:** invented vocabulary ("Guest Aura," "Maintenance drag"); property rows aren't tappable (can't get to the "why"); occupancy tile is a bare number with no "so what."
 
 ### Morning Brief (pending build — log once usable)
 - **Expected behavior:** Luke reads/hears the brief, acts on the one thing, returns to the cockpit.
@@ -326,6 +357,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** Continued the Pilot Acceptance lane (no external change to review — branch unchanged, no Codex
+  delivery, R1–R6 still open). Pre-staged **acceptance criteria** for the first slice (Morning Brief owner-voice + always-on
+  one-thing) with objective PASS / PILOT BLOCKER / REFINE conditions, marking sub-behaviors gated on R1–R3. Extended
+  **Pilot Learnings** to the two other surfaces usable today (Executive Cockpit, Property Cockpit). Claude-lane doc only;
+  no code, no audit, no Codex-owned file touched.
 - **2026-07-11 [Claude]** Entered **Product Design / Pilot Acceptance**. Added two Claude-owned standing sections:
   `## Pilot Acceptance Reviews` (PASS / REFINE / PILOT BLOCKER rubric + review log; empty until Codex ships Raven-lane
   implementation) and `## Pilot Learnings` (observation-only hypotheses to validate with Luke across the usable

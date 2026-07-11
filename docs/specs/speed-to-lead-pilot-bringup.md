@@ -144,6 +144,38 @@ drafts instead of the gated stub.
 
 ---
 
+## No-terminal bring-up (migrations + data)
+
+For operators without a local dev setup, the whole thing comes up from the
+browser + Vercel dashboard — no terminal:
+
+1. **Migrations apply themselves on deploy.** The build runs
+   `scripts/vercel-migrate.mjs` → `prisma migrate deploy`, but *only* on a Vercel
+   **production** build with `DATABASE_URL` set (preview/local skip). So a
+   production deploy (merging to `main`) creates the `Lead`/`CallEvent`/
+   `MessageEvent` tables automatically. Make sure `DATABASE_URL` and — for
+   migrations — a direct (non-pooled) `DIRECT_URL` are set in the Production env.
+2. **Seed your pilot data with one URL.** Set a one-time secret in the env:
+
+   ```
+   PILOT_BOOTSTRAP_TOKEN=<long-random-string>
+   ```
+
+   Then, **signed in**, open:
+
+   ```
+   /api/realestate/dev/bootstrap?token=<PILOT_BOOTSTRAP_TOKEN>&name=Your%20Brokerage
+   ```
+
+   It creates a `REAL_ESTATE_BROKERAGE` tenant, attaches you as **BROKER**, links
+   you to a `BrokerageAgent`, and seeds a small fictitious lead spread. Idempotent
+   — reuses a brokerage you already belong to and only seeds once. The endpoint
+   **fails closed** (503) whenever `PILOT_BOOTSTRAP_TOKEN` is unset, so **remove
+   the token from the env once you're set up** to close the door.
+3. Open `/realestate/broker` and `/realestate/agent` — both now render populated.
+
+---
+
 ## Fire a test lead (proves the loop end-to-end, no BoldTrail)
 
 **Easiest: the in-app button.** On `/realestate/broker` (signed in as

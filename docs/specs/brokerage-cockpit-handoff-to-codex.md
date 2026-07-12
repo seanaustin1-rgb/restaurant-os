@@ -587,6 +587,39 @@ _Logged here so the Engineering picture is complete; Codex to absorb/own. Full h
 - AI **draft-for-lead** and **fire-test-lead** server actions.
 - ⚠ **Note vs PD-005:** this session's push/Twilio/OneSignal work predates the integration priority (Google Workspace #1, BoldTrail #2). See Recommendations in the handoff report — resequencing may be warranted before Luke First Login.
 
+## Codex Next-Run Brief (Design Authority → Codex)
+
+_Standing task brief for Codex's next run. Source of truth is this Command Center; read PD-001…PD-013, resolved R7–R10,
+Design Review §3 & §7, and REV-1 before coding._
+
+**Scope this run to Increment 1 only. Do NOT start the unified cockpit router (R7) or the Google value-gate UI (R8) this run.**
+
+**Build:**
+1. **Owner-mode fix (R10):** set owner-mode to `["OPERATOR","BROKER"]` in `src/app/morning-brief/page.tsx`
+   (`OWNER_MODE_ROLES`) and `src/lib/nav.ts` (`OWNER_ROLES`).
+2. **Ritual loop (PD-002/003/004):**
+   a. Greet the signed-in owner **by name** ("Good morning, {first name}.") via Clerk `currentUser` — not the business name.
+   b. **Reorder:** executive context (forward cash / watch items) renders **before** One Thing First.
+   c. One Thing First becomes **actionable: Start Now / Defer / Skip Today**.
+   d. **Persist** the decision — survives reload, not re-derived each load.
+   e. **Reflect** it in the cockpit/dashboard on return (complete/defer/skip visibly changes it).
+
+**Acceptance conditions (Design Authority verifies each):**
+- A `BROKER`-role owner reaches `/morning-brief` (not redirected).
+- Greeting addresses the owner by name.
+- Executive context precedes One Thing First.
+- Start Now / Defer / Skip Today each work **and persist**; the cockpit reflects the choice on return.
+- **No regressions:** voice-first input, typing fallback, Skip, source-trust footer, confidence tones, Google Workspace
+  privacy boundaries ("no email bodies"), honest connection status.
+
+**Guardrails:**
+- When you later build R7/R8, implement to **Design Review §7 state specs** — do not design new panel states (PD-013, proposed).
+- Keep Google Workspace **planned / OAuth-after-scope-approval** (no live-sync claims).
+- **Reconcile the branch:** PR #105 is based on `main` and lacks the Product Decision Log — rebase/reconcile onto the
+  Command Center's PDL before merge so governance isn't clobbered.
+
+**Gate:** tsc + vitest + build green, then hand back for Design review.
+
 ## Next Actions
 
 - **[Human/either] Open PR** `feat/heartbeat-landing → main`, confirm CI green. Last item to ship this vertical.

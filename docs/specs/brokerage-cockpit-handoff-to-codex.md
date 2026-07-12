@@ -99,6 +99,11 @@ Progress Log after every step, so the other agents always know what's done and w
 - **Decision (proposed):** Executive-panel **UI states** — *which* states exist, plus their copy, hierarchy, owner-voice, and behavior — are **designed by Claude (Design Authority)**. **Codex implements** them to that spec and **flags any missing state back to Design** rather than originating it. This clarifies/enforces PD-009.
 - **Rationale:** Panel-state design is product judgment and is invisible to CI (typecheck/test/build stay green regardless). When Engineering designs states in a vacuum, design review becomes cleanup instead of confirmation — see the REV-1/R11/R12 drift (inverted sequence, missing greeting, voice-as-input-only). Design-specs-first keeps product truth upstream of code.
 
+### PD-014 — Morning Ritual is embedded in the Executive Cockpit
+- **Status:** Active · **Added:** 2026-07-12 (Sean)
+- **Decision:** The Raven Morning Ritual lives as an **embedded panel on the Executive Cockpit** (the PR #106 `LukeFirstLoginPanel` approach) — greeting → Executive Brief → One Thing First → return, all layered on the cockpit. The standalone full-screen `/morning-brief` route (PR #105) is **retired**.
+- **Rationale:** Keeps the cockpit as the stable home base (PD-002/003); the ritual augments the cockpit and returns to it rather than replacing it. Resolves the two-implementation divergence in favor of the embedded one.
+
 ---
 
 ## Sean Decisions Required
@@ -218,7 +223,8 @@ decision are marked (R#)._
 
 | Date | Feature / branch @ SHA | Verdict | Headline |
 |---|---|---|---|
-| 2026-07-11 | Morning Brief owner voice · `codex/prepare-for-luke-pilot-execution @ 9db06a3` | **PILOT BLOCKER** (1 blocker; strong work behind it → flips to REFINE fast) | Owner-mode brief is `OPERATOR`-only; brokerage owner Luke (provisioned `BROKER`) is locked out of the milestone centerpiece. |
+| 2026-07-11 | Morning Brief owner voice · `codex/prepare-for-luke-pilot-execution @ 9db06a3` (PR #105) | **PILOT BLOCKER** → superseded | Owner-mode brief is `OPERATOR`-only; brokerage owner Luke (provisioned `BROKER`) is locked out. **PR #105 retired per PD-014** (embedded approach chosen). |
+| 2026-07-12 | Raven Morning Ritual · `work @ 28a9fa4` (PR #106) | **PASS** (ritual increment) | Embedded ritual meets the approved sequence + every Increment-1 acceptance condition; CI green. Luke-milestone gaps (Google, cockpit landing, agent→owner demo) tracked separately. |
 
 #### Review REV-1 — Morning Brief owner voice (`9db06a3`)
 
@@ -253,6 +259,22 @@ brief on the big build. **Increment 1 (ship first):** the small, high-value wins
 reflected in the cockpit). PR #105 is already green and close to this. **Increment 2 (its own sprint):** the **unified
 cockpit-first router (R7/R9)** + the Google value-gate (R8) — the largest build; it should not gate the brief slice from
 reaching Luke. Ordering is Product's call; this is the Design-Authority recommendation.
+
+#### Review REV-2 — Raven Morning Ritual (PR #106 / `work @ 28a9fa4`)
+
+**Verdict: PASS** on the ritual increment (Increment 1). Verified against the pre-staged acceptance conditions:
+- **BROKER reaches it** ✅ — cockpit gated to `BROKERAGE_LEADERSHIP_ROLES` (incl. `BROKER`; `INVESTOR` excluded).
+- **Greeting by name** ✅ — "Good morning, {firstName}." from Clerk `currentUser().firstName`.
+- **Sequence** ✅ — Cockpit → Greeting → Executive Brief → One Thing First → Return (executive context now precedes the action).
+- **Actionable + persistent** ✅ — Start now / Defer / Skip today; per-day `localStorage` key; on reload it restores a "Today's focus" card with status.
+- **Reflected on the cockpit** ✅ — embedded panel on the Executive Cockpit (PD-014), not a takeover.
+- **No regressions** ✅ — voice input, typing, Skip, source-trust footer intact. **CI green** (tsc · test 367 · build · Codex Review · Vercel).
+
+**REFINE (non-blocking):** persistence is browser-local (per-device, per-day) — acceptable for a personal ritual pilot; note for later server-side. TTS out of scope. Verify empty/no-data `executiveBrief` renders gracefully.
+
+**Out of scope for this increment (Luke-milestone, tracked separately):** Google Workspace OAuth + personalized-from-Google brief (PD-005/PD-007); cockpit-first login landing so Luke lands here without navigating (R7/R9); the agent→owner rollup demo (§8).
+
+**Recommendation:** **Ready for Sean's owner walkthrough** on a seeded preview. Merge-gate per PR #106's own checklist (preview deploy succeeds, Luke's `BROKER` access verified, Start/Defer/Skip persistence smoke in a supported browser).
 
 ---
 
@@ -424,6 +446,24 @@ _Design specs the states; Codex implements (PD-013 proposed). Owner-voice copy p
 - **First value shown** — "Here's your first brief." → then the gate releases: "You're set — explore your cockpit." (skippable from here on).
 - **Skipped-before-value** — allowed, non-punitive: "Skipped — connect Google anytime to unlock your brief." (never traps Luke; PD-006).
 
+### 8. Demo — Agent Cockpit → Owner Cockpit rollup (design; Codex builds)
+
+_Goal (Sean, 2026-07-12): Luke sees his cockpit **and** a demo where an agent's work in the agent cockpit reports up into
+Luke's cockpit. Most of this loop already exists in the speed-to-lead spine — **reuse it, do not build a new module** (PD-006)._
+
+**Narrative (the demo script):**
+1. **Seed** via `/api/realestate/dev/bootstrap` — Luke (`BROKER`) + ≥1 agent + a spread of leads (some untouched past SLA).
+2. **Owner cockpit** (`/modules/brokerage/cockpit`): the Morning Ritual's **One Thing First** surfaces an **agent-accountability** signal — e.g. "An agent has a lead untouched past 30 min" — and the "Needs attention" list names that agent.
+3. **Agent cockpit / app** (`/realestate/agent`): the agent sees the untouched lead → **Call now** (stamps first touch) or **Draft reply → approve**.
+4. **Rollup:** back on Luke's cockpit (refresh) — the agent's response time posts, the agent moves off "Needs attention," and the One Thing clears. **Luke's cockpit visibly changed because the agent acted.**
+
+**Minimum Codex work (build to this; don't redesign):**
+- Owner **One Thing First** (`topPressure`) must be able to surface a **speed-to-lead agent-accountability** signal derived from the roster (`computeAgentRoster` / `computeResponseStats`), so the ritual points at agent activity — not only cash/financial signals.
+- Confirm the agent app, broker roster, and Executive Cockpit read the **same tenant** so an agent's touch propagates to Luke's cockpit on refresh (they share `Lead` + the response clock — should already hold; verify).
+- Extend the seed/bootstrap only if needed to stage the demo spread.
+
+**Design note:** this is the "agent → owner" story for the pilot demo; it's an assembly of existing surfaces (agent app, roster, Executive Cockpit agent-production) tied to the owner's One Thing First, not new product.
+
 ---
 
 ## 2026-07-03 Tandem Setup - Current Working Plan
@@ -592,25 +632,21 @@ _Logged here so the Engineering picture is complete; Codex to absorb/own. Full h
 _Standing task brief for Codex's next run. Source of truth is this Command Center; read PD-001…PD-013, resolved R7–R10,
 Design Review §3 & §7, and REV-1 before coding._
 
-**Scope this run to Increment 1 only. Do NOT start the unified cockpit router (R7) or the Google value-gate UI (R8) this run.**
+**Increment 1 — DONE** (PR #106, embedded `LukeFirstLoginPanel`; REV-2 **PASS**; PD-014). The standalone route (PR #105) is retired.
+
+**Scope this run to Increment 2 — the Agent → Owner rollup demo + Luke's cockpit landing. Build to Design Review §8. Do NOT build Google Workspace OAuth (PD-007) this run.**
 
 **Build:**
-1. **Owner-mode fix (R10):** set owner-mode to `["OPERATOR","BROKER"]` in `src/app/morning-brief/page.tsx`
-   (`OWNER_MODE_ROLES`) and `src/lib/nav.ts` (`OWNER_ROLES`).
-2. **Ritual loop (PD-002/003/004):**
-   a. Greet the signed-in owner **by name** ("Good morning, {first name}.") via Clerk `currentUser` — not the business name.
-   b. **Reorder:** executive context (forward cash / watch items) renders **before** One Thing First.
-   c. One Thing First becomes **actionable: Start Now / Defer / Skip Today**.
-   d. **Persist** the decision — survives reload, not re-derived each load.
-   e. **Reflect** it in the cockpit/dashboard on return (complete/defer/skip visibly changes it).
+1. **Agent-accountability One Thing First (§8):** the owner's One Thing First (`topPressure`) must be able to surface a speed-to-lead agent signal from `computeAgentRoster` / `computeResponseStats` (e.g. "An agent has a lead untouched past 30 min"), so the ritual points at agent activity — not only cash/financial signals.
+2. **Rollup continuity:** confirm the agent app, broker roster, and Executive Cockpit read the same tenant so an agent's Call now / approved draft propagates to Luke's cockpit on refresh — the agent leaves "Needs attention" and the One Thing clears.
+3. **Owner landing (minimal):** ensure a `BROKER` owner can reach the Executive Cockpit cleanly so Luke sees *his* cockpit; the full unified cockpit-first router (R7/R9) stays its own item.
+4. **Seed:** extend `/api/realestate/dev/bootstrap` only if needed to stage the demo spread (Luke `BROKER` + agent + untouched leads).
 
 **Acceptance conditions (Design Authority verifies each):**
-- A `BROKER`-role owner reaches `/morning-brief` (not redirected).
-- Greeting addresses the owner by name.
-- Executive context precedes One Thing First.
-- Start Now / Defer / Skip Today each work **and persist**; the cockpit reflects the choice on return.
-- **No regressions:** voice-first input, typing fallback, Skip, source-trust footer, confidence tones, Google Workspace
-  privacy boundaries ("no email bodies"), honest connection status.
+- From Luke's cockpit, One Thing First names an **agent-accountability item drawn from real roster data**.
+- The agent acts in `/realestate/agent`; on refresh **Luke's cockpit reflects it** (agent off "Needs attention"; One Thing updates).
+- A `BROKER` owner reaches the Executive Cockpit; the Morning Ritual (PR #106) renders there.
+- No regressions to REV-2's ritual behavior.
 
 **Guardrails:**
 - When you later build R7/R8, implement to **Design Review §7 state specs** — do not design new panel states (PD-013, proposed).
@@ -657,6 +693,14 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-12 [Claude]** **REV-2: Raven Morning Ritual = PASS** (PR #106, `work @ 28a9fa4`). The embedded `LukeFirstLoginPanel`
+  meets the approved sequence + every Increment-1 acceptance condition (BROKER reaches it, greeting by name, executive-context-
+  before-One-Thing, actionable Start/Defer/Skip persisted per-day, reflected on the cockpit, no regressions); CI green. **Sean
+  chose the embedded approach → PD-014 (Active); PR #105 retired.** Ready for Sean's owner walkthrough on a seeded preview.
+  **New Sean requirement:** an **Agent → Owner rollup demo** (agent's work in the agent cockpit shows up in Luke's cockpit) —
+  specced as Design Review **§8** (reuse the speed-to-lead spine; no new module) and set as the Codex **Increment 2** next-run
+  brief. Out-of-scope-but-tracked for the full milestone: Google Workspace OAuth (PD-007), unified cockpit-first landing
+  (R7/R9). Review/design/coordination only; no app code touched.
 - **2026-07-11 [Claude]** Got ahead of the R7 build: **specced the required UI states** for the **Unified Executive Cockpit**
   and the **Google value-gate** (Design Review §7) with owner-voice copy per state, so Codex implements rather than designs
   them. **Surfaced PD-013 (Proposed):** Design owns UI states, Engineering implements to spec — clarifies PD-009; awaiting

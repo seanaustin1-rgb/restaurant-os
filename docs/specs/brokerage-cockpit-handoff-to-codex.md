@@ -242,6 +242,13 @@ decision are marked (R#)._
 
 **Recommendation for Product Approval:** Not yet. Fix the role blocker (tiny), then this is REFINE-level and pilot-viable for the brief slice. Spoken briefing + actionable/persistent One Thing First are the substantive remaining gaps for the full milestone.
 
+**Sequencing recommendation (Claude → GPT / Codex, 2026-07-11):** Split the work into two increments rather than blocking the
+brief on the big build. **Increment 1 (ship first):** the small, high-value wins — owner-mode fix (R10: `OPERATOR` + `BROKER`)
++ the ritual loop (greeting, reorder executive-context-before-One-Thing, and make One Thing First actionable / persistent /
+reflected in the cockpit). PR #105 is already green and close to this. **Increment 2 (its own sprint):** the **unified
+cockpit-first router (R7/R9)** + the Google value-gate (R8) — the largest build; it should not gate the brief slice from
+reaching Luke. Ordering is Product's call; this is the Design-Authority recommendation.
+
 ---
 
 ## Pilot Learnings (Claude-owned)

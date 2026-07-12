@@ -24,8 +24,12 @@ A10 brokerage taxonomy). The live critical path is the A6 operator/laptop run:
   2. Once Stone is clean, spot-check Tax Vault / Cash Flow / Spending / Forward Cash against
      real data, then run scripts/compare-spines.ts "Stone Grille" for spine parity (the gate
      before A.3 touches allocation math).
-  3. A10 demo verify: npm run seed:brokerage -- --user <clerkUserId> against the demo DB →
-     confirm "Cascade Realty Group" tiles read brokerage-native.
+  3. A10 demo verify: seed:brokerage writes to whatever DATABASE_URL points at — a plain
+     live .env.local hits PRODUCTION. To target a SEPARATE demo DB, remap first (same
+     pattern as demo-investor-check.ts):
+       npx dotenv -e .env.local -o -- bash -c 'DATABASE_URL="$DEMO_DATABASE_URL" \
+         DIRECT_URL="$DEMO_DIRECT_URL" npm run seed:brokerage -- --user <clerkUserId>'
+     Then confirm "Cascade Realty Group" tiles read brokerage-native.
 
 Do NOT touch the Codex lane: PR #90 (accrued-vs-cleared reconciliation) is migration-gated
 (Restaurant.taxProfile) and awaiting a cleared==0 guard. The CLI steps (summarize / compare-
@@ -64,7 +68,7 @@ below is now history — the "Tax Vault is next" work is all merged. Auto-deploy
 **⛔ THE GATE — A6, an OPERATOR/LAPTOP action (not code). This is the live critical path:**
 1. `/settings/sources/review` on **Stone Grille** → use the new **bulk "Approve all as [category]" / "Exclude all"** on the largest vendor groups to clear the **373** open sync exceptions. Run `scripts/summarize-sync-exceptions.ts stone` **before and after** — that delta is a demo asset. (Runbook: `docs/fable-5/RUNBOOK-stone-triage.md`.)
 2. Clearing Stone unblocks: real-data spot-check of **Tax Vault / Cash Flow / Spending / Forward Cash** (they read ledger-first only where coverage exists — safe today, but unverified against real ledger data until Stone is clean), and **`scripts/compare-spines.ts "Stone Grille"`** parity (the acceptance gate before A.3 touches allocation math).
-3. **A10 demo verify:** `npm run seed:brokerage -- --user <clerkUserId>` against the demo DB → confirm "Cascade Realty Group" tiles read brokerage-native.
+3. **A10 demo verify:** `seed:brokerage` writes to whatever `DATABASE_URL` points at — a plain live `.env.local` seeds **production**. To target a separate demo DB, remap first (the vetted `demo-investor-check.ts` pattern): `npx dotenv -e .env.local -o -- bash -c 'DATABASE_URL="$DEMO_DATABASE_URL" DIRECT_URL="$DEMO_DIRECT_URL" npm run seed:brokerage -- --user <clerkUserId>'`. Then confirm "Cascade Realty Group" tiles read brokerage-native.
 
 **🤝 Codex lane (separate agent, do NOT step on):**
 - **PR #90** — A.1 accrued-vs-cleared reconciliation + `tax-sales-drift` signal. Adds a **`Restaurant.taxProfile` migration** → **migration must be applied by the operator before merge/deploy** (whole-dashboard blast radius: `loadTaxVault` feeds `loadDashboardData`). Also awaiting Codex to add the requested **`cleared==0` → insufficient-data guard** (avoid a 100%-variance red false-positive on a pre-triage tenant). `CODEX_HANDOFF.md` has the brief.

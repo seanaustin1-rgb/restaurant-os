@@ -10,9 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Wallet, Flame, CalendarClock, Pencil, ShieldCheck } from "lucide-react";
+import { Wallet, Flame, CalendarClock, Pencil, ShieldCheck, LifeBuoy, AlertTriangle } from "lucide-react";
 import type { CashRunwayData } from "@/lib/modules/cash-runway";
-import { setCashAnchor } from "@/app/modules/cash-runway/actions";
+import type { CashFloorBreach } from "@/lib/dashboard/signals";
+import { setCashAnchor, setCashFloor } from "@/app/modules/cash-runway/actions";
 import { money, count } from "@/lib/format";
 
 const STATUS_COLOR = { green: "#5FA777", yellow: "#D9A35E", red: "#C8643A", unknown: "#8A8F89" };
@@ -94,6 +95,98 @@ function AnchorForm({
   );
 }
 
+function FloorForm({ initialFloor }: { initialFloor: number | null }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(initialFloor != null ? String(initialFloor) : "");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const save = (floor: number | null) => {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await setCashFloor(floor);
+        setEditing(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Could not save");
+      }
+    });
+  };
+
+  const submit = () => {
+    const f = Number(value);
+    if (!value.trim() || Number.isNaN(f)) return setError("Enter the floor as a number.");
+    save(f);
+  };
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        className="flex items-center gap-1 text-[11px] text-muted transition-colors hover:text-copper-soft"
+      >
+        <LifeBuoy size={11} />
+        {initialFloor != null ? <>cash floor: {money(initialFloor)} · edit</> : <>set a cash floor</>}
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-line bg-ink/50 px-3 py-2">
+      <span className="text-[11px] uppercase tracking-wider text-muted">Minimum cash floor ($)</span>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <input
+          type="number"
+          step="0.01"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="e.g. 20000"
+          className="w-32 rounded-md border border-line bg-transparent px-2 py-1 text-sm text-ink-text outline-none focus:border-copper"
+        />
+        <button
+          onClick={submit}
+          disabled={pending}
+          className="rounded-md border border-copper bg-copper/10 px-3 py-1 text-xs text-copper-soft transition-colors hover:bg-copper/20 disabled:opacity-50"
+        >
+          {pending ? "Saving…" : "Save floor"}
+        </button>
+        {initialFloor != null ? (
+          <button
+            onClick={() => save(null)}
+            disabled={pending}
+            className="text-[11px] text-muted transition-colors hover:text-health-red disabled:opacity-50"
+          >
+            clear
+          </button>
+        ) : null}
+        <button onClick={() => setEditing(false)} className="text-[11px] text-muted hover:text-ink-text">
+          cancel
+        </button>
+      </div>
+      <p className="mt-1 text-[11px] leading-relaxed text-muted">
+        The least operating cash you want on hand. We warn when estimated cash — or the 30-day
+        low-point after payroll, bills, and the scheduled sweep — dips below it.
+      </p>
+      {error ? <p className="mt-1 text-xs text-health-red">{error}</p> : null}
+    </div>
+  );
+}
+
+function FloorBreachBanner({ breach }: { breach: CashFloorBreach }) {
+  if (breach.state === "none") return null;
+  return (
+    <div className="flex items-start gap-2 rounded-lg border border-health-red/40 bg-health-red/10 px-4 py-3">
+      <AlertTriangle size={16} className="mt-0.5 shrink-0 text-health-red" />
+      <div>
+        <div className="text-xs font-medium uppercase tracking-wider text-health-red">
+          {breach.state === "breach-now" ? "Below your cash floor" : "Heads up — sweep pushes you under your floor"}
+        </div>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink-text">{breach.readout}</p>
+      </div>
+    </div>
+  );
+}
+
 interface TipPayload {
   payload: { date: string; balance: number; projected: boolean };
 }
@@ -111,7 +204,13 @@ function ChartTip({ active, payload }: { active?: boolean; payload?: TipPayload[
   );
 }
 
-export function CashRunwayModule({ data }: { data: CashRunwayData }) {
+export function CashRunwayModule({
+  data,
+  floorBreach = { state: "none" },
+}: {
+  data: CashRunwayData;
+  floorBreach?: CashFloorBreach;
+}) {
   const [editing, setEditing] = useState(false);
 
   if (!data.hasAnchor || editing) {
@@ -140,6 +239,8 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
 
   return (
     <div className="space-y-6">
+      <FloorBreachBanner breach={floorBreach} />
+
       {/* Summary */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg border border-line bg-surface px-4 py-3">
@@ -203,6 +304,9 @@ export function CashRunwayModule({ data }: { data: CashRunwayData }) {
             <div className="mt-1 flex justify-between gap-4">
               <span>Go-live floor</span>
               <span className="tnum text-ink-text">{data.cashOxygen.goLiveFloorCash != null ? money(data.cashOxygen.goLiveFloorCash) : "Unknown"}</span>
+            </div>
+            <div className="mt-2 border-t border-line pt-2">
+              <FloorForm initialFloor={data.minCashFloor} />
             </div>
           </div>
         </div>

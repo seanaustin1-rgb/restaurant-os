@@ -1,7 +1,10 @@
-# Brokerage "Cockpit" — Living Coordination Doc (Claude ⇄ Codex)
+# Project Raven — Command Center
 
-**Single source of truth for the tandem brokerage build.** Update your own lane section + append to the
-Progress Log after every step, so the other agent always knows what's done and where we are.
+_Formerly "Brokerage 'Cockpit' — Living Coordination Doc (Claude ⇄ Codex)." Promoted 2026-07-11 to the **primary Project
+Raven Command Center**. The **`## Product Decision Log`** below is the canonical record of product truth._
+
+**Single source of truth for Project Raven.** Update your own lane section + append to the
+Progress Log after every step, so the other agents always know what's done and where we are.
 
 **Editing rule (agreed):**
 - **Claude** edits `## Claude Lane Status`.
@@ -10,8 +13,384 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Codex ·
-**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-11 by Claude ·
+**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`,
+`project-raven-cockpit-ux-audit.md`, `project-raven-pilot-interaction-spec.md`.
+
+> **This document is the Project Raven Command Center** (promoted 2026-07-11). The **`## Product Decision Log`** below is
+> the canonical record of product truth — every major product decision is recorded there (as a numbered PD) **before**
+> implementation begins (PD-012). Open questions still awaiting Sean live in **`## Sean Decisions Required`**. Each agent
+> updates only its own lane. Read the current milestone (PD-011: **Luke First Login**) before starting work.
+
+---
+
+## Product Decision Log
+
+> **Canonical record of Project Raven product truth.** Every major product decision is recorded here as a numbered **PD**
+> **before** implementation begins (PD-012). Append-only: supersede a decision rather than delete it. Status values:
+> **Active** · Superseded · Retired.
+
+### PD-001 — Mission
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Raven is an **Executive Operating System**. It is **not a CRM**. Success is measured by **daily adoption**. Current pilot customer: **Luke**.
+- **Rationale:** The product wins when Luke runs his business through it every day ("this helps me run my business"), not when it merely displays data.
+
+### PD-002 — Product Principles
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** (1) The cockpit **always loads first**. (2) AI **never replaces** the cockpit. (3) The Morning Brief is **voice-first**. (4) **Typing is always available.** (5) **Skip is always available.**
+- **Rationale:** The operator stays in control; the assistant augments the cockpit, never gates it.
+
+### PD-003 — Morning Brief Flow (locked)
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The Morning Brief sequence is **locked**: **Cockpit → Greeting → Executive Brief → One Thing First → Return to Cockpit.**
+- **Rationale:** A predictable, repeatable ritual that always returns the user to their cockpit.
+
+### PD-004 — One Thing First
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Every Morning Brief ends with **exactly one** recommended action. **Never multiple priorities.**
+- **Rationale:** A single next action drives execution; competing priorities create paralysis.
+
+### PD-005 — Integration Priority
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Integration order is **(1) Google Workspace, (2) BoldTrail, (3) Escapia, (4) QuickBooks Online.** Future integrations occur **only after pilot validation**.
+- **Rationale:** Sequence integrations behind proven pilot value.
+
+### PD-006 — Connect → Show Value → Expand
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The activation path is **Connect → Show Value → Expand.** **Never require users to connect multiple systems before demonstrating value.**
+- **Rationale:** Time-to-value must precede any ask for more setup.
+
+### PD-007 — Pilot Goal
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Luke connects **Google Workspace**, receives a **personalized Morning Brief**, **knows exactly what action to take next**, and **returns voluntarily the next morning**.
+- **Rationale:** A concrete, observable success condition for the pilot.
+
+### PD-008 — Vacation Rentals are a First-Class Business Type
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** Vacation rentals are a **first-class business type**, not a secondary feature of brokerage. Brokerages managing vacation rentals experience a **consistent Executive Cockpit across agents and properties.** **Property-owner reporting is a core capability.** **Automated monthly owner reports are required** and follow the same automation philosophy used for executive briefings, agent coaching, and follow-up workflows. Treat as **foundational architecture**.
+- **Rationale:** Luke runs a large vacation-rental division; owner reporting and a consistent cockpit are core to his daily use, not an add-on.
+
+### PD-009 — Team Roles
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:**
+  - **Sean — CEO:** product vision, Luke relationship, business decisions.
+  - **GPT — Head of Product:** roadmap, acceptance criteria, sprint priorities, product governance.
+  - **Claude — Design Authority:** UX, pilot validation, PASS / REFINE / PILOT BLOCKER.
+  - **Codex — Engineering:** implementation, testing, repository, documentation.
+- **Rationale:** Clear separation of authority prevents lane overlap.
+
+### PD-010 — Review Process
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The flow is **Engineering → Design Review → Product Approval → Customer Validation → Next Sprint.** **No sprint begins until the previous sprint has completed review.**
+- **Rationale:** Quality gate; no parallel sprint churn.
+
+### PD-011 — Current Milestone: Luke First Login
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** The current milestone is **Luke First Login.** Everything currently ships toward this milestone.
+- **Rationale:** A single focusing objective for all lanes.
+
+### PD-012 — Governance Rule
+- **Status:** Active · **Added:** 2026-07-11
+- **Decision:** From this point forward, **every major product decision must be recorded in the Product Decision Log before implementation begins.** The Product Decision Log is the **canonical record of product truth**.
+- **Rationale:** Prevents decisions from being lost or contradicted; the PDL is the single source.
+
+---
+
+## Sean Decisions Required
+
+_Open product decisions. Agents add rows here instead of deciding; Sean resolves. Newest lane first._
+
+**Raven pilot interaction design (Claude lane, 2026-07-11)** — needed before Claude-lane view implementation begins.
+See `project-raven-pilot-interaction-spec.md` for full context.
+
+| # | Decision | Claude's recommendation | Status |
+|---|---|---|---|
+| R1 | Voice: forced, or opt-in? | **RESOLVED → PD-002:** voice-first, with typing + skip always available. | RESOLVED |
+| R2 | Morning Brief entry: auto-open modal, or non-blocking (cockpit first)? | **RESOLVED → PD-001 / PD-002 / PD-003:** cockpit always loads first; AI never replaces it. | RESOLVED |
+| R3 | Approve the one net-new capability — a scoped LLM follow-up answer over the brief's already-loaded data (reuses the existing Anthropic path)? | **Approve**, bounded to brief context | OPEN |
+| R4 | Learned automations (e.g. auto-send a trusted agent's drafts): opt-in only, or auto-enable? | **Opt-in only**, never silent | OPEN |
+| R5 | Agent-rhythm "automatic CRM write-back": pilot week one, or deferred? | **Defer** until pilot CRM creds land (Codex ingestion lane) | OPEN |
+| R6 | Consolidate the three brokerage doors into one front door now, or after the first pilot week? | **Now** (low-risk view change) | OPEN |
+
+**Luke First Login (surfaced by the Design Review, 2026-07-11)**
+
+| # | Decision | Claude's recommendation | Status |
+|---|---|---|---|
+| R7 | Which `businessType` lands on which cockpit at login? | Brokerage + vacation-rental owner (Luke) → **one consistent Executive Cockpit** across agents + properties (PD-008). | OPEN |
+| R8 | Onboarding: enforced value-gate, or stay skippable? | A **light value-gate** — connect Google → first brief — then skippable once value is shown (PD-006). | OPEN |
+| R9 | Resolve the sign-in vs sign-up + env-config landing conflict. | **Unify** both to the cockpit-first landing (PD-002/PD-003); fix `.env*` divergence. | OPEN |
+| R10 | What role is pilot owner **Luke** provisioned as, and which roles are "owner-mode"? | Owner-mode must include **BROKER + MANAGER** (not just OPERATOR); confirm Luke's role. Surfaced by REV-1 pilot blocker. | OPEN |
+
+---
+
+## 2026-07-11 — Claude Lane: Pilot Interaction Design
+
+**Mission.** Turn the current cockpit experience into a coherent **first-week pilot for Luke** — a brokerage owner who
+also runs a large vacation-rental division — without redesigning the product or changing backend contracts. Luke needs a
+direct, concise **executive-assistant** experience that says what matters, what to do next, and why.
+
+**Status:** design specs delivered (see below); **no code written yet** — awaiting design approval before Claude-lane
+view implementation. This lane does **not** overlap Codex: it produces UX/copy/interaction specs and (on approval) edits
+only Claude-owned view/route files.
+
+### Claude owns (this lane)
+1. Morning Executive Brief interaction design — the first 3 minutes; cockpit-visible-first; greet → ready prompt; flows for
+   begin / skip / interrupt / ask follow-up / end / return-to-cockpit; owner voice; **separate consultant brief preserved
+   for `CONSULTANT`**.
+2. Owner-voice copy spec — replaces "Ask the operator…" interrogation language; exact copy for healthy / one urgent /
+   multiple / incomplete-data / positive-signal / recommended-action; every item ends in one action.
+3. Always-on "One thing first" — red / yellow / **healthy fallback that still orients** (never disappears).
+4. Screen-to-screen pilot flow — cockpit → brief → needs-attention → agent coaching detail → rental-property detail →
+   communication action → back to cockpit; reuse current screens; **minimum** routing/hierarchy changes only.
+5. Agent first-week rhythm — morning brief / daily execution / AI email-text / automatic CRM update / evening review /
+   tomorrow preview; no new modules.
+6. Evening Debrief — 3-minute optional conversational wrap (wins / unfinished / what Raven learned / tomorrow / one
+   confirmation only when needed); voice optional.
+7. AI behavior + tone standard — concise, calm, direct, transparent, never chatty/repetitive, asks only when necessary,
+   executes obvious reversible actions automatically, surfaces uncertainty.
+
+**Full spec:** `docs/specs/project-raven-pilot-interaction-spec.md`. **Audit input:** `docs/specs/project-raven-cockpit-ux-audit.md`.
+
+### Files Claude may touch (view/route/copy only — on approval)
+- `src/components/dashboard/AdvisorBrief.tsx` (owner-voice role branch + brief state machine)
+- `src/components/dashboard/**` (new client-side brief/debrief state machine components)
+- `src/components/cockpit/ExecutiveCockpit.tsx`, `PropertyCockpit.tsx` (always-on one-thing fallback; clickable needs-attention/property rows; back-to-cockpit)
+- `src/app/modules/brokerage/**`, `src/app/modules/rentals/**` (routing/hierarchy wiring, view only)
+- `src/app/realestate/agent/AgentAppView.tsx` (morning/evening bookend views)
+
+### Files Claude must avoid (Codex/backend lane)
+- `prisma/schema.prisma`, `prisma/migrations/**`
+- `src/lib/modules/brokerage-analytics.ts`, `property-portfolio.ts`, `rental-property-rollup.ts`
+- `src/lib/brokerage/**`, contract types, identity/activity logic, CSV vendor profiles
+- ingestion adapters (FUB/Moxi/BoldTrail), API/import routes, auth, shared backend services
+- `nav.ts` — **coordinate first** (July-3 log flags it Codex-sensitive)
+
+### Concrete next actions for Codex (after Sean approves the design)
+- **[Codex] CRM write-back adapter** — the agent rhythm's "automatic CRM update" needs an outbound push of touches
+  (`CallEvent`/`MessageEvent` already recorded internally) to the brokerage CRM (BoldTrail/FUB). Ingestion lane; gated on pilot creds.
+- **[Codex, optional] Deterministic "top positive signal" helper** in the data layer, if we'd rather the healthy-state
+  one-thing fallback (spec §3) be data-owned than view-picked. Not required for v1.
+- **[Codex] Persist opt-in automation rules** — e.g. an "auto-send agent X's drafts" flag surfaced by the Evening Debrief's
+  "what Raven learned" (spec §6). Setting/store only; Claude surfaces + confirms, Codex persists.
+- **[Codex] `nav.ts` coordination** — if the door-consolidation (spec §4) touches nav, Codex applies or blesses the change.
+
+### Sean decisions
+Consolidated in **`## Sean Decisions Required`** (rows R1–R6) at the top of this Command Center. Not repeated here.
+
+---
+
+## Pilot Acceptance Reviews (Claude-owned)
+
+_Claude is in **Product Design / Pilot Acceptance**. As Codex delivers implementation, Claude reviews it against this
+Command Center + the Raven UX principles (`project-raven-pilot-interaction-spec.md`) from the lens of **Luke's first week**._
+
+**Success bar:** the work passes when it moves Luke toward *"This helps me run my business,"* not *"nice dashboard."*
+
+**Verdict rubric — findings are classified ONLY as:**
+- **PASS** — matches the spec + owner-voice principles; ready for Luke.
+- **REFINE** — works, but needs a specific copy/UX change to feel like an assistant. Claude gives the **exact** replacement.
+- **PILOT BLOCKER** — would break Luke's first-week trust or adoption; must fix before pilot.
+
+Scope guardrail: reviews address adoption, clarity, and executive flow. Claude flags backend/schema/integration only when it
+**directly** changes the UX, and routes those to Codex as a dependency — never edits them.
+
+### Pre-staged acceptance criteria — first slice
+
+_Objective PASS conditions defined **before** implementation so review is fast and consistent. Slice = the first Claude-lane
+build once approved: **Morning Brief owner-voice reframe + always-on "One thing first."** Criteria gated on an open Sean
+decision are marked (R#)._
+
+**A. Morning Brief — owner voice** (`AdvisorBrief.tsx`, owner/operator path)
+- **PASS** when: greets Luke by name; the `CONSULTANT` path is **unchanged**; **zero** consultant/interrogation strings survive in the owner path (no "Ask the operator…", "Advisor mode", "Client conversation brief", "confirm the operator agrees"); each briefing item ends in **exactly one** action; a healthy day still says something useful (never renders empty); jargon replaced per the audit glossary.
+- **PILOT BLOCKER** when: owner sees any "Ask the operator…"/advisor framing; the "one thing" is wrong or empty; the brief blocks the cockpit when the decision says non-blocking (R2).
+- **Gated:** voice on/off (R1) · non-blocking bar vs modal (R2) · follow-up Q&A capability (R3) — those sub-behaviors reviewed only once the decision lands.
+
+**B. Always-on "One thing first"** (exec + property cockpits)
+- **PASS** when: red/yellow render as today **and** the healthy/green state renders a useful positive-orientation line (never blank); copy follows spec §3; an action affordance is present (optional on green).
+- **REFINE** triggers: a metric with no "so what"; a glossary jargon term; missing/duplicated action.
+
+### Review log
+
+| Date | Feature / branch @ SHA | Verdict | Headline |
+|---|---|---|---|
+| 2026-07-11 | Morning Brief owner voice · `codex/prepare-for-luke-pilot-execution @ 9db06a3` | **PILOT BLOCKER** (1 blocker; strong work behind it → flips to REFINE fast) | Owner-mode brief is `OPERATOR`-only; brokerage owner Luke (provisioned `BROKER`) is locked out of the milestone centerpiece. |
+
+#### Review REV-1 — Morning Brief owner voice (`9db06a3`)
+
+**Journey tested:** owner opens `/morning-brief` → One Thing First → voice/type/skip capture → "Also watching" context → return to dashboard. (Code read from the Codex branch; not run — no DB for this tenant here.)
+
+**Product-decision compliance:**
+- ✅ PD-002 (voice-first; typing + skip always available): real `SpeechRecognition`, graceful "not available in this browser → type or skip," `[Skip for now]` always present.
+- ✅ PD-006: onboarding source cards now show "First value: …" and a connect→value→expand line.
+- ✅ Honesty: Google Workspace added as **planned/OAuth-after-scope-approval** (no false "connected"), with riskNotes ("do not read email bodies…"). GPT product-approved this strategy (CODEX_HANDOFF).
+- 🟡 PD-004: exactly one "One Thing First" is shown (good, singular) — but it is **static text**, not an action (no Do/Defer/Dismiss, no persistence).
+- 🔴 PD-002/003: the brief is a **full-screen route that replaces the view**, reached from a nav link off the (non-cockpit) dashboard — not "cockpit loads first, brief layered on top, return to cockpit." One Thing First also renders **above** the executive context, inverting the locked sequence (Executive Brief → One Thing First).
+
+**PILOT BLOCKER (must fix first):**
+- **Screen/state:** `/morning-brief` page + nav link. **Problem:** owner-mode = `OPERATOR` only (`morning-brief/page.tsx` `OWNER_MODE_ROLES=["OPERATOR"]`; `nav.ts` `OWNER_ROLES=["OPERATOR"]`). **Why it matters:** Luke is a brokerage owner; the `BROKER` role exists for exactly this persona and the pilot bootstrap provisions the owner as `BROKER` — so Luke is redirected to `/dashboard` and never sees the Morning Brief (the milestone centerpiece). **Required change:** include `BROKER` (and `MANAGER`) in owner-mode for both the page gate and the nav link; confirm Luke's provisioned role (R10). **Acceptance:** a `BROKER`-role owner reaches `/morning-brief` and sees their brief.
+
+**REFINE (before PASS):**
+- **Spoken briefing missing.** Voice today is **input** (Luke dictates his plan via STT); there is no **TTS reading the brief aloud**. PD-002/directive emphasize a *voice-first briefing* (Raven speaks). *Required:* add spoken delivery of One Thing First + watch items with obvious Play/Pause/Stop. *Acceptance:* Luke can hear the brief hands-free; written stays fully usable.
+- **No greeting by name.** Header shows the business name, not "Good morning, Luke." *Required:* greet the signed-in owner by name (Clerk `currentUser`). *Acceptance:* personal greeting renders.
+- **One Thing First is not actionable / not persistent.** *Required:* the single action needs Do/Defer/Dismiss and must persist into the cockpit (per required-states + PD-004 steps 10-11). *Acceptance:* completing/deferring/dismissing persists and the cockpit reflects it. (Larger item — acceptable to stage, but flag as not-yet-done for the full journey.)
+- **Structural: brief replaces the cockpit.** *Required:* move toward cockpit-first with the brief as an overlay/return (depends on the net-new cockpit router, R7/R9). *Acceptance:* cockpit visible first; brief never a hard takeover; sequence Executive Brief → One Thing First.
+- **Empty-data copy** says "connect a source" generically; per PD-005/007 it should point to **Google** first. *Acceptance:* empty state names Google Workspace as the first connect.
+
+**Strengths (PASS-worthy):** voice-first-not-mandatory is correctly implemented; honest source-trust footer; Google Workspace privacy posture (no email-body reads) is exemplary; deterministic digest degrades honestly with no data.
+
+**Coordination note:** Codex branched from `main` (`3eb01b0`), so its work does **not** include this Command Center's Product Decision Log, and this branch does not include Codex's code — the two will need reconciliation before merge.
+
+**Recommendation for Product Approval:** Not yet. Fix the role blocker (tiny), then this is REFINE-level and pilot-viable for the brief slice. Spoken briefing + actionable/persistent One Thing First are the substantive remaining gaps for the full milestone.
+
+---
+
+## Pilot Learnings (Claude-owned)
+
+_Standing, observation-only log — hypotheses to validate with **Luke**, not feature requests. Populated as features become
+usable. Five lenses per surface: **Expected behavior · Assumptions to test · Questions to observe · Adoption signals ·
+Potential friction.** Success metric: Luke says "this helps me run my business."_
+
+### Broker roster / speed-to-lead — `/realestate/broker` (usable now)
+- **Expected behavior:** Luke glances each morning to see whether agents are responding to leads; reads worst-first; acts on the "leaked to broker" count.
+- **Assumptions to test:** that lead-leakage (untouched > 30 min) is the metric he actually cares about; that worst-first matches his mental model; that he'll *act* (nudge an agent), not just observe.
+- **Questions to observe:** Does he open it daily or only when something's wrong? Does he trust the response-time numbers? Does he know what to *do* about a slow agent from this screen?
+- **Adoption signals:** he cites a specific agent's response time in a team conversation; checks it unprompted; median response improves week over week.
+- **Potential friction:** numbers with no "so what"; no one-tap nudge from here; an empty state early on can read as "broken."
+
+### Agent daily app — `/realestate/agent` (usable now; drives the data Luke sees)
+- **Expected behavior:** agent opens it on their phone, sees untouched leads first, taps Call now / Draft reply, approves drafts.
+- **Assumptions to test:** agents will adopt a new surface vs. living in BoldTrail; the cell-bridge "Call now" feels natural; AI drafts are good enough to send with light edits.
+- **Questions to observe:** Do agents open it unprompted? Do they trust the draft? Does push reach them fast enough? Do they *double-enter* into BoldTrail anyway (the friction CRM write-back would remove)?
+- **Adoption signals:** 90%+ of first touches flow through the app; agents approve drafts rather than writing their own; median first response under 2 min.
+- **Potential friction:** yet-another-app fatigue; iOS push needs a home-screen install; one off-tone draft erodes trust fast; no CRM write-back = double entry.
+
+### Executive Cockpit — `/modules/brokerage/cockpit` (usable now)
+- **Expected behavior:** Luke opens it as his 30-second read on brokerage health; looks first at whether volume is reaching the company (deal-vs-ledger) and whether cash is safe.
+- **Assumptions to test:** that "company dollar retention" and "cash oxygen" are decisions he acts on, not just numbers he notes; that he reads the hero gap the way we intend ("volume only matters if it reaches the company").
+- **Questions to observe:** Does he land here first, or on the brief? Which tile does his eye go to? Does he understand the tiles without us explaining them? Does he ever act, or only observe?
+- **Adoption signals:** he quotes the retention or cash-days number to his team; he asks "why did this move" (wants the drill-in); he checks it before a leadership decision.
+- **Potential friction:** jargon (company dollar / cash oxygen / DOM) with no plain gloss; dead "connect MLS / gathering snapshots" tiles reading as broken setup; no path from a worrying tile to the detail behind it.
+
+### Property Cockpit — `/modules/rentals/cockpit` (usable now)
+- **Expected behavior:** Luke checks whether his rentals are performing and which properties need attention; cares about what the *owner keeps*, not gross bookings.
+- **Assumptions to test:** that "owner proceeds" framing lands better than occupancy/ADR/RevPAR; that the "needs attention" property is the one he'd actually chase; that he wants portfolio-level first, property-level on demand.
+- **Questions to observe:** Does he trust the proceeds number? Does he tap a flagged property expecting detail (today a dead end)? Does "Guest Aura" mean anything to him?
+- **Adoption signals:** he acts on a flagged property (calls the cleaner/manager); he references owner proceeds when talking to a property owner; he checks it weekly.
+- **Potential friction:** invented vocabulary ("Guest Aura," "Maintenance drag"); property rows aren't tappable (can't get to the "why"); occupancy tile is a bare number with no "so what."
+
+### Morning Brief (pending build — log once usable)
+- **Expected behavior:** Luke reads/hears the brief, acts on the one thing, returns to the cockpit.
+- **Assumptions to test:** the "one thing" is the *right* one; owner-voice reads as an assistant, not a gimmick; he wants a brief at all vs. just glancing at the cockpit.
+- **Questions to observe:** Begin or Skip? Does he ask a follow-up? Does he act on the recommended action or ignore it?
+- **Adoption signals:** he starts the brief unprompted; acts on the recommendation; asks a follow-up; says it saved him time.
+- **Potential friction:** one wrong "one thing" erodes trust; too chatty; anything that feels like an interruption.
+
+---
+
+## Design Review — Luke First Login (Claude-owned)
+
+_Design Authority readiness review (2026-07-11) conducted **while Codex builds**, per the sprint directive. Source-of-truth
+audit of the current app across the entry → connect-Google → brief → one-action journey (three parallel code reads,
+file:line-grounded). **No Codex implementation has been submitted, so NO PASS / REFINE / PILOT BLOCKER verdict is issued
+here** — that is reserved for Codex's delivery. This section defines the target, the required states, and pre-staged
+acceptance for the milestone. Enforces PD-001…PD-008, PD-011._
+
+### 1. Existing-UX audit — what is real today
+
+| Area | Reality today (file evidence) | Luke First Login gap |
+|---|---|---|
+| **Login destination** | Sign-**in** → `/dashboard` (`sign-in/page.tsx:6`, `page.tsx:11`). Sign-**up** → `/onboarding` (`sign-up/page.tsx:6`). Only role redirect: INVESTOR-only → `/investor` (`dashboard/page.tsx:47`). | Two different first screens for "first login"; env conflict — `.env.example` sends signup to `/onboarding`, `.env.sandbox.example:25` to `/dashboard`. |
+| **Cockpit entry** | **No cockpit loads first.** Landing is the restaurant-centric `DashboardView` → `HeartbeatSummary` ("Heartbeat first", `DashboardView.tsx:239`). Cockpits exist only as `/modules/**` sub-routes + demos. | 🔴 **A Raven cockpit-first landing does not exist.** Violates PD-002/PD-003 by default. |
+| **Business-type routing** | None at login. All verticals render one shared `DashboardView`; `businessType` only filters modules + swaps *hard-coded placeholder* preview cards (`DashboardView.tsx:276-408`). | 🔴 A brokerage/rental owner lands on a restaurant dashboard with fake preview numbers, not their cockpit. |
+| **Onboarding** | Non-blocking. Middleware enforces auth only (`middleware.ts:32`); a business-less user gets a soft "No business yet" card, not a gate. Wizard = 3 steps (`OnboardingFlow.tsx`). | 🟡 Skippable; no enforced value path. PD-006 (Connect→Value→Expand) not embodied. |
+| **Google integration** | **Gmail/Calendar OAuth does not exist.** Only Google *Business Profile* (reviews/"Aura", `business.manage` scope, `google-business-profile/oauth.ts:6`). Mailbox is a TODO (`realestate/actions.ts:132`). | 🔴 **Integration #1 (PD-005) is net-new from zero** — OAuth client, scopes, data model, connect UI. |
+| **Integration UI framing** | Administrative "**Source Onboarding / Setup**" (`settings/sources/page.tsx:185`), "owner approvals", "support-assisted", "secure connections". Value ("Unlocks: …") is buried. | 🔴 Reads as admin chore, not a value unlock (violates PD-006 framing). |
+| **Connection states** | `DataSourceStatus` enum has only 4: PLANNED / CONNECTED / NOT_NEEDED / BLOCKED (`schema.prisma:86`). | 🔴 No connecting / syncing / expired / sync-failed states. |
+| **Morning Brief** | **No owner brief.** `AdvisorBrief` = "Client conversation brief", **CONSULTANT/MANAGER only** (`DashboardView.tsx:209`), 4 **static** cards, not sequenced. | 🔴 An owner (Luke) sees no brief at all. Sequenced owner brief exists only in specs. |
+| **Voice** | **Zero capability** — no SpeechSynthesis / recognition / audio anywhere. | 🔴 Voice-first brief (PD-002) is net-new. |
+| **One-thing / action** | Displayed in 2 surfaces (`HeartbeatSummary` "The One Thing"; `ExecutiveCockpit` "One thing first") — both **stateless, read-only navigation**, no complete/dismiss/defer, no persistence (`signals.ts:147`). | 🔴 No persistent single-action primitive (PD-004 step 10-11). |
+| **Conflicting surfaces** | **Three** "top thing" derivations: `HeartbeatSummary` + `ExecutiveCockpit` (shared `deriveTopPressure`) **and** `AdvisorBrief.topWatchout` (its *own* logic) — can co-render on `/dashboard` and **disagree**. | 🔴 No canonical single top-action source (violates PD-004). |
+
+### 2. Intended Luke First Login journey vs. current reality
+
+_Legend: ✅ exists · 🟡 partial · 🔴 net-new_
+
+1. Luke signs in. — 🟡 (works, but sign-in vs sign-up land differently)
+2. Cockpit loads immediately. — 🔴 (lands on restaurant heartbeat; no cockpit-first router)
+3. Raven explains the value of connecting Google Workspace. — 🔴 (no Workspace concept; admin framing)
+4. Luke may connect / type / skip. — 🔴 (no brief interaction surface)
+5. Luke connects Gmail + Calendar. — 🔴 (no OAuth)
+6. Raven returns him to the cockpit. — 🔴 (depends on 2 + OAuth return routing)
+7. Morning Brief becomes available. — 🔴 (no owner brief)
+8. Raven delivers a concise executive briefing. — 🔴 (AdvisorBrief is consultant static cards)
+9. Exactly one recommended action. — 🟡 (displayed but conflicting, stateless, read-only)
+10. Action remains visible in the cockpit. — 🔴 (no persistence)
+11. Complete / dismiss / defer. — 🔴 (no action state)
+12. Leaves knowing what matters next. — 🔴 (emergent from the above)
+
+**Headline for Product (GPT) + Sean:** Luke First Login is a **build-from-near-zero**, not a refinement of existing screens. 9 of 12 steps are net-new; the entry router, Gmail/Calendar OAuth, owner brief, voice, and the persistent single-action primitive do not exist in any form today.
+
+### 3. Required UI states (design targets for Codex)
+
+**Google integration** _(owner-voice copy per state; note `DataSourceStatus` must gain states — Codex/schema dependency)_
+- **Disconnected** — "Connect Google to let Raven brief you on what actually needs you today." `[Connect Google]`
+- **Connecting** — "Opening Google…" (spinner; never a dead button).
+- **Connected** — "Google connected. Pulling your last few days…"
+- **Syncing** — "Reading your inbox and calendar — about 30 seconds."
+- **Permission incomplete** — "Raven needs Calendar too, to see your day. `[Grant calendar access]`" (names the missing scope + one action).
+- **Authorization expired** — "Google needs a quick reconnect to keep your brief current. `[Reconnect]`"
+- **Sync failed** — "Couldn't reach Google just now — your cockpit still works. `[Try again]`" (what happened + what to do; cockpit never blocked).
+- **No useful data** — "Nothing urgent in Google today. Here's your cockpit." (graceful, not an error).
+
+**Morning Brief**
+- **Ready** — a calm, non-blocking "Ready for your brief?" affordance; cockpit fully visible (PD-002).
+- **Loading** — "Putting your brief together…"
+- **Written active** — text brief, one item visible, `[Next]`/`[Skip]` always present.
+- **Voice active** — spoken, with obvious `[Pause] [Stop] [Read instead]` controls.
+- **Paused** — resumes where left off; cockpit reachable.
+- **Skipped** — collapses to a quiet chip; cockpit unaffected; re-offer later.
+- **Completed** — "That's your day. One thing needs you →" hands off to One Thing First.
+- **Failed safely** — "Couldn't generate your brief — here's your cockpit and the one thing I can see." (never a dead end).
+
+**One Thing First** _(persistent primitive — net-new; needs a store — Codex dependency)_
+- **Recommended** — one action, specific + actionable, `[Do it] [Defer] [Dismiss]`.
+- **Completed** — checked, quietly logged; brief won't re-surface it today.
+- **Deferred** — "Back tomorrow" (or a chosen time); stays visible but muted.
+- **Dismissed** — removed for today with an undo.
+- **Source unavailable** — "I can't see enough yet to recommend one thing — connect Google to unlock this." (points back to the value step).
+
+### 4. Copy & hierarchy requirements (pass conditions)
+
+- **Executive OS, not CRM** (PD-001) — no roster tables / raw-metric grids on the first-login path; language interprets, not tabulates.
+- **Cockpit is stable home base** (PD-002/003) — the cockpit is always visible; brief/onboarding overlay, never replace it.
+- **Google = value-enabling** (PD-006) — connect copy leads with what Luke *gets* ("so Raven can brief you"), not "authorize this system."
+- **AI subordinate to cockpit** — the assistant is an affordance on the cockpit, never a full-screen takeover.
+- **Singular action** (PD-004) — exactly one recommended action, unmistakable; the three conflicting "top thing" surfaces must collapse to one canonical source.
+- **Error language** — every error says *what happened* + *what to do next*, in plain, non-technical words; cockpit stays usable.
+
+### 5. Voice-first, not voice-mandatory (validation checklist)
+
+- Voice is the **emphasized** brief experience (PD-002) — but…
+- **Typing** is always available; **Skip** is always available.
+- Voice controls (play / pause / stop) are **obvious**, not hidden.
+- The user can **stop or leave** the brief at any point and land back in the cockpit.
+- **Written content is fully usable** when audio is unavailable (no audio-only information).
+
+### 6. Readiness dependencies & decisions to route (not built by Claude)
+
+**Codex / Engineering (PD-009) — net-new, flagged as dependencies:**
+- Gmail + Calendar OAuth (client, scopes, token store, callback + return routing).
+- A cockpit-first **post-auth router** keyed on `businessType`/role (today only INVESTOR is routed).
+- Owner **sequenced Morning Brief** surface (reframe/rebuild beyond `AdvisorBrief`).
+- **Voice layer** (browser TTS/STT — no infra).
+- **Persistent single-action** store (complete/defer/dismiss).
+- Connection **state machine** — extend `DataSourceStatus` (connecting/syncing/expired/failed).
+- Collapse the **three "one thing" derivations** into one canonical source (PD-004).
+
+**Route to `Sean Decisions Required` / GPT (product):**
+- Which `businessType` lands on which cockpit at login (brokerage + vacation-rental owner = same person per PD-008 → one consistent Executive Cockpit).
+- Does onboarding become an enforced value-gate, or stay skippable? (PD-006 tension.)
+- Resolve the sign-up vs sign-in and env-config landing conflict.
 
 ---
 
@@ -113,7 +492,27 @@ Codex will handle the repo/data integrity side:
 
 ## Claude Lane Status
 
-_View/UX (Cockpit). Owned by Claude._
+_Product Design / Pilot Acceptance (view/UX + copy). Owned by Claude._
+- 🎯 **Role (2026-07-11):** Design Authority / Pilot Acceptance for **Luke First Login**. Review Codex implementations
+  against this Command Center + the Product Decision Log through Luke's lens; classify **PASS / REFINE / PILOT BLOCKER**
+  with exact replacement copy/UX in `## Pilot Acceptance Reviews`. Not primary engineer; no competing implementation.
+- ✅ **Design Review — Luke First Login** (see section): source-of-truth readiness audit (entry/auth, integrations/Google,
+  brief/voice/action), the intended 12-step journey vs. reality, required UI states, copy/hierarchy + voice-first criteria.
+  **Headline: 9 of 12 journey steps are net-new** (no cockpit-first router, no Gmail/Calendar OAuth, no owner brief, no
+  voice, no persistent single action). Surfaced R7–R9 for Sean/GPT. No verdict issued — no Codex delivery yet.
+- 📓 **Standing:** maintain `## Pilot Learnings` — observations to validate with Luke as features become usable.
+- ✅ **Reviewed Codex Sprint 3** (`codex/prepare-for-luke-pilot-execution @ 9db06a3`, Morning Brief owner voice): verdict
+  **PILOT BLOCKER** (owner-mode is OPERATOR-only → brokerage owner Luke, provisioned BROKER, locked out) with strong work
+  behind it. Full REV-1 in `## Pilot Acceptance Reviews`; surfaced R10. Not authorizing next sprint — awaiting Product
+  Approval (GPT) + business approval (Sean).
+- ✅ **Project Raven pilot-adoption audit** (`project-raven-cockpit-ux-audit.md`): KEEP/REFINE/MOVE/REMOVE for every
+  cockpit screen + P0/P1/P2 punch list + CRM-vs-AI-OS inventory.
+- ✅ **Project Raven pilot interaction spec** (`project-raven-pilot-interaction-spec.md`): Morning Brief flow, owner-voice
+  copy states, always-on one-thing, screen-to-screen flow, agent first-week rhythm, Evening Debrief, AI tone standard.
+- ⏳ **Awaiting Sean approval** on the six minimal design decisions (voice default, brief entry, follow-up Q&A, learned
+  automations, CRM write-back timing, door consolidation) before Claude-lane view implementation begins.
+- 💡 **First implementation slice on approval:** owner-voice + role branch in `AdvisorBrief.tsx` and the always-on
+  one-thing green fallback — pure view work, no contract change.
 - ✅ Tile-set spec + strawman contract (`executive-cockpit-tile-set.md`).
 - ✅ Executive Cockpit built, then **wired to real `loadBrokerageCockpit`** (`d028942`). Reputation/Market rendered as
   two tiles (a VIEW split; both source the contract's single `marketAura`).
@@ -123,6 +522,16 @@ _View/UX (Cockpit). Owned by Claude._
 - 💡 **Proposed, awaiting operator:** reputation as a header chip → click-to-expand Google review themes panel.
 
 ## Codex Lane Status
+
+### 2026-07-12 — R12 replacement on `work`
+
+- The original `raven-r12-work.bundle` and commit `0e0571f7` are no longer available; Sean authorized rebuilding the approved R12 behavior from the living specs.
+- Reused the existing Executive Cockpit. Added a cockpit-embedded owner ritual in `LukeFirstLoginPanel`: personalized Clerk greeting → Executive Brief → One Thing First → Start now / Defer / Skip today → cockpit reflection.
+- Pilot decisions persist in browser-local storage, scoped by brokerage, Clerk user, and local day. No server persistence or schema change was added for R12.
+- Preserved typed and browser speech-recognition input. Text-to-speech remains outside R12, matching the launch handoff's known limitations.
+- Corrected the leadership capability list so the existing `BROKER` role can reach the Executive Cockpit; `INVESTOR` remains excluded.
+- Claude-lane parallel acceptance review found and Codex resolved its three P0s: mount the panel, remove the duplicate legacy One Thing callout, and keep Skip available before the final decision step.
+- Validation complete: typecheck passed; Vitest passed (55 files, 367 tests); production build passed with placeholder environment values and migrations correctly skipped outside Vercel production.
 
 _Data/financial spine. Owned by Codex._
 - ✅ Formalized `BrokerageCockpitData` (`7aa072c`) and approved Claude's strawman with additions:
@@ -146,6 +555,15 @@ _Data/financial spine. Owned by Codex._
   Follow Up Boss API client scaffold, credential-intake guidance, and CRM-neutral/AppFiles casing cleanup.
 - ⏳ Not started: live Follow Up Boss / Moxi / BoldTrail ingestion jobs. The FUB client scaffold exists, but real sync
   should wait until partner credentials / pilot source shapes are available.
+
+### Engineering delivered this session (2026-07-11, Claude-built — for Codex ownership per PD-009)
+_Logged here so the Engineering picture is complete; Codex to absorb/own. Full history is in the Progress Log; nothing overwritten._
+- Speed-to-lead **agent app** (`/realestate/agent`) and **broker roster** (`/realestate/broker`) view routes.
+- **OneSignal Web SDK** integration (pilot App ID committed; `Key` auth for new-format key; root service worker) — push gated on `ONESIGNAL_API_KEY`.
+- **No-terminal pilot bootstrap** endpoint (`GET /api/realestate/dev/bootstrap`, token-gated, fail-closed) — creates a brokerage tenant + links the user + seeds sample leads.
+- **Auto-apply migrations** on Vercel production build (`scripts/vercel-migrate.mjs`, production-guarded, idempotent).
+- AI **draft-for-lead** and **fire-test-lead** server actions.
+- ⚠ **Note vs PD-005:** this session's push/Twilio/OneSignal work predates the integration priority (Google Workspace #1, BoldTrail #2). See Recommendations in the handoff report — resequencing may be warranted before Luke First Login.
 
 ## Next Actions
 
@@ -182,8 +600,68 @@ phantom diffs); gate on **tsc + vitest**.
 
 ## Progress Log
 
+- **2026-07-12 [Codex]** Rebuilt the unavailable R12 artifact from the approved Raven interaction spec on `work`, based on
+  Claude's latest reviewed Raven branch. The existing Executive Cockpit now hosts the personalized owner ritual and reflects
+  a tenant/user/day-scoped browser-local Start/Defer/Skip decision after return to cockpit. Added `BROKER` to the shared
+  leadership capability used by the cockpit route. No server persistence, schema, calculation, ingestion, or source-status
+  semantics changed. Parallel Claude-lane review identified three P0 sequence issues during implementation; all were corrected
+  before the full gates. TTS remains explicitly deferred for the initial pilot.
+
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** **Design review of Codex Sprint 3** (`codex/prepare-for-luke-pilot-execution @ 9db06a3` — Morning
+  Brief owner voice). **Verdict: PILOT BLOCKER** — owner-mode is gated to `OPERATOR` only (`morning-brief/page.tsx`,
+  `nav.ts`), but the brokerage-owner persona uses the `BROKER` role (the pilot bootstrap provisions BROKER), so Luke is
+  redirected off the milestone centerpiece. Minimum fix: add BROKER (+ MANAGER) to owner-mode. Behind the blocker the work
+  is strong (real voice-first with typing/skip fallback; honest Google Workspace planned-source posture with privacy
+  riskNotes; connect→value→expand in onboarding) and flips to REFINE fast. REFINE items: no spoken (TTS) briefing — only
+  voice input; no greeting by name; One Thing First is static (no Do/Defer/Dismiss, no persistence); brief full-screen
+  replaces the cockpit (PD-002/003). Full REV-1 recorded in `## Pilot Acceptance Reviews`; surfaced R10. **Coordination:**
+  Codex branched from `main`, so it lacks this Command Center's Product Decision Log — reconciliation needed before merge.
+  **Not authorizing the next sprint** — awaiting Product Approval (GPT) + Sean. Review only; no app code touched.
+- **2026-07-11 [Claude]** **Design Authority readiness review — Luke First Login** (immediate work while Codex builds).
+  Ran a source-of-truth audit (three parallel code reads, file:line-grounded) of the entry→connect-Google→brief→one-action
+  journey and recorded it in the new **`## Design Review — Luke First Login`** section: existing-UX audit, intended 12-step
+  journey vs. reality, required UI states (Google integration / Morning Brief / One Thing First) with owner-voice copy,
+  copy & hierarchy pass conditions, and the voice-first-not-mandatory checklist. **Key finding: the milestone is
+  build-from-near-zero — 9/12 steps net-new** (no cockpit-first login router, no Gmail/Calendar OAuth — only Google
+  Business Profile exists, no owner Morning Brief, zero voice capability, no persistent single-action primitive; and three
+  conflicting "one thing" derivations that can disagree on `/dashboard`). **No PASS/REFINE/PILOT BLOCKER issued — no Codex
+  implementation submitted yet.** Surfaced R7–R9 to `Sean Decisions Required`; listed Codex engineering dependencies.
+  Documentation/governance only — no application code touched.
+- **2026-07-11 [Claude]** **Established the Project Raven Command Center + Product Decision Log.** Promoted this doc (new
+  H1, governance note) to the primary Command Center and added a top-level **`## Product Decision Log`** with twelve
+  numbered decisions **PD-001…PD-012** (mission; product principles; locked Morning Brief flow; One Thing First;
+  integration priority; connect→value→expand; pilot goal; vacation-rentals-first-class; team roles; review process;
+  Luke-First-Login milestone; governance rule), each with Status/Date/Decision/Rationale. Marked Sean-decision rows
+  **R1/R2 RESOLVED** (→ PD-002, PD-001/003); R3–R6 remain open. Merged today's engineering notes into the Codex/Engineering
+  section for absorption (history preserved). **Documentation/governance only — no application code touched.**
+- **2026-07-11 [Claude]** Continued the Pilot Acceptance lane (no external change to review — branch unchanged, no Codex
+  delivery, R1–R6 still open). Pre-staged **acceptance criteria** for the first slice (Morning Brief owner-voice + always-on
+  one-thing) with objective PASS / PILOT BLOCKER / REFINE conditions, marking sub-behaviors gated on R1–R3. Extended
+  **Pilot Learnings** to the two other surfaces usable today (Executive Cockpit, Property Cockpit). Claude-lane doc only;
+  no code, no audit, no Codex-owned file touched.
+- **2026-07-11 [Claude]** Entered **Product Design / Pilot Acceptance**. Added two Claude-owned standing sections:
+  `## Pilot Acceptance Reviews` (PASS / REFINE / PILOT BLOCKER rubric + review log; empty until Codex ships Raven-lane
+  implementation) and `## Pilot Learnings` (observation-only hypotheses to validate with Luke across the usable
+  speed-to-lead broker roster + agent app, and the pending Morning Brief). Updated Claude Lane Status to the acceptance
+  role. No audit, no redesign, no code, no Codex-owned file touched. Holding to review Codex deliveries and/or resolved
+  Sean decisions (R1–R6).
+- **2026-07-11 [Claude]** Adopted the **Command Center** operating model: this doc is the single authoritative Project
+  Raven roadmap (no separate roadmap file; `PROJECT_RAVEN_MASTER.md` not created). Added a top-level
+  `## Sean Decisions Required` section and consolidated the six open Raven design decisions (R1–R6) there — agents surface
+  decisions, Sean resolves. Claude edits only its own lane; will not edit Codex's engineering lane except to flag
+  dependencies/blockers; reads the current sprint before starting work. No code touched.
+- **2026-07-11 [Claude]** Opened the **Pilot Interaction Design** lane (Project Raven). **Completed:** the interaction spec
+  `docs/specs/project-raven-pilot-interaction-spec.md` (Morning Brief first-3-minutes flow with begin/skip/interrupt/ask/
+  end/return; owner-voice copy states each ending in one action; always-on "One thing first" incl. a healthy-state
+  fallback that still orients; screen-to-screen pilot flow reusing current routes; agent first-week rhythm over the
+  existing `/realestate/agent` app; 3-minute optional Evening Debrief; and an executive-assistant AI tone standard), plus
+  this dated top section and lane status. Design branches the brief **by role** — owners get the direct conversational
+  voice, `CONSULTANT` keeps the existing "Client conversation brief" in `AdvisorBrief.tsx`. **No code written; no contract,
+  schema, or Codex-owned file touched.** **Ready for Codex (post-approval):** CRM write-back adapter for the agent rhythm,
+  optional data-owned "top positive signal" helper, persistence for opt-in learned automations, and `nav.ts` coordination
+  for door consolidation. **Needs Sean:** the six minimal design decisions listed in the top section / spec §⚑.
 - **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
   Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
   casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM

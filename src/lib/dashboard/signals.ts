@@ -211,3 +211,89 @@ export function deriveCoverageGap(input: CoverageGapInput): CoverageGap {
     readout: `${gapDays} of the last ${windowDays} days in this view ${gapDays === 1 ? "is" : "are"} served from legacy data — resolve open sync exceptions to move them onto the ledger.`,
   };
 }
+
+/**
+ * Cash floor breach (B6) — deterministic cash-safety signal against the operator's
+ * minimum-cash-floor setting. Two escalating states:
+ *   • breach-now       — estimated cash is already below the floor.
+ *   • breach-projected — cash clears the floor today, but the 30-day Forward Cash
+ *                        LOW-POINT (which already stacks payroll, recurring bills,
+ *                        AND the scheduled 10th/25th Profit First sweep) dips below
+ *                        it. This is the "pre-sweep warn": the sweep is a modeled
+ *                        obligation in that projection.
+ * Silent when no floor is configured, no anchor exists (currentCash unknown), or
+ * the floor is non-positive. Pure: the caller supplies the already-computed cash
+ * figures — no DB, no clock.
+ */
+export interface CashFloorInput {
+  /** Operator-set minimum cash floor, in dollars. Null = not configured (silent). */
+  floor: number | null;
+  /** Current estimated cash (anchor + net flow). Null = no anchor (silent). */
+  currentCash: number | null;
+  /** Forward Cash 30-day projected low-point balance (includes the scheduled sweep). Null = no projection. */
+  projectedLowPoint: number | null;
+}
+
+export type CashFloorBreach =
+  | { state: "none" }
+  | {
+      state: "breach-now";
+      floor: number;
+      currentCash: number;
+      shortfall: number;
+      severity: "red";
+      readout: string;
+    }
+  | {
+      state: "breach-projected";
+      floor: number;
+      projectedLowPoint: number;
+      shortfall: number;
+      severity: "red";
+      readout: string;
+    };
+
+// Deterministic dollar formatter (no ICU dependency, so test strings are stable).
+function usd(v: number): string {
+  const neg = v < 0;
+  const body = Math.round(Math.abs(v))
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${neg ? "-$" : "$"}${body}`;
+}
+
+export function deriveCashFloorBreach(input: CashFloorInput): CashFloorBreach {
+  const { floor, currentCash, projectedLowPoint } = input;
+  // No floor set, or a non-positive floor, → nothing to compare against.
+  if (floor == null || floor <= 0) return { state: "none" };
+  // No anchor → we don't know current cash, so we can't honestly assert a breach.
+  if (currentCash == null) return { state: "none" };
+
+  // Already under the floor takes precedence over a projected dip.
+  if (currentCash < floor) {
+    const shortfall = Math.round((floor - currentCash) * 100) / 100;
+    return {
+      state: "breach-now",
+      floor,
+      currentCash,
+      shortfall,
+      severity: "red",
+      readout: `Estimated cash ${usd(currentCash)} is below your ${usd(floor)} floor by ${usd(shortfall)}.`,
+    };
+  }
+
+  // Pre-sweep warning: the 30-day low-point (payroll + recurring + scheduled sweep) dips below the floor.
+  if (projectedLowPoint != null && projectedLowPoint < floor) {
+    const shortfall = Math.round((floor - projectedLowPoint) * 100) / 100;
+    return {
+      state: "breach-projected",
+      floor,
+      projectedLowPoint,
+      shortfall,
+      severity: "red",
+      readout: `Cash clears your ${usd(floor)} floor today, but the 30-day low-point drops to ${usd(projectedLowPoint)} — ${usd(shortfall)} under — once payroll, recurring bills, and the scheduled sweep land.`,
+    };
+  }
+
+  return { state: "none" };
+}

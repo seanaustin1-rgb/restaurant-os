@@ -129,7 +129,31 @@ See `project-raven-pilot-interaction-spec.md` for full context.
 | R7 | Which `businessType` lands on which cockpit at login? | **RESOLVED (Sean, 2026-07-11):** login lands on **one unified Executive Cockpit** (brokerage agents + rental properties, one surface), per PD-008. Net-new cockpit-first router + unified view. | RESOLVED |
 | R8 | Onboarding: enforced value-gate, or stay skippable? | **RESOLVED (Sean, 2026-07-11):** a **light value-gate on Google** — guide connect Google Workspace → first brief, then skippable after value is shown (PD-006/PD-007). | RESOLVED |
 | R9 | Resolve the sign-in vs sign-up + env-config landing conflict. | **RESOLVED (Sean, 2026-07-11):** **both** sign-in and sign-up route to the unified cockpit; new users pass through onboarding once first; fix the `.env*` post-signup divergence. | RESOLVED |
-| R10 | Which roles are "owner-mode" (reach the Morning Brief)? | **RESOLVED (Sean, 2026-07-11):** owner-mode = **`OPERATOR` + `BROKER`** (owners only; exclude MANAGER). Apply to `morning-brief/page.tsx` + `nav.ts`. Unblocks the REV-1 pilot blocker. | RESOLVED |
+| R10 | Which roles are "owner-mode" (reach the Morning Brief)? | **RESOLVED (Sean, 2026-07-11):** owner-mode = **`OPERATOR` + `BROKER`** (owners only; exclude MANAGER). Apply to the Executive Cockpit gate (`BROKERAGE_LEADERSHIP_ROLES`). Unblocked the REV-1 pilot blocker. | RESOLVED |
+
+---
+
+## Execution Plan — Luke First Login (Claude ⇄ Codex)
+
+_The path to a Luke-usable pilot, split by lane (PD-009) and gated by the review loop (PD-010: Engineering → Design Review →
+Product Approval (GPT) → Business Approval (Sean) → next). **Design specs states → Codex builds → Claude reviews.**_
+
+| # | Increment | Claude (Design Authority) | Codex (Engineering) | Gate |
+|---|---|---|---|---|
+| 1 | **Morning Ritual** | ✅ REV-2 PASS | ✅ PR #106 (CI green, draft) | **Sean owner walkthrough → merge PR #106** |
+| 2 | **Agent → Owner rollup demo** (§8) | ✅ spec done (§8) → REV-3 on delivery | Build: surface agent-accountability in owner One Thing First; verify shared-tenant propagation; seed spread | Claude REV-3 → GPT/Sean |
+| 3 | **Owner cockpit landing** (minimal R7/R9) | Spec the minimal role/businessType post-auth landing | Build: `BROKER` → Executive Cockpit on login; both auth paths; fix `.env` split | Claude review → GPT/Sean |
+| — | **▶ Checkpoint A — demoable pilot** | After 1–3: Luke signs in → lands on **his** cockpit → runs the ritual → sees the agent→owner story on the data we have. **Showable to Luke.** | | |
+| 4 | **Google Workspace connect + value-gate** (PD-005/007, R8) | Spec OAuth connect flow states (value-gate §7 done) → review | Build: Gmail/Calendar OAuth (client/scopes/token store/callback); wire brief to Google signals; value-gate onboarding | Claude review → GPT/Sean |
+| — | **▶ Checkpoint B — full Luke First Login** | After 4: the PD-007 pilot goal ("connect Google → personalized brief") is met. | | |
+
+**Per-increment cadence:** Claude specs states (Command Center) → Codex builds to spec, CI green, one PR, self-checks acceptance → Claude reviews PASS/REFINE/BLOCK with exact fixes → GPT product approval → Sean business approval → merge → next. No increment starts until the prior is reviewed (PD-010).
+
+**Sean's open calls (small; they unblock the whole plan):**
+1. Do the **PR #106 owner walkthrough** → approve merge.
+2. **Ratify PD-013** (Design owns UI states) so Codex stops designing panels.
+3. **Branch strategy:** recommend merge PR #106 → `main`, then reconcile the Command Center/docs onto `main` so code + governance live together.
+4. **Scope for Luke's first look:** show at **Checkpoint A** (demoable, faster) or wait for **Checkpoint B** (Google connected)?
 
 ---
 
@@ -693,6 +717,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-12 [Claude]** Added an **Execution Plan — Luke First Login** (Claude ⇄ Codex), splitting remaining work into
+  four increments by lane with the review-loop gate: (1) Morning Ritual — built, pending Sean walkthrough + merge PR #106;
+  (2) Agent→Owner rollup demo (§8); (3) Owner cockpit landing (minimal R7/R9) → **Checkpoint A = demoable pilot**; (4) Google
+  Workspace connect + value-gate → **Checkpoint B = full Luke First Login**. Flagged Sean's four unblocking calls (walkthrough/
+  merge, ratify PD-013, branch strategy, Checkpoint A vs B for Luke's first look). Planning/coordination only; no app code.
 - **2026-07-12 [Claude]** **REV-2: Raven Morning Ritual = PASS** (PR #106, `work @ 28a9fa4`). The embedded `LukeFirstLoginPanel`
   meets the approved sequence + every Increment-1 acceptance condition (BROKER reaches it, greeting by name, executive-context-
   before-One-Thing, actionable Start/Defer/Skip persisted per-day, reflected on the cockpit, no regressions); CI green. **Sean

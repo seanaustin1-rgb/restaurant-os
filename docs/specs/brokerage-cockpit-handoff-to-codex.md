@@ -94,6 +94,11 @@ Progress Log after every step, so the other agents always know what's done and w
 - **Decision:** From this point forward, **every major product decision must be recorded in the Product Decision Log before implementation begins.** The Product Decision Log is the **canonical record of product truth**.
 - **Rationale:** Prevents decisions from being lost or contradicted; the PDL is the single source.
 
+### PD-013 — Design owns UI states; Engineering implements  *(PROPOSED — awaiting Sean/GPT ratification)*
+- **Status:** **Proposed** (surfaced by Claude 2026-07-11; not yet Active) · **Added:** 2026-07-11
+- **Decision (proposed):** Executive-panel **UI states** — *which* states exist, plus their copy, hierarchy, owner-voice, and behavior — are **designed by Claude (Design Authority)**. **Codex implements** them to that spec and **flags any missing state back to Design** rather than originating it. This clarifies/enforces PD-009.
+- **Rationale:** Panel-state design is product judgment and is invisible to CI (typecheck/test/build stay green regardless). When Engineering designs states in a vacuum, design review becomes cleanup instead of confirmation — see the REV-1/R11/R12 drift (inverted sequence, missing greeting, voice-as-input-only). Design-specs-first keeps product truth upstream of code.
+
 ---
 
 ## Sean Decisions Required
@@ -399,6 +404,26 @@ _Legend: ✅ exists · 🟡 partial · 🔴 net-new_
 - Does onboarding become an enforced value-gate, or stay skippable? (PD-006 tension.)
 - Resolve the sign-up vs sign-in and env-config landing conflict.
 
+### 7. Required UI states — Unified Executive Cockpit (R7) + Google value-gate (R8)
+
+_Design specs the states; Codex implements (PD-013 proposed). Owner-voice copy per state so Codex builds, not designs._
+
+**Unified Executive Cockpit** (R7 — one surface across brokerage agents + rental properties; single canonical "one thing"):
+- **Loading** — skeleton; never a blank screen.
+- **Ready** — cockpit renders; "One Thing First" (PD-004) always present on top.
+- **Partial** — some domains connected, others not: show live data where it exists; for a missing domain show a quiet "Connect {X} to light this up," not an error.
+- **Empty (no sources)** — value-forward, not a dashboard of zeros: "Connect Google to get your first brief" → routes to the value-gate (R8).
+- **One Thing First** — reuse §3 red/yellow/healthy; **one canonical source across both domains** (collapse the three divergent derivations flagged in the audit).
+- **Brokerage panel** states: has-data (agents, worst-first "needs attention") · no-data ("Connect BoldTrail / import agents") · all-healthy ("Team's responsive — nothing needs you").
+- **Rentals panel** states: has-data (properties, worst-first) · no-data ("Connect Escapia / import properties") · all-healthy.
+- **Source/trust** — one quiet, honest indicator; no "modeled/plumbing" noise on the exec surface.
+
+**Google value-gate** (R8 — light gate; connect → first value → then skippable):
+- **Pitch (pre-connect)** — leads with the payoff: "Connect Google Workspace so Raven can brief you on what needs you today." `[Connect Google] [Skip for now]`
+- **Connecting / Connected / Syncing / Permission-incomplete / Authorization-expired / Sync-failed / No-useful-data** — exactly the §3 Google-integration states + copy.
+- **First value shown** — "Here's your first brief." → then the gate releases: "You're set — explore your cockpit." (skippable from here on).
+- **Skipped-before-value** — allowed, non-punitive: "Skipped — connect Google anytime to unlock your brief." (never traps Luke; PD-006).
+
 ---
 
 ## 2026-07-03 Tandem Setup - Current Working Plan
@@ -599,6 +624,11 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** Got ahead of the R7 build: **specced the required UI states** for the **Unified Executive Cockpit**
+  and the **Google value-gate** (Design Review §7) with owner-voice copy per state, so Codex implements rather than designs
+  them. **Surfaced PD-013 (Proposed):** Design owns UI states, Engineering implements to spec — clarifies PD-009; awaiting
+  Sean/GPT ratification. Guidance: let Codex finish the specced brief slice, but hold the cockpit-router (R7) build until it
+  builds to these states. Design/coordination only; no app code touched.
 - **2026-07-11 [Claude]** **Sean resolved R7–R10** (captured during Design-Authority Q&A). **R10:** owner-mode = `OPERATOR` +
   `BROKER` (unblocks REV-1 pilot blocker). **R7:** login lands on one **unified Executive Cockpit** (brokerage +
   properties). **R9:** both sign-in/sign-up → the unified cockpit; new users onboard once first; fix `.env*` divergence.

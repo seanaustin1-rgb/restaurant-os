@@ -116,10 +116,10 @@ See `project-raven-pilot-interaction-spec.md` for full context.
 
 | # | Decision | Claude's recommendation | Status |
 |---|---|---|---|
-| R7 | Which `businessType` lands on which cockpit at login? | Brokerage + vacation-rental owner (Luke) → **one consistent Executive Cockpit** across agents + properties (PD-008). | OPEN |
-| R8 | Onboarding: enforced value-gate, or stay skippable? | A **light value-gate** — connect Google → first brief — then skippable once value is shown (PD-006). | OPEN |
-| R9 | Resolve the sign-in vs sign-up + env-config landing conflict. | **Unify** both to the cockpit-first landing (PD-002/PD-003); fix `.env*` divergence. | OPEN |
-| R10 | What role is pilot owner **Luke** provisioned as, and which roles are "owner-mode"? | Owner-mode must include **BROKER + MANAGER** (not just OPERATOR); confirm Luke's role. Surfaced by REV-1 pilot blocker. | OPEN |
+| R7 | Which `businessType` lands on which cockpit at login? | **RESOLVED (Sean, 2026-07-11):** login lands on **one unified Executive Cockpit** (brokerage agents + rental properties, one surface), per PD-008. Net-new cockpit-first router + unified view. | RESOLVED |
+| R8 | Onboarding: enforced value-gate, or stay skippable? | **RESOLVED (Sean, 2026-07-11):** a **light value-gate on Google** — guide connect Google Workspace → first brief, then skippable after value is shown (PD-006/PD-007). | RESOLVED |
+| R9 | Resolve the sign-in vs sign-up + env-config landing conflict. | **RESOLVED (Sean, 2026-07-11):** **both** sign-in and sign-up route to the unified cockpit; new users pass through onboarding once first; fix the `.env*` post-signup divergence. | RESOLVED |
+| R10 | Which roles are "owner-mode" (reach the Morning Brief)? | **RESOLVED (Sean, 2026-07-11):** owner-mode = **`OPERATOR` + `BROKER`** (owners only; exclude MANAGER). Apply to `morning-brief/page.tsx` + `nav.ts`. Unblocks the REV-1 pilot blocker. | RESOLVED |
 
 ---
 
@@ -592,6 +592,12 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Claude]** **Sean resolved R7–R10** (captured during Design-Authority Q&A). **R10:** owner-mode = `OPERATOR` +
+  `BROKER` (unblocks REV-1 pilot blocker). **R7:** login lands on one **unified Executive Cockpit** (brokerage +
+  properties). **R9:** both sign-in/sign-up → the unified cockpit; new users onboard once first; fix `.env*` divergence.
+  **R8:** light value-gate on Google (connect Workspace → first brief, then skippable). Confirmed Codex's work is **PR #105**
+  (`codex/prepare-for-luke-pilot-execution`, base `main`) — CI green (Typecheck/Test/Build/Codex Review/Vercel). **Codex is
+  now unblocked** to execute REV-1's punch list against these decisions. Review/coordination only; no app code touched.
 - **2026-07-11 [Claude]** **Design review of Codex Sprint 3** (`codex/prepare-for-luke-pilot-execution @ 9db06a3` — Morning
   Brief owner voice). **Verdict: PILOT BLOCKER** — owner-mode is gated to `OPERATOR` only (`morning-brief/page.tsx`,
   `nav.ts`), but the brokerage-owner persona uses the `BROKER` role (the pilot bootstrap provisions BROKER), so Luke is

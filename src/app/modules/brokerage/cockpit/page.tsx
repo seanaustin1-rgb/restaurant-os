@@ -1,10 +1,10 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ExecutiveCockpit } from "@/components/cockpit/ExecutiveCockpit";
 import { loadBrokerageCockpit } from "@/lib/modules/brokerage-analytics";
-import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
+import { BROKERAGE_LEADERSHIP_ROLES } from "@/lib/access/roles";
 import { prisma } from "@/lib/prisma";
 
 export default async function BrokerageExecutiveCockpitPage({
@@ -14,6 +14,7 @@ export default async function BrokerageExecutiveCockpitPage({
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+  const user = await currentUser();
 
   // Leadership-only (locked decision 7): the Executive Cockpit renders the named
   // per-agent leaderboard, which INVESTOR must never see. Scope the lookup to
@@ -22,7 +23,7 @@ export default async function BrokerageExecutiveCockpitPage({
   const role = await prisma.userRestaurantRole.findFirst({
     where: {
       clerkUserId: userId,
-      role: { in: [...ADJUSTMENT_ROLES] },
+      role: { in: [...BROKERAGE_LEADERSHIP_ROLES] },
       ...(searchParams?.restaurantId ? { restaurantId: searchParams.restaurantId } : {}),
       restaurant: { businessType: "REAL_ESTATE_BROKERAGE" },
     },
@@ -46,7 +47,7 @@ export default async function BrokerageExecutiveCockpitPage({
       </div>
 
       {data ? (
-        <ExecutiveCockpit data={data} />
+        <ExecutiveCockpit data={data} ownerFirstName={user?.firstName?.trim() || "there"} ownerUserId={userId} />
       ) : (
         <section className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           No brokerage cockpit data is available yet. Add a real-estate brokerage business, then import agents/deals or

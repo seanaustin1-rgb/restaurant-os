@@ -523,6 +523,16 @@ _Product Design / Pilot Acceptance (view/UX + copy). Owned by Claude._
 
 ## Codex Lane Status
 
+### 2026-07-12 — R12 replacement on `work`
+
+- The original `raven-r12-work.bundle` and commit `0e0571f7` are no longer available; Sean authorized rebuilding the approved R12 behavior from the living specs.
+- Reused the existing Executive Cockpit. Added a cockpit-embedded owner ritual in `LukeFirstLoginPanel`: personalized Clerk greeting → Executive Brief → One Thing First → Start now / Defer / Skip today → cockpit reflection.
+- Pilot decisions persist in browser-local storage, scoped by brokerage, Clerk user, and local day. No server persistence or schema change was added for R12.
+- Preserved typed and browser speech-recognition input. Text-to-speech remains outside R12, matching the launch handoff's known limitations.
+- Corrected the leadership capability list so the existing `BROKER` role can reach the Executive Cockpit; `INVESTOR` remains excluded.
+- Claude-lane parallel acceptance review found and Codex resolved its three P0s: mount the panel, remove the duplicate legacy One Thing callout, and keep Skip available before the final decision step.
+- Validation complete: typecheck passed; Vitest passed (55 files, 367 tests); production build passed with placeholder environment values and migrations correctly skipped outside Vercel production.
+
 _Data/financial spine. Owned by Codex._
 - ✅ Formalized `BrokerageCockpitData` (`7aa072c`) and approved Claude's strawman with additions:
   `sourceConfidence`, `floorDaysTarget`, nullable market data, and data-lane-owned `topPressure`.
@@ -589,6 +599,13 @@ email-matched); `BrokerageAgentActivitySnapshot` (agent/source/period). Authorit
 phantom diffs); gate on **tsc + vitest**.
 
 ## Progress Log
+
+- **2026-07-12 [Codex]** Rebuilt the unavailable R12 artifact from the approved Raven interaction spec on `work`, based on
+  Claude's latest reviewed Raven branch. The existing Executive Cockpit now hosts the personalized owner ritual and reflects
+  a tenant/user/day-scoped browser-local Start/Defer/Skip decision after return to cockpit. Added `BROKER` to the shared
+  leadership capability used by the cockpit route. No server persistence, schema, calculation, ingestion, or source-status
+  semantics changed. Parallel Claude-lane review identified three P0 sequence issues during implementation; all were corrected
+  before the full gates. TTS remains explicitly deferred for the initial pilot.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 

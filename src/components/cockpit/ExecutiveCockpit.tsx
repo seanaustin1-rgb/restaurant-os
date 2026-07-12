@@ -16,6 +16,7 @@
 import type { ReactNode } from "react";
 import { Banknote, Building2, Gauge, Star, TrendingUp, TrendingDown, Users, Scale } from "lucide-react";
 import { HealthSignal } from "@/components/health/HealthSignal";
+import { LukeFirstLoginPanel } from "@/components/cockpit/LukeFirstLoginPanel";
 import { orderByNeedsAttention } from "@/lib/cockpit/needs-attention";
 import { money, pct } from "@/lib/format";
 import type {
@@ -136,7 +137,15 @@ function marketDetail(market: BrokerageCockpitData["marketAura"]["market"]): str
   return `${dom}${ratio}${listings}.`;
 }
 
-export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
+export function ExecutiveCockpit({
+  data,
+  ownerFirstName = "Luke",
+  ownerUserId = "public-demo",
+}: {
+  data: BrokerageCockpitData;
+  ownerFirstName?: string;
+  ownerUserId?: string;
+}) {
   const {
     dealHealth,
     ledgerHealth,
@@ -161,6 +170,16 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
     (a) => a.health,
     (a, b) => b.companyDollar - a.companyDollar,
   ).slice(0, 3);
+  const oneThing = topPressure ?? {
+    label: "You're clear today",
+    readout:
+      cdr.pct != null
+        ? `Company-dollar retention is ${pct(cdr.pct, 1)}. Keep the current operating rhythm.`
+        : `Closed GCI is ${compactMoney(dealHealth.closedGci)} for the current period.`,
+  };
+  const sourceTrustText = `Source trust: ${sourceTrust.connected}/${sourceTrust.required} connected${
+    sourceTrust.missing.length ? `; missing ${sourceTrust.missing.slice(0, 3).join(", ")}.` : "."
+  } Figures remain partial until planned sources are connected or imported.`;
 
   return (
     <article className="rounded-lg border border-line bg-surface px-4 py-4 sm:px-5 sm:py-5">
@@ -183,15 +202,19 @@ export function ExecutiveCockpit({ data }: { data: BrokerageCockpitData }) {
         </span>
       </div>
 
-      {/* The One Thing — the single rationed copper callout */}
-      {topPressure ? (
-        <div className="mt-5 rounded-lg border border-copper-dim bg-copper/10 px-4 py-3">
-          <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-copper-soft">One thing first</div>
-          <p className="mt-1 text-sm leading-relaxed text-ink-text">
-            <span className="font-medium">{topPressure.label}</span> — {topPressure.readout}
-          </p>
-        </div>
-      ) : null}
+      <LukeFirstLoginPanel
+        restaurantId={data.restaurantId}
+        userId={ownerUserId}
+        firstName={ownerFirstName}
+        executiveBrief={[
+          `${compactMoney(dealHealth.closedGci)} closed GCI; ${compactMoney(ledgerHealth.companyDollar)} reached company dollar.`,
+          cashSafety.oxygenDays != null
+            ? `Cash oxygen is ${Math.floor(cashSafety.oxygenDays)} days against a ${cashSafety.floorDaysTarget}-day floor.`
+            : "Cash oxygen needs a starting balance before it can be measured.",
+        ]}
+        oneThing={oneThing}
+        sourceTrust={sourceTrustText}
+      />
 
       {/* HERO — Deal Health vs Ledger Health */}
       <section className="mt-5 rounded-lg border border-line bg-ink/40 p-4 sm:p-5">

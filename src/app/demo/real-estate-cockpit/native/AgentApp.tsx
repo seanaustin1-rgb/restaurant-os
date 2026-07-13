@@ -490,19 +490,19 @@ export default function AgentApp() {
           flex-direction: column;
           gap: 10px;
         }
-        .qcard {
+        .agent :global(.qcard) {
           border: 1px solid var(--line);
           border-radius: 12px;
           background: var(--surface);
           overflow: hidden;
         }
-        .qcard.r {
+        .agent :global(.qcard.r) {
           border-color: color-mix(in srgb, var(--red) 40%, var(--line));
         }
-        .qcard.y {
+        .agent :global(.qcard.y) {
           border-color: color-mix(in srgb, var(--yellow) 38%, var(--line));
         }
-        .qhead {
+        .agent :global(.qhead) {
           width: 100%;
           display: grid;
           grid-template-columns: 34px 1fr auto;
@@ -516,10 +516,10 @@ export default function AgentApp() {
           text-align: left;
           cursor: pointer;
         }
-        .qhead:hover {
+        .agent :global(.qhead:hover) {
           background: var(--raise);
         }
-        .qic {
+        .agent :global(.qic) {
           width: 34px;
           height: 34px;
           border-radius: 9px;
@@ -529,28 +529,28 @@ export default function AgentApp() {
           place-items: center;
           color: var(--copper-soft);
         }
-        .qmid {
+        .agent :global(.qmid) {
           min-width: 0;
           display: flex;
           flex-direction: column;
           gap: 1px;
         }
-        .qtype {
+        .agent :global(.qtype) {
           font-size: 9.5px;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: var(--muted);
           font-weight: 600;
         }
-        .qtitle {
+        .agent :global(.qtitle) {
           font-size: 14.5px;
           color: var(--text);
         }
-        .qmeta {
+        .agent :global(.qmeta) {
           font-size: 12px;
           color: var(--muted);
         }
-        .qwarn {
+        .agent :global(.qwarn) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -558,41 +558,41 @@ export default function AgentApp() {
           font-size: 11.5px;
           color: var(--red);
         }
-        .qwarn :global(svg) {
+        .agent :global(.qwarn svg) {
           width: 13px;
           height: 13px;
           flex: none;
         }
-        .qright {
+        .agent :global(.qright) {
           display: flex;
           align-items: center;
           gap: 10px;
         }
-        .qtime {
+        .agent :global(.qtime) {
           font-family: var(--font-mono);
           font-size: 12px;
           color: var(--text-soft);
           white-space: nowrap;
         }
-        .qchev {
+        .agent :global(.qchev) {
           color: var(--muted);
           display: inline-flex;
           transition: transform 0.18s;
         }
-        .qbody {
+        .agent :global(.qbody) {
           padding: 4px 15px 14px 61px;
           display: flex;
           flex-direction: column;
           gap: 8px;
           border-top: 1px solid var(--line-soft);
         }
-        .task {
+        .agent :global(.task) {
           display: flex;
           gap: 9px;
           align-items: flex-start;
           font-size: 12.5px;
         }
-        .tbox {
+        .agent :global(.tbox) {
           width: 16px;
           height: 16px;
           border-radius: 5px;
@@ -602,26 +602,26 @@ export default function AgentApp() {
           display: grid;
           place-items: center;
         }
-        .tbox.done {
+        .agent :global(.tbox.done) {
           background: var(--green);
           border-color: var(--green);
           color: var(--ink);
         }
-        .tbox.miss {
+        .agent :global(.tbox.miss) {
           border-color: color-mix(in srgb, var(--red) 50%, var(--line));
         }
-        .tbox :global(svg) {
+        .agent :global(.tbox svg) {
           width: 11px;
           height: 11px;
         }
-        .task .tt {
+        .agent :global(.task .tt) {
           color: var(--text-soft);
         }
-        .task.done .tt {
+        .agent :global(.task.done .tt) {
           color: var(--muted);
           text-decoration: line-through;
         }
-        .task .file {
+        .agent :global(.task .file) {
           display: block;
           font-family: var(--font-mono);
           font-size: 11px;
@@ -808,38 +808,38 @@ export default function AgentApp() {
           letter-spacing: 0.04em;
           margin-top: 1px;
         }
-        .lead {
+        .agent :global(.lead) {
           border: 1px solid var(--line);
           border-radius: 11px;
           background: var(--surface);
           padding: 13px 14px;
           margin-top: 10px;
         }
-        .lead.r {
+        .agent :global(.lead.r) {
           border-color: color-mix(in srgb, var(--red) 40%, var(--line));
           background: var(--red-wash);
         }
-        .lead.y {
+        .agent :global(.lead.y) {
           border-color: color-mix(in srgb, var(--yellow) 38%, var(--line));
         }
-        .lead.done {
+        .agent :global(.lead.done) {
           opacity: 0.5;
         }
-        .lead.done .lact {
+        .agent :global(.lead.done .lact) {
           pointer-events: none;
         }
-        .lhead {
+        .agent :global(.lhead) {
           display: flex;
           justify-content: space-between;
           gap: 10px;
           align-items: baseline;
           flex-wrap: wrap;
         }
-        .lnm {
+        .agent :global(.lnm) {
           font-size: 14.5px;
           color: var(--text);
         }
-        .lflag {
+        .agent :global(.lflag) {
           font-size: 10.5px;
           font-weight: 700;
           text-transform: uppercase;
@@ -848,31 +848,31 @@ export default function AgentApp() {
           align-items: center;
           gap: 5px;
         }
-        .lflag.r {
+        .agent :global(.lflag.r) {
           color: var(--red);
         }
-        .lflag.y {
+        .agent :global(.lflag.y) {
           color: var(--yellow);
         }
-        .lflag.g {
+        .agent :global(.lflag.g) {
           color: var(--green);
         }
-        .lflag :global(svg) {
+        .agent :global(.lflag svg) {
           width: 12px;
           height: 12px;
         }
-        .lmeta {
+        .agent :global(.lmeta) {
           font-size: 12.5px;
           color: var(--muted);
           margin-top: 2px;
         }
-        .lwhy {
+        .agent :global(.lwhy) {
           font-size: 12.5px;
           color: var(--text-soft);
           margin-top: 8px;
           line-height: 1.5;
         }
-        .lact {
+        .agent :global(.lact) {
           display: flex;
           gap: 8px;
           margin-top: 10px;
@@ -962,7 +962,7 @@ export default function AgentApp() {
         .cal-item .cx2 {
           color: var(--text-soft);
         }
-        .btn {
+        .agent :global(.btn) {
           font: inherit;
           font-size: 12.5px;
           font-weight: 600;
@@ -975,20 +975,20 @@ export default function AgentApp() {
           gap: 6px;
           transition: filter 0.15s;
         }
-        .btn:hover {
+        .agent :global(.btn:hover) {
           filter: brightness(1.08);
         }
-        .btn.primary {
+        .agent :global(.btn.primary) {
           background: var(--copper-soft);
           border-color: var(--copper-soft);
           color: var(--ink);
         }
-        .btn.urgent {
+        .agent :global(.btn.urgent) {
           background: var(--red);
           border-color: var(--red);
           color: #fff;
         }
-        .btn.ghost {
+        .agent :global(.btn.ghost) {
           background: transparent;
           border-color: var(--line);
           color: var(--text-soft);

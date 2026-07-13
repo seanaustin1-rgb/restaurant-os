@@ -178,6 +178,41 @@ const PROFILES = ["Low", "Medium", "High"] as const;
 const occTone = (o: number): Tone => (o >= 75 ? "green" : o >= 65 ? "yellow" : "red");
 const SORTED = [...PROPS].sort((a, b) => (RANK[a.flag] !== RANK[b.flag] ? RANK[a.flag] - RANK[b.flag] : b.revpar - a.revpar));
 
+// Owner updates & follow-up — close the loop on concerns and prompt proactive
+// owner reporting. Generated demo data; "send" is a toast, no real delivery.
+type OwnerAction = { id: string; kind: "email" | "text"; flag: Flag; title: string; line: string; subject?: string; body: string };
+const OWNER_ACTIONS: OwnerAction[] = [
+  {
+    id: "brundage-owner",
+    kind: "email",
+    flag: "r",
+    title: "Update the Brundage owner",
+    line: "Close the loop on the furnace ticket and the 3.2★ review before the owner hears it from the guest.",
+    subject: "Brundage Chalet — furnace being resolved, Thursday check-in protected",
+    body:
+      "Hi,\n\nA heads-up with the resolution already in motion: a guest reported the furnace not igniting at Brundage Chalet. We flagged it Critical, dispatched a technician today, and it's being repaired ahead of Thursday's check-in — the booking is protected.\n\nWe also responded to the recent 3.2★ review directly. I'll confirm the moment the furnace ticket closes.\n\nThis period: 61% occupancy · $340 ADR · $207 RevPAR.\n\nBest,\nYour property team",
+  },
+  {
+    id: "brundage-guest",
+    kind: "text",
+    flag: "r",
+    title: "Reassure the Thursday guest",
+    line: "A quick proactive text keeps the arrival smooth and heads off another low review.",
+    body:
+      "Hi! This is your host team for Brundage Chalet — we've had a technician service the furnace ahead of your Thursday check-in, so the cabin will be warm and ready. Anything you need before you arrive, just reply here.",
+  },
+  {
+    id: "sawtooth-report",
+    kind: "email",
+    flag: "g",
+    title: "Send the Sawtooth owner their monthly report",
+    line: "Premium-strategy owner — proactively show the numbers behind the plan they chose.",
+    subject: "Sawtooth Summit Lodge — your monthly owner report",
+    body:
+      "Hi,\n\nYour monthly summary for Sawtooth Summit Lodge:\n\n• Occupancy 58% · ADR $714 · RevPAR $414\n• Pacing −18% vs the 3-year benchmark — held intentionally behind your $5,000/wk floor\n• Guest reviews averaging 4.8★\n\nYour asset is priced ~24% above market for comparable >4,000 sq ft homes. This premium strategy has held occupancy below local momentum — exactly as you directed. Happy to revisit the floor whenever you'd like.\n\nBest,\nYour property team",
+  },
+];
+
 function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast: (m: string) => void }) {
   const [profile, setProfile] = useState<string>(p.profile);
   const rTone: Tone = p.rating < 3.5 ? "red" : p.rating < 4.2 ? "yellow" : "green";
@@ -303,6 +338,10 @@ export default function RentalCockpit() {
   const [open, setOpen] = useState<Prop | null>(null);
   const [handled, setHandled] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [oaOpen, setOaOpen] = useState<string | null>(null);
+  const [oaSubject, setOaSubject] = useState("");
+  const [oaBody, setOaBody] = useState("");
+  const [oaSent, setOaSent] = useState(false);
   const brundage = PROPS.find((p) => p.n === "Brundage Chalet") ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -310,6 +349,17 @@ export default function RentalCockpit() {
     setToast(m);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 2400);
+  };
+  const openOwnerAction = (a: OwnerAction) => {
+    if (oaOpen === a.id) { setOaOpen(null); return; }
+    setOaOpen(a.id);
+    setOaSent(false);
+    setOaSubject(a.kind === "email" ? a.subject ?? "" : "");
+    setOaBody(a.body);
+  };
+  const sendOwnerAction = (a: OwnerAction) => {
+    setOaSent(true);
+    say(a.kind === "text" ? "Message sent to the guest." : "Owner report sent.");
   };
 
   return (
@@ -354,8 +404,8 @@ export default function RentalCockpit() {
             <path d="M20 6 9 17l-5-5" />
           </svg>
           <p>
-            <b>Dispatched.</b> A technician is assigned to Brundage&apos;s furnace and a guest reply is queued. Reopen the
-            property to track the ticket to close.
+            <b>Dispatched.</b> A technician is assigned to Brundage&apos;s furnace. Close the loop below — update the owner
+            and reassure the Thursday guest — or reopen the property to track the ticket.
           </p>
           <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
             Undo
@@ -466,6 +516,60 @@ export default function RentalCockpit() {
               </span>
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* owner updates & follow-up — close the loop on concerns + proactive owner reports */}
+      <div className="section">
+        <div className="sh">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+              <path d="m22 6-10 7L2 6" />
+            </svg>
+            Owner updates &amp; follow-up
+          </span>
+          <span className="desc">close the loop on concerns · proactive owner reporting</span>
+        </div>
+        <div className="oalist">
+          {OWNER_ACTIONS.map((a) => {
+            const isOpen = oaOpen === a.id;
+            return (
+              <div className={`ocard ${a.flag}`} key={a.id}>
+                <div className="oc-t">{a.title}</div>
+                <div className="oc-l">{a.line}</div>
+                <button type="button" className="oc-go" aria-expanded={isOpen} onClick={() => openOwnerAction(a)}>
+                  {a.kind === "email" ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                      <path d="m22 6-10 7L2 6" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  )}
+                  {isOpen ? "Hide draft" : a.kind === "email" ? "Email a report" : "Text the guest"}
+                </button>
+                {isOpen && (
+                  <div className="ocompose">
+                    {a.kind === "email" && (
+                      <input className="oc-subj" value={oaSubject} onChange={(e) => setOaSubject(e.target.value)} placeholder="Subject" disabled={oaSent} />
+                    )}
+                    <textarea className="oc-body" value={oaBody} onChange={(e) => setOaBody(e.target.value)} rows={a.kind === "email" ? 8 : 3} disabled={oaSent} />
+                    <div className="oc-act">
+                      <button type="button" className="oc-send" disabled={oaSent} onClick={() => sendOwnerAction(a)}>
+                        {oaSent ? "✓ Sent" : a.kind === "email" ? "Send report" : "Send text"}
+                      </button>
+                      <button type="button" className="oc-cancel" onClick={() => setOaOpen(null)}>
+                        {oaSent ? "Close" : "Cancel"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -838,6 +942,119 @@ export default function RentalCockpit() {
           padding-top: 12px;
         }
         .footnote :global(b) {
+          color: var(--text-soft);
+        }
+        .oalist {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .ocard {
+          border: 1px solid var(--line);
+          background: var(--surface);
+          border-radius: 11px;
+          padding: 12px 13px;
+        }
+        .ocard.r {
+          border-color: color-mix(in srgb, var(--red) 32%, var(--line));
+        }
+        .oc-t {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .oc-l {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.45;
+          margin-top: 3px;
+        }
+        .oc-go {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          margin-top: 10px;
+          padding: 7px 13px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+          transition: filter 0.15s;
+        }
+        .oc-go:hover {
+          filter: brightness(1.06);
+        }
+        .oc-go :global(svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .ocompose {
+          margin-top: 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .oc-subj,
+        .oc-body {
+          font: inherit;
+          width: 100%;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          color: var(--text);
+          padding: 9px 10px;
+        }
+        .oc-subj {
+          font-size: 12.5px;
+          font-weight: 600;
+        }
+        .oc-body {
+          font-size: 12.5px;
+          line-height: 1.5;
+          resize: vertical;
+          white-space: pre-wrap;
+        }
+        .oc-subj:focus,
+        .oc-body:focus {
+          outline: none;
+          border-color: var(--copper-dim);
+        }
+        .oc-subj:disabled,
+        .oc-body:disabled {
+          opacity: 0.7;
+        }
+        .oc-act {
+          display: flex;
+          gap: 8px;
+        }
+        .oc-send {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+        }
+        .oc-send:disabled {
+          opacity: 0.7;
+          cursor: default;
+        }
+        .oc-cancel {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--line);
+          background: transparent;
           color: var(--text-soft);
         }
         .rental :global(.backdrop) {

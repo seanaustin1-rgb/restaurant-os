@@ -225,6 +225,35 @@ weighs in per Sean.
   `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`.
 - **NEXT-008 — Consolidated merge sequence.** Owner [Sean/Claude] · Status **Proposed** · See "Merge sequence" below.
 
+### 2026-07-13 (EOD+1) — Codex lane: bilingual maintenance reporting architecture
+
+- **NEED-002 — Canonical bilingual maintenance reporting contract.** Date 2026-07-13 · Owner [Codex] · Status
+  **In Progress** · Evidence: repository audit of `RentalMaintenanceIssue`, `RentalExpense`,
+  `RentalOwnerStatement`, `RentalProperty`, `loadRentalPropertyRollup`, and the generated-data Rental demo.
+  Existing foundation already keys maintenance issues to tenant/property/source and stores status, opened/resolved dates,
+  estimated/actual cost, repeat-issue state, and provider payload. The live contract must add append-only field updates
+  (original language + original text/transcript + reviewed translation + approval/audit metadata), assignments/status
+  history, completion attachments, owner identity/delivery preferences, and an immutable owner-report snapshot. Next
+  action: review Claude's demo implementation against this contract without editing Claude-owned Rental UI files.
+- **FAILURE-004 — Maintenance cost can be double-counted in the current rental rollup.** Date 2026-07-13 · Owner [Codex] ·
+  Status **Identified; deferred outside tomorrow's generated-data demo** · Evidence:
+  `src/lib/modules/rental-property-rollup.ts` currently computes maintenance cost as the sum of all
+  `RentalExpense(kind=MAINTENANCE)` amounts plus every included maintenance issue's `actualCost ?? estimatedCost`.
+  If an imported work order and its booked expense represent the same repair, the property/owner economics can count it
+  twice. Required live rule: issue cost is operational estimate; once a linked booked expense exists, that expense is
+  financial truth. Add an explicit issue↔expense link or deterministic provider identity before using this flow for real
+  owner proceeds. No schema or rollup change is authorized in PR #115.
+- **DECISION-008 — Preserve original-language truth; translation is reviewed derivative copy.** Date 2026-07-13 ·
+  Owner [Sean/Codex] · Status **Approved for demo contract** · Evidence: Sean identified bilingual maintenance reporting
+  as a major selling point. Every translated field update must preserve the original submission, clearly label the
+  machine translation, and require review/approval before owner-facing delivery. Structured facts (property, timestamps,
+  status, assignee, cost, checklist) remain canonical and are never inferred solely from translated prose.
+- **NEXT-009 — Codex review gate for the bilingual Maintenance Center.** Date 2026-07-13 · Owner [Codex] · Status
+  **In Progress** · Review the completed PR #115 diff for demo-only containment, honest generated-data labeling,
+  translation/original-language visibility, simulated-send wording, reset behavior, responsive/accessibility regressions,
+  and zero production writes. Confirm Broker and Agent remain unchanged. After Claude finishes, record findings and the
+  pass/fail result here before Sean's visual approval and merge.
+
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 
 **Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`

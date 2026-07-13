@@ -179,6 +179,12 @@ test / direct operator decision), and a **Next action** when applicable.
   first).
 - **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule. (Codex advisory reviews on
   #111/#112 both errored on an OpenAI billing quota — non-blocking; the required gates are typecheck/test/build.)
+- **NEXT-005 [Codex] — back online; repo-green + route/auth/data.** Status **In Progress (relayed)** · fix the
+  Prisma/`Restaurant.cashFloor` stale-client typecheck blocker (`npx prisma generate`), run `npm test` + `npm run build`,
+  then brokerage leadership route + investor gate, agent demo-path decision, vacation-rental copy, demo-funnel routing.
+  Not UI polish (Claude's lane). Codex to self-log its own lane section.
+- **NEXT-006 [Claude] — extend day-in-life narrative to Agent + Rental** (DECISION-002 spine), generated-data-only, on
+  `claude/demo-broker-day-in-life-p0`; PR #112 grows to a three-tab narrative. Status **In Progress**.
 
 ---
 
@@ -350,6 +356,18 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — Coordination re-established with Codex; lanes reassigned.** Sean confirmed Codex is
+  back online. **Lane split (agreed):** Codex takes **repo-green + route/auth/data correctness** (Step 1: the
+  Prisma/`Restaurant.cashFloor` stale-generated-client typecheck blocker → `npx prisma generate` then `npx tsc --noEmit`;
+  Step 2: `npm test` + `npm run build`; Step 3: brokerage leadership route/investor-gate, agent demo path decision,
+  vacation-rental copy, demo-funnel routing — **not** UI polish, to avoid overlap). Claude takes **extending the
+  day-in-life narrative (DECISION-002 spine) to the Agent and Rental tabs** in `src/app/**`, generated-data-only.
+  **Data point for Codex:** on Claude's checkout `npx tsc --noEmit` is **green** on both `claude/fix-demo-render-p0-ebh2gr`
+  and `claude/demo-broker-day-in-life-p0` (Prisma client regenerated via `npm run build`/postinstall) — corroborates the
+  "stale generated client, not a code bug" diagnosis; `npx prisma generate` should clear it with no source change.
+  Claude staying out of `prisma/**`, `src/lib/brokerage/**`, `brokerage-analytics.ts`, migrations (Codex-owned).
+  Next: Agent + Rental narratives on `claude/demo-broker-day-in-life-p0` (PR #112 expands to all three tabs).
 
 - **2026-07-13 (EOD) [Claude] — COMPLETION REPORT: P0 render fix (#111) + Broker day-in-life narrative (#112).**
 

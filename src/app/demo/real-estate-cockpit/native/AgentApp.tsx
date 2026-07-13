@@ -266,6 +266,7 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
 
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
+  const [handled, setHandled] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -277,6 +278,78 @@ export default function AgentApp() {
 
   return (
     <div className="agent">
+      {/* executive brief — the 20-second read before the first task */}
+      <div className="brief">
+        <span className="eyebrow">Your morning</span>
+        <ul className="brief-list">
+          <li>
+            <span className="bdot" style={{ background: handled ? "var(--green)" : "var(--red)" }} />
+            <span>
+              {handled ? (
+                <>
+                  <b>214 Highland Park is open</b> — the missing docs are queued; funding at 2 PM is back on track.
+                </>
+              ) : (
+                <>
+                  <b>214 Highland Park funds at 2 PM</b> — 2 compliance docs still missing. This is today&apos;s first move.
+                </>
+              )}
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--yellow)" }} />
+            <span>
+              <b>Sam Ortega</b> (referral) has been unanswered <b>41 min</b> — past the 30-minute line and cooling.
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--green)" }} />
+            <span>
+              3 files closing this week are on track; the market is <b>accelerating</b> in your favor.
+            </span>
+          </li>
+        </ul>
+      </div>
+
+      {/* one thing first — an obvious action */}
+      {handled ? (
+        <div className="onething done">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          <p>
+            <b>On it.</b> The Highland Park file is open below — walkthrough form and seller disclosure flagged to upload
+            before the 2 PM funding. Next: answer Sam Ortega.
+          </p>
+          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
+            Undo
+          </button>
+        </div>
+      ) : (
+        <div className="onething">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+          </svg>
+          <div className="ot-body">
+            <p>
+              <b>One thing first — funding today:</b> 214 Highland Park funds at 2 PM but two compliance items (seller
+              disclosure signature, final walkthrough form) are still missing. Clear them first, then work the queue.
+            </p>
+            <div className="ot-actions">
+              <button type="button" className="ot-go" onClick={() => { setHandled(true); say("Highland Park file opened — docs flagged to upload."); }}>
+                Open the file
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+              <button type="button" className="ot-ghost" onClick={() => setHandled(true)}>
+                Mark handled
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* daily priority queue */}
       <div className="section">
         <div className="sh">
@@ -470,6 +543,150 @@ export default function AgentApp() {
       </div>
 
       <style jsx>{`
+        .brief {
+          margin-top: 16px;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          border-radius: 11px;
+          padding: 13px 15px;
+        }
+        .brief-list {
+          list-style: none;
+          margin: 9px 0 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .brief-list li {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+        }
+        .brief-list :global(b) {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .bdot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          flex: none;
+          margin-top: 6px;
+        }
+        .onething {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          border-radius: 11px;
+          padding: 12px 14px;
+          margin-top: 12px;
+        }
+        .onething :global(svg) {
+          width: 15px;
+          height: 15px;
+          color: var(--copper-soft);
+          flex: none;
+          margin-top: 2px;
+        }
+        .onething p {
+          margin: 0;
+          font-size: 13.5px;
+          color: var(--text);
+          line-height: 1.45;
+        }
+        .onething :global(b) {
+          color: var(--copper-soft);
+          font-weight: 600;
+        }
+        .onething .ot-body {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething .ot-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 11px;
+        }
+        .ot-go {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .ot-go:hover {
+          background: var(--copper);
+          border-color: var(--copper);
+        }
+        .ot-go :global(svg) {
+          width: 14px;
+          height: 14px;
+          margin: 0;
+          color: var(--ink);
+        }
+        .ot-ghost {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--copper-soft);
+          background: transparent;
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .ot-ghost:hover {
+          border-color: var(--copper-soft);
+          color: var(--text);
+        }
+        .onething.done {
+          align-items: center;
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .onething.done :global(svg) {
+          color: var(--green);
+        }
+        .onething.done p {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething.done :global(b) {
+          color: var(--green);
+        }
+        .ot-undo {
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          flex: none;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .ot-undo:hover {
+          color: var(--text);
+          border-color: var(--copper-dim);
+        }
         .section {
           margin-top: 16px;
         }

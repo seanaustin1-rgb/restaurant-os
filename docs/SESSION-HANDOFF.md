@@ -47,6 +47,69 @@ Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
 ---
 
+## ⏱️ RESUME HERE — 2026-07-13 (EOD) — P0 PUBLIC-DEMO RENDER FAILURE · BROKER NARRATIVE PARKED
+
+> **This block is authoritative.** The 2026-07-04 block below is history. Public site: **www.outfrontdata.com**.
+
+**Paste this into a fresh session to resume:**
+
+```text
+Read CLAUDE.md, docs/PRODUCT-MAP.md, and docs/SESSION-HANDOFF.md. Start from the
+⏱️ RESUME HERE — 2026-07-13 block (authoritative). There are TWO tracks:
+
+TRACK 1 (DO FIRST — P0): The live public demo at
+https://www.outfrontdata.com/demo/real-estate-cockpit renders BROKEN. On mobile
+(~390×844) the gauge dials, warning/checkmark/info SVG icons are massively
+oversized and escape their containers. On desktop (~1440×900) the MLS market
+ticker expands into a huge block of unspaced/wrapping text and the cockpit
+content is pushed off-screen or absent. Affects the native demo shell
+(RealEstateDemo.tsx + AgentApp.tsx + RentalCockpit.tsx). Fix on a NEW branch off
+main (e.g. claude/fix-demo-render-p0), preview deploy, do NOT merge to main.
+
+TRACK 2 (AFTER P0 verified): resume the broker day-in-life narrative already
+committed (UNTESTED) on branch claude/demo-broker-day-in-life — run gates, push,
+open draft PR, capture screenshots + click-through script. See details below.
+```
+
+### TRACK 1 — P0 render failure (top priority)
+
+**Symptoms (from Sean's screenshots of production):**
+1. **Mobile ~390×844:** gauge dials, warning symbols, checkmarks, info icons massively oversized, escaping containers.
+2. **Desktop ~1440×900:** MLS market ticker expands into a huge block of unspaced text; actual cockpit content absent / pushed off-screen.
+3. Contradicts the earlier "ready as-is" assessment → something regressed or never rendered right in prod.
+
+**Leading root-cause hypothesis (HIGH confidence): scoped `<style jsx>` CSS is not being applied in the production build.** Every symptom is exactly "this component with its CSS stripped out":
+- The SVGs in `RealEstateDemo.tsx` carry **no width/height attributes** — all sizing comes from scoped CSS (`.gauge :global(.info){width:13px}`, `.gwrap :global(svg){width:100%}`, `.onething :global(svg){width:15px}`, HealthWord `.word svg{width:11px}`, GaugeDial uses viewBox only). An SVG with only a viewBox and no CSS size defaults to **300×150px** → "oversized icons escaping containers."
+- The ticker relies on `.ticker-track{white-space:nowrap}` + `.ticker-win{overflow:hidden}` + the scroll animation. Without them → "huge block of unspaced/wrapping text taking over the page."
+- Giant SVGs + wrapped ticker blow out layout → "content pushed off-screen."
+
+**First checks for the fresh session (in order):**
+1. **Grep for a custom Babel config** (`.babelrc`, `.babelrc.js`, `babel.config.js`, `babel.config.mjs`) anywhere in the repo. If one exists, Next disables SWC and **styled-jsx silently stops compiling** unless `styled-jsx/babel` is in its `plugins`. This is the #1 real-world cause and would break ALL three native tabs (all use `<style jsx>`). Fix = add the plugin, or remove the stray babel config so SWC handles it.
+2. **Reproduce locally against a production build** (don't rely on dev — the bug is prod-only): `npm run build && npm start`, then Playwright screenshot `/demo/real-estate-cockpit` at 390×844 and 1440×900, all three tabs. Chromium is at `/opt/pw-browsers/chromium` (PLAYWRIGHT env already set). Confirm the bug reproduces in a local prod build → then the fix is in-repo, not infra.
+3. **Inspect served HTML** for the styled-jsx signature: are `jsx-<hash>` class names present on elements and is a `<style>` block with those hashes emitted? If the classes are on elements but the `<style>` is missing → SSR style-injection issue. If neither → babel/SWC compile issue (points back to #1).
+4. **Confirm what prod is actually serving** — page.tsx serves `<RealEstateDemo/>` (native), and there is ALSO a static fallback at `public/demo/real-estate-cockpit.html` (or similar). Verify prod serves the expected PR #104 build and not a stale/partial asset. Note: outbound fetch to outfrontdata.com returns **403 from the sandbox proxy** (not the site being down) — use the local prod-build repro instead of curling production.
+5. Secondary leads if styled-jsx is fine: flex/grid children missing `min-width:0`; a global CSS collision between `.demo-root` shell and the native components; hydration mismatch.
+
+**Definition of done (Sean's):** no oversized icons/gauges; no overlapping/clipped labels; Broker cockpit appears immediately below the nav; MLS ticker stays a compact single-line element; all three tabs usable at mobile+desktop; page stays public + generated-data-only; NO backend/db/auth/integration/migration changes. Dedicated branch + preview, do not merge to main. Return: root cause, preview URL, before/after screenshots at both viewports, confirmation all three tabs tested, typecheck/tests/build results.
+
+### TRACK 2 — Broker day-in-life narrative (PARKED, resume after P0)
+
+- **Branch `claude/demo-broker-day-in-life`** (pushed to remote, commit `b646e61`, based off main `483a26f`). Code is written but **UNTESTED — typecheck/tests/build never ran** (session pivoted to P0 first). No PR opened yet (deliberately — don't advertise unverified code).
+- **What's in it** (all in `src/app/demo/real-estate-cockpit/native/RealEstateDemo.tsx`, the ONLY file touched — AgentApp.tsx / RentalCockpit.tsx untouched per scope):
+  1. Header greeting: h1 "Cascade Realty Group" → "Good morning, Marcus"; eyebrow → "Executive Cockpit · Wed, June 11"; sub → "Cascade Realty Group · Boise, ID · 12 agents" (kept "3/4 sources" badge).
+  2. New `.brief` "Executive brief" block (3 lines, health dots; line 1 reacts to `handled` state) between header and the one-thing.
+  3. One-thing now has action buttons ("Open Whitaker's file" → `setHandled(true)`+`setOpenAgent("whitaker")`; "Mark handled") and a green `.onething.done` acknowledged state with Undo.
+  4. New module-level `AgentRow` interface + `AGENTS` constant (6 agents, exceptions-first: Whitaker red / Chloe yellow / then 4 green) and a `.roster` section (clickable `.arow` → `.adetail` expand) before the market section. "12 agents · N need you now" reacts to `handled`; Whitaker's row flips red→green ("Opened") when handled.
+  5. All new CSS added into the single `<style jsx>` block (`.brief`, `.ot-go/.ot-ghost/.ot-undo`, `.onething.done`, `.roster/.arow/.adetail/.aflag/.astats/.anote`, `.rmeta`, mobile `@media (max-width:640px)` collapsing `.acap` + reflowing the row grid to 5 cols).
+- **⚠️ IMPORTANT for Track 2:** the broker branch is based off main and will inherit the SAME P0 styled-jsx bug if that turns out to be a build-config issue. **Rebase this branch onto the P0 fix** (or land P0 first, then rebase) before validating the narrative — otherwise the preview will look broken for the same root reason.
+- **Remaining Track-2 steps:** `npx tsc --noEmit` → `npm test` → `npm run build`; push; open **draft** PR (Vercel preview); capture desktop+mobile screenshots (Broker/Agent/Rental); write 3–5 min click-through script; confirm prod demo unchanged. STOP before merging. Approved scope forbids: touching PR #105/#106, auth, db, CRM/BoldTrail/Google/Escapia integrations, migrations, prod financial stack, full redesign, merging to main.
+
+### State of the world (unchanged from 07-04, still true)
+- Spec A ledger + demo read modules SHIPPED. B6 cash floor (#108), B7 payroll (#109), demo/prod isolation (#110), Tax Vault (#107) all MERGED to main; migrations `20260704033000_add_restaurant_tax_profile` + `20260713010000_add_restaurant_cash_floor` applied via Supabase SQL editor (reconcile Prisma migration history someday — parked).
+- Do NOT merge PR #106 (Raven Morning Ritual — 58 files, stale base, login-gated) or #105 before the demo. Both deferred.
+
+---
+
 ## ⏱️ RESUME HERE — 2026-07-04 (EOD) — SPEC A + DEMO READ MODULES SHIPPED · A6 IS THE GATE
 
 **`main` tip: `a5db4c1`** (this lane's last merge was **#98 `4077094`** A10; `#96`/`#99` on top are a

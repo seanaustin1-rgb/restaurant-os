@@ -115,6 +115,7 @@ interface LeadAction {
   kind: LeadKind;
   u?: boolean;
   phone?: string;
+  tpl?: string;
   draft?: { subject?: string; body: string };
 }
 interface Lead {
@@ -148,6 +149,7 @@ const LEADS: Lead[] = [
     primary: {
       t: "Send email template",
       kind: "email",
+      tpl: "listings",
       draft: {
         subject: "Your Zillow inquiry — Boise homes",
         body: "Hi — thanks for reaching out on Zillow about the Boise listing. I pulled a few similar homes in your range and can set up private tours this week. What days work for you? Happy to answer anything in the meantime.\n\n— Priya, Cascade Realty",
@@ -169,6 +171,7 @@ const LEADS: Lead[] = [
     primary: {
       t: "Send intro",
       kind: "email",
+      tpl: "intro",
       draft: {
         subject: "Great meeting you at the open house",
         body: "Hi Marcus — great chatting at the open house today. Here's my info and a link to homes like the one you toured. If you'd like, I can set up a few showings this week — just say the word.\n\n— Priya, Cascade Realty",
@@ -184,12 +187,116 @@ const LEADS: Lead[] = [
     primary: {
       t: "Send listing match",
       kind: "email",
+      tpl: "listings",
       draft: {
         subject: "2 new listings that match your saved search",
         body: "Hi Dana — two new Ridgeline listings just hit that match what you saved: 77 Ridgeline ($465k) and 512 Foothills Dr ($548k). Want me to schedule private tours this weekend? Great to reconnect.\n\n— Priya, Cascade Realty",
       },
     },
     ghost: { t: "Skip", kind: "snooze" },
+  },
+];
+
+// A deterministic mock CMA so the "what's my home worth" email responds to the
+// address the agent types (no real data — generated demo).
+function marketReport(addr: string): string {
+  const seed = [...addr].reduce((a, c) => a + c.charCodeAt(0), 0);
+  const mid = 380 + (seed % 260); // $380k–$639k
+  const low = mid - 18;
+  const high = mid + 22;
+  const psf = 240 + (seed % 90);
+  const dom = 12 + (seed % 22);
+  const yoy = 3 + (seed % 7);
+  return [
+    `• Estimated value: $${low}k – $${high}k (midpoint ~$${mid}k)`,
+    `• Based on 6 recent comparable sales within 0.5 mi`,
+    `• Median $/sq ft: $${psf} · Median days on market: ${dom}`,
+    `• Neighborhood trend: +${yoy}% year-over-year, sale-to-list 99.4%`,
+  ].join("\n");
+}
+
+// Templated follow-up emails the agent can choose from, grouped by intent.
+type EmailTemplate = {
+  id: string;
+  name: string;
+  group: "New lead" | "Follow-up" | "Re-engage";
+  needsAddress?: boolean;
+  subject: string;
+  body: (nm: string, addr?: string, report?: string) => string;
+};
+const EMAIL_TEMPLATES: EmailTemplate[] = [
+  {
+    id: "value",
+    name: "What's my home worth?",
+    group: "New lead",
+    needsAddress: true,
+    subject: "Your home value & market report",
+    body: (nm, addr, report) =>
+      `Hi ${nm} — you asked what your home might be worth. Here's a quick market snapshot${addr ? ` for ${addr}` : ""}:\n\n${report ?? "[Add the property address above and generate the report to include the estimate.]"}\n\nThis is an automated estimate — I'd love to walk you through a full comparative market analysis and what it means for your timeline. Reply here or grab a time and we'll dig in.\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "buyerguide",
+    name: "How buying works",
+    group: "New lead",
+    subject: "Your quick guide to buying a home",
+    body: (nm) =>
+      `Hi ${nm} — buying a home is a lot smoother when you know the steps. The short version:\n\n1. Get pre-approved so we know your budget\n2. Tour homes that fit your must-haves\n3. Make an offer — I'll handle the strategy & paperwork\n4. Inspection, appraisal & final walkthrough\n5. Close & get your keys\n\nWant me to send a one-pager and set up a quick call? Just reply.\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "preapproval",
+    name: "Get pre-approved",
+    group: "New lead",
+    subject: "First step: getting pre-approved",
+    body: (nm) =>
+      `Hi ${nm} — the best first move is a pre-approval: it tells us your real budget and makes your offers far stronger in this market. It's usually a 15-minute call with a lender.\n\nI work with a couple of trusted local lenders and can introduce you today — want me to connect you?\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "listings",
+    name: "Listings matching your search",
+    group: "Follow-up",
+    subject: "A few homes that match what you're looking for",
+    body: (nm) =>
+      `Hi ${nm} — great connecting. Based on what you're after, here are a few that just came up:\n\n• 77 Ridgeline — 3bd/2ba · $465k\n• 512 Foothills Dr — 4bd/3ba · $548k\n• 1102 Alderwood — 3bd/2ba · $432k\n\nWant me to set up private tours this week? I can also fine-tune the search — just tell me what to add or drop.\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "intro",
+    name: "Intro follow-up (after a call)",
+    group: "Follow-up",
+    subject: "Great connecting today",
+    body: (nm) =>
+      `Hi ${nm} — great chatting today. Here's my contact info and a link to homes like the ones we discussed. Whenever you're ready, I can line up showings this week or answer anything as it comes up.\n\nTalk soon,\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "marketupdate",
+    name: "Neighborhood market update",
+    group: "Re-engage",
+    subject: "What's happening in your neighborhood",
+    body: (nm) =>
+      `Hi ${nm} — it's been a bit, so I wanted to share what's happening near you: homes are selling in about 24 days at 99% of list, and prices are up ~5% year-over-year. Inventory is still tight, which is good news if you've thought about selling.\n\nCurious what your place could fetch today? I'm happy to run the numbers — no pressure.\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "stilllooking",
+    name: "Still thinking about a move?",
+    group: "Re-engage",
+    subject: "Still thinking about a move?",
+    body: (nm) =>
+      `Hi ${nm} — checking in! Life gets busy and timing changes, so no worries if the search went quiet. If a move is still somewhere on your list, I can send fresh listings that fit and keep it low-key until you're ready.\n\nWant me to turn your search back on?\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "equity",
+    name: "Equity / anniversary check-in",
+    group: "Re-engage",
+    subject: "You may have more equity than you think",
+    body: (nm) =>
+      `Hi ${nm} — with prices up over the last couple of years, a lot of owners have more equity than they realize. If you've been curious whether it's enough to move up (or cash out), I can put together a quick equity + value estimate for your place.\n\nWant me to run it? Takes me five minutes.\n\n— Priya, Cascade Realty`,
+  },
+  {
+    id: "justlisted",
+    name: "Just listed near you",
+    group: "Re-engage",
+    subject: "Just listed near you — worth a look?",
+    body: (nm) =>
+      `Hi ${nm} — a home just listed near you that reminded me of what you were after. These tend to move fast in this market. Want me to send the details and set up a quick tour before the weekend?\n\n— Priya, Cascade Realty`,
   },
 ];
 
@@ -268,26 +375,50 @@ function QueueCardView({ c }: { c: QueueCard }) {
   );
 }
 
+const EMAIL_GROUPS = ["New lead", "Follow-up", "Re-engage"] as const;
+
 function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const [done, setDone] = useState(false);
   const [compose, setCompose] = useState<LeadAction | null>(null);
+  const [templateId, setTemplateId] = useState<string>("intro");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [address, setAddress] = useState("");
+  const [report, setReport] = useState("");
   const [sent, setSent] = useState(false);
   const [phone, setPhone] = useState<string | null>(null);
   const f = FLAG[l.flag];
+  const activeTpl = EMAIL_TEMPLATES.find((t) => t.id === templateId) ?? EMAIL_TEMPLATES[0];
+
+  const loadTpl = (id: string, addr: string, rep: string) => {
+    const t = EMAIL_TEMPLATES.find((x) => x.id === id) ?? EMAIL_TEMPLATES[0];
+    setTemplateId(t.id);
+    setSubject(t.subject);
+    setBody(t.body(l.nm, addr || undefined, rep || undefined));
+  };
 
   const act = (a: LeadAction) => {
-    if (a.kind === "email" || a.kind === "text") {
+    if (a.kind === "email") {
+      setPhone(null);
+      if (compose && compose.kind === "email") {
+        setCompose(null);
+        return;
+      }
+      setCompose(a);
+      setSent(false);
+      setAddress("");
+      setReport("");
+      loadTpl(a.tpl ?? "intro", "", "");
+    } else if (a.kind === "text") {
       setPhone(null);
       if (compose && compose.t === a.t) {
         setCompose(null);
         return;
       }
       setCompose(a);
-      setSubject(a.draft?.subject ?? "");
-      setBody(a.draft?.body ?? "");
       setSent(false);
+      setSubject("");
+      setBody(a.draft?.body ?? "");
     } else if (a.kind === "call") {
       setCompose(null);
       setPhone(phone ? null : a.phone ?? "");
@@ -295,6 +426,12 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
       setDone(true);
       onFire("Queued — I'll resurface this lead later.");
     }
+  };
+  const genReport = () => {
+    const rep = marketReport(address);
+    setReport(rep);
+    setSubject(activeTpl.subject);
+    setBody(activeTpl.body(l.nm, address, rep));
   };
   const send = () => {
     setSent(true);
@@ -349,8 +486,47 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
               )}
             </svg>
             {compose.kind === "email" ? "Email to" : "Text"} {l.nm}
-            <span className="cmp-tag">AI-drafted · edit before sending</span>
+            <span className="cmp-tag">{compose.kind === "email" ? "pick a template · edit before sending" : "AI-drafted · edit before sending"}</span>
           </div>
+
+          {compose.kind === "email" && (
+            <div className="tpick">
+              {EMAIL_GROUPS.map((g) => (
+                <div className="tgroup" key={g}>
+                  <span className="tglabel">{g}</span>
+                  <div className="tchips">
+                    {EMAIL_TEMPLATES.filter((t) => t.group === g).map((t) => (
+                      <button
+                        type="button"
+                        key={t.id}
+                        className={`tchip ${templateId === t.id ? "on" : ""}`}
+                        disabled={sent}
+                        onClick={() => loadTpl(t.id, address, report)}
+                      >
+                        {t.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {compose.kind === "email" && activeTpl.needsAddress && (
+            <div className="addr">
+              <input
+                className="addr-in"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Property address (if the lead didn't provide one)"
+                disabled={sent}
+              />
+              <button type="button" className="addr-go" disabled={sent || !address.trim()} onClick={genReport}>
+                {report ? "Regenerate report" : "Generate market report"}
+              </button>
+            </div>
+          )}
+
           {compose.kind === "email" && (
             <input
               className="cmp-subj"
@@ -364,7 +540,7 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
             className={`cmp-body ${compose.kind}`}
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={compose.kind === "email" ? 7 : 3}
+            rows={compose.kind === "email" ? 9 : 3}
             disabled={sent}
           />
           <div className="cmp-act">
@@ -1244,6 +1420,89 @@ export default function AgentApp() {
           border-radius: 10px;
           background: var(--panel);
           padding: 12px 13px;
+        }
+        .agent :global(.tpick) {
+          margin-top: 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .agent :global(.tgroup) {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .agent :global(.tglabel) {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--muted);
+          min-width: 62px;
+        }
+        .agent :global(.tchips) {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .agent :global(.tchip) {
+          font: inherit;
+          font-size: 11.5px;
+          color: var(--text-soft);
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 11px;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
+        }
+        .agent :global(.tchip:hover) {
+          border-color: var(--copper-dim);
+          color: var(--text);
+        }
+        .agent :global(.tchip.on) {
+          color: var(--ink);
+          background: var(--copper-soft);
+          border-color: var(--copper-soft);
+          font-weight: 600;
+        }
+        .agent :global(.addr) {
+          display: flex;
+          gap: 8px;
+          margin-top: 10px;
+          flex-wrap: wrap;
+        }
+        .agent :global(.addr-in) {
+          flex: 1;
+          min-width: 180px;
+          font: inherit;
+          font-size: 13px;
+          color: var(--text);
+          background: var(--surface);
+          border: 1px solid var(--copper-dim);
+          border-radius: 8px;
+          padding: 8px 10px;
+        }
+        .agent :global(.addr-in:focus) {
+          outline: none;
+          border-color: var(--copper-soft);
+        }
+        .agent :global(.addr-go) {
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 8px;
+          padding: 8px 14px;
+          cursor: pointer;
+          flex: none;
+        }
+        .agent :global(.addr-go:disabled) {
+          opacity: 0.5;
+          cursor: default;
         }
         .agent :global(.cmp-hd) {
           display: flex;

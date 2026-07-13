@@ -138,12 +138,15 @@ authoritative visual reference for the demo state (SUCCESS-004/005/006). Preview
 #111 `restaurant-os-git-claude-fix-demo-render-p0-ebh2gr-outfrontdata.vercel.app`,
 #112 `restaurant-os-git-claude-demo-broker-day-in-8563a3-outfrontdata.vercel.app`.
 
-**Broker cockpit** — greeting → Executive Brief → One-Thing ("Open Whitaker's file") → agent roster/detail → Handled state.
-- Desktop (1440×900): `mockups/broker-desktop.png` · after action: `mockups/broker-desktop-handled.png`
+**Broker cockpit** — "Welcome, Luke" → clickable Executive Brief (each line expands a *Suggested fix*) → One-Thing
+("Open Whitaker's file") → **real compliance file** (2 missing disclosures, Call/Send-reminder-draft/Mark-resolved) →
+agent roster → **Your week** calendar (follow-ups + appointments) → **Company Aura** reputation → Resolved state.
+- Desktop (1440×900): `mockups/broker-desktop.png` · compliance file + email draft: `mockups/broker-desktop-file.png` · resolved: `mockups/broker-desktop-handled.png`
 - Mobile (390×844): `mockups/broker-mobile.png`
 
-![Broker cockpit — desktop](mockups/broker-desktop.png)
-![Broker cockpit — desktop, handled](mockups/broker-desktop-handled.png)
+![Broker cockpit — desktop (Welcome Luke, brief, calendar, Aura)](mockups/broker-desktop.png)
+![Broker cockpit — Open Whitaker's file → compliance file + reminder draft](mockups/broker-desktop-file.png)
+![Broker cockpit — desktop, resolved](mockups/broker-desktop-handled.png)
 ![Broker cockpit — mobile](mockups/broker-mobile.png)
 
 **Agent app** — "Your morning" brief + One-Thing (214 Highland Park funding today) → "Open the file" → "On it." state.
@@ -395,6 +398,17 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-007: broker cockpit deepened per Sean's demo feedback.** Commit `62a9304`
+  (RealEstateDemo.tsx, generated-data-only). (1) Greeting → **"Welcome, Luke"** (this demo is for Luke, not "Marcus").
+  (2) **"Open Whitaker's file" now opens an actual file** — a compliance panel with the 2 missing disclosures (SPDS +
+  Lead-Based Paint, with filenames), a **Call Whitaker** action revealing a direct line, a **ready-to-send reminder email
+  draft** (To/Subject/body → Send), and **Mark resolved** (acknowledges the one-thing) — not just a mark-complete.
+  (3) **Executive Brief lines are clickable** and expand a **"Suggested fix"** with concrete remediation; the red line
+  links to Open-the-compliance-file. (4) Added a **broker calendar** ("Your week" — follow-ups + upcoming appointments),
+  matching the agent. (5) Added a **"Company Aura · reputation"** section (blended 4.6, Google/Zillow split, profile-view/
+  direction/call intent signals, a recent review). tsc clean, 340 tests, prod build green; verified at both viewports.
+  Refreshed the broker demo mockups above (incl. `broker-desktop-file.png`).
 
 - **2026-07-13 (EOD+1) [Claude] — Added demo mockups to the Command Center for Codex.** Committed 10 rendered PNGs to
   `docs/specs/mockups/` (Broker/Agent/Rental at desktop 1440×900 + mobile 390×844, each interactive "handled" state, and

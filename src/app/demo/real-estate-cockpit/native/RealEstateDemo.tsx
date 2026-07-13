@@ -423,6 +423,7 @@ function BrokerCockpit() {
   const [openGauge, setOpenGauge] = useState<string | null>(null);
   const [tickerOpen, setTickerOpen] = useState(false);
   const [openAgent, setOpenAgent] = useState<string | null>(null);
+  const [openCal, setOpenCal] = useState<string | null>(null);
   const [handled, setHandled] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
   const [reveal, setReveal] = useState<"call" | "email" | null>(null);
@@ -743,7 +744,7 @@ function BrokerCockpit() {
                   type="button"
                   className="arow"
                   aria-expanded={isOpen}
-                  onClick={() => setOpenAgent(isOpen ? null : a.key)}
+                  onClick={() => { setOpenAgent(isOpen ? null : a.key); setOpenCal(null); }}
                 >
                   <span className="adot" style={{ background: TONE[tone] }} />
                   <span className="aname">
@@ -804,23 +805,37 @@ function BrokerCockpit() {
                     </div>
                     <p className="anote">{a.detail.note}</p>
                     <div className="acal">
-                      <div className="acal-h">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <button
+                        type="button"
+                        className="acal-h"
+                        aria-expanded={openCal === a.key}
+                        onClick={() => setOpenCal(openCal === a.key ? null : a.key)}
+                      >
+                        <svg className="acal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="4" width="18" height="18" rx="2" />
                           <path d="M3 10h18M8 2v4M16 2v4" />
                         </svg>
-                        Real-estate calendar · appointments sync to the client file in your CRM
-                      </div>
-                      {a.cal.map((c, i) => (
-                        <div className="acal-row" key={i}>
-                          <span className="acal-when">{c.when}</span>
-                          <span className={`akind ${c.kind}`}>{APPT_LABEL[c.kind]}</span>
-                          <span className="acal-what">
-                            {c.what}
-                            <small>{c.who}</small>
-                          </span>
+                        <span className="acal-htxt">Real-estate calendar</span>
+                        <span className="acal-count">{a.cal.length} this week</span>
+                        <svg className="acal-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M6 9l6 6 6-6" />
+                        </svg>
+                      </button>
+                      {openCal === a.key && (
+                        <div className="acal-body">
+                          <div className="acal-sync">Appointments sync to the client file in your CRM.</div>
+                          {a.cal.map((c, i) => (
+                            <div className="acal-row" key={i}>
+                              <span className="acal-when">{c.when}</span>
+                              <span className={`akind ${c.kind}`}>{APPT_LABEL[c.kind]}</span>
+                              <span className="acal-what">
+                                {c.what}
+                                <small>{c.who}</small>
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
                 )}
@@ -1875,17 +1890,50 @@ function BrokerCockpit() {
           display: flex;
           align-items: center;
           gap: 7px;
+          width: 100%;
+          font: inherit;
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--copper-soft);
-          margin-bottom: 4px;
+          background: transparent;
+          border: 0;
+          padding: 3px 0;
+          cursor: pointer;
         }
-        .acal-h :global(svg) {
+        .acal-h :global(.acal-ico) {
           width: 13px;
           height: 13px;
           flex: none;
+        }
+        .acal-h .acal-htxt {
+          flex: none;
+        }
+        .acal-h .acal-count {
+          font-family: var(--font-mono);
+          font-weight: 400;
+          text-transform: none;
+          letter-spacing: 0;
+          font-size: 10.5px;
+          color: var(--muted);
+          margin-left: auto;
+        }
+        .acal-h :global(.acal-chev) {
+          width: 14px;
+          height: 14px;
+          flex: none;
+          color: var(--muted);
+          transition: transform 0.2s;
+        }
+        .acal-h[aria-expanded="true"] :global(.acal-chev) {
+          transform: rotate(180deg);
+          color: var(--copper-soft);
+        }
+        .acal-sync {
+          font-size: 11px;
+          color: var(--muted);
+          margin: 4px 0 2px;
         }
         .acal-row {
           display: flex;

@@ -349,13 +349,76 @@ function BrokerCockpit() {
   const [tickerOpen, setTickerOpen] = useState(false);
   const [openAgent, setOpenAgent] = useState<string | null>(null);
   const [handled, setHandled] = useState(false);
+  const [fileOpen, setFileOpen] = useState(false);
+  const [reveal, setReveal] = useState<"call" | "email" | null>(null);
+  const [sent, setSent] = useState(false);
+  const [openBrief, setOpenBrief] = useState<number | null>(null);
   const active = FIN_GAUGES.find((g) => g.key === openGauge) ?? null;
   const needNow = handled ? 1 : 2;
 
-  const openWhitaker = () => {
-    setHandled(true);
-    setOpenAgent("whitaker");
+  const openFile = () => {
+    setFileOpen(true);
+    setReveal(null);
+    setSent(false);
+    setOpenBrief(null);
   };
+  const resolveFile = () => {
+    setHandled(true);
+    setFileOpen(false);
+    setReveal(null);
+  };
+
+  const BRIEF: { dot: string; text: React.ReactNode; fix: React.ReactNode; action?: { label: string; onClick: () => void } }[] = [
+    {
+      dot: handled ? "var(--green)" : "var(--red)",
+      text: handled ? (
+        <>
+          <b>Whitaker&apos;s disclosure file is resolved</b> — the exposure cleared; Chloe&apos;s stalled pipeline is the
+          only item still needing you.
+        </>
+      ) : (
+        <>
+          <b>One compliance exposure</b> needs you before anything else — a missing-disclosure file past deadline.
+        </>
+      ),
+      fix: (
+        <>
+          Open Whitaker&apos;s Highland Park file, send the disclosure reminder, and mark it resolved once both forms are
+          uploaded. Clearing it removes the liability before the Friday close.
+        </>
+      ),
+      action: { label: "Open the compliance file", onClick: openFile },
+    },
+    {
+      dot: "var(--yellow)",
+      text: (
+        <>
+          Company-dollar retention is <b>28.4%</b> vs a 30% target — ≈$2.4k of company dollar soft, $9.4k at risk as three
+          agents near cap.
+        </>
+      ),
+      fix: (
+        <>
+          Reallocate the two lowest-ROI agents&apos; lead budgets this week and coach pipeline conversion — that recovers
+          ≈<b>$2.4k</b> of company dollar and protects the $9.4k nearing cap.
+        </>
+      ),
+    },
+    {
+      dot: "var(--green)",
+      text: (
+        <>
+          Cash oxygen holds at <b>47 days</b> and lead ROI blends to <b>4.2×</b>; the market is accelerating in your favor.
+        </>
+      ),
+      fix: (
+        <>
+          Lead with the <b>4.6★</b> company reputation in listing pitches — a quiet trust asset that wins seller mandates
+          while the market runs hot.
+        </>
+      ),
+    },
+  ];
 
   const tickerRow = (
     <>
@@ -380,7 +443,7 @@ function BrokerCockpit() {
           <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
             Executive Cockpit · Wed, June 11
           </span>
-          <h1>Good morning, Marcus</h1>
+          <h1>Welcome, Luke</h1>
           <div className="sub">Cascade Realty Group · Boise, ID · 12 agents</div>
         </div>
         <span className="badge partial">
@@ -388,39 +451,35 @@ function BrokerCockpit() {
         </span>
       </div>
 
-      {/* executive brief — the 20-second read before the one thing */}
+      {/* executive brief — the 20-second read; each line expands to a suggested fix */}
       <div className="brief">
-        <span className="eyebrow">Executive brief</span>
+        <span className="eyebrow">Executive brief · tap a line for the fix</span>
         <ul className="brief-list">
-          <li>
-            <span className="bdot" style={{ background: "var(--red)" }} />
-            <span>
-              {handled ? (
-                <>
-                  <b>Whitaker&apos;s disclosure file is open</b> — one compliance exposure was clearing; Chloe&apos;s stalled
-                  pipeline is the only item still needing you.
-                </>
-              ) : (
-                <>
-                  <b>One compliance exposure</b> needs you before anything else — a missing-disclosure file past deadline.
-                </>
+          {BRIEF.map((b, i) => (
+            <li key={i}>
+              <button type="button" className="brow" aria-expanded={openBrief === i} onClick={() => setOpenBrief(openBrief === i ? null : i)}>
+                <span className="bdot" style={{ background: b.dot }} />
+                <span className="btext">{b.text}</span>
+                <svg className="bchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </button>
+              {openBrief === i && (
+                <div className="bfix">
+                  <span className="bfix-label">Suggested fix</span>
+                  <p>{b.fix}</p>
+                  {b.action && (
+                    <button type="button" className="bfix-go" onClick={b.action.onClick}>
+                      {b.action.label}
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               )}
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--yellow)" }} />
-            <span>
-              Company-dollar retention is <b>28.4%</b> vs a 30% target — ≈$2.4k of company dollar soft, $9.4k at risk as
-              three agents near cap.
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--green)" }} />
-            <span>
-              Cash oxygen holds at <b>47 days</b> and lead ROI blends to <b>4.2×</b>; the market is accelerating in your
-              favor.
-            </span>
-          </li>
+            </li>
+          ))}
         </ul>
       </div>
 
@@ -430,10 +489,10 @@ function BrokerCockpit() {
             <path d="M20 6 9 17l-5-5" />
           </svg>
           <p>
-            <b>Handled.</b> Whitaker&apos;s file is open below and the compliance clock is acknowledged. Next up: Chloe
-            Bennett&apos;s stalled pipeline.
+            <b>Resolved.</b> Whitaker&apos;s disclosure reminder is sent and the compliance clock is acknowledged. Next up:
+            Chloe Bennett&apos;s stalled pipeline.
           </p>
-          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
+          <button type="button" className="ot-undo" onClick={() => { setHandled(false); setFileOpen(false); }}>
             Undo
           </button>
         </div>
@@ -449,7 +508,7 @@ function BrokerCockpit() {
               pipeline.
             </p>
             <div className="ot-actions">
-              <button type="button" className="ot-go" onClick={openWhitaker}>
+              <button type="button" className="ot-go" onClick={openFile}>
                 Open Whitaker&apos;s file
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6" />
@@ -460,6 +519,107 @@ function BrokerCockpit() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* the actual file — opens on "Open Whitaker's file" with real remediation actions */}
+      {fileOpen && !handled && (
+        <div className="cfile">
+          <div className="cfile-hd">
+            <div>
+              <span className="eyebrow">Compliance file · 214 Highland Park</span>
+              <div className="cfile-title">Whitaker Cole · Pending · funds Fri Jun 13</div>
+            </div>
+            <span className="cflag">26h past 24h deadline</span>
+            <button type="button" className="cfile-x" aria-label="Close file" onClick={() => setFileOpen(false)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="cfile-sub">2 required disclosures missing before close:</div>
+          <div className="cdocs">
+            <div className="cdoc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6M9 15l6-6M15 15 9 9" />
+              </svg>
+              <div>
+                <div className="cdoc-t">Seller Property Disclosure (SPDS) — unsigned</div>
+                <div className="cdoc-f">SPDS_214Highland.pdf</div>
+              </div>
+            </div>
+            <div className="cdoc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6M12 18v-6M9 15h6" />
+              </svg>
+              <div>
+                <div className="cdoc-t">Lead-Based Paint Disclosure — not uploaded</div>
+                <div className="cdoc-f">LBP_214Highland.pdf · awaiting Whitaker</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="cfile-actions">
+            <button type="button" className={`cbtn ${reveal === "call" ? "on" : ""}`} onClick={() => setReveal(reveal === "call" ? null : "call")}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+              </svg>
+              Call Whitaker
+            </button>
+            <button type="button" className={`cbtn ${reveal === "email" ? "on" : ""}`} onClick={() => { setReveal(reveal === "email" ? null : "email"); setSent(false); }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                <path d="m22 6-10 7L2 6" />
+              </svg>
+              Send reminder
+            </button>
+            <button type="button" className="cbtn resolve" onClick={resolveFile}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+              Mark resolved
+            </button>
+          </div>
+
+          {reveal === "call" && (
+            <div className="creveal">
+              <span className="crk">Direct line</span>
+              <a className="cphone" href="tel:+12085550142">(208) 555-0142</a>
+              <span className="crhint">mobile · best before showings · generated demo contact</span>
+            </div>
+          )}
+          {reveal === "email" && (
+            <div className="cemail">
+              <div className="cem-row"><span>To</span> Whitaker Cole &lt;whitaker@cascaderealty.demo&gt;</div>
+              <div className="cem-row"><span>Subject</span> 214 Highland Park — 2 disclosures needed before Friday close</div>
+              <div className="cem-body">
+                Hi Whitaker — the Seller Property Disclosure signature and the Lead-Based Paint form are still outstanding
+                on 214 Highland Park. It funds Friday and is already past the 24-hour compliance window. Can you sign the
+                SPDS and upload the LBP today so we clear the file? I&apos;ve attached both forms. Thanks — reply here or
+                call if anything&apos;s unclear.
+              </div>
+              <button type="button" className="cem-send" disabled={sent} onClick={() => { setSent(true); }}>
+                {sent ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    Sent to Whitaker
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
+                    </svg>
+                    Send reminder
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -642,6 +802,105 @@ function BrokerCockpit() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* your week — follow-ups + upcoming appointments (parity with the agent) */}
+      <div className="section">
+        <div className="st">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <path d="M3 10h18M8 2v4M16 2v4" />
+            </svg>
+            Your week · follow-ups &amp; appointments
+          </span>
+          <span style={{ fontSize: "10.5px", color: "var(--muted)", opacity: 0.8 }}>from your connected calendar · live sync on roadmap</span>
+        </div>
+        <div className="bcal">
+          <div className="bcal-col">
+            <div className="bcal-h">Follow up on</div>
+            {([
+              ["r", "Chloe Bennett — stalled-pipeline check-in", "overdue 2d"],
+              ["y", "Lead-vendor renewal — go/no-go", "by Jun 20"],
+              ["g", "Q3 recruiting — 2 candidates to call back", "this week"],
+            ] as [string, string, string][]).map(([flag, t, when]) => (
+              <div className="bfollow" key={t}>
+                <span className={`fdot ${flag}`} />
+                <span className="ft">{t}</span>
+                <span className="fw">{when}</span>
+              </div>
+            ))}
+          </div>
+          <div className="bcal-col">
+            <div className="bcal-h">Coming up</div>
+            {([
+              ["Wed 3:00 PM", "Agent 1:1s — Whitaker & Chloe"],
+              ["Thu 10:00 AM", "Brokerage P&L review"],
+              ["Fri 9:00 AM", "New-agent onboarding — 2 starts"],
+              ["Mon 8:30 AM", "Investor update — monthly"],
+            ] as [string, string][]).map(([tm, t]) => (
+              <div className="bappt" key={t}>
+                <span className="atm">{tm}</span>
+                <span className="at">{t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* company aura — reputation intelligence for the brokerage */}
+      <div className="section">
+        <div className="st">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3l2.4 5.5L20 9l-4 3.9L17 19l-5-2.8L7 19l1-6.1L4 9l5.6-.5z" />
+            </svg>
+            Company Aura · reputation
+          </span>
+          <span style={{ fontSize: "10.5px", color: "var(--muted)", opacity: 0.8 }}>Google + Zillow · updated daily</span>
+        </div>
+        <div className="aura">
+          <div className="aura-top">
+            <div className="aura-score">
+              <span className="asc">4.6</span>
+              <div>
+                <div className="astars">★★★★★</div>
+                <div className="asub">218 reviews · 3.4h avg response</div>
+              </div>
+            </div>
+            <div className="aura-srcs">
+              <div className="asrc">
+                <span>Google</span>
+                <b>4.7</b>
+                <small>142 reviews</small>
+              </div>
+              <div className="asrc">
+                <span>Zillow</span>
+                <b>4.5</b>
+                <small>76 reviews</small>
+              </div>
+            </div>
+          </div>
+          <div className="aura-intent">
+            <div className="aint">
+              <b>1,240</b>
+              <span>profile views</span>
+            </div>
+            <div className="aint">
+              <b>86</b>
+              <span>direction requests</span>
+            </div>
+            <div className="aint">
+              <b>52</b>
+              <span>calls this month</span>
+            </div>
+          </div>
+          <div className="aura-rev">
+            <span className="arev-stars">★★★★★</span>
+            <span className="arev-q">&ldquo;Cascade made our first sale effortless — responsive, honest, and on top of every deadline.&rdquo;</span>
+            <span className="arev-m">Google · 2 days ago</span>
+          </div>
+        </div>
       </div>
 
       <div className="footnote">
@@ -827,11 +1086,7 @@ function BrokerCockpit() {
         }
         .brief-list li {
           display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          font-size: 13px;
-          color: var(--text-soft);
-          line-height: 1.5;
+          flex-direction: column;
         }
         .brief-list :global(b) {
           color: var(--text);
@@ -843,6 +1098,489 @@ function BrokerCockpit() {
           border-radius: 50%;
           flex: none;
           margin-top: 6px;
+        }
+        .brow {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          width: 100%;
+          text-align: left;
+          font: inherit;
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+          background: transparent;
+          border: 0;
+          padding: 2px 0;
+          cursor: pointer;
+        }
+        .brow .btext {
+          flex: 1;
+          min-width: 0;
+        }
+        .brow .bchev {
+          width: 14px;
+          height: 14px;
+          flex: none;
+          color: var(--muted);
+          margin-top: 3px;
+          transition: transform 0.2s;
+        }
+        .brow[aria-expanded="true"] .bchev {
+          transform: rotate(180deg);
+          color: var(--copper-soft);
+        }
+        .bfix {
+          margin: 6px 0 2px 17px;
+          border-left: 2px solid var(--copper-dim);
+          padding: 2px 0 2px 11px;
+        }
+        .bfix-label {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: var(--copper-soft);
+        }
+        .bfix p {
+          margin: 4px 0 0;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.5;
+        }
+        .bfix-go {
+          margin-top: 9px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 6px 12px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .bfix-go:hover {
+          background: var(--copper);
+        }
+        .bfix-go :global(svg) {
+          width: 13px;
+          height: 13px;
+        }
+        /* ── compliance file panel ─────────────────────────────── */
+        .cfile {
+          margin-top: 10px;
+          border: 1px solid var(--copper-dim);
+          background: var(--panel);
+          border-radius: 12px;
+          padding: 15px 16px;
+        }
+        .cfile-hd {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .cfile-hd > div:first-child {
+          flex: 1;
+          min-width: 0;
+        }
+        .cfile-title {
+          font-family: var(--font-display);
+          font-size: 18px;
+          color: var(--text);
+          margin-top: 3px;
+        }
+        .cflag {
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--red);
+          border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
+          background: var(--red-wash);
+          border-radius: 999px;
+          padding: 4px 9px;
+          white-space: nowrap;
+          flex: none;
+        }
+        .cfile-x {
+          width: 26px;
+          height: 26px;
+          border-radius: 7px;
+          border: 1px solid var(--line);
+          background: var(--surface);
+          color: var(--muted);
+          cursor: pointer;
+          display: grid;
+          place-items: center;
+          flex: none;
+        }
+        .cfile-x:hover {
+          color: var(--text);
+        }
+        .cfile-x :global(svg) {
+          width: 13px;
+          height: 13px;
+        }
+        .cfile-sub {
+          margin-top: 12px;
+          font-size: 12px;
+          color: var(--muted);
+        }
+        .cdocs {
+          margin-top: 8px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .cdoc {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--surface);
+          padding: 10px 12px;
+        }
+        .cdoc :global(svg) {
+          width: 17px;
+          height: 17px;
+          flex: none;
+          margin-top: 1px;
+        }
+        .cdoc-t {
+          font-size: 13px;
+          color: var(--text);
+        }
+        .cdoc-f {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .cfile-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 13px;
+        }
+        .cbtn {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-soft);
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 7px 13px;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .cbtn:hover,
+        .cbtn.on {
+          border-color: var(--copper-dim);
+          color: var(--text);
+        }
+        .cbtn :global(svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .cbtn.resolve {
+          color: var(--ink);
+          background: var(--green);
+          border-color: var(--green);
+        }
+        .cbtn.resolve:hover {
+          filter: brightness(1.08);
+        }
+        .creveal {
+          margin-top: 11px;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: baseline;
+          gap: 6px 10px;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--surface);
+          padding: 11px 13px;
+        }
+        .crk {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--muted);
+        }
+        .cphone {
+          font-family: var(--font-mono);
+          font-size: 18px;
+          color: var(--copper-soft);
+          text-decoration: none;
+        }
+        .crhint {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .cemail {
+          margin-top: 11px;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--surface);
+          padding: 12px 13px;
+        }
+        .cem-row {
+          font-size: 12.5px;
+          color: var(--text-soft);
+          padding: 3px 0;
+          border-bottom: 1px solid var(--line-soft);
+        }
+        .cem-row span {
+          display: inline-block;
+          width: 58px;
+          color: var(--muted);
+          font-size: 10.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .cem-body {
+          margin-top: 9px;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.55;
+        }
+        .cem-send {
+          margin-top: 11px;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .cem-send:hover:not(:disabled) {
+          background: var(--copper);
+        }
+        .cem-send:disabled {
+          color: var(--ink);
+          background: var(--green);
+          border-color: var(--green);
+          cursor: default;
+        }
+        .cem-send :global(svg) {
+          width: 14px;
+          height: 14px;
+        }
+        /* ── your week: follow-ups + appointments ──────────────── */
+        .bcal {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-top: 10px;
+        }
+        @media (max-width: 640px) {
+          .bcal {
+            grid-template-columns: 1fr;
+          }
+        }
+        .bcal-col {
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 13px 14px;
+        }
+        .bcal-h {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: var(--muted);
+          margin-bottom: 4px;
+        }
+        .bfollow {
+          display: flex;
+          align-items: baseline;
+          gap: 9px;
+          padding: 9px 0;
+          border-top: 1px solid var(--line-soft);
+          font-size: 13px;
+        }
+        .bfollow:first-of-type {
+          border-top: 0;
+        }
+        .fdot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex: none;
+          align-self: center;
+        }
+        .fdot.r {
+          background: var(--red);
+        }
+        .fdot.y {
+          background: var(--yellow);
+        }
+        .fdot.g {
+          background: var(--green);
+        }
+        .bfollow .ft {
+          flex: 1;
+          min-width: 0;
+          color: var(--text-soft);
+        }
+        .bfollow .fw {
+          font-family: var(--font-mono);
+          font-size: 11px;
+          color: var(--muted);
+          white-space: nowrap;
+        }
+        .bappt {
+          display: flex;
+          gap: 11px;
+          align-items: baseline;
+          padding: 9px 0;
+          border-top: 1px solid var(--line-soft);
+          font-size: 13px;
+        }
+        .bappt:first-of-type {
+          border-top: 0;
+        }
+        .bappt .atm {
+          font-family: var(--font-mono);
+          font-size: 11.5px;
+          color: var(--copper-soft);
+          white-space: nowrap;
+          min-width: 82px;
+        }
+        .bappt .at {
+          color: var(--text-soft);
+        }
+        /* ── company aura: reputation ──────────────────────────── */
+        .aura {
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 15px 16px;
+          margin-top: 10px;
+        }
+        .aura-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 14px;
+          flex-wrap: wrap;
+        }
+        .aura-score {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .aura-score .asc {
+          font-family: var(--font-display);
+          font-size: 40px;
+          line-height: 1;
+          color: var(--text);
+        }
+        .astars {
+          color: var(--copper-soft);
+          font-size: 14px;
+          letter-spacing: 2px;
+        }
+        .asub {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 3px;
+        }
+        .aura-srcs {
+          display: flex;
+          gap: 10px;
+        }
+        .asrc {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 9px 13px;
+          text-align: center;
+        }
+        .asrc span {
+          display: block;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+        }
+        .asrc b {
+          font-family: var(--font-mono);
+          font-size: 17px;
+          font-weight: 400;
+          color: var(--text);
+          display: block;
+          margin-top: 3px;
+        }
+        .asrc small {
+          font-size: 10px;
+          color: var(--muted);
+        }
+        .aura-intent {
+          display: flex;
+          gap: 10px;
+          margin-top: 13px;
+        }
+        .aint {
+          flex: 1;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 10px;
+          text-align: center;
+        }
+        .aint b {
+          font-family: var(--font-mono);
+          font-size: 18px;
+          font-weight: 400;
+          color: var(--copper-soft);
+          display: block;
+        }
+        .aint span {
+          font-size: 10.5px;
+          color: var(--muted);
+        }
+        .aura-rev {
+          margin-top: 13px;
+          border-top: 1px solid var(--line);
+          padding-top: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .arev-stars {
+          color: var(--copper-soft);
+          font-size: 12px;
+          letter-spacing: 2px;
+        }
+        .arev-q {
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+          font-style: italic;
+        }
+        .arev-m {
+          font-size: 11px;
+          color: var(--muted);
         }
         .roster {
           margin-top: 10px;

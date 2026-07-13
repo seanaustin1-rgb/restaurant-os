@@ -32,6 +32,29 @@ chat response does not replace the Command Center update.** If it isn't logged h
 Approved, In Progress, Passed, Failed, Blocked, Deferred, Superseded), **Evidence** (PR / commit / route / screenshot /
 test / direct operator decision), and a **Next action** when applicable.
 
+## This session at a glance — for Codex (2026-07-13, Claude)
+
+Everything below is logged in full in the Progress Log; this is the 30-second delta so you don't have to scroll.
+All changes are **demo-shell only** (`src/app/demo/real-estate-cockpit/native/*`), **generated-data-only**, no backend/db/
+auth/migration. Two open **draft** PRs (do not merge): **#111** P0 render fix, **#112** three-tab narrative stacked on it.
+
+- **P0 render fix (#111, SUCCESS-004).** Root cause was **styled-jsx child-component scoping**, not a Babel config
+  (FAILURE-003). Fixed CSS-only across RealEstateDemo/AgentApp/RentalCockpit.
+- **Day-in-life narrative on all three tabs (#112, SUCCESS-005/006).** Broker + Agent + Rental each run
+  greeting → Executive Brief → One-Thing-with-action → roster/detail → acknowledgment.
+- **Broker deepened per Sean (SUCCESS-007):** "Welcome, Luke" greeting; "Open Whitaker's file" opens a real compliance
+  file (missing disclosures + Call + ready-to-send reminder draft + Mark resolved); clickable Executive Brief with
+  "Suggested fix"; a **broker calendar** ("Your week"); a **Company Aura** reputation section.
+- **Broker → agent real-estate calendar (SUCCESS-008):** expanding an agent shows their showings/closings/listings/etc.,
+  with a note that appointments sync to the client file in the CRM. **Kept CRM-neutral (not "BoldTrail")** per the
+  genericization — **your call on the exact CRM wording** (source-label copy is your lane).
+- **Trend arrows on every tracked metric (SUCCESS-009):** gauges, per-agent GCI MoM, and Aura (incl. "4.5★ avg over the
+  last 4 weeks — trending up") all carry a direction + quantified change.
+
+Rendered mockups for all of the above are in the **Demo Mockups** section below (`docs/specs/mockups/`). **Nothing here
+touches your lane** (schema/migrations/`brokerage-analytics.ts`/`src/lib/brokerage/**`/ingestion). One flag for you: the
+CRM label in the agent calendar (SUCCESS-008) — align to the canonical source-label wording if you want.
+
 ## Product Decision Log
 
 - **DECISION-001 — Single Command Center doc.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence: direct
@@ -402,6 +425,15 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-009: trend arrows + quantified change on every tracked broker metric.** Commit
+  `d44cf94`. Added a reusable directional `Trend` chip (up/down/flat → green/red/muted) and wired it into: the 4 company
+  gauges (retention **▼1.2 pts** vs last mo, cash oxygen **▲5 days**, lead ROI **▲0.4×**, reputation **▲0.1**), each
+  agent's GCI month-over-month in the roster (Priya ▲15%, Chloe ▼4%, Drew ▲22%, …), and the Company Aura (rating **▲0.1**
+  vs last month + **"4.5★ average over the last 4 weeks — trending up"**, Google ▲0.1 / Zillow steady, intent tiles
+  ▲12% / ▲9 / ▲6). Chip is a `.demo-root :global(.trend)` global so it also works inside child components (GaugeCard).
+  Per Sean: "anything being tracked should have an arrow and a quantifiable change." tsc clean, 340 tests, build green.
+  Refreshed `broker-desktop.png` + added `broker-gauges-trends.png`.
 
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-008: broker drill-down shows each agent's real-estate calendar.** Commit
   `9ff8409`. Expanding an agent in the roster now reveals that agent's real-estate calendar — upcoming showings,

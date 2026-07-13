@@ -109,22 +109,13 @@ const QUEUE: QueueCard[] = [
   },
 ];
 
-type LeadKind = "email" | "text" | "call" | "snooze";
-interface LeadAction {
-  t: string;
-  kind: LeadKind;
-  u?: boolean;
-  phone?: string;
-  tpl?: string;
-  draft?: { subject?: string; body: string };
-}
 interface Lead {
   nm: string;
   flag: Flag;
   meta: string;
   why: string;
-  primary: LeadAction;
-  ghost: LeadAction;
+  primary: { t: string; u?: boolean };
+  ghost: string;
 }
 const LEADS: Lead[] = [
   {
@@ -132,171 +123,32 @@ const LEADS: Lead[] = [
     flag: "r",
     meta: "Referral from Priya · new 41 min ago",
     why: "Past the 30-minute red line. Referrals contacted within 10 minutes close 3× more often.",
-    primary: { t: "Call now", kind: "call", u: true, phone: "(208) 555-0148" },
-    ghost: {
-      t: "Send SMS template",
-      kind: "text",
-      draft: {
-        body: "Hi Sam — Priya passed your info along, I'm with Cascade Realty. I'd love to help with your home search. Do you have 10 minutes for a quick call today? — Priya",
-      },
-    },
+    primary: { t: "Call now", u: true },
+    ghost: "Send SMS template",
   },
   {
     nm: "The Whitfields",
     flag: "y",
     meta: "Zillow inquiry · 22 min ago",
     why: "In the 15–30 min yellow window — still recoverable if you touch it now.",
-    primary: {
-      t: "Send email template",
-      kind: "email",
-      tpl: "listings",
-      draft: {
-        subject: "Your Zillow inquiry — Boise homes",
-        body: "Hi — thanks for reaching out on Zillow about the Boise listing. I pulled a few similar homes in your range and can set up private tours this week. What days work for you? Happy to answer anything in the meantime.\n\n— Priya, Cascade Realty",
-      },
-    },
-    ghost: {
-      t: "Text",
-      kind: "text",
-      draft: {
-        body: "Hi! It's Priya with Cascade Realty following up on your Zillow inquiry — want me to send a couple similar listings and line up tours this week?",
-      },
-    },
+    primary: { t: "Send email template" },
+    ghost: "Text",
   },
   {
     nm: "Marcus Lindqvist",
     flag: "g",
     meta: "Open-house sign-in · 6 min ago",
     why: "Fresh and under the 15-min target — a quick intro locks it in.",
-    primary: {
-      t: "Send intro",
-      kind: "email",
-      tpl: "intro",
-      draft: {
-        subject: "Great meeting you at the open house",
-        body: "Hi Marcus — great chatting at the open house today. Here's my info and a link to homes like the one you toured. If you'd like, I can set up a few showings this week — just say the word.\n\n— Priya, Cascade Realty",
-      },
-    },
-    ghost: { t: "Snooze", kind: "snooze" },
+    primary: { t: "Send intro" },
+    ghost: "Snooze",
   },
   {
     nm: "Dana Whitfield (past client)",
     flag: "y",
     meta: "60-day nurture · re-engage",
     why: "Two new Ridgeline listings match her saved search — the automated match sequence works here.",
-    primary: {
-      t: "Send listing match",
-      kind: "email",
-      tpl: "listings",
-      draft: {
-        subject: "2 new listings that match your saved search",
-        body: "Hi Dana — two new Ridgeline listings just hit that match what you saved: 77 Ridgeline ($465k) and 512 Foothills Dr ($548k). Want me to schedule private tours this weekend? Great to reconnect.\n\n— Priya, Cascade Realty",
-      },
-    },
-    ghost: { t: "Skip", kind: "snooze" },
-  },
-];
-
-// A deterministic mock CMA so the "what's my home worth" email responds to the
-// address the agent types (no real data — generated demo).
-function marketReport(addr: string): string {
-  const seed = [...addr].reduce((a, c) => a + c.charCodeAt(0), 0);
-  const mid = 380 + (seed % 260); // $380k–$639k
-  const low = mid - 18;
-  const high = mid + 22;
-  const psf = 240 + (seed % 90);
-  const dom = 12 + (seed % 22);
-  const yoy = 3 + (seed % 7);
-  return [
-    `• Estimated value: $${low}k – $${high}k (midpoint ~$${mid}k)`,
-    `• Based on 6 recent comparable sales within 0.5 mi`,
-    `• Median $/sq ft: $${psf} · Median days on market: ${dom}`,
-    `• Neighborhood trend: +${yoy}% year-over-year, sale-to-list 99.4%`,
-  ].join("\n");
-}
-
-// Templated follow-up emails the agent can choose from, grouped by intent.
-type EmailTemplate = {
-  id: string;
-  name: string;
-  group: "New lead" | "Follow-up" | "Re-engage";
-  needsAddress?: boolean;
-  subject: string;
-  body: (nm: string, addr?: string, report?: string) => string;
-};
-const EMAIL_TEMPLATES: EmailTemplate[] = [
-  {
-    id: "value",
-    name: "What's my home worth?",
-    group: "New lead",
-    needsAddress: true,
-    subject: "Your home value & market report",
-    body: (nm, addr, report) =>
-      `Hi ${nm} — you asked what your home might be worth. Here's a quick market snapshot${addr ? ` for ${addr}` : ""}:\n\n${report ?? "[Add the property address above and generate the report to include the estimate.]"}\n\nThis is an automated estimate — I'd love to walk you through a full comparative market analysis and what it means for your timeline. Reply here or grab a time and we'll dig in.\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "buyerguide",
-    name: "How buying works",
-    group: "New lead",
-    subject: "Your quick guide to buying a home",
-    body: (nm) =>
-      `Hi ${nm} — buying a home is a lot smoother when you know the steps. The short version:\n\n1. Get pre-approved so we know your budget\n2. Tour homes that fit your must-haves\n3. Make an offer — I'll handle the strategy & paperwork\n4. Inspection, appraisal & final walkthrough\n5. Close & get your keys\n\nWant me to send a one-pager and set up a quick call? Just reply.\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "preapproval",
-    name: "Get pre-approved",
-    group: "New lead",
-    subject: "First step: getting pre-approved",
-    body: (nm) =>
-      `Hi ${nm} — the best first move is a pre-approval: it tells us your real budget and makes your offers far stronger in this market. It's usually a 15-minute call with a lender.\n\nI work with a couple of trusted local lenders and can introduce you today — want me to connect you?\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "listings",
-    name: "Listings matching your search",
-    group: "Follow-up",
-    subject: "A few homes that match what you're looking for",
-    body: (nm) =>
-      `Hi ${nm} — great connecting. Based on what you're after, here are a few that just came up:\n\n• 77 Ridgeline — 3bd/2ba · $465k\n• 512 Foothills Dr — 4bd/3ba · $548k\n• 1102 Alderwood — 3bd/2ba · $432k\n\nWant me to set up private tours this week? I can also fine-tune the search — just tell me what to add or drop.\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "intro",
-    name: "Intro follow-up (after a call)",
-    group: "Follow-up",
-    subject: "Great connecting today",
-    body: (nm) =>
-      `Hi ${nm} — great chatting today. Here's my contact info and a link to homes like the ones we discussed. Whenever you're ready, I can line up showings this week or answer anything as it comes up.\n\nTalk soon,\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "marketupdate",
-    name: "Neighborhood market update",
-    group: "Re-engage",
-    subject: "What's happening in your neighborhood",
-    body: (nm) =>
-      `Hi ${nm} — it's been a bit, so I wanted to share what's happening near you: homes are selling in about 24 days at 99% of list, and prices are up ~5% year-over-year. Inventory is still tight, which is good news if you've thought about selling.\n\nCurious what your place could fetch today? I'm happy to run the numbers — no pressure.\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "stilllooking",
-    name: "Still thinking about a move?",
-    group: "Re-engage",
-    subject: "Still thinking about a move?",
-    body: (nm) =>
-      `Hi ${nm} — checking in! Life gets busy and timing changes, so no worries if the search went quiet. If a move is still somewhere on your list, I can send fresh listings that fit and keep it low-key until you're ready.\n\nWant me to turn your search back on?\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "equity",
-    name: "Equity / anniversary check-in",
-    group: "Re-engage",
-    subject: "You may have more equity than you think",
-    body: (nm) =>
-      `Hi ${nm} — with prices up over the last couple of years, a lot of owners have more equity than they realize. If you've been curious whether it's enough to move up (or cash out), I can put together a quick equity + value estimate for your place.\n\nWant me to run it? Takes me five minutes.\n\n— Priya, Cascade Realty`,
-  },
-  {
-    id: "justlisted",
-    name: "Just listed near you",
-    group: "Re-engage",
-    subject: "Just listed near you — worth a look?",
-    body: (nm) =>
-      `Hi ${nm} — a home just listed near you that reminded me of what you were after. These tend to move fast in this market. Want me to send the details and set up a quick tour before the weekend?\n\n— Priya, Cascade Realty`,
+    primary: { t: "Send listing match" },
+    ghost: "Skip",
   },
 ];
 
@@ -375,70 +227,9 @@ function QueueCardView({ c }: { c: QueueCard }) {
   );
 }
 
-const EMAIL_GROUPS = ["New lead", "Follow-up", "Re-engage"] as const;
-
 function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const [done, setDone] = useState(false);
-  const [compose, setCompose] = useState<LeadAction | null>(null);
-  const [templateId, setTemplateId] = useState<string>("intro");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [address, setAddress] = useState("");
-  const [report, setReport] = useState("");
-  const [sent, setSent] = useState(false);
-  const [phone, setPhone] = useState<string | null>(null);
   const f = FLAG[l.flag];
-  const activeTpl = EMAIL_TEMPLATES.find((t) => t.id === templateId) ?? EMAIL_TEMPLATES[0];
-
-  const loadTpl = (id: string, addr: string, rep: string) => {
-    const t = EMAIL_TEMPLATES.find((x) => x.id === id) ?? EMAIL_TEMPLATES[0];
-    setTemplateId(t.id);
-    setSubject(t.subject);
-    setBody(t.body(l.nm, addr || undefined, rep || undefined));
-  };
-
-  const act = (a: LeadAction) => {
-    if (a.kind === "email") {
-      setPhone(null);
-      if (compose && compose.kind === "email") {
-        setCompose(null);
-        return;
-      }
-      setCompose(a);
-      setSent(false);
-      setAddress("");
-      setReport("");
-      loadTpl(a.tpl ?? "intro", "", "");
-    } else if (a.kind === "text") {
-      setPhone(null);
-      if (compose && compose.t === a.t) {
-        setCompose(null);
-        return;
-      }
-      setCompose(a);
-      setSent(false);
-      setSubject("");
-      setBody(a.draft?.body ?? "");
-    } else if (a.kind === "call") {
-      setCompose(null);
-      setPhone(phone ? null : a.phone ?? "");
-    } else {
-      setDone(true);
-      onFire("Queued — I'll resurface this lead later.");
-    }
-  };
-  const genReport = () => {
-    const rep = marketReport(address);
-    setReport(rep);
-    setSubject(activeTpl.subject);
-    setBody(activeTpl.body(l.nm, address, rep));
-  };
-  const send = () => {
-    setSent(true);
-    setDone(true);
-    onFire(compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.");
-  };
-
   return (
     <div className={`lead ${l.flag} ${done ? "done" : ""}`}>
       <div className="lhead">
@@ -454,112 +245,27 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
       <div className="lmeta">{l.meta}</div>
       <div className="lwhy">{l.why}</div>
       <div className="lact">
-        <button type="button" className={l.primary.u ? "btn urgent" : "btn primary"} onClick={() => act(l.primary)}>
-          {l.primary.t}
+        <button
+          type="button"
+          className={l.primary.u ? "btn urgent" : "btn primary"}
+          onClick={() => {
+            if (done) return;
+            setDone(true);
+            onFire("Follow-up fired from template — logged to the lead.");
+          }}
+        >
+          {done ? "✓ Sent" : l.primary.t}
         </button>
-        <button type="button" className="btn ghost" onClick={() => act(l.ghost)}>
-          {l.ghost.t}
+        <button type="button" className="btn ghost" onClick={() => onFire("Queued.")}>
+          {l.ghost}
         </button>
       </div>
-
-      {phone && (
-        <div className="lcall">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
-          </svg>
-          <span className="lcall-n">{phone}</span>
-          <span className="lcall-h">tap to dial · generated demo contact</span>
-        </div>
-      )}
-
-      {compose && (
-        <div className="compose">
-          <div className="cmp-hd">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              {compose.kind === "email" ? (
-                <>
-                  <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
-                  <path d="m22 6-10 7L2 6" />
-                </>
-              ) : (
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              )}
-            </svg>
-            {compose.kind === "email" ? "Email to" : "Text"} {l.nm}
-            <span className="cmp-tag">{compose.kind === "email" ? "pick a template · edit before sending" : "AI-drafted · edit before sending"}</span>
-          </div>
-
-          {compose.kind === "email" && (
-            <div className="tpick">
-              {EMAIL_GROUPS.map((g) => (
-                <div className="tgroup" key={g}>
-                  <span className="tglabel">{g}</span>
-                  <div className="tchips">
-                    {EMAIL_TEMPLATES.filter((t) => t.group === g).map((t) => (
-                      <button
-                        type="button"
-                        key={t.id}
-                        className={`tchip ${templateId === t.id ? "on" : ""}`}
-                        disabled={sent}
-                        onClick={() => loadTpl(t.id, address, report)}
-                      >
-                        {t.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {compose.kind === "email" && activeTpl.needsAddress && (
-            <div className="addr">
-              <input
-                className="addr-in"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Property address (if the lead didn't provide one)"
-                disabled={sent}
-              />
-              <button type="button" className="addr-go" disabled={sent || !address.trim()} onClick={genReport}>
-                {report ? "Regenerate report" : "Generate market report"}
-              </button>
-            </div>
-          )}
-
-          {compose.kind === "email" && (
-            <input
-              className="cmp-subj"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Subject"
-              disabled={sent}
-            />
-          )}
-          <textarea
-            className={`cmp-body ${compose.kind}`}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={compose.kind === "email" ? 9 : 3}
-            disabled={sent}
-          />
-          <div className="cmp-act">
-            <button type="button" className="btn primary" disabled={sent} onClick={send}>
-              {sent ? "✓ Sent" : compose.kind === "text" ? "Send text" : "Send email"}
-            </button>
-            <button type="button" className="btn ghost" onClick={() => setCompose(null)}>
-              {sent ? "Close" : "Cancel"}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
-  const [handled, setHandled] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -571,78 +277,6 @@ export default function AgentApp() {
 
   return (
     <div className="agent">
-      {/* executive brief — the 20-second read before the first task */}
-      <div className="brief">
-        <span className="eyebrow">Your morning</span>
-        <ul className="brief-list">
-          <li>
-            <span className="bdot" style={{ background: handled ? "var(--green)" : "var(--red)" }} />
-            <span>
-              {handled ? (
-                <>
-                  <b>214 Highland Park is open</b> — the missing docs are queued; funding at 2 PM is back on track.
-                </>
-              ) : (
-                <>
-                  <b>214 Highland Park funds at 2 PM</b> — 2 compliance docs still missing. This is today&apos;s first move.
-                </>
-              )}
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--yellow)" }} />
-            <span>
-              <b>Sam Ortega</b> (referral) has been unanswered <b>41 min</b> — past the 30-minute line and cooling.
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--green)" }} />
-            <span>
-              3 files closing this week are on track; the market is <b>accelerating</b> in your favor.
-            </span>
-          </li>
-        </ul>
-      </div>
-
-      {/* one thing first — an obvious action */}
-      {handled ? (
-        <div className="onething done">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-          <p>
-            <b>On it.</b> The Highland Park file is open below — walkthrough form and seller disclosure flagged to upload
-            before the 2 PM funding. Next: answer Sam Ortega.
-          </p>
-          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
-            Undo
-          </button>
-        </div>
-      ) : (
-        <div className="onething">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-          </svg>
-          <div className="ot-body">
-            <p>
-              <b>One thing first — funding today:</b> 214 Highland Park funds at 2 PM but two compliance items (seller
-              disclosure signature, final walkthrough form) are still missing. Clear them first, then work the queue.
-            </p>
-            <div className="ot-actions">
-              <button type="button" className="ot-go" onClick={() => { setHandled(true); say("Highland Park file opened — docs flagged to upload."); }}>
-                Open the file
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </button>
-              <button type="button" className="ot-ghost" onClick={() => setHandled(true)}>
-                Mark handled
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* daily priority queue */}
       <div className="section">
         <div className="sh">
@@ -836,150 +470,6 @@ export default function AgentApp() {
       </div>
 
       <style jsx>{`
-        .brief {
-          margin-top: 16px;
-          border: 1px solid var(--line);
-          background: var(--panel);
-          border-radius: 11px;
-          padding: 13px 15px;
-        }
-        .brief-list {
-          list-style: none;
-          margin: 9px 0 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 9px;
-        }
-        .brief-list li {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          font-size: 13px;
-          color: var(--text-soft);
-          line-height: 1.5;
-        }
-        .brief-list :global(b) {
-          color: var(--text);
-          font-weight: 600;
-        }
-        .bdot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          flex: none;
-          margin-top: 6px;
-        }
-        .onething {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          border: 1px solid var(--copper-dim);
-          background: var(--copper-wash);
-          border-radius: 11px;
-          padding: 12px 14px;
-          margin-top: 12px;
-        }
-        .onething :global(svg) {
-          width: 15px;
-          height: 15px;
-          color: var(--copper-soft);
-          flex: none;
-          margin-top: 2px;
-        }
-        .onething p {
-          margin: 0;
-          font-size: 13.5px;
-          color: var(--text);
-          line-height: 1.45;
-        }
-        .onething :global(b) {
-          color: var(--copper-soft);
-          font-weight: 600;
-        }
-        .onething .ot-body {
-          flex: 1;
-          min-width: 0;
-        }
-        .onething .ot-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 11px;
-        }
-        .ot-go {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          font: inherit;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: var(--ink);
-          background: var(--copper-soft);
-          border: 1px solid var(--copper-soft);
-          border-radius: 999px;
-          padding: 7px 14px;
-          cursor: pointer;
-          transition: background 0.15s, border-color 0.15s;
-        }
-        .ot-go:hover {
-          background: var(--copper);
-          border-color: var(--copper);
-        }
-        .ot-go :global(svg) {
-          width: 14px;
-          height: 14px;
-          margin: 0;
-          color: var(--ink);
-        }
-        .ot-ghost {
-          font: inherit;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: var(--copper-soft);
-          background: transparent;
-          border: 1px solid var(--copper-dim);
-          border-radius: 999px;
-          padding: 7px 14px;
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s;
-        }
-        .ot-ghost:hover {
-          border-color: var(--copper-soft);
-          color: var(--text);
-        }
-        .onething.done {
-          align-items: center;
-          border-color: color-mix(in srgb, var(--green) 40%, transparent);
-          background: var(--green-wash);
-        }
-        .onething.done :global(svg) {
-          color: var(--green);
-        }
-        .onething.done p {
-          flex: 1;
-          min-width: 0;
-        }
-        .onething.done :global(b) {
-          color: var(--green);
-        }
-        .ot-undo {
-          font: inherit;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--muted);
-          background: transparent;
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 5px 12px;
-          cursor: pointer;
-          flex: none;
-          transition: color 0.15s, border-color 0.15s;
-        }
-        .ot-undo:hover {
-          color: var(--text);
-          border-color: var(--copper-dim);
-        }
         .section {
           margin-top: 16px;
         }
@@ -1000,19 +490,19 @@ export default function AgentApp() {
           flex-direction: column;
           gap: 10px;
         }
-        .agent :global(.qcard) {
+        .qcard {
           border: 1px solid var(--line);
           border-radius: 12px;
           background: var(--surface);
           overflow: hidden;
         }
-        .agent :global(.qcard.r) {
+        .qcard.r {
           border-color: color-mix(in srgb, var(--red) 40%, var(--line));
         }
-        .agent :global(.qcard.y) {
+        .qcard.y {
           border-color: color-mix(in srgb, var(--yellow) 38%, var(--line));
         }
-        .agent :global(.qhead) {
+        .qhead {
           width: 100%;
           display: grid;
           grid-template-columns: 34px 1fr auto;
@@ -1026,10 +516,10 @@ export default function AgentApp() {
           text-align: left;
           cursor: pointer;
         }
-        .agent :global(.qhead:hover) {
+        .qhead:hover {
           background: var(--raise);
         }
-        .agent :global(.qic) {
+        .qic {
           width: 34px;
           height: 34px;
           border-radius: 9px;
@@ -1039,28 +529,28 @@ export default function AgentApp() {
           place-items: center;
           color: var(--copper-soft);
         }
-        .agent :global(.qmid) {
+        .qmid {
           min-width: 0;
           display: flex;
           flex-direction: column;
           gap: 1px;
         }
-        .agent :global(.qtype) {
+        .qtype {
           font-size: 9.5px;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           color: var(--muted);
           font-weight: 600;
         }
-        .agent :global(.qtitle) {
+        .qtitle {
           font-size: 14.5px;
           color: var(--text);
         }
-        .agent :global(.qmeta) {
+        .qmeta {
           font-size: 12px;
           color: var(--muted);
         }
-        .agent :global(.qwarn) {
+        .qwarn {
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -1068,41 +558,41 @@ export default function AgentApp() {
           font-size: 11.5px;
           color: var(--red);
         }
-        .agent :global(.qwarn svg) {
+        .qwarn :global(svg) {
           width: 13px;
           height: 13px;
           flex: none;
         }
-        .agent :global(.qright) {
+        .qright {
           display: flex;
           align-items: center;
           gap: 10px;
         }
-        .agent :global(.qtime) {
+        .qtime {
           font-family: var(--font-mono);
           font-size: 12px;
           color: var(--text-soft);
           white-space: nowrap;
         }
-        .agent :global(.qchev) {
+        .qchev {
           color: var(--muted);
           display: inline-flex;
           transition: transform 0.18s;
         }
-        .agent :global(.qbody) {
+        .qbody {
           padding: 4px 15px 14px 61px;
           display: flex;
           flex-direction: column;
           gap: 8px;
           border-top: 1px solid var(--line-soft);
         }
-        .agent :global(.task) {
+        .task {
           display: flex;
           gap: 9px;
           align-items: flex-start;
           font-size: 12.5px;
         }
-        .agent :global(.tbox) {
+        .tbox {
           width: 16px;
           height: 16px;
           border-radius: 5px;
@@ -1112,26 +602,26 @@ export default function AgentApp() {
           display: grid;
           place-items: center;
         }
-        .agent :global(.tbox.done) {
+        .tbox.done {
           background: var(--green);
           border-color: var(--green);
           color: var(--ink);
         }
-        .agent :global(.tbox.miss) {
+        .tbox.miss {
           border-color: color-mix(in srgb, var(--red) 50%, var(--line));
         }
-        .agent :global(.tbox svg) {
+        .tbox :global(svg) {
           width: 11px;
           height: 11px;
         }
-        .agent :global(.task .tt) {
+        .task .tt {
           color: var(--text-soft);
         }
-        .agent :global(.task.done .tt) {
+        .task.done .tt {
           color: var(--muted);
           text-decoration: line-through;
         }
-        .agent :global(.task .file) {
+        .task .file {
           display: block;
           font-family: var(--font-mono);
           font-size: 11px;
@@ -1318,38 +808,38 @@ export default function AgentApp() {
           letter-spacing: 0.04em;
           margin-top: 1px;
         }
-        .agent :global(.lead) {
+        .lead {
           border: 1px solid var(--line);
           border-radius: 11px;
           background: var(--surface);
           padding: 13px 14px;
           margin-top: 10px;
         }
-        .agent :global(.lead.r) {
+        .lead.r {
           border-color: color-mix(in srgb, var(--red) 40%, var(--line));
           background: var(--red-wash);
         }
-        .agent :global(.lead.y) {
+        .lead.y {
           border-color: color-mix(in srgb, var(--yellow) 38%, var(--line));
         }
-        .agent :global(.lead.done) {
+        .lead.done {
           opacity: 0.5;
         }
-        .agent :global(.lead.done .lact) {
+        .lead.done .lact {
           pointer-events: none;
         }
-        .agent :global(.lhead) {
+        .lhead {
           display: flex;
           justify-content: space-between;
           gap: 10px;
           align-items: baseline;
           flex-wrap: wrap;
         }
-        .agent :global(.lnm) {
+        .lnm {
           font-size: 14.5px;
           color: var(--text);
         }
-        .agent :global(.lflag) {
+        .lflag {
           font-size: 10.5px;
           font-weight: 700;
           text-transform: uppercase;
@@ -1358,226 +848,35 @@ export default function AgentApp() {
           align-items: center;
           gap: 5px;
         }
-        .agent :global(.lflag.r) {
+        .lflag.r {
           color: var(--red);
         }
-        .agent :global(.lflag.y) {
+        .lflag.y {
           color: var(--yellow);
         }
-        .agent :global(.lflag.g) {
+        .lflag.g {
           color: var(--green);
         }
-        .agent :global(.lflag svg) {
+        .lflag :global(svg) {
           width: 12px;
           height: 12px;
         }
-        .agent :global(.lmeta) {
+        .lmeta {
           font-size: 12.5px;
           color: var(--muted);
           margin-top: 2px;
         }
-        .agent :global(.lwhy) {
+        .lwhy {
           font-size: 12.5px;
           color: var(--text-soft);
           margin-top: 8px;
           line-height: 1.5;
         }
-        .agent :global(.lact) {
+        .lact {
           display: flex;
           gap: 8px;
           margin-top: 10px;
           flex-wrap: wrap;
-        }
-        .agent :global(.lcall) {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          flex-wrap: wrap;
-          margin-top: 10px;
-          border: 1px solid var(--line);
-          border-radius: 9px;
-          background: var(--surface);
-          padding: 10px 12px;
-        }
-        .agent :global(.lcall svg) {
-          width: 15px;
-          height: 15px;
-          color: var(--copper-soft);
-          flex: none;
-        }
-        .agent :global(.lcall-n) {
-          font-family: var(--font-mono);
-          font-size: 16px;
-          color: var(--copper-soft);
-        }
-        .agent :global(.lcall-h) {
-          font-size: 11px;
-          color: var(--muted);
-        }
-        .agent :global(.compose) {
-          margin-top: 10px;
-          border: 1px solid var(--copper-dim);
-          border-radius: 10px;
-          background: var(--panel);
-          padding: 12px 13px;
-        }
-        .agent :global(.tpick) {
-          margin-top: 11px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-        .agent :global(.tgroup) {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-        .agent :global(.tglabel) {
-          font-size: 9px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-          color: var(--muted);
-          min-width: 62px;
-        }
-        .agent :global(.tchips) {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .agent :global(.tchip) {
-          font: inherit;
-          font-size: 11.5px;
-          color: var(--text-soft);
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 5px 11px;
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-        .agent :global(.tchip:hover) {
-          border-color: var(--copper-dim);
-          color: var(--text);
-        }
-        .agent :global(.tchip.on) {
-          color: var(--ink);
-          background: var(--copper-soft);
-          border-color: var(--copper-soft);
-          font-weight: 600;
-        }
-        .agent :global(.addr) {
-          display: flex;
-          gap: 8px;
-          margin-top: 10px;
-          flex-wrap: wrap;
-        }
-        .agent :global(.addr-in) {
-          flex: 1;
-          min-width: 180px;
-          font: inherit;
-          font-size: 13px;
-          color: var(--text);
-          background: var(--surface);
-          border: 1px solid var(--copper-dim);
-          border-radius: 8px;
-          padding: 8px 10px;
-        }
-        .agent :global(.addr-in:focus) {
-          outline: none;
-          border-color: var(--copper-soft);
-        }
-        .agent :global(.addr-go) {
-          font: inherit;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--ink);
-          background: var(--copper-soft);
-          border: 1px solid var(--copper-soft);
-          border-radius: 8px;
-          padding: 8px 14px;
-          cursor: pointer;
-          flex: none;
-        }
-        .agent :global(.addr-go:disabled) {
-          opacity: 0.5;
-          cursor: default;
-        }
-        .agent :global(.cmp-hd) {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          flex-wrap: wrap;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: var(--text);
-        }
-        .agent :global(.cmp-hd svg) {
-          width: 15px;
-          height: 15px;
-          color: var(--copper-soft);
-          flex: none;
-        }
-        .agent :global(.cmp-tag) {
-          font-size: 10px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: var(--muted);
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 2px 8px;
-          margin-left: auto;
-        }
-        .agent :global(.cmp-subj) {
-          width: 100%;
-          margin-top: 10px;
-          font: inherit;
-          font-size: 13px;
-          color: var(--text);
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 8px 10px;
-        }
-        .agent :global(.cmp-body) {
-          width: 100%;
-          margin-top: 8px;
-          font: inherit;
-          font-size: 13px;
-          color: var(--text-soft);
-          line-height: 1.5;
-          background: var(--surface);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 9px 11px;
-          resize: vertical;
-        }
-        .agent :global(.cmp-body.text) {
-          border-radius: 14px;
-        }
-        .agent :global(.cmp-subj:focus),
-        .agent :global(.cmp-body:focus) {
-          outline: none;
-          border-color: var(--copper-dim);
-        }
-        .agent :global(.cmp-subj:disabled),
-        .agent :global(.cmp-body:disabled) {
-          opacity: 0.7;
-        }
-        .agent :global(.cmp-act) {
-          display: flex;
-          gap: 8px;
-          margin-top: 10px;
-          flex-wrap: wrap;
-        }
-        .agent :global(.cmp-act .btn.primary:disabled) {
-          background: var(--green);
-          border-color: var(--green);
-          color: var(--ink);
-          cursor: default;
-          filter: none;
         }
         .guard {
           border: 1px solid color-mix(in srgb, var(--red) 40%, var(--line));
@@ -1663,7 +962,7 @@ export default function AgentApp() {
         .cal-item .cx2 {
           color: var(--text-soft);
         }
-        .agent :global(.btn) {
+        .btn {
           font: inherit;
           font-size: 12.5px;
           font-weight: 600;
@@ -1676,20 +975,20 @@ export default function AgentApp() {
           gap: 6px;
           transition: filter 0.15s;
         }
-        .agent :global(.btn:hover) {
+        .btn:hover {
           filter: brightness(1.08);
         }
-        .agent :global(.btn.primary) {
+        .btn.primary {
           background: var(--copper-soft);
           border-color: var(--copper-soft);
           color: var(--ink);
         }
-        .agent :global(.btn.urgent) {
+        .btn.urgent {
           background: var(--red);
           border-color: var(--red);
           color: #fff;
         }
-        .agent :global(.btn.ghost) {
+        .btn.ghost {
           background: transparent;
           border-color: var(--line);
           color: var(--text-soft);

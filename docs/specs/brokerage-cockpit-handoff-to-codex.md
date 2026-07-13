@@ -94,8 +94,8 @@ Progress Log after every step, so the other agents always know what's done and w
 - **Decision:** From this point forward, **every major product decision must be recorded in the Product Decision Log before implementation begins.** The Product Decision Log is the **canonical record of product truth**.
 - **Rationale:** Prevents decisions from being lost or contradicted; the PDL is the single source.
 
-### PD-013 — Design owns UI states; Engineering implements  *(PROPOSED — awaiting Sean/GPT ratification)*
-- **Status:** **Proposed** (surfaced by Claude 2026-07-11; not yet Active) · **Added:** 2026-07-11
+### PD-013 — Design owns UI states; Engineering implements
+- **Status:** **Active** (ratified by Sean 2026-07-12) · **Added:** 2026-07-11
 - **Decision (proposed):** Executive-panel **UI states** — *which* states exist, plus their copy, hierarchy, owner-voice, and behavior — are **designed by Claude (Design Authority)**. **Codex implements** them to that spec and **flags any missing state back to Design** rather than originating it. This clarifies/enforces PD-009.
 - **Rationale:** Panel-state design is product judgment and is invisible to CI (typecheck/test/build stay green regardless). When Engineering designs states in a vacuum, design review becomes cleanup instead of confirmation — see the REV-1/R11/R12 drift (inverted sequence, missing greeting, voice-as-input-only). Design-specs-first keeps product truth upstream of code.
 
@@ -140,7 +140,7 @@ Product Approval (GPT) → Business Approval (Sean) → next). **Design specs st
 
 | # | Increment | Claude (Design Authority) | Codex (Engineering) | Gate |
 |---|---|---|---|---|
-| 1 | **Morning Ritual** | ✅ REV-2 PASS | ✅ PR #106 (CI green, draft) | **Sean owner walkthrough → merge PR #106** |
+| 1 | **Morning Ritual** | ✅ REV-2 PASS | ✅ PR #106 (CI green) | ✅ **Sean APPROVED (2026-07-12) → merge PR #106 to `main`** |
 | 2 | **Agent → Owner rollup demo** (§8) | ✅ spec done (§8) → REV-3 on delivery | Build: surface agent-accountability in owner One Thing First; verify shared-tenant propagation; seed spread | Claude REV-3 → GPT/Sean |
 | 3 | **Owner cockpit landing** (minimal R7/R9) | Spec the minimal role/businessType post-auth landing | Build: `BROKER` → Executive Cockpit on login; both auth paths; fix `.env` split | Claude review → GPT/Sean |
 | — | **▶ Checkpoint A — demoable pilot** | After 1–3: Luke signs in → lands on **his** cockpit → runs the ritual → sees the agent→owner story on the data we have. **Showable to Luke.** | | |
@@ -149,11 +149,11 @@ Product Approval (GPT) → Business Approval (Sean) → next). **Design specs st
 
 **Per-increment cadence:** Claude specs states (Command Center) → Codex builds to spec, CI green, one PR, self-checks acceptance → Claude reviews PASS/REFINE/BLOCK with exact fixes → GPT product approval → Sean business approval → merge → next. No increment starts until the prior is reviewed (PD-010).
 
-**Sean's open calls (small; they unblock the whole plan):**
-1. Do the **PR #106 owner walkthrough** → approve merge.
-2. **Ratify PD-013** (Design owns UI states) so Codex stops designing panels.
-3. **Branch strategy:** recommend merge PR #106 → `main`, then reconcile the Command Center/docs onto `main` so code + governance live together.
-4. **Scope for Luke's first look:** show at **Checkpoint A** (demoable, faster) or wait for **Checkpoint B** (Google connected)?
+**Sean's calls — ANSWERED 2026-07-12:**
+1. ✅ **PR #106 approved** → merge to `main`.
+2. ✅ **PD-013 ratified** (Active) — Design owns UI states; Codex implements to spec.
+3. ✅ **Branch strategy:** merge PR #106 → `main`, then reconcile the Command Center/docs onto `main` so code + governance live together.
+4. ✅ **Luke's first look = Checkpoint B** (full Luke First Login, Google connected). Run Increments 1→4 before showing Luke; each still ships + reviews individually (PD-010).
 
 ---
 
@@ -653,8 +653,11 @@ _Logged here so the Engineering picture is complete; Codex to absorb/own. Full h
 
 ## Codex Next-Run Brief (Design Authority → Codex)
 
-_Standing task brief for Codex's next run. Source of truth is this Command Center; read PD-001…PD-013, resolved R7–R10,
-Design Review §3 & §7, and REV-1 before coding._
+_Standing task brief for Codex's next run. Source of truth is this Command Center; read the Execution Plan, PD-001…PD-014,
+resolved R7–R10, Design Review §3/§7/§8, and REV-1/REV-2 before coding._
+
+**Branch:** start from `main` **after PR #106 merges** (so you have the Morning Ritual + the speed-to-lead spine). Target for
+Luke's first look is **Checkpoint B**; ship this increment on its own PR, CI green, and hand back for Design review (PD-010).
 
 **Increment 1 — DONE** (PR #106, embedded `LukeFirstLoginPanel`; REV-2 **PASS**; PD-014). The standalone route (PR #105) is retired.
 
@@ -717,6 +720,10 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-12 [Sean, via Claude]** **Decisions:** (1) PR #106 **approved** → merge to `main`; (2) **PD-013 ratified → Active**
+  (Design owns UI states, Codex implements to spec); (3) **branch strategy** = merge #106 to `main`, then reconcile the
+  Command Center/docs onto `main`; (4) **Luke's first look = Checkpoint B** (full Luke First Login, Google connected).
+  Codex Next-Run Brief updated to Increment 2 (branch from `main` after #106 merges).
 - **2026-07-12 [Claude]** Added an **Execution Plan — Luke First Login** (Claude ⇄ Codex), splitting remaining work into
   four increments by lane with the review-loop gate: (1) Morning Ritual — built, pending Sean walkthrough + merge PR #106;
   (2) Agent→Owner rollup demo (§8); (3) Owner cockpit landing (minimal R7/R9) → **Checkpoint A = demoable pilot**; (4) Google

@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import { AlertTriangle, CalendarClock, Info, ShieldCheck, TrendingDown } from "lucide-react";
-import type { ForwardCashData, ObligationKind } from "@/lib/modules/forward-cash";
+import type { ForwardCashData, ObligationKind, PayrollCadence } from "@/lib/modules/forward-cash";
 import { CashFloorControl } from "@/components/modules/CashFloorControl";
 import { money } from "@/lib/format";
 
@@ -14,6 +14,13 @@ const KIND_LABEL: Record<ObligationKind, string> = {
   payroll: "Payroll",
   sweep: "Sweep",
   recurring: "Recurring",
+};
+
+const PAYROLL_CADENCE_LABEL: Record<PayrollCadence, string> = {
+  weekly: "weekly",
+  biweekly: "every ~2 weeks",
+  monthly: "monthly",
+  irregular: "irregular",
 };
 
 export function ForwardCashModule({ data, restaurantId }: { data: ForwardCashData; restaurantId: string }) {
@@ -92,6 +99,19 @@ export function ForwardCashModule({ data, restaurantId }: { data: ForwardCashDat
         )}
         <CashFloorControl restaurantId={restaurantId} current={data.cashFloor} />
       </section>
+
+      {/* Inferred payroll accrual (B7) — the largest predictable outflow. */}
+      {data.payroll?.confident && (
+        <p className="flex items-start gap-2 rounded-lg border border-line bg-surface/60 px-4 py-3 text-xs text-muted">
+          <CalendarClock size={14} className="mt-0.5 shrink-0 text-copper-soft" />
+          <span>
+            Payroll projected as <span className="text-ink-text">{PAYROLL_CADENCE_LABEL[data.payroll.cadence]}</span>,{" "}
+            <span className="tnum text-ink-text">{money(data.payroll.amount)}</span>/run — the average of the last{" "}
+            {data.payroll.pullsUsed} cleared pull{data.payroll.pullsUsed === 1 ? "" : "s"}. Inferred from bank history (no
+            payroll feed); it moves with your real runs.
+          </span>
+        </p>
+      )}
 
       {/* 30-day balance strip. */}
       <section>

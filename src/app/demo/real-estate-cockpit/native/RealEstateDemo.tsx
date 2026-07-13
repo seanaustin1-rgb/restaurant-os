@@ -369,16 +369,226 @@ function BrokerCockpit() {
         Every figure is <b>generated demo data</b>. Native React port in progress — Agent app &amp; Rental cockpit land next,
         then this replaces the iframe and wires to a demo-DB tenant.
       </div>
+    </div>
+  );
+}
 
-      {/*
-        Broker cockpit styles live HERE, co-located with the markup they scope.
-        styled-jsx only tags DOM elements rendered by the component that owns the
-        <style jsx> block — so anything rendered by child components (GaugeCard →
-        GaugeDial / HealthWord) does NOT receive the scope class. Those inner
-        selectors are therefore anchored on `.gauges` (this component's own
-        markup) via :global(...) so they reach the child-rendered elements.
-      */}
+const TABS = [
+  { key: "broker", label: "Broker cockpit" },
+  { key: "agent", label: "Agent app" },
+  { key: "rental", label: "Rental" },
+] as const;
+
+export default function RealEstateDemo() {
+  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("broker");
+  // lock body scroll chrome away — this is a full-page demo
+  useEffect(() => {
+    document.documentElement.style.setProperty("color-scheme", "dark");
+  }, []);
+
+  return (
+    <div className="demo-root">
+      <div className="unav">
+        <div className="unav-in">
+          <div className="brand">
+            <span className="bm">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 3v18h18" />
+                <path d="M7 14l4-4 3 3 5-6" />
+              </svg>
+            </span>
+            <span className="bn">
+              OutFront<b>Data</b>
+            </span>
+          </div>
+          <div className="utabs" role="tablist" aria-label="Dashboards">
+            {TABS.map((t) => (
+              <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <span className="uchip">
+            <span className="d" />
+            Generated demo data
+          </span>
+        </div>
+      </div>
+
+      <div className="wrap">
+        {tab === "broker" && <BrokerCockpit />}
+        {tab === "agent" && (
+          <div className="card pad">
+            <div className="header">
+              <div>
+                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
+                  Agent frontline
+                </span>
+                <h1>Good morning, Priya</h1>
+                <div className="sub">Wednesday, June 11 · Boise, ID · 3 active files</div>
+              </div>
+              <span className="badge partial">
+                <span className="tnum">2</span> need you now
+              </span>
+            </div>
+            <AgentApp />
+          </div>
+        )}
+        {tab === "rental" && (
+          <div className="card pad">
+            <div className="header">
+              <div>
+                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
+                  Vacation-Rental Cockpit
+                </span>
+                <h1>Sawtooth Retreats</h1>
+                <div className="sub">June 2026 · McCall &amp; Sun Valley, ID · 7 properties · 6 owners</div>
+              </div>
+              <span className="badge partial">
+                <span className="tnum">Escapia</span> connected
+              </span>
+            </div>
+            <RentalCockpit />
+          </div>
+        )}
+      </div>
+
       <style jsx>{`
+        .demo-root {
+          --ink: #0b0d0b;
+          --surface: #141614;
+          --panel: #0f110f;
+          --raise: #191c19;
+          --line: #232623;
+          --line-soft: #1b1e1b;
+          --muted: #8a8f89;
+          --text: #e6e8e4;
+          --text-soft: #cfd2cc;
+          --copper: #c8873a;
+          --copper-soft: #d9a35e;
+          --copper-dim: #7a5526;
+          --green: #5fa777;
+          --yellow: #d9a35e;
+          --red: #c8643a;
+          --green-wash: rgba(95, 167, 119, 0.1);
+          --yellow-wash: rgba(217, 163, 94, 0.1);
+          --red-wash: rgba(200, 100, 58, 0.1);
+          --copper-wash: rgba(200, 135, 58, 0.12);
+          --font-display: "Cormorant Garamond", "Palatino Linotype", Palatino, "Iowan Old Style", Georgia, serif;
+          --font-mono: var(--font-mono, "Space Mono", ui-monospace, Menlo, monospace);
+          min-height: 100vh;
+          background: var(--ink);
+          color: var(--text);
+          line-height: 1.45;
+        }
+        .demo-root :global(.tnum) {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          letter-spacing: -0.01em;
+        }
+        .demo-root :global(.eyebrow) {
+          font-size: 10.5px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.09em;
+          color: var(--muted);
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+        }
+        .unav {
+          position: sticky;
+          top: 0;
+          z-index: 30;
+          background: color-mix(in srgb, var(--ink) 88%, transparent);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid var(--line);
+        }
+        .unav-in {
+          max-width: 1120px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 14px 18px;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          padding: 12px 18px;
+        }
+        .brand {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .bm {
+          width: 26px;
+          height: 26px;
+          border-radius: 6px;
+          border: 1px solid var(--copper-dim);
+          display: grid;
+          place-items: center;
+          color: var(--copper-soft);
+          background: var(--copper-wash);
+        }
+        .bn {
+          font-family: var(--font-display);
+          font-size: 20px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .bn :global(b) {
+          color: var(--copper-soft);
+        }
+        .utabs {
+          display: inline-flex;
+          padding: 4px;
+          gap: 4px;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          background: var(--surface);
+          flex-wrap: wrap;
+        }
+        .utabs button {
+          font: inherit;
+          font-size: 12.5px;
+          color: var(--muted);
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          padding: 7px 14px;
+          border-radius: 999px;
+          white-space: nowrap;
+          transition: color 0.15s, background 0.15s;
+        }
+        .utabs button:hover {
+          color: var(--text);
+        }
+        .utabs button[aria-selected="true"] {
+          color: var(--ink);
+          background: var(--copper-soft);
+          font-weight: 600;
+        }
+        .uchip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11.5px;
+          padding: 5px 10px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          color: var(--copper-soft);
+          background: var(--copper-wash);
+        }
+        .uchip .d {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: currentColor;
+        }
+        .wrap {
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 18px 18px 64px;
+        }
         .card {
           border: 1px solid var(--line);
           background: var(--surface);
@@ -386,6 +596,11 @@ function BrokerCockpit() {
         }
         .pad {
           padding: 18px;
+        }
+        .stub p {
+          margin-top: 10px;
+          color: var(--muted);
+          font-size: 14px;
         }
         .header {
           display: flex;
@@ -454,7 +669,7 @@ function BrokerCockpit() {
           gap: 8px;
           margin-top: 12px;
         }
-        .gauges :global(.gauge) {
+        .gauge {
           position: relative;
           border: 1px solid var(--line);
           border-radius: 10px;
@@ -469,14 +684,14 @@ function BrokerCockpit() {
           cursor: pointer;
           transition: border-color 0.15s, background 0.15s;
         }
-        .gauges :global(.gauge:hover) {
+        .gauge:hover {
           border-color: var(--copper-dim);
         }
-        .gauges :global(.gauge[aria-expanded="true"]) {
+        .gauge[aria-expanded="true"] {
           border-color: var(--copper-soft);
           background: var(--copper-wash);
         }
-        .gauges :global(.gauge .glabel) {
+        .gauge .glabel {
           font-size: 9.5px;
           font-weight: 600;
           text-transform: uppercase;
@@ -484,7 +699,7 @@ function BrokerCockpit() {
           color: var(--muted);
           line-height: 1.2;
         }
-        .gauges :global(.gauge .info) {
+        .gauge :global(.info) {
           position: absolute;
           top: 7px;
           right: 8px;
@@ -493,24 +708,24 @@ function BrokerCockpit() {
           color: var(--muted);
           opacity: 0.45;
         }
-        .gauges :global(.gauge:hover .info) {
+        .gauge:hover :global(.info) {
           opacity: 0.8;
         }
-        .gauges :global(.gauge[aria-expanded="true"] .info) {
+        .gauge[aria-expanded="true"] :global(.info) {
           opacity: 0;
         }
-        .gauges :global(.gwrap) {
+        .gwrap {
           position: relative;
           width: 88px;
           height: 88px;
           margin-top: 7px;
         }
-        .gauges :global(.gwrap svg) {
+        .gwrap :global(svg) {
           width: 100%;
           height: 100%;
           display: block;
         }
-        .gauges :global(.gval) {
+        .gval {
           position: absolute;
           inset: 0;
           display: flex;
@@ -518,21 +733,21 @@ function BrokerCockpit() {
           align-items: center;
           justify-content: center;
         }
-        .gauges :global(.gval .v) {
+        .gval .v {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 19px;
           letter-spacing: -0.02em;
           line-height: 1;
         }
-        .gauges :global(.gval .u) {
+        .gval .u {
           font-size: 8.5px;
           color: var(--muted);
           margin-top: 2px;
           text-transform: uppercase;
           letter-spacing: 0.04em;
         }
-        .gauges :global(.gauge .word) {
+        .gauge :global(.word) {
           display: inline-flex;
           align-items: center;
           gap: 4px;
@@ -540,7 +755,7 @@ function BrokerCockpit() {
           font-weight: 600;
           margin-top: 6px;
         }
-        .gauges :global(.gauge .word svg) {
+        .gauge :global(.word svg) {
           width: 11px;
           height: 11px;
         }
@@ -548,14 +763,14 @@ function BrokerCockpit() {
           .gauges {
             gap: 14px;
           }
-          .gauges :global(.gwrap) {
+          .gwrap {
             width: 108px;
             height: 108px;
           }
-          .gauges :global(.gval .v) {
+          .gval .v {
             font-size: 23px;
           }
-          .gauges :global(.gauge) {
+          .gauge {
             padding: 14px 10px 12px;
           }
         }
@@ -860,274 +1075,6 @@ function BrokerCockpit() {
           .ticker-track {
             animation: none;
           }
-        }
-      `}</style>
-    </div>
-  );
-}
-
-const TABS = [
-  { key: "broker", label: "Broker cockpit" },
-  { key: "agent", label: "Agent app" },
-  { key: "rental", label: "Rental" },
-] as const;
-
-export default function RealEstateDemo() {
-  const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("broker");
-  // lock body scroll chrome away — this is a full-page demo
-  useEffect(() => {
-    document.documentElement.style.setProperty("color-scheme", "dark");
-  }, []);
-
-  return (
-    <div className="demo-root">
-      <div className="unav">
-        <div className="unav-in">
-          <div className="brand">
-            <span className="bm">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 3v18h18" />
-                <path d="M7 14l4-4 3 3 5-6" />
-              </svg>
-            </span>
-            <span className="bn">
-              OutFront<b>Data</b>
-            </span>
-          </div>
-          <div className="utabs" role="tablist" aria-label="Dashboards">
-            {TABS.map((t) => (
-              <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <span className="uchip">
-            <span className="d" />
-            Generated demo data
-          </span>
-        </div>
-      </div>
-
-      <div className="wrap">
-        {tab === "broker" && <BrokerCockpit />}
-        {tab === "agent" && (
-          <div className="card pad">
-            <div className="header">
-              <div>
-                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
-                  Agent frontline
-                </span>
-                <h1>Good morning, Priya</h1>
-                <div className="sub">Wednesday, June 11 · Boise, ID · 3 active files</div>
-              </div>
-              <span className="badge partial">
-                <span className="tnum">2</span> need you now
-              </span>
-            </div>
-            <AgentApp />
-          </div>
-        )}
-        {tab === "rental" && (
-          <div className="card pad">
-            <div className="header">
-              <div>
-                <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
-                  Vacation-Rental Cockpit
-                </span>
-                <h1>Sawtooth Retreats</h1>
-                <div className="sub">June 2026 · McCall &amp; Sun Valley, ID · 7 properties · 6 owners</div>
-              </div>
-              <span className="badge partial">
-                <span className="tnum">Escapia</span> connected
-              </span>
-            </div>
-            <RentalCockpit />
-          </div>
-        )}
-      </div>
-
-      <style jsx>{`
-        .demo-root {
-          --ink: #0b0d0b;
-          --surface: #141614;
-          --panel: #0f110f;
-          --raise: #191c19;
-          --line: #232623;
-          --line-soft: #1b1e1b;
-          --muted: #8a8f89;
-          --text: #e6e8e4;
-          --text-soft: #cfd2cc;
-          --copper: #c8873a;
-          --copper-soft: #d9a35e;
-          --copper-dim: #7a5526;
-          --green: #5fa777;
-          --yellow: #d9a35e;
-          --red: #c8643a;
-          --green-wash: rgba(95, 167, 119, 0.1);
-          --yellow-wash: rgba(217, 163, 94, 0.1);
-          --red-wash: rgba(200, 100, 58, 0.1);
-          --copper-wash: rgba(200, 135, 58, 0.12);
-          --font-display: "Cormorant Garamond", "Palatino Linotype", Palatino, "Iowan Old Style", Georgia, serif;
-          --font-mono: var(--font-mono, "Space Mono", ui-monospace, Menlo, monospace);
-          min-height: 100vh;
-          background: var(--ink);
-          color: var(--text);
-          line-height: 1.45;
-        }
-        .demo-root :global(.tnum) {
-          font-family: var(--font-mono);
-          font-variant-numeric: tabular-nums;
-          letter-spacing: -0.01em;
-        }
-        .demo-root :global(.eyebrow) {
-          font-size: 10.5px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.09em;
-          color: var(--muted);
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-        }
-        .unav {
-          position: sticky;
-          top: 0;
-          z-index: 30;
-          background: color-mix(in srgb, var(--ink) 88%, transparent);
-          backdrop-filter: blur(8px);
-          border-bottom: 1px solid var(--line);
-        }
-        .unav-in {
-          max-width: 1120px;
-          margin: 0 auto;
-          display: flex;
-          align-items: center;
-          gap: 14px 18px;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          padding: 12px 18px;
-        }
-        .brand {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .bm {
-          width: 26px;
-          height: 26px;
-          border-radius: 6px;
-          border: 1px solid var(--copper-dim);
-          display: grid;
-          place-items: center;
-          color: var(--copper-soft);
-          background: var(--copper-wash);
-        }
-        .bn {
-          font-family: var(--font-display);
-          font-size: 20px;
-          font-weight: 600;
-          color: var(--text);
-        }
-        .bn :global(b) {
-          color: var(--copper-soft);
-        }
-        .utabs {
-          display: inline-flex;
-          padding: 4px;
-          gap: 4px;
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          background: var(--surface);
-          flex-wrap: wrap;
-        }
-        .utabs button {
-          font: inherit;
-          font-size: 12.5px;
-          color: var(--muted);
-          background: transparent;
-          border: 0;
-          cursor: pointer;
-          padding: 7px 14px;
-          border-radius: 999px;
-          white-space: nowrap;
-          transition: color 0.15s, background 0.15s;
-        }
-        .utabs button:hover {
-          color: var(--text);
-        }
-        .utabs button[aria-selected="true"] {
-          color: var(--ink);
-          background: var(--copper-soft);
-          font-weight: 600;
-        }
-        .uchip {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11.5px;
-          padding: 5px 10px;
-          border: 1px solid var(--copper-dim);
-          border-radius: 999px;
-          color: var(--copper-soft);
-          background: var(--copper-wash);
-        }
-        .uchip .d {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: currentColor;
-        }
-        .wrap {
-          max-width: 1120px;
-          margin: 0 auto;
-          padding: 18px 18px 64px;
-        }
-        .card {
-          border: 1px solid var(--line);
-          background: var(--surface);
-          border-radius: 12px;
-        }
-        .pad {
-          padding: 18px;
-        }
-        .stub p {
-          margin-top: 10px;
-          color: var(--muted);
-          font-size: 14px;
-        }
-        .header {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-          align-items: flex-end;
-          justify-content: space-between;
-          border-bottom: 1px solid var(--line);
-          padding-bottom: 16px;
-        }
-        .header :global(h1) {
-          margin: 4px 0 0;
-          font-family: var(--font-display);
-          font-size: clamp(26px, 4vw, 36px);
-          color: var(--text);
-          line-height: 1.03;
-        }
-        .header .sub {
-          color: var(--muted);
-          font-size: 13px;
-          margin-top: 3px;
-        }
-        .badge {
-          font-size: 12px;
-          font-weight: 600;
-          padding: 6px 12px;
-          border-radius: 999px;
-          border: 1px solid;
-          white-space: nowrap;
-        }
-        .badge.partial {
-          color: var(--yellow);
-          border-color: color-mix(in srgb, var(--yellow) 35%, transparent);
-          background: var(--yellow-wash);
         }
       `}</style>
     </div>

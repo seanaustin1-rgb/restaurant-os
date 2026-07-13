@@ -55,6 +55,42 @@ Rendered mockups for all of the above are in the **Demo Mockups** section below 
 touches your lane** (schema/migrations/`brokerage-analytics.ts`/`src/lib/brokerage/**`/ingestion). One flag for you: the
 CRM label in the agent calendar (SUCCESS-008) — align to the canonical source-label wording if you want.
 
+## ❓ OPEN QUESTIONS FOR CODEX — agent coaching + appointment assistant (2026-07-13, Claude)
+
+Sean wants two things on the **demo Agent app** (`/demo/real-estate-cockpit`, Agent tab) and asked me to get Codex's read
+**before building**, to avoid rebuilding anything that already exists. Context + what I found in-repo:
+
+**(A) "Coaching / what to do today, before noon" for the agent.** Sean feels the agent has lost the prescriptive,
+time-boxed daily direction ("get this done before noon", follow-ups for today).
+- **What already exists (Codex-owned):** `deriveAgentCoachingSignals()` → `BrokerageAgentCoachingSignal[]` in
+  `src/lib/modules/brokerage-analytics.ts` (keys `goal_gap | pipeline_deficit | cap_sprint | lead_waste | activity_gap |
+  conversion_leak | speed_to_lead_missing`; `severity red|yellow`; `label/readout/action/source`), rendered as a ranked
+  **"Coaching queue"** in `src/app/modules/brokerage/agent-cockpit/page.tsx` ("Ranked from current production, pipeline,
+  lead, cap, and activity signals"). This is **performance** coaching, and it lives only in the **authenticated** cockpit
+  — not in the public demo.
+- **The gap:** Sean's ask is a **daily execution plan** (time-boxed: before noon / afternoon / EOD, checkable tasks tied
+  to today's closings/leads/inspections) — a *different* concept from the performance signals, and it doesn't exist.
+- **NEED-C1 [Codex]:** (1) Is there any existing **daily-plan / next-best-action / task** model I should reuse instead of
+  inventing one? (2) Should the demo's coaching section render against the existing `BrokerageAgentCoachingSignal` shape
+  (so it's consistent + wireable later) or is a standalone generated-data mock fine for the demo? (3) Is any
+  timing/deadline field on the roadmap for coaching, or is "before noon" bucketing net-new?
+
+**(B) Contact + "Talk to update" on the agent's own appointments.** I already built (broker cockpit) an appointment
+assistant — voice "Speak to update" → AI actions (reschedule / add to client history / draft email / set reminder) +
+"After the appointment" recap — and email/text/call compose with templates + a home-value CMA (SUCCESS-011/012/013).
+Sean wants the **agent's** calendar appointments to open the same thing (call/text/email + talk-to-update).
+- **NEED-C2 [Codex]:** What are the **canonical entities** for an agent's appointments/tasks in the data model (is there
+  an Appointment/CalendarEvent, and a transaction-task/checklist entity)? Which of the demo's agent surfaces map to them —
+  the **priority-queue cards** (closings/inspections/messages = transaction tasks) and/or the **calendar-guard items**
+  (listing appt / closing / buyer tour = calendar events)? I want the demo to mirror the real shape.
+- **NEED-C3 [Codex]:** For the eventual **live** assistant, what's the write contract (CRM client-history write, calendar
+  write, message send, speech-to-text/LLM)? I'd extract ONE shared "contact + appointment assistant" component for broker
+  + agent; I want its action interface to match what backend will implement so the demo isn't throwaway.
+
+**Claude's recommendation (pending Codex):** time-boxed "Today's game plan" section for (A); make both priority-queue and
+calendar items open the assistant for (B); extract a shared assistant/compose component for (C). Not building until Codex
+weighs in per Sean.
+
 ## Product Decision Log
 
 - **DECISION-001 — Single Command Center doc.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence: direct

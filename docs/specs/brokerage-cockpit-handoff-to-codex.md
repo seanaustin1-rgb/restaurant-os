@@ -432,6 +432,14 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-012: Agent lead action center opens editable email/text drafts.** Commit
+  `e52d323` (AgentApp.tsx). The suggested lead actions no longer just fire a toast — they open an inline compose panel
+  with an **AI-drafted, editable** message: email actions (Send email template / Send intro / Send listing match) →
+  editable Subject + Body; text/SMS actions (Send SMS template / Text) → editable message window; Call reveals a direct
+  line; Snooze/Skip queue. Each draft is per-lead and pre-filled; Send logs it to the lead. Compose styles anchored under
+  `.agent :global(...)` (LeadView is a child component). tsc clean, 340 tests, build green. Mockups:
+  `agent-lead-email.png`, `agent-lead-text.png`. (Live send/AI-draft is the same backend track as SUCCESS-011 — Codex.)
+
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-011: clickable calendar entries → voice/AI appointment assistant (DEMO mock).**
   Commit `c202e47`. Every calendar entry on the broker cockpit (each agent's real-estate calendar row + the broker's
   "Your week" appointments) is clickable and opens an `ApptDrawer` with a voice-driven AI flow: **"Speak to update"** →

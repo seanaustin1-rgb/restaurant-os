@@ -560,8 +560,22 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
 // Time-boxed daily execution plan — checkable, generated demo data. Complements
 // the Executive Brief (what's true), One Thing First (the single top move), and
 // the queue/lead/calendar detail below by rolling the day into a scannable,
-// scheduled checklist tied to today's closing, lead, and inspection work.
-type PlanItem = { id: string; short: string; text: string; next: string; flag: "r" | "y" | "g" };
+// scheduled checklist tied to today's closing, lead, and inspection work. Each
+// item carries the *means to act* — a ready-to-send call / text / email draft —
+// so the plan doesn't just say what to do, it does it (demo: sending is a toast).
+type GpAction =
+  | { kind: "call"; label: string; phone: string }
+  | { kind: "text"; label: string; body: string }
+  | { kind: "email"; label: string; subject: string; body: string }
+  | { kind: "task"; label: string; done: string };
+type PlanItem = {
+  id: string;
+  short: string;
+  text: string;
+  next: string;
+  flag: "r" | "y" | "g";
+  actions: GpAction[];
+};
 const GAME_PLAN: { when: string; items: PlanItem[] }[] = [
   {
     when: "Before noon",
@@ -572,13 +586,45 @@ const GAME_PLAN: { when: string; items: PlanItem[] }[] = [
         text: "Clear 214 Highland Park compliance docs",
         next: "Upload the seller disclosure signature + final walkthrough form before the title company's noon cutoff — funding is at 2 PM.",
         flag: "r",
+        actions: [
+          {
+            kind: "email",
+            label: "Request e-signature",
+            subject: "Signature needed today — 214 Highland Park funds at 2 PM",
+            body:
+              "Hi Whitakers,\n\nWe're clear to close 214 Highland Park this afternoon — the only thing between you and funding at 2 PM is two quick e-signatures: the seller disclosure and the final walkthrough form.\n\nI've just sent both to your email. If you can sign within the hour we stay on schedule, and I'll confirm the moment they land.\n\nThank you!",
+          },
+          {
+            kind: "text",
+            label: "Text the title officer",
+            body:
+              "Hi Dana — sending the signed seller disclosure + final walkthrough form over before your noon cutoff so 214 Highland Park still funds at 2 PM. I'll upload both to the portal within the hour. Anything else you need from me?",
+          },
+          { kind: "task", label: "Mark docs uploaded", done: "Compliance docs uploaded to the title portal." },
+        ],
       },
       {
         id: "sam",
-        short: "Call Sam Ortega back",
+        short: "Sam Ortega",
         text: "Call Sam Ortega back",
-        next: "41 min unanswered and past the 30-minute line — a 2-minute call now keeps the referral warm.",
+        next: "41 min unanswered and past the 30-minute line — reach out now to keep the referral warm.",
         flag: "y",
+        actions: [
+          { kind: "call", label: "Call Sam", phone: "(208) 555-0147" },
+          {
+            kind: "text",
+            label: "Text Sam",
+            body:
+              "Hi Sam, it's your agent at Cascade Realty — sorry I missed you! I pulled two Boise foothills homes that match what you described. Free for a quick call around 2:30, or want me to text the listings first?",
+          },
+          {
+            kind: "email",
+            label: "Email Sam",
+            subject: "Two Boise foothills homes for you",
+            body:
+              "Hi Sam,\n\nThanks for the referral — great to connect. Based on what you're looking for, I've lined up two foothills homes worth a look and can get you in this week.\n\nWhat's the best number and time to reach you? Happy to work around your schedule.\n\nTalk soon,\nCascade Realty",
+          },
+        ],
       },
     ],
   },
@@ -587,17 +633,41 @@ const GAME_PLAN: { when: string; items: PlanItem[] }[] = [
     items: [
       {
         id: "inspection",
-        short: "Confirm the inspection window",
+        short: "Highland Park inspection",
         text: "Confirm the Highland Park inspection window",
         next: "Verify the inspector lands 12–2 PM so it clears before the 2 PM funding.",
         flag: "y",
+        actions: [
+          {
+            kind: "text",
+            label: "Text the inspector",
+            body:
+              "Hi Mark — confirming the 214 Highland Park inspection lands between 12 and 2 PM today. Funding's at 2, so I need it wrapped by ~1:45. Are we good on timing?",
+          },
+          { kind: "call", label: "Call the inspector", phone: "(208) 555-0132" },
+        ],
       },
       {
         id: "cedar",
-        short: "Prep the Cedar Bluff listing",
+        short: "88 Cedar Bluff listing",
         text: "Prep tomorrow's 88 Cedar Bluff listing appointment",
         next: "Pull comps + a quick CMA for the 9 AM Wednesday walk-through.",
         flag: "g",
+        actions: [
+          {
+            kind: "text",
+            label: "Text the sellers",
+            body:
+              "Hi Priya — confirming our listing appointment tomorrow (Wed) at 9 AM for 88 Cedar Bluff. I'll bring recent comps and a pricing recommendation. See you then!",
+          },
+          {
+            kind: "email",
+            label: "Email the prep",
+            subject: "Your 88 Cedar Bluff listing — prep for tomorrow at 9 AM",
+            body:
+              "Hi Priya,\n\nLooking forward to tomorrow at 9. Ahead of it I'm pulling recent Cedar Bluff comps and a quick CMA so we can talk list price with real numbers.\n\nIf anything's changed on the home — updates, repairs, timing — reply here and I'll fold it in.\n\nSee you at 9!",
+          },
+        ],
       },
     ],
   },
@@ -606,15 +676,140 @@ const GAME_PLAN: { when: string; items: PlanItem[] }[] = [
     items: [
       {
         id: "ridgeline",
-        short: "Nudge the Ridgeline sellers",
+        short: "Ridgeline sellers",
         text: "Send the Ridgeline sellers the “convert to listing” note",
         next: "Market's accelerating (99.4% list-to-sale) — ask for signatures while the window's open.",
         flag: "g",
+        actions: [
+          {
+            kind: "email",
+            label: "Email the sellers",
+            subject: "The window to list Ridgeline is open right now",
+            body:
+              "Hi,\n\nQuick market note on your Ridgeline home: homes are selling at 99.4% of list and days-on-market just dropped a week — the strongest seller window we've seen this quarter.\n\nList now and we catch that momentum. I've attached a quick value estimate — want to grab 15 minutes this week to talk timing?\n\nBest,\nCascade Realty",
+          },
+          {
+            kind: "text",
+            label: "Text a nudge",
+            body:
+              "Hi — the market's moving in your favor on Ridgeline (99.4% list-to-sale, days-on-market down a week). Great window to list. Have 15 minutes this week to talk timing?",
+          },
+        ],
       },
     ],
   },
 ];
 const PLAN_TOTAL = GAME_PLAN.reduce((n, b) => n + b.items.length, 0);
+
+function GpIcon({ kind }: { kind: GpAction["kind"] }) {
+  const common = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (kind === "call") return (<svg {...common}><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" /></svg>);
+  if (kind === "text") return (<svg {...common}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>);
+  if (kind === "email") return (<svg {...common}><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="m22 6-10 7L2 6" /></svg>);
+  return (<svg {...common}><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>);
+}
+
+function GamePlanItem({ it, checked, onToggle, say }: { it: PlanItem; checked: boolean; onToggle: () => void; say: (m: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [compose, setCompose] = useState<Extract<GpAction, { kind: "text" | "email" }> | null>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [phone, setPhone] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  const pick = (a: GpAction) => {
+    if (a.kind === "call") {
+      setCompose(null);
+      setPhone((p) => (p ? null : a.phone));
+      return;
+    }
+    if (a.kind === "task") {
+      if (!checked) { onToggle(); say(a.done); }
+      return;
+    }
+    setPhone(null);
+    if (compose && compose.label === a.label) { setCompose(null); return; }
+    setCompose(a);
+    setSent(false);
+    setSubject(a.kind === "email" ? a.subject : "");
+    setBody(a.body);
+  };
+  const send = () => {
+    setSent(true);
+    if (!checked) onToggle();
+    say(compose?.kind === "text" ? `Text sent · ${it.short}` : `Email sent · ${it.short}`);
+  };
+
+  return (
+    <div className={`gp-item ${it.flag} ${checked ? "done" : ""}`}>
+      <div className="gp-row">
+        <button type="button" className="gp-box" aria-pressed={checked} aria-label={checked ? "Mark not done" : "Mark done"} onClick={onToggle}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </button>
+        <button type="button" className="gp-main" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <span className="gp-txt">{it.text}</span>
+          <span className="gp-next">{it.next}</span>
+          <span className="gp-cue">
+            {open ? "Hide actions" : "Take action"}
+            <svg className={open ? "flip" : ""} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      {open && (
+        <div className="gp-actions">
+          <div className="lact gp-lact">
+            {it.actions.map((a) => {
+              const active = (a.kind === "call" && phone !== null) || ((a.kind === "text" || a.kind === "email") && compose?.label === a.label);
+              return (
+                <button type="button" key={a.label} className={`btn ${active ? "primary" : "ghost"}`} onClick={() => pick(a)}>
+                  <span className="gp-bi"><GpIcon kind={a.kind} /></span>
+                  {a.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {phone && (
+            <div className="lcall">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+              </svg>
+              <span className="lcall-n">{phone}</span>
+              <span className="lcall-h">tap to dial · generated demo contact</span>
+            </div>
+          )}
+
+          {compose && (
+            <div className="compose">
+              <div className="cmp-hd">
+                <GpIcon kind={compose.kind} />
+                {compose.kind === "email" ? "Email" : "Text"} · {it.short}
+                <span className="cmp-tag">{compose.kind === "email" ? "drafted · edit before sending" : "AI-drafted · edit before sending"}</span>
+              </div>
+              {compose.kind === "email" && (
+                <input className="cmp-subj" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" disabled={sent} />
+              )}
+              <textarea className={`cmp-body ${compose.kind}`} value={body} onChange={(e) => setBody(e.target.value)} rows={compose.kind === "email" ? 8 : 3} disabled={sent} />
+              <div className="cmp-act">
+                <button type="button" className="btn primary" disabled={sent} onClick={send}>
+                  {sent ? "✓ Sent" : compose.kind === "text" ? "Send text" : "Send email"}
+                </button>
+                <button type="button" className="btn ghost" onClick={() => setCompose(null)}>
+                  {sent ? "Close" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
@@ -720,32 +915,19 @@ export default function AgentApp() {
           {GAME_PLAN.map((bucket) => (
             <div className="gp-bucket" key={bucket.when}>
               <div className="gp-when">{bucket.when}</div>
-              {bucket.items.map((it) => {
-                const checked = !!planDone[it.id];
-                return (
-                  <button
-                    type="button"
-                    className={`gp-item ${it.flag} ${checked ? "done" : ""}`}
-                    key={it.id}
-                    aria-pressed={checked}
-                    onClick={() => {
-                      const nowDone = !planDone[it.id];
-                      setPlanDone((p) => ({ ...p, [it.id]: nowDone }));
-                      if (nowDone) say(`Checked off · ${it.short}`);
-                    }}
-                  >
-                    <span className="gp-box">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                      </svg>
-                    </span>
-                    <span className="gp-main">
-                      <span className="gp-txt">{it.text}</span>
-                      <span className="gp-next">{it.next}</span>
-                    </span>
-                  </button>
-                );
-              })}
+              {bucket.items.map((it) => (
+                <GamePlanItem
+                  it={it}
+                  key={it.id}
+                  checked={!!planDone[it.id]}
+                  say={say}
+                  onToggle={() => {
+                    const nowDone = !planDone[it.id];
+                    setPlanDone((p) => ({ ...p, [it.id]: nowDone }));
+                    if (nowDone) say(`Checked off · ${it.short}`);
+                  }}
+                />
+              ))}
             </div>
           ))}
         </div>
@@ -1105,77 +1287,122 @@ export default function AgentApp() {
           text-transform: uppercase;
           color: var(--copper-soft);
         }
-        .gp-item {
-          display: flex;
-          gap: 11px;
-          align-items: flex-start;
-          width: 100%;
-          text-align: left;
-          font: inherit;
-          cursor: pointer;
+        .agent :global(.gp-item) {
           border: 1px solid var(--line);
           background: var(--surface);
           border-radius: 10px;
-          padding: 10px 12px;
-          transition: border-color 0.15s, background 0.15s;
+          overflow: hidden;
+          transition: border-color 0.15s;
         }
-        .gp-item.r {
+        .agent :global(.gp-item.r) {
           border-color: color-mix(in srgb, var(--red) 34%, var(--line));
         }
-        .gp-item.y {
+        .agent :global(.gp-item.y) {
           border-color: color-mix(in srgb, var(--yellow) 32%, var(--line));
         }
-        .gp-item:hover {
-          background: var(--raise);
+        .agent :global(.gp-row) {
+          display: flex;
+          gap: 11px;
+          align-items: flex-start;
+          padding: 10px 12px;
         }
-        .gp-box {
+        .agent :global(.gp-box) {
           flex: none;
           width: 19px;
           height: 19px;
           border-radius: 6px;
           border: 1.5px solid var(--copper-dim);
+          background: transparent;
           display: grid;
           place-items: center;
           margin-top: 1px;
+          padding: 0;
+          cursor: pointer;
           transition: background 0.15s, border-color 0.15s;
         }
-        .gp-box :global(svg) {
+        .agent :global(.gp-box svg) {
           width: 12px;
           height: 12px;
           color: var(--ink);
           opacity: 0;
           transition: opacity 0.12s;
         }
-        .gp-item.done .gp-box {
+        .agent :global(.gp-item.done .gp-box) {
           background: var(--green);
           border-color: var(--green);
         }
-        .gp-item.done .gp-box :global(svg) {
+        .agent :global(.gp-item.done .gp-box svg) {
           opacity: 1;
         }
-        .gp-main {
+        .agent :global(.gp-main) {
+          flex: 1;
+          min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 2px;
-          min-width: 0;
+          gap: 3px;
+          text-align: left;
+          font: inherit;
+          background: transparent;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
         }
-        .gp-txt {
+        .agent :global(.gp-txt) {
           font-size: 13px;
           font-weight: 600;
           color: var(--text);
           line-height: 1.35;
         }
-        .gp-next {
+        .agent :global(.gp-next) {
           font-size: 11.5px;
           color: var(--text-soft);
           line-height: 1.4;
         }
-        .gp-item.done .gp-txt {
+        .agent :global(.gp-item.done .gp-txt) {
           color: var(--muted);
           text-decoration: line-through;
         }
-        .gp-item.done .gp-next {
+        .agent :global(.gp-item.done .gp-next) {
           color: var(--muted);
+        }
+        .agent :global(.gp-cue) {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 3px;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--copper-soft);
+        }
+        .agent :global(.gp-cue svg) {
+          width: 13px;
+          height: 13px;
+          transition: transform 0.15s;
+        }
+        .agent :global(.gp-cue svg.flip) {
+          transform: rotate(180deg);
+        }
+        .agent :global(.gp-actions) {
+          border-top: 1px solid var(--line);
+          padding: 11px 12px 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .agent :global(.gp-lact) {
+          flex-wrap: wrap;
+        }
+        .agent :global(.gp-lact .btn) {
+          display: inline-flex;
+          align-items: center;
+        }
+        .agent :global(.gp-bi) {
+          display: inline-flex;
+          margin-right: 6px;
+        }
+        .agent :global(.gp-bi svg) {
+          width: 13px;
+          height: 13px;
         }
         .section {
           margin-top: 16px;

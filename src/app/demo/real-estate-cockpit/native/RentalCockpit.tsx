@@ -301,9 +301,7 @@ function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast
 
 export default function RentalCockpit() {
   const [open, setOpen] = useState<Prop | null>(null);
-  const [handled, setHandled] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const brundage = PROPS.find((p) => p.n === "Brundage Chalet") ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const say = (m: string) => {
@@ -314,79 +312,15 @@ export default function RentalCockpit() {
 
   return (
     <div className="rental">
-      {/* executive brief — the 20-second portfolio read */}
-      <div className="brief">
-        <span className="eyebrow">Portfolio brief</span>
-        <ul className="brief-list">
-          <li>
-            <span className="bdot" style={{ background: handled ? "var(--green)" : "var(--red)" }} />
-            <span>
-              {handled ? (
-                <>
-                  <b>Brundage dispatched</b> — technician en route and the guest reply is sent; Thursday check-in is safe.
-                </>
-              ) : (
-                <>
-                  <b>Brundage Chalet is red</b> — a Critical furnace ticket, 52h open, with a guest checking in Thursday.
-                </>
-              )}
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--yellow)" }} />
-            <span>
-              Portfolio occupancy is <b>72%</b> and pace runs <b>−5%</b> vs 3-year; two units carry price-drop flags.
-            </span>
-          </li>
-          <li>
-            <span className="bdot" style={{ background: "var(--green)" }} />
-            <span>
-              Blended RevPAR holds at <b>$295</b> and reviews average <b>4.6★</b> across the portfolio.
-            </span>
-          </li>
-        </ul>
+      <div className="onething alert">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+        </svg>
+        <p>
+          <b>Brundage Chalet is red:</b> a Critical furnace work order has been open 52h (past 48h) and a fresh 3.2★ review just
+          posted. A guest checks in Thursday — dispatch and respond today.
+        </p>
       </div>
-
-      {/* one thing first — an obvious action */}
-      {handled ? (
-        <div className="onething alert done">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-          <p>
-            <b>Dispatched.</b> A technician is assigned to Brundage&apos;s furnace and a guest reply is queued. Reopen the
-            property to track the ticket to close.
-          </p>
-          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
-            Undo
-          </button>
-        </div>
-      ) : (
-        <div className="onething alert">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-          </svg>
-          <div className="ot-body">
-            <p>
-              <b>One thing first — Brundage Chalet is red:</b> a Critical furnace work order has been open 52h (past 48h)
-              and a fresh 3.2★ review just posted. A guest checks in Thursday — dispatch and respond today.
-            </p>
-            <div className="ot-actions">
-              <button type="button" className="ot-go" onClick={() => { setHandled(true); say("Technician dispatched to Brundage; guest reply queued."); }}>
-                Dispatch technician
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </button>
-              {brundage && (
-                <button type="button" className="ot-ghost" onClick={() => setOpen(brundage)}>
-                  Open property
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* portfolio tiles */}
       <div className="ptiles">
@@ -482,122 +416,6 @@ export default function RentalCockpit() {
       </div>
 
       <style jsx>{`
-        .brief {
-          margin-top: 16px;
-          border: 1px solid var(--line);
-          background: var(--panel);
-          border-radius: 11px;
-          padding: 13px 15px;
-        }
-        .brief-list {
-          list-style: none;
-          margin: 9px 0 0;
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 9px;
-        }
-        .brief-list li {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          font-size: 13px;
-          color: var(--text-soft);
-          line-height: 1.5;
-        }
-        .brief-list :global(b) {
-          color: var(--text);
-          font-weight: 600;
-        }
-        .bdot {
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          flex: none;
-          margin-top: 6px;
-        }
-        .onething.alert .ot-body {
-          flex: 1;
-          min-width: 0;
-        }
-        .onething.alert .ot-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 11px;
-        }
-        .ot-go {
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          font: inherit;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: #fff;
-          background: var(--red);
-          border: 1px solid var(--red);
-          border-radius: 999px;
-          padding: 7px 14px;
-          cursor: pointer;
-          transition: filter 0.15s;
-        }
-        .ot-go:hover {
-          filter: brightness(1.08);
-        }
-        .ot-go :global(svg) {
-          width: 14px;
-          height: 14px;
-          margin: 0;
-          color: #fff;
-        }
-        .ot-ghost {
-          font: inherit;
-          font-size: 12.5px;
-          font-weight: 600;
-          color: var(--text-soft);
-          background: transparent;
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 7px 14px;
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s;
-        }
-        .ot-ghost:hover {
-          border-color: var(--copper-dim);
-          color: var(--text);
-        }
-        .onething.alert.done {
-          align-items: center;
-          border-color: color-mix(in srgb, var(--green) 40%, transparent);
-          background: var(--green-wash);
-        }
-        .onething.alert.done :global(svg) {
-          color: var(--green);
-        }
-        .onething.alert.done p {
-          flex: 1;
-          min-width: 0;
-        }
-        .onething.alert.done :global(b) {
-          color: var(--green);
-        }
-        .ot-undo {
-          font: inherit;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--muted);
-          background: transparent;
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 5px 12px;
-          cursor: pointer;
-          flex: none;
-          transition: color 0.15s, border-color 0.15s;
-        }
-        .ot-undo:hover {
-          color: var(--text);
-          border-color: var(--copper-dim);
-        }
         .onething.alert {
           display: flex;
           gap: 10px;

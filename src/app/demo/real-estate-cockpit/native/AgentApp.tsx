@@ -557,9 +557,69 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   );
 }
 
+// Time-boxed daily execution plan — checkable, generated demo data. Complements
+// the Executive Brief (what's true), One Thing First (the single top move), and
+// the queue/lead/calendar detail below by rolling the day into a scannable,
+// scheduled checklist tied to today's closing, lead, and inspection work.
+type PlanItem = { id: string; short: string; text: string; next: string; flag: "r" | "y" | "g" };
+const GAME_PLAN: { when: string; items: PlanItem[] }[] = [
+  {
+    when: "Before noon",
+    items: [
+      {
+        id: "hp-docs",
+        short: "Highland Park compliance docs",
+        text: "Clear 214 Highland Park compliance docs",
+        next: "Upload the seller disclosure signature + final walkthrough form before the title company's noon cutoff — funding is at 2 PM.",
+        flag: "r",
+      },
+      {
+        id: "sam",
+        short: "Call Sam Ortega back",
+        text: "Call Sam Ortega back",
+        next: "41 min unanswered and past the 30-minute line — a 2-minute call now keeps the referral warm.",
+        flag: "y",
+      },
+    ],
+  },
+  {
+    when: "This afternoon",
+    items: [
+      {
+        id: "inspection",
+        short: "Confirm the inspection window",
+        text: "Confirm the Highland Park inspection window",
+        next: "Verify the inspector lands 12–2 PM so it clears before the 2 PM funding.",
+        flag: "y",
+      },
+      {
+        id: "cedar",
+        short: "Prep the Cedar Bluff listing",
+        text: "Prep tomorrow's 88 Cedar Bluff listing appointment",
+        next: "Pull comps + a quick CMA for the 9 AM Wednesday walk-through.",
+        flag: "g",
+      },
+    ],
+  },
+  {
+    when: "Before end of day",
+    items: [
+      {
+        id: "ridgeline",
+        short: "Nudge the Ridgeline sellers",
+        text: "Send the Ridgeline sellers the “convert to listing” note",
+        next: "Market's accelerating (99.4% list-to-sale) — ask for signatures while the window's open.",
+        flag: "g",
+      },
+    ],
+  },
+];
+const PLAN_TOTAL = GAME_PLAN.reduce((n, b) => n + b.items.length, 0);
+
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
   const [handled, setHandled] = useState(false);
+  const [planDone, setPlanDone] = useState<Record<string, boolean>>({});
   const [toast, setToast] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
@@ -642,6 +702,54 @@ export default function AgentApp() {
           </div>
         </div>
       )}
+
+      {/* today's game plan — time-boxed, checkable rollup of the day */}
+      <div className="section gameplan">
+        <div className="sh">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            Today · game plan
+          </span>
+          <span className="desc">
+            {Object.values(planDone).filter(Boolean).length} of {PLAN_TOTAL} done · tap to check off
+          </span>
+        </div>
+        <div className="gp-buckets">
+          {GAME_PLAN.map((bucket) => (
+            <div className="gp-bucket" key={bucket.when}>
+              <div className="gp-when">{bucket.when}</div>
+              {bucket.items.map((it) => {
+                const checked = !!planDone[it.id];
+                return (
+                  <button
+                    type="button"
+                    className={`gp-item ${it.flag} ${checked ? "done" : ""}`}
+                    key={it.id}
+                    aria-pressed={checked}
+                    onClick={() => {
+                      const nowDone = !planDone[it.id];
+                      setPlanDone((p) => ({ ...p, [it.id]: nowDone }));
+                      if (nowDone) say(`Checked off · ${it.short}`);
+                    }}
+                  >
+                    <span className="gp-box">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    </span>
+                    <span className="gp-main">
+                      <span className="gp-txt">{it.text}</span>
+                      <span className="gp-next">{it.next}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* daily priority queue */}
       <div className="section">
@@ -979,6 +1087,95 @@ export default function AgentApp() {
         .ot-undo:hover {
           color: var(--text);
           border-color: var(--copper-dim);
+        }
+        .gameplan .gp-buckets {
+          display: flex;
+          flex-direction: column;
+          gap: 13px;
+        }
+        .gp-bucket {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .gp-when {
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          color: var(--copper-soft);
+        }
+        .gp-item {
+          display: flex;
+          gap: 11px;
+          align-items: flex-start;
+          width: 100%;
+          text-align: left;
+          font: inherit;
+          cursor: pointer;
+          border: 1px solid var(--line);
+          background: var(--surface);
+          border-radius: 10px;
+          padding: 10px 12px;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .gp-item.r {
+          border-color: color-mix(in srgb, var(--red) 34%, var(--line));
+        }
+        .gp-item.y {
+          border-color: color-mix(in srgb, var(--yellow) 32%, var(--line));
+        }
+        .gp-item:hover {
+          background: var(--raise);
+        }
+        .gp-box {
+          flex: none;
+          width: 19px;
+          height: 19px;
+          border-radius: 6px;
+          border: 1.5px solid var(--copper-dim);
+          display: grid;
+          place-items: center;
+          margin-top: 1px;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .gp-box :global(svg) {
+          width: 12px;
+          height: 12px;
+          color: var(--ink);
+          opacity: 0;
+          transition: opacity 0.12s;
+        }
+        .gp-item.done .gp-box {
+          background: var(--green);
+          border-color: var(--green);
+        }
+        .gp-item.done .gp-box :global(svg) {
+          opacity: 1;
+        }
+        .gp-main {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .gp-txt {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+          line-height: 1.35;
+        }
+        .gp-next {
+          font-size: 11.5px;
+          color: var(--text-soft);
+          line-height: 1.4;
+        }
+        .gp-item.done .gp-txt {
+          color: var(--muted);
+          text-decoration: line-through;
+        }
+        .gp-item.done .gp-next {
+          color: var(--muted);
         }
         .section {
           margin-top: 16px;

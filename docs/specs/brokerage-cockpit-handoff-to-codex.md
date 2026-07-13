@@ -432,6 +432,17 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-013: lead email template picker + home-value market report.** Commit
+  `ac62ee6` (AgentApp.tsx). The lead email compose now offers multiple templates grouped by intent, plus a home-value
+  generator: **New lead** (What's my home worth? · How buying works · Get pre-approved), **Follow-up** (Listings matching
+  your search · Intro follow-up after a call), **Re-engage / cold clients** (Neighborhood market update · Still thinking
+  about a move? · Equity/anniversary check-in · Just listed near you). The **"What's my home worth?"** template shows an
+  address field (for when the lead didn't supply one) and generates a deterministic mock **CMA** (est. value range, 6
+  comps, median $/sqft, DOM, YoY trend) embedded in the follow-up email. Picking a template loads its editable subject +
+  body. tsc clean, 340 tests, build green. Mockup: `agent-lead-templates.png`.
+  **For Codex/backend:** live versions of these (a real CMA/AVM for the home-value report, and template send) are the
+  same integration track as SUCCESS-011/012.
+
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-012: Agent lead action center opens editable email/text drafts.** Commit
   `e52d323` (AgentApp.tsx). The suggested lead actions no longer just fire a toast — they open an inline compose panel
   with an **AI-drafted, editable** message: email actions (Send email template / Send intro / Send listing match) →

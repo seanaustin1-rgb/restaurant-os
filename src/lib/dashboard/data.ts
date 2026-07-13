@@ -19,6 +19,7 @@ import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coa
 import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
 import { loadPrimeCost } from "@/lib/modules/prime-cost";
 import { loadTaxVault, type TaxDrift } from "@/lib/modules/tax-vault";
+import { loadForwardCash, type CashFloorAssessment } from "@/lib/modules/forward-cash";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 import { loadAura, type AuraData } from "@/lib/modules/aura";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
@@ -37,6 +38,7 @@ export interface DashboardData {
   cashSafety: DashboardCashSafety;
   aura: DashboardAuraSummary;
   taxVault: DashboardTaxVaultSummary;
+  forwardCash: DashboardForwardCashSummary;
   sourceSetup: SourceSetupSummary;
   rentalPropertyRollup: RentalPropertyRollupData | null;
   gauges: TapGauge[];
@@ -78,6 +80,12 @@ export interface DashboardAuraSummary {
 
 export interface DashboardTaxVaultSummary {
   salesTaxDrift: TaxDrift;
+}
+
+export interface DashboardForwardCashSummary {
+  cashFloor: number | null;
+  lowPointBalance: number | null;
+  floor: CashFloorAssessment | null;
 }
 
 export interface SourceSetupSummary {
@@ -300,12 +308,13 @@ export async function loadDashboardData(
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
   const aura = await loadDashboardAura(restaurantId);
-  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost, taxVault] = await Promise.all([
+  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost, taxVault, forwardCash] = await Promise.all([
     loadCashOxygenFloor(restaurantId, db),
     loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     loadPeriodNetCashChange(restaurantId, start, end, db),
     loadPrimeCost(restaurantId, 8, db),
     loadTaxVault(restaurantId, db),
+    loadDashboardForwardCash(restaurantId, db),
   ]);
   const goLiveCoach = await loadGoLiveCoach(restaurantId, db, cashOxygen);
   const operatingProfitAmount = revenue - (cogsFood + cogsLiquor + cogsBeverage) - labor - opex;
@@ -343,6 +352,7 @@ export async function loadDashboardData(
     taxVault: {
       salesTaxDrift: taxVault.sales.drift,
     },
+    forwardCash,
     sourceSetup,
     rentalPropertyRollup,
     heartbeat: {
@@ -405,6 +415,28 @@ async function loadDashboardAura(restaurantId: string): Promise<DashboardAuraSum
       hasAnyData: false,
       intentMetrics: [],
     };
+  }
+}
+
+// Cash-floor breach for the shared attention surface (B6). Cheap by default: a
+// single-column read gates the heavier Forward Cash projection so it only runs
+// for tenants who have actually set a floor — no floor, no alarm, no cost.
+async function loadDashboardForwardCash(
+  restaurantId: string,
+  db: PrismaClient,
+): Promise<DashboardForwardCashSummary> {
+  const restaurant = await db.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { cashFloor: true },
+  });
+  if (restaurant?.cashFloor == null) {
+    return { cashFloor: null, lowPointBalance: null, floor: null };
+  }
+  try {
+    const fc = await loadForwardCash(restaurantId);
+    return { cashFloor: fc.cashFloor, lowPointBalance: fc.lowPoint?.balance ?? null, floor: fc.floor };
+  } catch {
+    return { cashFloor: n(restaurant.cashFloor), lowPointBalance: null, floor: null };
   }
 }
 

@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
-import { AlertTriangle, CalendarClock, Info, TrendingDown } from "lucide-react";
+import { AlertTriangle, CalendarClock, Info, ShieldCheck, TrendingDown } from "lucide-react";
 import type { ForwardCashData, ObligationKind } from "@/lib/modules/forward-cash";
+import { CashFloorControl } from "@/components/modules/CashFloorControl";
 import { money } from "@/lib/format";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -15,7 +16,7 @@ const KIND_LABEL: Record<ObligationKind, string> = {
   recurring: "Recurring",
 };
 
-export function ForwardCashModule({ data }: { data: ForwardCashData }) {
+export function ForwardCashModule({ data, restaurantId }: { data: ForwardCashData; restaurantId: string }) {
   if (!data.hasAnchor) {
     return (
       <div className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
@@ -73,6 +74,23 @@ export function ForwardCashModule({ data }: { data: ForwardCashData }) {
           <Stat label="Scheduled out" value={money(data.totalScheduledOut)} />
           <Stat label={`End (day ${data.windowDays})`} value={money(data.endBalance ?? start)} />
         </div>
+      </section>
+
+      {/* Cash floor + sweep safety (B6). */}
+      <section className="space-y-3">
+        {data.floor?.state === "breach" && (
+          <p className="flex items-start gap-2 rounded-lg border border-health-red/40 bg-health-red/5 px-4 py-3 text-xs leading-relaxed text-health-red">
+            <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+            <span>{data.floor.readout}</span>
+          </p>
+        )}
+        {data.floor?.state === "ok" && (
+          <p className="flex items-start gap-2 rounded-lg border border-health-green/30 bg-health-green/5 px-4 py-3 text-xs leading-relaxed text-health-green">
+            <ShieldCheck size={14} className="mt-0.5 shrink-0" />
+            <span>{data.floor.readout}</span>
+          </p>
+        )}
+        <CashFloorControl restaurantId={restaurantId} current={data.cashFloor} />
       </section>
 
       {/* 30-day balance strip. */}

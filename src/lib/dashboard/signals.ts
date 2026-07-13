@@ -49,6 +49,7 @@ export interface SourceTrust {
  * deterministic and defensible.
  */
 const PRIORITY: Record<string, number> = {
+  "cash-floor-breach": 0,
   "tax-sales-drift": 0,
   "bucket-tax-reserve": 0,
   "bucket-labor": 1,
@@ -134,6 +135,21 @@ export function deriveAttention(data: DashboardData): AttentionItem[] {
       readout: drift.readout,
       overByPct: drift.variancePct != null ? Math.max(0, drift.variancePct - drift.thresholdPct) : null,
       systemNote: `Accrued ${drift.accrued.toFixed(2)} vs cleared ${drift.cleared.toFixed(2)} over ${drift.windowDays} days.`,
+    });
+  }
+
+  const floor = data.forwardCash?.floor;
+  if (floor?.state === "breach") {
+    items.push({
+      id: "cash-floor-breach",
+      label: "Cash Floor",
+      severity: "red",
+      readout: floor.readout,
+      // Magnitude for ranking = how far under the floor, as a % of the floor.
+      overByPct: floor.floor > 0 && floor.shortfall != null ? (floor.shortfall / floor.floor) * 100 : null,
+      systemNote: floor.sweepAtRisk
+        ? `A scheduled sweep on ${floor.sweepAtRisk.date} drops projected cash to ${floor.sweepAtRisk.balanceAfter.toFixed(2)} (floor ${floor.floor.toFixed(2)}).`
+        : `Projected low-point ${floor.lowBalance.toFixed(2)} vs ${floor.floor.toFixed(2)} floor.`,
     });
   }
 

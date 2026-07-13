@@ -99,6 +99,18 @@ function HealthWord({ tone, children }: { tone: Tone; children: React.ReactNode 
   );
 }
 
+// Directional trend chip — every tracked metric carries a quantified change.
+type Dir = "up" | "down" | "flat";
+function Trend({ dir, good, children }: { dir: Dir; good?: boolean; children: React.ReactNode }) {
+  const arrow = dir === "flat" ? "→" : dir === "up" ? "▲" : "▼";
+  const cls = dir === "flat" ? "flat" : (good ?? dir === "up") ? "good" : "bad";
+  return (
+    <span className={`trend ${cls}`}>
+      {arrow} {children}
+    </span>
+  );
+}
+
 interface GaugeSpec {
   key: string;
   label: string;
@@ -108,6 +120,7 @@ interface GaugeSpec {
   tone: Tone;
   target?: number | null;
   word: [Tone, string];
+  trend: { dir: Dir; good: boolean; label: string };
   ex: { def: string; read: React.ReactNode; so: string };
 }
 
@@ -121,6 +134,7 @@ const FIN_GAUGES: GaugeSpec[] = [
     tone: "yellow",
     target: 0.3 / 0.36,
     word: ["yellow", "Watch"],
+    trend: { dir: "down", good: false, label: "1.2 pts vs last mo" },
     ex: {
       def: "Of every dollar of commission the brokerage earns (GCI), how much it keeps after agent splits, caps, and lead spend.",
       read: (
@@ -141,6 +155,7 @@ const FIN_GAUGES: GaugeSpec[] = [
     tone: "green",
     target: 30 / 90,
     word: ["green", "On track"],
+    trend: { dir: "up", good: true, label: "5 days vs last mo" },
     ex: {
       def: "Operating cash divided by average daily fixed burn — how many days you could run with zero new closings.",
       read: (
@@ -161,6 +176,7 @@ const FIN_GAUGES: GaugeSpec[] = [
     tone: "green",
     target: 3 / 8,
     word: ["green", "On track"],
+    trend: { dir: "up", good: true, label: "0.4× vs last mo" },
     ex: {
       def: "Company dollar generated per $1 of lead spend, blended across all agents.",
       read: (
@@ -180,6 +196,7 @@ const FIN_GAUGES: GaugeSpec[] = [
     tone: "green",
     target: 4.0 / 5,
     word: ["green", "On track"],
+    trend: { dir: "up", good: true, label: "0.1 vs last mo" },
     ex: {
       def: "Blended Google + Zillow rating across the brokerage's listings and agents.",
       read: (
@@ -365,6 +382,16 @@ const AGENTS: AgentRow[] = [
   },
 ];
 
+// Per-agent GCI month-over-month change.
+const GCI_TREND: Record<string, { dir: Dir; good: boolean; label: string }> = {
+  whitaker: { dir: "up", good: true, label: "8%" },
+  chloe: { dir: "down", good: false, label: "4%" },
+  priya: { dir: "up", good: true, label: "15%" },
+  theo: { dir: "up", good: true, label: "6%" },
+  sofia: { dir: "flat", good: true, label: "2%" },
+  drew: { dir: "up", good: true, label: "22%" },
+};
+
 function GaugeCard({ g, open, onToggle }: { g: GaugeSpec; open: boolean; onToggle: () => void }) {
   return (
     <button type="button" className="gauge" aria-expanded={open} onClick={onToggle}>
@@ -379,6 +406,11 @@ function GaugeCard({ g, open, onToggle }: { g: GaugeSpec; open: boolean; onToggl
         </div>
       </div>
       <HealthWord tone={g.word[0]}>{g.word[1]}</HealthWord>
+      <span className="gtrend">
+        <Trend dir={g.trend.dir} good={g.trend.good}>
+          {g.trend.label}
+        </Trend>
+      </span>
       <svg className="info" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" />
         <path d="M12 16v-4M12 8h.01" />
@@ -727,6 +759,9 @@ function BrokerCockpit() {
                   <span className="agci">
                     {a.gci}
                     <small>GCI MTD</small>
+                    <Trend dir={GCI_TREND[a.key].dir} good={GCI_TREND[a.key].good}>
+                      {GCI_TREND[a.key].label} MoM
+                    </Trend>
                   </span>
                   <span className="astatus" style={{ color: TONE[tone] }}>
                     {status}
@@ -926,20 +961,23 @@ function BrokerCockpit() {
             <div className="aura-score">
               <span className="asc">4.6</span>
               <div>
-                <div className="astars">★★★★★</div>
+                <div className="astars">
+                  ★★★★★ <Trend dir="up" good>0.1 vs last mo</Trend>
+                </div>
                 <div className="asub">218 reviews · 3.4h avg response</div>
+                <div className="asub">4.5★ average over the last 4 weeks — trending up</div>
               </div>
             </div>
             <div className="aura-srcs">
               <div className="asrc">
                 <span>Google</span>
                 <b>4.7</b>
-                <small>142 reviews</small>
+                <small>142 reviews · <Trend dir="up" good>0.1</Trend></small>
               </div>
               <div className="asrc">
                 <span>Zillow</span>
                 <b>4.5</b>
-                <small>76 reviews</small>
+                <small>76 reviews · <Trend dir="flat">steady</Trend></small>
               </div>
             </div>
           </div>
@@ -947,14 +985,17 @@ function BrokerCockpit() {
             <div className="aint">
               <b>1,240</b>
               <span>profile views</span>
+              <Trend dir="up" good>12% vs last mo</Trend>
             </div>
             <div className="aint">
               <b>86</b>
               <span>direction requests</span>
+              <Trend dir="up" good>9 vs last mo</Trend>
             </div>
             <div className="aint">
               <b>52</b>
               <span>calls this month</span>
+              <Trend dir="up" good>6 vs last mo</Trend>
             </div>
           </div>
           <div className="aura-rev">
@@ -1621,6 +1662,14 @@ function BrokerCockpit() {
           font-size: 10.5px;
           color: var(--muted);
         }
+        .aint :global(.trend) {
+          display: block;
+          margin-top: 3px;
+        }
+        .astars :global(.trend) {
+          margin-left: 4px;
+          vertical-align: 1px;
+        }
         .aura-rev {
           margin-top: 13px;
           border-top: 1px solid var(--line);
@@ -1737,6 +1786,11 @@ function BrokerCockpit() {
           letter-spacing: 0.05em;
           color: var(--muted);
           margin-top: 2px;
+        }
+        .agci :global(.trend) {
+          display: block;
+          margin-top: 2px;
+          font-size: 10px;
         }
         .astatus {
           font-size: 11.5px;
@@ -2023,6 +2077,10 @@ function BrokerCockpit() {
         .gauges :global(.gauge .word svg) {
           width: 11px;
           height: 11px;
+        }
+        .gauges :global(.gtrend) {
+          margin-top: 3px;
+          line-height: 1;
         }
         @media (min-width: 820px) {
           .gauges {
@@ -2468,6 +2526,22 @@ export default function RealEstateDemo() {
           display: inline-flex;
           align-items: center;
           gap: 7px;
+        }
+        .demo-root :global(.trend) {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          font-size: 10.5px;
+          font-weight: 600;
+          white-space: nowrap;
+        }
+        .demo-root :global(.trend.good) {
+          color: var(--green);
+        }
+        .demo-root :global(.trend.bad) {
+          color: var(--red);
+        }
+        .demo-root :global(.trend.flat) {
+          color: var(--muted);
         }
         .unav {
           position: sticky;

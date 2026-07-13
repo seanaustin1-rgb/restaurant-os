@@ -10,7 +10,7 @@ import { money } from "@/lib/format";
  * keep. Forward Cash warns when the projection — or a scheduled sweep — dips
  * below it. Clearing the field and saving turns the floor warning off.
  */
-export function CashFloorControl({ current }: { current: number | null }) {
+export function CashFloorControl({ restaurantId, current }: { restaurantId: string; current: number | null }) {
   const [value, setValue] = useState(current != null ? String(current) : "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -19,7 +19,7 @@ export function CashFloorControl({ current }: { current: number | null }) {
     setError(null);
     startTransition(async () => {
       try {
-        await setCashFloor(next);
+        await setCashFloor(restaurantId, next);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not save");
       }

@@ -16,7 +16,7 @@ const KIND_LABEL: Record<ObligationKind, string> = {
   recurring: "Recurring",
 };
 
-export function ForwardCashModule({ data }: { data: ForwardCashData }) {
+export function ForwardCashModule({ data, restaurantId }: { data: ForwardCashData; restaurantId: string }) {
   if (!data.hasAnchor) {
     return (
       <div className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
@@ -90,7 +90,7 @@ export function ForwardCashModule({ data }: { data: ForwardCashData }) {
             <span>{data.floor.readout}</span>
           </p>
         )}
-        <CashFloorControl current={data.cashFloor} />
+        <CashFloorControl restaurantId={restaurantId} current={data.cashFloor} />
       </section>
 
       {/* 30-day balance strip. */}

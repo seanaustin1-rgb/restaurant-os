@@ -13,7 +13,8 @@ export default async function ForwardCashPage() {
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
-  const data = role ? await loadForwardCash(role.restaurantId) : null;
+  const restaurantId = role?.restaurantId ?? null;
+  const data = restaurantId ? await loadForwardCash(restaurantId) : null;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">
@@ -24,8 +25,8 @@ export default async function ForwardCashPage() {
           against upcoming bills, payroll, and Profit First sweeps.
         </p>
       </div>
-      {data ? (
-        <ForwardCashModule data={data} />
+      {data && restaurantId ? (
+        <ForwardCashModule data={data} restaurantId={restaurantId} />
       ) : (
         <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
           You need a business to view forward cash. Complete onboarding first.

@@ -12,23 +12,29 @@ const PATH = "/modules/forward-cash";
 // single edit point when that decision is made.
 const CASH_FLOOR_EDIT_ROLES = ["OPERATOR"] as const;
 
-async function requireRestaurant(): Promise<string> {
+// Authorize an allowed role ON THIS restaurant. Scoping to the passed
+// restaurantId (not "the user's first operator role") is what keeps a
+// multi-tenant operator from writing the floor of a different tenant than the
+// one whose Forward Cash page they're on.
+async function requireCashFloorAccess(restaurantId: string): Promise<void> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
+  if (!restaurantId) throw new Error("forbidden");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...CASH_FLOOR_EDIT_ROLES] } },
+    where: { clerkUserId: userId, restaurantId, role: { in: [...CASH_FLOOR_EDIT_ROLES] } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");
-  return role.restaurantId;
 }
 
 /**
- * Set (or clear) the cash floor: the minimum operating balance the operator
- * wants to keep. Pass `null` to unset it (turns the floor warning off).
+ * Set (or clear) the cash floor for a specific restaurant: the minimum operating
+ * balance the operator wants to keep. Pass `null` to unset it. `restaurantId` is
+ * the tenant whose Forward Cash page is open — bound and authorized here so the
+ * write can never land on another tenant the user also operates.
  */
-export async function setCashFloor(amount: number | null): Promise<void> {
-  const restaurantId = await requireRestaurant();
+export async function setCashFloor(restaurantId: string, amount: number | null): Promise<void> {
+  await requireCashFloorAccess(restaurantId);
 
   let value: number | null = null;
   if (amount != null) {

@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
 
@@ -40,14 +41,14 @@ const PROJECT_DAYS = 56; // 8 weeks
 
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
-export async function loadCashRunway(restaurantId: string): Promise<CashRunwayData> {
-  const cashOxygen = await loadCashOxygenFloor(restaurantId);
+export async function loadCashRunway(restaurantId: string, db: PrismaClient = prisma): Promise<CashRunwayData> {
+  const cashOxygen = await loadCashOxygenFloor(restaurantId, db);
   const [restaurant, txns] = await Promise.all([
-    prisma.restaurant.findUnique({
+    db.restaurant.findUnique({
       where: { id: restaurantId },
       select: { cashBalanceAnchor: true, cashBalanceAnchorDate: true },
     }),
-    prisma.transaction.findMany({
+    db.transaction.findMany({
       where: { restaurantId },
       orderBy: { date: "asc" },
       select: { date: true, amount: true },

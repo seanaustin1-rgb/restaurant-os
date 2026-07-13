@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { loadCashRunway } from "@/lib/modules/cash-runway";
 import { loadRecurring, type RecurringVendor } from "@/lib/modules/recurring";
@@ -406,8 +407,9 @@ export function projectPayrollObligations(
  */
 async function loadPayrollPulls(
   restaurantId: string,
+  db: PrismaClient = prisma,
 ): Promise<{ pulls: { date: string; amount: number }[]; payrollCategoryNames: Set<string> }> {
-  const cats = await prisma.category.findMany({
+  const cats = await db.category.findMany({
     where: { restaurantId },
     select: { id: true, name: true, tapBucket: true },
   });
@@ -415,7 +417,7 @@ async function loadPayrollPulls(
   const payrollCategoryNames = new Set(payrollCats.map((c) => c.name));
   if (payrollCats.length === 0) return { pulls: [], payrollCategoryNames };
 
-  const txns = await prisma.transaction.findMany({
+  const txns = await db.transaction.findMany({
     where: { restaurantId, amount: { gt: 0 }, categoryId: { in: payrollCats.map((c) => c.id) } },
     orderBy: { date: "desc" },
     take: 120, // enough raw rows to span several pay runs even for check-heavy payrolls
@@ -425,14 +427,15 @@ async function loadPayrollPulls(
   return { pulls: aggregatePayrollPulls(raw), payrollCategoryNames };
 }
 
-export async function loadForwardCash(restaurantId: string): Promise<ForwardCashData> {
+export async function loadForwardCash(restaurantId: string, db: PrismaClient = prisma): Promise<ForwardCashData> {
   // Starting cash + as-of date come from Cash Runway (anchor + net flow since).
-  // Not db-injectable: the sub-loaders (Cash Runway / Recurring / ledger snapshot)
-  // read the prisma singleton directly. Correctness lives in the pure functions
-  // above, which ARE unit-tested; this is thin assembly over already-tested loaders.
+  // `db` threads through every sub-loader (Cash Runway / Recurring / ledger
+  // snapshot / payroll pulls) so the demo path stays on demoPrisma and never
+  // touches production. Correctness lives in the pure functions above, which ARE
+  // unit-tested; this is thin assembly over already-tested loaders.
   const [runway, restaurant] = await Promise.all([
-    loadCashRunway(restaurantId),
-    prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { cashFloor: true } }),
+    loadCashRunway(restaurantId, db),
+    db.restaurant.findUnique({ where: { id: restaurantId }, select: { cashFloor: true } }),
   ]);
   const cashFloor = restaurant?.cashFloor != null ? n(restaurant.cashFloor) : null;
 
@@ -463,9 +466,9 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
   }
 
   const [recurring, snapshot, payrollData] = await Promise.all([
-    loadRecurring(restaurantId),
-    getLedgerSnapshot(restaurantId),
-    loadPayrollPulls(restaurantId),
+    loadRecurring(restaurantId, db),
+    getLedgerSnapshot(restaurantId, db),
+    loadPayrollPulls(restaurantId, db),
   ]);
   const start = parseISO(runway.asOfDate);
 

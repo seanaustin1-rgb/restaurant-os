@@ -18,6 +18,7 @@
 // but DEFERRED — they need integrations that don't exist as discrete feeds yet;
 // obligations are derived from categorized Transactions here.
 
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { runAllocation, prevSweepDate, isSweepDue } from "./allocation";
 import type { Taps } from "./calculator";
@@ -326,12 +327,12 @@ export interface LedgerSnapshot {
 }
 
 /** Read the persisted ledger for display. Pure read — never mutates. */
-export async function getLedgerSnapshot(restaurantId: string): Promise<LedgerSnapshot> {
+export async function getLedgerSnapshot(restaurantId: string, db: PrismaClient = prisma): Promise<LedgerSnapshot> {
   const [accounts, sweeps, allocCount, lastAlloc] = await Promise.all([
-    prisma.virtualAccount.findMany({ where: { restaurantId }, select: { key: true, name: true, balance: true, lastSweptAt: true } }),
-    prisma.bucketSweep.findMany({ where: { restaurantId }, orderBy: { sweptAt: "desc" }, take: 6, select: { key: true, amount: true, sweptAt: true } }),
-    prisma.bucketAllocation.count({ where: { restaurantId } }),
-    prisma.bucketAllocation.findFirst({ where: { restaurantId }, orderBy: { date: "desc" }, select: { date: true } }),
+    db.virtualAccount.findMany({ where: { restaurantId }, select: { key: true, name: true, balance: true, lastSweptAt: true } }),
+    db.bucketSweep.findMany({ where: { restaurantId }, orderBy: { sweptAt: "desc" }, take: 6, select: { key: true, amount: true, sweptAt: true } }),
+    db.bucketAllocation.count({ where: { restaurantId } }),
+    db.bucketAllocation.findFirst({ where: { restaurantId }, orderBy: { date: "desc" }, select: { date: true } }),
   ]);
   const byKey = new Map(accounts.map((a) => [a.key, a]));
   return {

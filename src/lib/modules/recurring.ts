@@ -1,3 +1,4 @@
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { signatureOf } from "@/lib/categorization/suggestions";
 
@@ -57,9 +58,9 @@ function cadenceOf(intervalDays: number | null): Cadence {
   return "irregular";
 }
 
-export async function loadRecurring(restaurantId: string): Promise<RecurringData> {
+export async function loadRecurring(restaurantId: string, db: PrismaClient = prisma): Promise<RecurringData> {
   const [txns, cats] = await Promise.all([
-    prisma.transaction.findMany({
+    db.transaction.findMany({
       where: { restaurantId, amount: { gt: 0 } }, // outflows only
       orderBy: { date: "asc" },
       select: {
@@ -71,7 +72,7 @@ export async function loadRecurring(restaurantId: string): Promise<RecurringData
         categoryId: true,
       },
     }),
-    prisma.category.findMany({ where: { restaurantId }, select: { id: true, name: true } }),
+    db.category.findMany({ where: { restaurantId }, select: { id: true, name: true } }),
   ]);
 
   if (txns.length === 0) {

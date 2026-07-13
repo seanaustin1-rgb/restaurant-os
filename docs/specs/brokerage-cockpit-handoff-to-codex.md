@@ -583,6 +583,15 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — Rental tab: owner updates & follow-up (SUCCESS-015, PR #115, commit `6e7f139`).**
+  Sean's feedback on the vacation tab: it surfaced concerns and dispatch but had no follow-up on concerns and no prompt
+  to email ownership with a report. Added an **Owner updates & follow-up** section on the main Rental view with editable,
+  ready-to-send drafts: (1) **Update the Brundage owner** — email closing the loop on the furnace ticket + the 3.2★
+  review with the period's occ/ADR/RevPAR; (2) **Reassure the Thursday guest** — proactive text ahead of check-in;
+  (3) **Send the Sawtooth owner their monthly report** — the numbers behind the premium-floor strategy. Each opens an
+  editable draft; Send fires a toast (demo — no real delivery). The dispatched "One thing first" state now points here to
+  close the loop. Rendered inline in `RentalCockpit` so scoped styles apply. Generated-data-only; no backend/API/
+  persistence/auth. Gates green: `tsc` clean · `vitest` 340 passed · `npm run build` green. Held for Sean's approval.
 - **2026-07-13 (EOD+1) [Claude] — Today's game plan made ACTIONABLE (SUCCESS-014 extended, PR #115, commit `e3236d1`).**
   Sean's screenshot feedback: the plan listed actions but offered no way to *act* (no call/text/email). Each game-plan
   item now expands ("Take action") into the same call / text / email affordances the Lead action center uses — a dial

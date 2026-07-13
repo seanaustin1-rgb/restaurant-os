@@ -10,8 +10,9 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` (original tandem) · current Claude working branch `claude/demo-broker-day-in-life` ·
-**Last updated:** 2026-07-13 by Claude · **Related specs:** `brokerage-data-sources.md`,
+**Branch:** `feat/heartbeat-landing` (original tandem) · current Claude working branches `claude/fix-demo-render-p0-ebh2gr`
+(P0 fix, PR #111) + `claude/demo-broker-day-in-life-p0` (broker narrative rebased on P0, PR #112) ·
+**Last updated:** 2026-07-13 (EOD) by Claude · **Related specs:** `brokerage-data-sources.md`,
 `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
 
 ---
@@ -63,12 +64,15 @@ test / direct operator decision), and a **Next action** when applicable.
   route `/demo/real-estate-cockpit`. Show, in one public demo: the **broker day**, the **agent day**, and the
   **vacation-property platform**. Next action: unblock via OBJECTIVE-003 (P0) then OBJECTIVE-004 (broker narrative).
 - **OBJECTIVE-003 — P0: repair responsive rendering across Broker, Agent, Rental.** Date 2026-07-13 · Owner [Claude] ·
-  Status **In Progress** · Evidence: Sean's mobile (~390×844) + desktop (~1440×900) screenshots (FAILURE-002). Fix on a
-  dedicated branch off main + preview; do not merge (DECISION-004). Next action: reproduce against a **local production
-  build** (bug is prod-only); first check a stray Babel config disabling SWC/styled-jsx.
+  Status **Passed (pending Sean's visual approval)** · Evidence: PR #111 (`claude/fix-demo-render-p0-ebh2gr`, commit
+  `1f0eb99`); root cause = styled-jsx child-component scoping (SUCCESS-004); before/after screenshots at 390×844 +
+  1440×900, all three tabs + rental drawer; tsc clean, 340 tests, prod build green; Vercel preview Ready. See SUCCESS-004
+  and FAILURE-002 resolution. Remaining: Sean's visual approval + merge (BLOCKER-001, DECISION-004).
 - **OBJECTIVE-004 — Complete the contained Broker day-in-life narrative.** Date 2026-07-13 · Owner [Claude] ·
-  Status **Blocked** (on OBJECTIVE-003) · Evidence: code committed UNTESTED on `claude/demo-broker-day-in-life`
-  (commit `b646e61`). Next action: after P0, rebase onto the fix, run gates, push, open draft PR, capture evidence.
+  Status **Passed (pending Sean's visual approval)** · Evidence: PR #112 (`claude/demo-broker-day-in-life-p0`, narrative
+  cherry-picked from `b646e61` onto the P0 fix, commit `ed3b8bf`); tsc clean, 340 tests, prod build green; broker
+  screenshots at both viewports incl. the interactive "Open Whitaker's file" flow; stacked on PR #111 (SUCCESS-005).
+  Remaining: retarget base to `main` after #111 merges; Sean's visual approval.
 - **NEED-001 — Required evidence before Sean's visual approval.** Date 2026-07-13 · Owner [Sean] · Status **Proposed** ·
   Evidence gate: **preview URL + desktop screenshots + mobile screenshots + all three tabs (Broker/Agent/Rental) tested
   + typecheck + tests + build**, all green, before any approval or merge. Applies to both OBJECTIVE-003 and -004.
@@ -84,17 +88,47 @@ test / direct operator decision), and a **Next action** when applicable.
   Status **Failed** · Evidence: prior "ready as-is" assessment was made from source inspection, **without rendered
   browser verification**. Corrective rule → NEED-001 (visual evidence is mandatory before "ready").
 - **FAILURE-002 — P0 rendering failure exposed by Sean's screenshots.** Date 2026-07-13 · Owner [Sean] · Status
-  **Failed** · Evidence: mobile — gauges/warning/checkmark/info SVGs massively oversized, escaping containers; desktop —
-  MLS ticker expands into a huge unspaced text block, cockpit content pushed off-screen. Leading hypothesis: scoped
-  `<style jsx>` CSS not applied in the production build. Next action: OBJECTIVE-003.
+  **Resolved by SUCCESS-004** · Evidence: mobile — gauges/warning/checkmark/info SVGs massively oversized, escaping
+  containers; desktop — MLS ticker expands into a huge unspaced text block, cockpit content pushed off-screen. The
+  leading hypothesis (scoped CSS stripped by a stray Babel config disabling SWC) was **disproven** — see FAILURE-003;
+  the real cause is styled-jsx child-component scoping (SUCCESS-004). Fixed in PR #111.
+- **FAILURE-003 — Leading "stray Babel config / prod-only" hypothesis was wrong.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Corrected** · Evidence: no `.babelrc`/`babel.config.*` exists anywhere in the repo (grep-verified); SWC +
+  styled-jsx compile normally. The bug reproduces in **both dev and prod** — it never rendered correctly, nothing
+  "regressed" in prod. Correct root cause recorded as SUCCESS-004. Lesson: reproduce and read the actual scoping
+  mechanism before trusting a build-config hypothesis.
+- **SUCCESS-004 — P0 root cause found + fixed (PR #111).** Date 2026-07-13 · Owner [Claude] · Status **Passed (pending
+  approval)** · Root cause: **styled-jsx only stamps its scope class onto DOM elements rendered by the component that
+  owns the `<style jsx>` block.** `BrokerCockpit` (+ children `GaugeCard`/`GaugeDial`/`HealthWord`), `AgentApp`'s
+  `QueueCardView`/`LeadView`, and `RentalCockpit`'s `Drawer` rendered markup whose scoped rules lived in a *different*
+  component, so those rules silently dropped. The inline SVGs carry no width/height (sized purely by that dropped CSS) →
+  browser default 300×150; the ticker lost `white-space:nowrap`. Fix (CSS/scoping only — no logic/data/layout/backend/
+  auth/migration): `BrokerCockpit` gets its own co-located `<style jsx>` with gauge internals anchored on
+  `.gauges :global(...)`; `AgentApp` child selectors re-anchored under `.agent :global(...)`; `RentalCockpit` Drawer
+  under `.rental :global(...)`. Evidence: PR #111 commit `1f0eb99`; tsc clean; `npm test` 340 passed; `npm run build`
+  green; CI Typecheck ✓ / Test ✓; before/after screenshots at 390×844 + 1440×900 for Broker/Agent/Rental + drawer;
+  Vercel preview Ready. Next action: NEED-001 satisfied → Sean visual approval (BLOCKER-001).
+- **SUCCESS-005 — Broker day-in-life narrative shipped as a stacked PR (PR #112).** Date 2026-07-13 · Owner [Claude] ·
+  Status **Passed (pending approval)** · Evidence: PR #112 base = `claude/fix-demo-render-p0-ebh2gr` (stacked on #111),
+  commit `ed3b8bf`; narrative from `b646e61` cherry-picked onto the P0 fix — its new markup is inline in `BrokerCockpit`
+  and its CSS lands in `BrokerCockpit`'s own block, so scoping is correct (no new child-scoping gaps). Verified: greeting,
+  Executive Brief, One-Thing-with-action, agent-roster→detail, and the acknowledgment state change all render + interact
+  at both viewports (incl. the "Open Whitaker's file" flow: brief updates, one-thing→green Handled+Undo, roster 2→1,
+  Whitaker red→green "Opened" auto-expanded). tsc clean; 340 tests; prod build green; Vercel preview Ready. Agent/Rental
+  are byte-identical to the P0 branch. Next action: retarget base to `main` after #111 merges (NEXT-004).
 - **BLOCKER-001 — Public demo is NOT visually approved / not meeting-ready.** Date 2026-07-13 · Owner [Sean] ·
   Status **Blocked** · Evidence: FAILURE-002. Blocks OBJECTIVE-002. Clears only when OBJECTIVE-003 is verified against
   NEED-001 and Sean visually approves the preview.
 - **NEXT-001 — Repair the P0** on a dedicated branch off main + preview; deliver root cause, preview URL,
   before/after screenshots at both viewports, all-three-tabs confirmation, and typecheck/tests/build. Owner [Claude] ·
-  Status **In Progress**.
+  Status **Passed** · Evidence: SUCCESS-004 / PR #111.
 - **NEXT-002 — Resume the Broker day-in-life narrative** (OBJECTIVE-004) after P0 is verified: rebase onto the fix,
-  run gates, push, open a draft PR, capture evidence. Owner [Claude] · Status **Blocked** on NEXT-001.
+  run gates, push, open a draft PR, capture evidence. Owner [Claude] · Status **Passed** · Evidence: SUCCESS-005 / PR #112.
+- **NEXT-003 — Sean visually approves (or rejects) the P0 + narrative previews** against NEED-001 before any merge.
+  Owner [Sean] · Status **Proposed** · Evidence gate open: previews Ready but not reachable from the build sandbox
+  (Vercel egress blocked → verification done on a local prod build instead). This is the sole remaining blocker.
+- **NEXT-004 — Merge order.** Owner [Sean/Claude] · Status **Proposed** · After approval: merge PR #111 to `main`, then
+  retarget PR #112's base from `claude/fix-demo-render-p0-ebh2gr` to `main`. Do not merge #112 before #111.
 
 ## Shared Current State — Raven (2026-07-13)
 
@@ -108,14 +142,19 @@ test / direct operator decision), and a **Next action** when applicable.
 
 ## Claude Lane Status — Raven (2026-07-13)
 
-- 🔴 **P0 (OBJECTIVE-003) — owned, not started in code.** Root-cause hypothesis recorded (styled-jsx not applied in prod
-  build); repair plan is: reproduce on a local production build, grep for a stray Babel config, fix on a dedicated
-  branch off main, preview, gather NEED-001 evidence. Full plan mirrored in `docs/SESSION-HANDOFF.md` (2026-07-13 block).
-- ⏸️ **Broker day-in-life narrative (OBJECTIVE-004) — committed UNTESTED, parked** on `claude/demo-broker-day-in-life`
-  (`b646e61`): greeting, Executive Brief, One-Thing-with-action, agent roster→detail, acknowledgment state, all in
-  `native/RealEstateDemo.tsx` (Agent/Rental untouched). Typecheck/tests/build not yet run; no PR opened. Will inherit the
-  P0 bug until rebased onto the fix.
-- ✅ Corrected the process failure (FAILURE-001): visual browser verification is now a hard gate (NEED-001).
+- ✅ **P0 (OBJECTIVE-003) — fixed, PR #111 open (draft), gates green.** Root cause was **styled-jsx child-component
+  scoping**, not a Babel config (FAILURE-003 corrected the hypothesis). Reproduced on a local prod build in both dev and
+  prod; fixed CSS-only across `RealEstateDemo`/`AgentApp`/`RentalCockpit` (SUCCESS-004). NEED-001 evidence delivered
+  (root cause, preview URL, before/after at both viewports, all three tabs + drawer, tsc/tests/build). Awaiting Sean's
+  visual approval before merge.
+- ✅ **Broker day-in-life narrative (OBJECTIVE-004) — done, PR #112 (draft, stacked on #111).** Cherry-picked `b646e61`
+  onto the P0 fix (`ed3b8bf`); gates green; verified rendering + interaction at both viewports (SUCCESS-005). Agent/Rental
+  byte-identical to the P0 branch. The two docs-only commits from the parked `claude/demo-broker-day-in-life` (handoff
+  update + this Command Center restoration) were intentionally left out of #112's code; this report brings the Command
+  Center forward + logs completion.
+- ✅ Corrected the process failure (FAILURE-001): visual browser verification is now a hard gate (NEED-001) — this cycle
+  was verified against a **local production build** with Playwright, because the Vercel previews are not reachable from
+  the build sandbox (egress-blocked).
 
 ## Codex Lane Status — Raven (2026-07-13)
 
@@ -126,15 +165,20 @@ test / direct operator decision), and a **Next action** when applicable.
 
 ## Blockers — Raven
 
-- **BLOCKER-001** — public demo not visually approved until the P0 (OBJECTIVE-003) is repaired and verified against
-  NEED-001. Everything else for July 14 waits on this.
+- **BLOCKER-001** — public demo not visually approved. **Narrowed:** the P0 repair (OBJECTIVE-003) is done and gate-green
+  (SUCCESS-004) and the narrative is done (SUCCESS-005); the *only* remaining item is **Sean's visual approval of the
+  previews** (NEXT-003) before merge to main (DECISION-004). No engineering blocker remains.
 
 ## Next Actions — Raven
 
-- **NEXT-001 [Claude]** — repair the P0 render failure (dedicated branch off main, preview, deliver NEED-001 evidence).
-- **NEXT-002 [Claude]** — after P0 verified, rebase + finish the Broker day-in-life narrative (draft PR, evidence).
-- **[Sean]** — visually approve (or reject) the P0 preview against NEED-001 before any merge to main.
-- **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule.
+- **NEXT-001 [Claude] — DONE** — P0 render failure repaired; PR #111 (draft), NEED-001 evidence delivered (SUCCESS-004).
+- **NEXT-002 [Claude] — DONE** — Broker day-in-life narrative finished; PR #112 (draft, stacked on #111) (SUCCESS-005).
+- **NEXT-003 [Sean]** — visually approve (or reject) the P0 preview (#111) and the narrative preview (#112) against
+  NEED-001 before any merge to main.
+- **NEXT-004 [Sean/Claude]** — on approval: merge #111 to `main`, then retarget #112's base to `main` (do not merge #112
+  first).
+- **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule. (Codex advisory reviews on
+  #111/#112 both errored on an OpenAI billing quota — non-blocking; the required gates are typecheck/test/build.)
 
 ---
 
@@ -306,6 +350,44 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD) [Claude] — COMPLETION REPORT: P0 render fix (#111) + Broker day-in-life narrative (#112).**
+
+  **What shipped (both DRAFT, not merged — DECISION-004).**
+  - **P0 (OBJECTIVE-003 → SUCCESS-004), PR #111** on `claude/fix-demo-render-p0-ebh2gr` (commit `1f0eb99`). CSS/scoping
+    only across `native/RealEstateDemo.tsx`, `native/AgentApp.tsx`, `native/RentalCockpit.tsx` — no logic, data, layout
+    intent, backend, auth, or migration change.
+  - **Broker narrative (OBJECTIVE-004 → SUCCESS-005), PR #112** on `claude/demo-broker-day-in-life-p0` (commit `ed3b8bf`),
+    **stacked on #111** (base = the P0 branch). Narrative cherry-picked from `b646e61`; only `RealEstateDemo.tsx` differs
+    from the P0 branch (Agent/Rental byte-identical).
+
+  **Root cause (corrects the leading hypothesis — FAILURE-003).** NOT a stray Babel config (none exists; grep-verified)
+  and NOT prod-only — the bug reproduced in **both dev and prod**. The real cause: **styled-jsx only stamps its scope
+  class onto DOM elements rendered by the component that owns the `<style jsx>` block.** Markup rendered by *child*
+  components (`BrokerCockpit`→`GaugeCard`/`GaugeDial`/`HealthWord`; `AgentApp`→`QueueCardView`/`LeadView`;
+  `RentalCockpit`→`Drawer`) never received the scope class, so its scoped rules silently dropped. The inline `<svg>`s
+  have no width/height (sized purely by that CSS) → fell back to the browser default 300×150; the ticker lost
+  `white-space:nowrap`. Fix: co-locate `BrokerCockpit`'s styles in its own `<style jsx>` (gauge internals anchored on
+  `.gauges :global(...)`); re-anchor `AgentApp` child selectors under `.agent :global(...)` and the `Drawer` under
+  `.rental :global(...)` — same idiom already in the file (`.demo-root :global(.eyebrow)`).
+
+  **Evidence (NEED-001 satisfied).** `npx tsc --noEmit` clean on both branches · `npm test` 340 passed (49 files) ·
+  `npm run build` succeeds on both · CI Typecheck ✓ / Test ✓ on #111. Verified on a **local production build**
+  (`npm run build && npm start`) with Playwright at **390×844** and **1440×900**: all three tabs (Broker/Agent/Rental)
+  + the rental property **drawer**; broker before/after; and the narrative's interactive "Open Whitaker's file" flow
+  (Executive Brief line updates, One-Thing → green Handled + Undo, roster "2 → 1 need you now", Whitaker row red→green
+  "Opened" auto-expanded). Roster cap-bars collapse correctly on mobile. Previews: #111 →
+  `restaurant-os-git-claude-fix-demo-render-p0-ebh2gr-outfrontdata.vercel.app`, #112 →
+  `restaurant-os-git-claude-demo-broker-day-in-8563a3-outfrontdata.vercel.app` (both Vercel **Ready**).
+
+  **Remaining gaps / caveats.** (1) **Sole open item = Sean's visual approval** of the two previews before any merge
+  (BLOCKER-001 / NEXT-003); no engineering blocker remains. (2) Vercel previews are **not reachable from the build
+  sandbox** (egress-blocked, HTTP 000) — verification was done on a local prod build; the "before" screenshots were
+  captured in dev (the bug is build-independent, proven identical in dev+prod). (3) **Merge order matters** — merge #111
+  first, then retarget #112 to `main` (NEXT-004). (4) #112 intentionally **excludes** the parked branch's two docs-only
+  commits (handoff update + Command Center restoration); this report brings the Command Center forward instead. (5) The
+  Codex advisory reviews on both PRs errored on an OpenAI billing quota — non-blocking. (6) Unrelated/out-of-scope: the
+  A6 Stone exception triage and any live-data wiring are untouched (demo stays generated-data-only, DECISION-003).
 
 - **2026-07-13 [Claude]** Restored the Project Raven coordination discipline in this Command Center. Added the
   **Product Decision Log** (DECISION-001…006) and **Current Execution Ledger** (OBJECTIVE-001…004, NEED-001,

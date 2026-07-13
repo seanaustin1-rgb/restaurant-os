@@ -658,7 +658,7 @@ export default function RentalCockpit() {
         .footnote :global(b) {
           color: var(--text-soft);
         }
-        .backdrop {
+        .rental :global(.backdrop) {
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.55);
@@ -667,11 +667,11 @@ export default function RentalCockpit() {
           transition: opacity 0.2s;
           z-index: 40;
         }
-        .backdrop.show {
+        .rental :global(.backdrop.show) {
           opacity: 1;
           pointer-events: auto;
         }
-        .drawer {
+        .rental :global(.drawer) {
           position: fixed;
           top: 0;
           right: 0;
@@ -685,10 +685,10 @@ export default function RentalCockpit() {
           overflow-y: auto;
           padding: 22px 20px 40px;
         }
-        .drawer.show {
+        .rental :global(.drawer.show) {
           transform: none;
         }
-        .dclose {
+        .rental :global(.dclose) {
           position: absolute;
           top: 14px;
           right: 14px;
@@ -702,14 +702,14 @@ export default function RentalCockpit() {
           display: grid;
           place-items: center;
         }
-        .dclose:hover {
+        .rental :global(.dclose:hover) {
           color: var(--text);
         }
-        .dclose :global(svg) {
+        .rental :global(.dclose svg) {
           width: 15px;
           height: 15px;
         }
-        .dhd {
+        .rental :global(.dhd) {
           display: flex;
           gap: 11px;
           align-items: flex-start;
@@ -717,55 +717,55 @@ export default function RentalCockpit() {
           border-bottom: 1px solid var(--line);
           padding-bottom: 15px;
         }
-        .dflag {
+        .rental :global(.dflag) {
           width: 10px;
           height: 10px;
           border-radius: 50%;
           margin-top: 6px;
           flex: none;
         }
-        .dflag.r {
+        .rental :global(.dflag.r) {
           background: var(--red);
         }
-        .dflag.y {
+        .rental :global(.dflag.y) {
           background: var(--yellow);
         }
-        .dflag.g {
+        .rental :global(.dflag.g) {
           background: var(--green);
         }
-        .dhd h3 {
+        .rental :global(.dhd h3) {
           margin: 0;
           font-family: var(--font-display);
           font-size: 23px;
           color: var(--text);
           line-height: 1.05;
         }
-        .dreason {
+        .rental :global(.dreason) {
           font-size: 12.5px;
           color: var(--muted);
           margin-top: 4px;
           line-height: 1.45;
         }
-        .dstats {
+        .rental :global(.dstats) {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 10px;
           margin-top: 16px;
         }
-        .dstats > div {
+        .rental :global(.dstats > div) {
           border: 1px solid var(--line);
           border-radius: 9px;
           background: var(--panel);
           padding: 10px 11px;
           text-align: center;
         }
-        .dstats .dk {
+        .rental :global(.dstats .dk) {
           font-size: 9px;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--muted);
         }
-        .dstats .dv2 {
+        .rental :global(.dstats .dv2) {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 17px;
@@ -773,7 +773,7 @@ export default function RentalCockpit() {
           display: block;
           color: var(--text);
         }
-        .dsec {
+        .rental :global(.dsec) {
           font-size: 10.5px;
           font-weight: 600;
           text-transform: uppercase;
@@ -781,7 +781,7 @@ export default function RentalCockpit() {
           color: var(--muted);
           margin: 20px 0 8px;
         }
-        .mrow {
+        .rental :global(.mrow) {
           display: flex;
           gap: 10px;
           align-items: flex-start;
@@ -789,10 +789,10 @@ export default function RentalCockpit() {
           border-top: 1px solid var(--line-soft);
           font-size: 12.5px;
         }
-        .mrow:first-of-type {
+        .rental :global(.mrow:first-of-type) {
           border-top: 0;
         }
-        .mtag {
+        .rental :global(.mtag) {
           font-size: 9px;
           font-weight: 700;
           text-transform: uppercase;
@@ -802,24 +802,24 @@ export default function RentalCockpit() {
           flex: none;
           margin-top: 1px;
         }
-        .mtag.crit {
+        .rental :global(.mtag.crit) {
           color: var(--red);
           border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
           background: var(--red-wash);
         }
-        .mtag.std {
+        .rental :global(.mtag.std) {
           color: var(--muted);
           border: 1px solid var(--line);
         }
-        .mrow .mt {
+        .rental :global(.mrow .mt) {
           color: var(--text-soft);
         }
-        .mrow .ms {
+        .rental :global(.mrow .ms) {
           color: var(--muted);
           font-size: 11px;
           margin-top: 1px;
         }
-        .revbox {
+        .rental :global(.revbox) {
           display: flex;
           align-items: center;
           gap: 12px;
@@ -828,24 +828,24 @@ export default function RentalCockpit() {
           background: var(--panel);
           padding: 12px;
         }
-        .revbox .rr {
+        .rental :global(.revbox .rr) {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 26px;
         }
-        .revbox .rn {
+        .rental :global(.revbox .rn) {
           font-size: 12px;
           color: var(--muted);
           line-height: 1.4;
         }
-        .seg {
+        .rental :global(.seg) {
           display: flex;
           border: 1px solid var(--line);
           border-radius: 9px;
           overflow: hidden;
           margin-top: 2px;
         }
-        .seg button {
+        .rental :global(.seg button) {
           font: inherit;
           font-size: 11.5px;
           padding: 8px 10px;
@@ -857,61 +857,61 @@ export default function RentalCockpit() {
           flex: 1;
           transition: background 0.15s, color 0.15s;
         }
-        .seg button:last-child {
+        .rental :global(.seg button:last-child) {
           border-right: 0;
         }
-        .seg button[aria-pressed="true"] {
+        .rental :global(.seg button[aria-pressed="true"]) {
           color: var(--ink);
           background: var(--copper-soft);
           font-weight: 600;
         }
-        .strat-note {
+        .rental :global(.strat-note) {
           margin-top: 10px;
           font-size: 12.5px;
           line-height: 1.5;
           border-radius: 9px;
           padding: 11px 12px;
         }
-        .strat-note.drop {
+        .rental :global(.strat-note.drop) {
           border: 1px solid color-mix(in srgb, var(--yellow) 40%, var(--line));
           background: var(--yellow-wash);
           color: var(--text);
         }
-        .strat-note.suppress {
+        .rental :global(.strat-note.suppress) {
           border: 1px solid var(--copper-dim);
           background: var(--copper-wash);
           color: var(--text);
         }
-        .strat-note.ok {
+        .rental :global(.strat-note.ok) {
           border: 1px solid var(--line);
           background: var(--panel);
           color: var(--text-soft);
         }
-        .strat-note :global(b) {
+        .rental :global(.strat-note b) {
           color: var(--text);
         }
-        .ownerbox {
+        .rental :global(.ownerbox) {
           margin-top: 12px;
           border: 1px solid var(--copper-dim);
           background: var(--copper-wash);
           border-radius: 10px;
           padding: 13px;
         }
-        .ownerbox .ot {
+        .rental :global(.ownerbox .ot) {
           font-size: 11px;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--copper-soft);
         }
-        .ownerbox .oq {
+        .rental :global(.ownerbox .oq) {
           font-size: 13px;
           color: var(--text);
           margin-top: 7px;
           line-height: 1.55;
           font-style: italic;
         }
-        .obtn {
+        .rental :global(.obtn) {
           font: inherit;
           font-size: 12px;
           font-weight: 600;
@@ -926,13 +926,13 @@ export default function RentalCockpit() {
           align-items: center;
           gap: 6px;
         }
-        .obtn :global(svg) {
+        .rental :global(.obtn svg) {
           width: 13px;
           height: 13px;
         }
         @media (prefers-reduced-motion: reduce) {
-          .drawer,
-          .backdrop {
+          .rental :global(.drawer),
+          .rental :global(.backdrop) {
             transition: none;
           }
         }

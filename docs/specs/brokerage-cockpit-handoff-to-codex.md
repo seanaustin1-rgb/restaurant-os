@@ -10,8 +10,131 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Codex ·
-**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+**Branch:** `feat/heartbeat-landing` (original tandem) · current Claude working branch `claude/demo-broker-day-in-life` ·
+**Last updated:** 2026-07-13 by Claude · **Related specs:** `brokerage-data-sources.md`,
+`investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+
+---
+
+# 🛰️ PROJECT RAVEN — COMMAND CENTER
+
+**This is the single Project Raven Command Center. Do not create another master document.** Everything below
+(Product Decision Log, Current Execution Ledger, dated lane status, Progress Log) is authoritative and append-only.
+Earlier dated sections further down (2026-07-01/03/04 tandem plan + lanes) are **history — never rewrite or delete them**.
+
+**Permanent coordination rule (agreed 2026-07-13):** After **every meaningful task**, Claude and Codex must update
+their own lane section **and** append a dated `[Claude]` / `[Codex]` entry to the Progress Log. **A PR description or a
+chat response does not replace the Command Center update.** If it isn't logged here, it didn't happen.
+
+**Entry labels:** `DECISION-###` · `OBJECTIVE-###` · `NEED-###` · `SUCCESS-###` · `FAILURE-###` · `BLOCKER-###` ·
+`NEXT-###`. Every entry carries **Date**, **Owner** (`[Sean]` / `[Claude]` / `[Codex]`), **Status** (Proposed,
+Approved, In Progress, Passed, Failed, Blocked, Deferred, Superseded), **Evidence** (PR / commit / route / screenshot /
+test / direct operator decision), and a **Next action** when applicable.
+
+## Product Decision Log
+
+- **DECISION-001 — Single Command Center doc.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence: direct
+  operator instruction 2026-07-13 ("The single Project Raven Command Center is `docs/specs/brokerage-cockpit-handoff-to-codex.md`.
+  Do not create another master document."). This file is it; no parallel master docs.
+- **DECISION-002 — Locked Morning Ritual sequence.** Date 2026-07-13 · Owner [Sean] · Status **Approved (locked)** ·
+  Evidence: operator-approved broker day-in-life scope 2026-07-13. The ritual each operator lands in is:
+  **(1) personalized greeting → (2) concise Executive Brief → (3) One Thing First with an obvious action →
+  (4) agent-roster → agent-detail interaction → (5) a visible acknowledgment / state change after the action.**
+  This is the same day-in-life spine Raven's Morning Ritual (PR #106 concept) expresses; #106's implementation stays
+  unmerged (see DECISION-005). Next action: keep Broker/Agent/Rental narratives faithful to this sequence.
+- **DECISION-003 — Generated-data visual demo, NOT a connected-data demo.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Approved** · Evidence: `/demo/real-estate-cockpit` is public, generated-data-only, "Generated demo data"
+  labeled; no backend/db/auth/integration/migration in scope. Next action: every demo change stays generated-data-only.
+- **DECISION-004 — No merge to main until Sean visually approves the preview.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Approved** · Evidence: direct operator instruction (P0 + broker-patch scopes both say "Do not merge to main").
+  Next action: all demo work lands on dedicated branches + preview deploys only.
+- **DECISION-005 — PR #105 and PR #106 are NOT required for the July 14 public demo.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Deferred** · Evidence: readiness audit + operator decision; #106 (Raven Morning Ritual — 58 files, stale base,
+  login-gated) and #105 (owner morning brief) both remain unmerged and are not on the demo critical path.
+- **DECISION-006 — Permanent lane-update rule.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence:
+  operator instruction 2026-07-13. Recorded as the "Permanent coordination rule" above; binding on both lanes.
+
+## Current Execution Ledger
+
+- **OBJECTIVE-001 — Raven mission.** Date 2026-07-13 · Owner [Sean] · Status **In Progress** · Evidence: product history
+  in this doc. Give each vertical operator a 30-second "operating cockpit" plus a guided daily Morning Ritual
+  (DECISION-002) across Brokerage (broker + agent) and Vacation Rental — honest, deterministic, source-labeled.
+- **OBJECTIVE-002 — July 14 Luke demo.** Date 2026-07-13 · Owner [Sean] · Status **In Progress** · Evidence: public
+  route `/demo/real-estate-cockpit`. Show, in one public demo: the **broker day**, the **agent day**, and the
+  **vacation-property platform**. Next action: unblock via OBJECTIVE-003 (P0) then OBJECTIVE-004 (broker narrative).
+- **OBJECTIVE-003 — P0: repair responsive rendering across Broker, Agent, Rental.** Date 2026-07-13 · Owner [Claude] ·
+  Status **In Progress** · Evidence: Sean's mobile (~390×844) + desktop (~1440×900) screenshots (FAILURE-002). Fix on a
+  dedicated branch off main + preview; do not merge (DECISION-004). Next action: reproduce against a **local production
+  build** (bug is prod-only); first check a stray Babel config disabling SWC/styled-jsx.
+- **OBJECTIVE-004 — Complete the contained Broker day-in-life narrative.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Blocked** (on OBJECTIVE-003) · Evidence: code committed UNTESTED on `claude/demo-broker-day-in-life`
+  (commit `b646e61`). Next action: after P0, rebase onto the fix, run gates, push, open draft PR, capture evidence.
+- **NEED-001 — Required evidence before Sean's visual approval.** Date 2026-07-13 · Owner [Sean] · Status **Proposed** ·
+  Evidence gate: **preview URL + desktop screenshots + mobile screenshots + all three tabs (Broker/Agent/Rental) tested
+  + typecheck + tests + build**, all green, before any approval or merge. Applies to both OBJECTIVE-003 and -004.
+- **SUCCESS-001 — PR #104 merged; public three-tab demo deployed.** Date (merged) pre-2026-07-13 · Owner [Codex/Claude] ·
+  Status **Passed (with caveat)** · Evidence: PR #104; live route `/demo/real-estate-cockpit` (+ static fallback).
+  Caveat: deployed ≠ visually correct — see FAILURE-002 / BLOCKER-001.
+- **SUCCESS-002 — Agent and Rental experiences exist.** Date 2026-07-13 · Owner [Claude] · Status **Passed** ·
+  Evidence: `native/AgentApp.tsx`, `native/RentalCockpit.tsx`; both render under the Agent and Rental tabs.
+- **SUCCESS-003 — PRs #107–#110 merged to main.** Date pre-2026-07-13 · Owner [Claude] · Status **Passed (off critical
+  path)** · Evidence: #107 Tax Vault, #108 cash floor, #109 payroll, #110 demo/prod isolation. Valuable production work
+  but did **not** directly advance the visual demo; noted so the ledger reflects true demo progress.
+- **FAILURE-001 — Source-based readiness audit wrongly cleared the demo.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Failed** · Evidence: prior "ready as-is" assessment was made from source inspection, **without rendered
+  browser verification**. Corrective rule → NEED-001 (visual evidence is mandatory before "ready").
+- **FAILURE-002 — P0 rendering failure exposed by Sean's screenshots.** Date 2026-07-13 · Owner [Sean] · Status
+  **Failed** · Evidence: mobile — gauges/warning/checkmark/info SVGs massively oversized, escaping containers; desktop —
+  MLS ticker expands into a huge unspaced text block, cockpit content pushed off-screen. Leading hypothesis: scoped
+  `<style jsx>` CSS not applied in the production build. Next action: OBJECTIVE-003.
+- **BLOCKER-001 — Public demo is NOT visually approved / not meeting-ready.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Blocked** · Evidence: FAILURE-002. Blocks OBJECTIVE-002. Clears only when OBJECTIVE-003 is verified against
+  NEED-001 and Sean visually approves the preview.
+- **NEXT-001 — Repair the P0** on a dedicated branch off main + preview; deliver root cause, preview URL,
+  before/after screenshots at both viewports, all-three-tabs confirmation, and typecheck/tests/build. Owner [Claude] ·
+  Status **In Progress**.
+- **NEXT-002 — Resume the Broker day-in-life narrative** (OBJECTIVE-004) after P0 is verified: rebase onto the fix,
+  run gates, push, open a draft PR, capture evidence. Owner [Claude] · Status **Blocked** on NEXT-001.
+
+## Shared Current State — Raven (2026-07-13)
+
+- July 14 Luke demo hinges on the **public** `/demo/real-estate-cockpit` three-tab experience (Broker / Agent / Rental),
+  generated-data-only. All three tabs exist and PR #104 is deployed, **but a P0 render failure means the demo is not yet
+  visually approved** (FAILURE-002 / BLOCKER-001).
+- Active demo work is on `claude/demo-broker-day-in-life` (broker narrative, committed UNTESTED). The P0 fix will take a
+  **separate** branch off main. Nothing merges to main until Sean visually approves a preview (DECISION-004).
+- PRs #107–#110 shipped to production (Tax Vault, cash floor, payroll, demo/prod isolation) but are off the visual-demo
+  critical path. PR #105 / #106 remain unmerged and are not required for July 14 (DECISION-005).
+
+## Claude Lane Status — Raven (2026-07-13)
+
+- 🔴 **P0 (OBJECTIVE-003) — owned, not started in code.** Root-cause hypothesis recorded (styled-jsx not applied in prod
+  build); repair plan is: reproduce on a local production build, grep for a stray Babel config, fix on a dedicated
+  branch off main, preview, gather NEED-001 evidence. Full plan mirrored in `docs/SESSION-HANDOFF.md` (2026-07-13 block).
+- ⏸️ **Broker day-in-life narrative (OBJECTIVE-004) — committed UNTESTED, parked** on `claude/demo-broker-day-in-life`
+  (`b646e61`): greeting, Executive Brief, One-Thing-with-action, agent roster→detail, acknowledgment state, all in
+  `native/RealEstateDemo.tsx` (Agent/Rental untouched). Typecheck/tests/build not yet run; no PR opened. Will inherit the
+  P0 bug until rebased onto the fix.
+- ✅ Corrected the process failure (FAILURE-001): visual browser verification is now a hard gate (NEED-001).
+
+## Codex Lane Status — Raven (2026-07-13)
+
+- **No known Codex activity on the P0 render issue or the July-14 demo.** Last recorded Codex work is 2026-07-04 (PR #92
+  `feat/source-profile-scaffolds` — source onboarding copy cleanup). Codex lane state beyond that is **unknown from
+  Claude's side and is deliberately not invented here.** If Codex picks up any Raven work, it must self-log per the
+  permanent coordination rule.
+
+## Blockers — Raven
+
+- **BLOCKER-001** — public demo not visually approved until the P0 (OBJECTIVE-003) is repaired and verified against
+  NEED-001. Everything else for July 14 waits on this.
+
+## Next Actions — Raven
+
+- **NEXT-001 [Claude]** — repair the P0 render failure (dedicated branch off main, preview, deliver NEED-001 evidence).
+- **NEXT-002 [Claude]** — after P0 verified, rebase + finish the Broker day-in-life narrative (draft PR, evidence).
+- **[Sean]** — visually approve (or reject) the P0 preview against NEED-001 before any merge to main.
+- **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule.
 
 ---
 
@@ -184,6 +307,16 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 [Claude]** Restored the Project Raven coordination discipline in this Command Center. Added the
+  **Product Decision Log** (DECISION-001…006) and **Current Execution Ledger** (OBJECTIVE-001…004, NEED-001,
+  SUCCESS-001…003, FAILURE-001…002, BLOCKER-001, NEXT-001…002) at the top, plus dated 2026-07-13 Raven lane status for
+  Shared State / Claude / Codex (Codex "unknown, not invented"), Blockers, and Next Actions. Codified the permanent rule:
+  after every meaningful task both lanes update their own section **and** append a dated Progress Log entry — a PR
+  description or chat reply does not substitute. Context: Sean's mobile/desktop screenshots exposed a **P0 render
+  failure** on the public `/demo/real-estate-cockpit` (oversized SVGs escaping containers; MLS ticker overflowing the
+  page), invalidating the earlier source-only "ready" read (FAILURE-001). Broker day-in-life narrative committed UNTESTED
+  and parked on `claude/demo-broker-day-in-life` (`b646e61`); P0 repair (OBJECTIVE-003) is next and takes a separate
+  branch off main. No code changed in this entry — doc only. Earlier dated sections preserved unchanged.
 - **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
   Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
   casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM

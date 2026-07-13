@@ -9,7 +9,7 @@
  * this replaces the iframe at /demo/real-estate-cockpit and gets wired to a
  * demo-DB tenant.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AgentApp from "./AgentApp";
 import RentalCockpit from "./RentalCockpit";
 
@@ -419,11 +419,563 @@ function GaugeCard({ g, open, onToggle }: { g: GaugeSpec; open: boolean; onToggl
   );
 }
 
+// Clickable calendar entry → a voice-driven AI appointment assistant (DEMO mock).
+// Live speech-to-text + AI writing to the CRM/calendar is a backend follow-up (Codex lane).
+function ApptDrawer({ appt, onClose }: { appt: AgentAppt; onClose: () => void }) {
+  const [phase, setPhase] = useState<"idle" | "listening" | "parsed">("idle");
+  const [recap, setRecap] = useState<"idle" | "listening" | "done">("idle");
+  const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [emailOpen, setEmailOpen] = useState(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const who = appt.who;
+
+  useEffect(() => {
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const t = timers.current;
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      t.forEach(clearTimeout);
+    };
+  }, [onClose]);
+
+  const listen = () => {
+    setPhase("listening");
+    timers.current.push(setTimeout(() => setPhase("parsed"), 1300));
+  };
+  const logRecap = () => {
+    setRecap("listening");
+    timers.current.push(setTimeout(() => setRecap("done"), 1300));
+  };
+  const apply = (id: string) => setApplied((p) => ({ ...p, [id]: true }));
+
+  const ACTIONS = [
+    {
+      id: "resched",
+      icon: <path d="M3 4v6h6M3.5 15a9 9 0 1 0 2.1-9.4L3 8" />,
+      label: (
+        <>
+          Reschedule <b>{appt.what}</b> → Thu 2:00 PM
+        </>
+      ),
+      done: "Moved to Thu 2:00 PM · calendar updated",
+    },
+    {
+      id: "hist",
+      icon: <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />,
+      label: (
+        <>
+          Add to <b>{who}</b>&apos;s history: &ldquo;wants a home-warranty quote before signing&rdquo;
+        </>
+      ),
+      done: `Logged to ${who}'s client record`,
+    },
+    {
+      id: "email",
+      icon: <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM22 6l-10 7L2 6" />,
+      label: (
+        <>
+          Draft a follow-up email to <b>{who}</b>
+        </>
+      ),
+      done: "Draft ready below",
+      isEmail: true,
+    },
+    {
+      id: "remind",
+      icon: <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" />,
+      label: (
+        <>
+          Set reminder: &ldquo;send <b>{who}</b> the utility-transfer checklist&rdquo; · Mon 8:00 AM
+        </>
+      ),
+      done: "Reminder set on your calendar · you'll be alerted Mon 8:00 AM",
+    },
+  ];
+
+  return (
+    <>
+      <div className="backdrop show" onClick={onClose} />
+      <aside className="apptd show" role="dialog" aria-modal="true" aria-label="Appointment assistant">
+        <button type="button" className="apptd-x" aria-label="Close" onClick={onClose} ref={closeRef}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        <div className="apptd-hd">
+          <span className={`akind ${appt.kind}`}>{APPT_LABEL[appt.kind]}</span>
+          <div className="apptd-when">{appt.when}</div>
+        </div>
+        <h3 className="apptd-what">{appt.what}</h3>
+        <div className="apptd-who">{who}</div>
+
+        {/* update by voice */}
+        <div className="vsec">
+          <span className="vlabel">Update by voice</span>
+          <button type="button" className={`mic ${phase === "listening" ? "live" : ""}`} onClick={listen}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3" />
+              <path d="M5 10a7 7 0 0 0 14 0M12 17v5" />
+            </svg>
+            {phase === "idle" ? "Speak to update" : phase === "listening" ? "Listening…" : "Re-record"}
+          </button>
+          {phase === "listening" && <div className="vwave"><span /><span /><span /><span /><span /></div>}
+          {phase === "parsed" && (
+            <>
+              <div className="vquote">
+                &ldquo;Move {who}&apos;s {appt.what.toLowerCase()} to Thursday at 2 — and note they want a home-warranty
+                quote before signing. Remind me to send the utility-transfer checklist Monday.&rdquo;
+              </div>
+              <div className="vcap">AI picked up 4 actions — apply the ones you want:</div>
+              {ACTIONS.map((a) => (
+                <div className={`vact ${applied[a.id] ? "done" : ""}`} key={a.id}>
+                  <span className="vact-ic">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      {a.icon}
+                    </svg>
+                  </span>
+                  <span className="vact-t">{applied[a.id] ? a.done : a.label}</span>
+                  {applied[a.id] ? (
+                    <svg className="vact-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <button
+                      type="button"
+                      className="vact-go"
+                      onClick={() => {
+                        apply(a.id);
+                        if (a.isEmail) setEmailOpen(true);
+                      }}
+                    >
+                      {a.isEmail ? "Open draft" : "Apply"}
+                    </button>
+                  )}
+                </div>
+              ))}
+              {emailOpen && (
+                <div className="vemail">
+                  <div className="vem-row"><span>To</span> {who}</div>
+                  <div className="vem-row"><span>Subject</span> Following up on your {appt.what.toLowerCase()}</div>
+                  <div className="vem-body">
+                    Hi {who} — great connecting today. As promised I&apos;ll send over the home-warranty quote before we
+                    sign, and I&apos;ve noted your questions. I&apos;ll also forward the utility-transfer checklist so
+                    everything&apos;s ready for closing. Anything else on your mind, just reply here.
+                  </div>
+                  <button type="button" className="vem-send" disabled={applied.emailsent} onClick={() => apply("emailsent")}>
+                    {applied.emailsent ? "✓ Sent" : "Send email"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* after the appointment */}
+        <div className="vsec">
+          <span className="vlabel">After the appointment</span>
+          <button type="button" className={`mic ${recap === "listening" ? "live" : ""}`} onClick={logRecap}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3" />
+              <path d="M5 10a7 7 0 0 0 14 0M12 17v5" />
+            </svg>
+            {recap === "idle" ? "Log how it went" : recap === "listening" ? "Listening…" : "Re-record recap"}
+          </button>
+          {recap === "listening" && <div className="vwave"><span /><span /><span /><span /><span /></div>}
+          {recap === "done" && (
+            <>
+              <div className="vquote">
+                &ldquo;{who} is ready to move forward — really happy with the place. They asked about the school-district
+                boundary, and mentioned wanting to look at a rental property in the fall.&rdquo;
+              </div>
+              <div className="vsent">
+                <span className="vsent-dot" /> Positive · client ready to proceed
+              </div>
+              <div className="vlog">
+                <div className="vlog-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  Recap saved to {who}&apos;s client history
+                </div>
+                <div className="vlog-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                  Answered: school-district boundary sent to {who}
+                </div>
+                <div className="vlog-row future">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+                  Future expectation — <b>revisit rental-property purchase (fall)</b> → reminder set for <b>Sep 1</b>, you&apos;ll be alerted
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="apptd-foot">Generated demo — voice &amp; AI actions are mocked. Live capture writes to the CRM &amp; calendar (roadmap).</div>
+      </aside>
+
+      <style jsx>{`
+        .backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.55);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s;
+          z-index: 40;
+        }
+        .backdrop.show {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .apptd {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: min(460px, 100%);
+          background: var(--surface);
+          border-left: 1px solid var(--line);
+          z-index: 50;
+          transform: translateX(101%);
+          transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+          overflow-y: auto;
+          padding: 22px 20px 40px;
+        }
+        .apptd.show {
+          transform: none;
+        }
+        .apptd-x {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          color: var(--muted);
+          cursor: pointer;
+          display: grid;
+          place-items: center;
+        }
+        .apptd-x:hover {
+          color: var(--text);
+        }
+        .apptd-x :global(svg) {
+          width: 15px;
+          height: 15px;
+        }
+        .apptd-hd {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding-right: 36px;
+        }
+        .apptd .akind {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2px 7px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          flex: none;
+        }
+        .apptd .akind.closing {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .apptd .akind.showing,
+        .apptd .akind.listing,
+        .apptd .akind.open {
+          color: var(--copper-soft);
+          border-color: var(--copper-dim);
+          background: var(--copper-wash);
+        }
+        .apptd .akind.inspection {
+          color: var(--yellow);
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .apptd .akind.call {
+          color: var(--muted);
+        }
+        .apptd-when {
+          font-family: var(--font-mono);
+          font-size: 12px;
+          color: var(--text-soft);
+        }
+        .apptd-what {
+          margin: 12px 0 0;
+          font-family: var(--font-display);
+          font-size: 23px;
+          color: var(--text);
+          line-height: 1.1;
+        }
+        .apptd-who {
+          font-size: 13px;
+          color: var(--copper-soft);
+          margin-top: 3px;
+        }
+        .vsec {
+          margin-top: 20px;
+          border-top: 1px solid var(--line);
+          padding-top: 15px;
+        }
+        .vlabel {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: var(--muted);
+        }
+        .mic {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 9px;
+          font: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 8px 15px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .mic:hover {
+          background: var(--copper);
+        }
+        .mic.live {
+          color: #fff;
+          background: var(--red);
+          border-color: var(--red);
+        }
+        .mic :global(svg) {
+          width: 15px;
+          height: 15px;
+        }
+        .vwave {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          height: 26px;
+          margin-top: 11px;
+        }
+        .vwave span {
+          width: 3px;
+          height: 100%;
+          border-radius: 3px;
+          background: var(--red);
+          animation: vw 0.9s ease-in-out infinite;
+        }
+        .vwave span:nth-child(2) { animation-delay: 0.12s; }
+        .vwave span:nth-child(3) { animation-delay: 0.24s; }
+        .vwave span:nth-child(4) { animation-delay: 0.36s; }
+        .vwave span:nth-child(5) { animation-delay: 0.48s; }
+        @keyframes vw {
+          0%, 100% { transform: scaleY(0.3); opacity: 0.5; }
+          50% { transform: scaleY(1); opacity: 1; }
+        }
+        .vquote {
+          margin-top: 12px;
+          border-left: 2px solid var(--copper-dim);
+          padding: 2px 0 2px 12px;
+          font-size: 13.5px;
+          font-style: italic;
+          color: var(--text-soft);
+          line-height: 1.55;
+        }
+        .vcap {
+          margin-top: 12px;
+          font-size: 11.5px;
+          color: var(--muted);
+        }
+        .vact {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 8px;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 10px 12px;
+        }
+        .vact.done {
+          border-color: color-mix(in srgb, var(--green) 40%, var(--line));
+          background: var(--green-wash);
+        }
+        .vact-ic {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          border: 1px solid var(--line);
+          background: var(--surface);
+          color: var(--copper-soft);
+          display: grid;
+          place-items: center;
+          flex: none;
+        }
+        .vact-ic :global(svg) {
+          width: 15px;
+          height: 15px;
+        }
+        .vact-t {
+          flex: 1;
+          min-width: 0;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.4;
+        }
+        .vact.done .vact-t {
+          color: var(--text);
+        }
+        .vact-go {
+          font: inherit;
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          flex: none;
+        }
+        .vact-go:hover {
+          background: var(--copper);
+        }
+        .vact-check {
+          width: 17px;
+          height: 17px;
+          color: var(--green);
+          flex: none;
+        }
+        .vemail {
+          margin-top: 10px;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 12px 13px;
+        }
+        .vem-row {
+          font-size: 12.5px;
+          color: var(--text-soft);
+          padding: 3px 0;
+          border-bottom: 1px solid var(--line-soft);
+        }
+        .vem-row span {
+          display: inline-block;
+          width: 52px;
+          color: var(--muted);
+          font-size: 10.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+        }
+        .vem-body {
+          margin-top: 9px;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.55;
+        }
+        .vem-send {
+          margin-top: 11px;
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 6px 13px;
+          cursor: pointer;
+        }
+        .vem-send:disabled {
+          background: var(--green);
+          border-color: var(--green);
+          cursor: default;
+        }
+        .vsent {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-top: 12px;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--green);
+        }
+        .vsent-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--green);
+        }
+        .vlog {
+          margin-top: 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .vlog-row {
+          display: flex;
+          gap: 9px;
+          align-items: flex-start;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.45;
+        }
+        .vlog-row :global(svg) {
+          width: 15px;
+          height: 15px;
+          flex: none;
+          margin-top: 1px;
+          color: var(--green);
+        }
+        .vlog-row.future {
+          border-top: 1px solid var(--line-soft);
+          padding-top: 9px;
+        }
+        .vlog-row.future :global(svg) {
+          color: var(--copper-soft);
+        }
+        .vlog-row :global(b) {
+          color: var(--text);
+        }
+        .apptd-foot {
+          margin-top: 22px;
+          border-top: 1px solid var(--line);
+          padding-top: 12px;
+          font-size: 11px;
+          color: var(--muted);
+          line-height: 1.5;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .apptd,
+          .backdrop {
+            transition: none;
+          }
+          .vwave span {
+            animation: none;
+          }
+        }
+      `}</style>
+    </>
+  );
+}
+
 function BrokerCockpit() {
   const [openGauge, setOpenGauge] = useState<string | null>(null);
   const [tickerOpen, setTickerOpen] = useState(false);
   const [openAgent, setOpenAgent] = useState<string | null>(null);
   const [openCal, setOpenCal] = useState<string | null>(null);
+  const [activeAppt, setActiveAppt] = useState<AgentAppt | null>(null);
   const [handled, setHandled] = useState(false);
   const [fileOpen, setFileOpen] = useState(false);
   const [reveal, setReveal] = useState<"call" | "email" | null>(null);
@@ -825,14 +1377,17 @@ function BrokerCockpit() {
                         <div className="acal-body">
                           <div className="acal-sync">Appointments sync to the client file in your CRM.</div>
                           {a.cal.map((c, i) => (
-                            <div className="acal-row" key={i}>
+                            <button type="button" className="acal-row" key={i} onClick={() => setActiveAppt(c)}>
                               <span className="acal-when">{c.when}</span>
                               <span className={`akind ${c.kind}`}>{APPT_LABEL[c.kind]}</span>
                               <span className="acal-what">
                                 {c.what}
                                 <small>{c.who}</small>
                               </span>
-                            </div>
+                              <svg className="acal-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 6l6 6-6 6" />
+                              </svg>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -946,15 +1501,21 @@ function BrokerCockpit() {
           <div className="bcal-col">
             <div className="bcal-h">Coming up</div>
             {([
-              ["Wed 3:00 PM", "Agent 1:1s — Whitaker & Chloe"],
-              ["Thu 10:00 AM", "Brokerage P&L review"],
-              ["Fri 9:00 AM", "New-agent onboarding — 2 starts"],
-              ["Mon 8:30 AM", "Investor update — monthly"],
-            ] as [string, string][]).map(([tm, t]) => (
-              <div className="bappt" key={t}>
-                <span className="atm">{tm}</span>
-                <span className="at">{t}</span>
-              </div>
+              { when: "Wed 3:00 PM", kind: "call", what: "Agent 1:1s", who: "Whitaker & Chloe" },
+              { when: "Thu 10:00 AM", kind: "call", what: "Brokerage P&L review", who: "leadership" },
+              { when: "Fri 9:00 AM", kind: "call", what: "New-agent onboarding", who: "2 new starts" },
+              { when: "Mon 8:30 AM", kind: "call", what: "Investor update", who: "investors" },
+            ] as AgentAppt[]).map((c) => (
+              <button type="button" className="bappt" key={c.what} onClick={() => setActiveAppt(c)}>
+                <span className="atm">{c.when}</span>
+                <span className="at">
+                  {c.what}
+                  {c.who ? ` — ${c.who}` : ""}
+                </span>
+                <svg className="bappt-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
             ))}
           </div>
         </div>
@@ -1025,6 +1586,8 @@ function BrokerCockpit() {
         Every figure is <b>generated demo data</b>. Native React port in progress — Agent app &amp; Rental cockpit land next,
         then this replaces the iframe and wires to a demo-DB tenant.
       </div>
+
+      {activeAppt && <ApptDrawer appt={activeAppt} onClose={() => setActiveAppt(null)} />}
 
       {/*
         Broker cockpit styles live HERE, co-located with the markup they scope.
@@ -1570,12 +2133,21 @@ function BrokerCockpit() {
           display: flex;
           gap: 11px;
           align-items: baseline;
+          width: 100%;
           padding: 9px 0;
+          border: 0;
           border-top: 1px solid var(--line-soft);
+          background: transparent;
+          font: inherit;
           font-size: 13px;
+          text-align: left;
+          cursor: pointer;
         }
         .bappt:first-of-type {
           border-top: 0;
+        }
+        .bappt:hover {
+          background: var(--raise);
         }
         .bappt .atm {
           font-family: var(--font-mono);
@@ -1585,7 +2157,16 @@ function BrokerCockpit() {
           min-width: 82px;
         }
         .bappt .at {
+          flex: 1;
+          min-width: 0;
           color: var(--text-soft);
+        }
+        .bappt .bappt-go {
+          width: 14px;
+          height: 14px;
+          flex: none;
+          color: var(--muted);
+          align-self: center;
         }
         /* ── company aura: reputation ──────────────────────────── */
         .aura {
@@ -1939,12 +2520,28 @@ function BrokerCockpit() {
           display: flex;
           align-items: baseline;
           gap: 10px;
+          width: 100%;
           padding: 7px 0;
+          border: 0;
           border-top: 1px solid var(--line-soft);
+          background: transparent;
+          font: inherit;
           font-size: 12.5px;
+          text-align: left;
+          cursor: pointer;
         }
         .acal-row:first-of-type {
           border-top: 0;
+        }
+        .acal-row:hover {
+          background: var(--raise);
+        }
+        .acal-row .acal-go {
+          width: 13px;
+          height: 13px;
+          flex: none;
+          color: var(--muted);
+          align-self: center;
         }
         .acal-when {
           font-family: var(--font-mono);

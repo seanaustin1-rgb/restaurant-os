@@ -433,7 +433,7 @@ async function loadDashboardForwardCash(
     return { cashFloor: null, lowPointBalance: null, floor: null };
   }
   try {
-    const fc = await loadForwardCash(restaurantId);
+    const fc = await loadForwardCash(restaurantId, db);
     return { cashFloor: fc.cashFloor, lowPointBalance: fc.lowPoint?.balance ?? null, floor: fc.floor };
   } catch {
     return { cashFloor: n(restaurant.cashFloor), lowPointBalance: null, floor: null };

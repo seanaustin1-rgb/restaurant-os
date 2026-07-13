@@ -308,13 +308,13 @@ export async function loadDashboardData(
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
   const aura = await loadDashboardAura(restaurantId);
-  const forwardCash = await loadDashboardForwardCash(restaurantId, db);
-  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost, taxVault] = await Promise.all([
+  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost, taxVault, forwardCash] = await Promise.all([
     loadCashOxygenFloor(restaurantId, db),
     loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     loadPeriodNetCashChange(restaurantId, start, end, db),
     loadPrimeCost(restaurantId, 8, db),
     loadTaxVault(restaurantId, db),
+    loadDashboardForwardCash(restaurantId, db),
   ]);
   const goLiveCoach = await loadGoLiveCoach(restaurantId, db, cashOxygen);
   const operatingProfitAmount = revenue - (cogsFood + cogsLiquor + cogsBeverage) - labor - opex;

@@ -1,3 +1,4 @@
+import { prisma } from "@/lib/prisma";
 import { loadCashRunway } from "@/lib/modules/cash-runway";
 import { loadRecurring, type RecurringVendor } from "@/lib/modules/recurring";
 import { getLedgerSnapshot } from "@/lib/profit-first/ledger";
@@ -33,6 +34,24 @@ export interface ForwardCashLowPoint {
   balance: number;
 }
 
+/**
+ * Cash-floor safety (B6): the operator sets a minimum operating balance they
+ * want to keep. This assesses the 30-day projection against it — a plain
+ * "does the low-point dip under the floor" breach, plus a pre-sweep warning
+ * when a scheduled Profit First sweep is the specific event that tips the
+ * balance below the floor (so the operator can hold or trim that sweep).
+ */
+export interface CashFloorAssessment {
+  floor: number;
+  state: "ok" | "breach";
+  breachDate: string | null; // first projected day the balance is under the floor
+  lowBalance: number; // the projected low-point balance over the window
+  shortfall: number | null; // floor − lowBalance, when breached (else null)
+  /** The scheduled sweep that tips the balance under the floor, when one does. */
+  sweepAtRisk: { date: string; amount: number; balanceAfter: number } | null;
+  readout: string;
+}
+
 export interface ForwardCashData {
   hasAnchor: boolean;
   hasData: boolean;
@@ -45,6 +64,8 @@ export interface ForwardCashData {
   endBalance: number | null;
   totalScheduledOut: number;
   breachesZero: boolean;
+  cashFloor: number | null; // operator-set minimum operating balance (B6)
+  floor: CashFloorAssessment | null; // floor safety, when a floor is set + anchored
   obligationCount: number;
   note: string;
 }
@@ -175,12 +196,82 @@ export function estimateSweepOutflow(
   return r2(mean("profit") + mean("owner_pay"));
 }
 
+const usd = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function monthDay(isoDate: string): string {
+  const [, m, d] = isoDate.split("-").map(Number);
+  return `${MONTHS_SHORT[(m ?? 1) - 1]} ${d}`;
+}
+
+/**
+ * Assess the projected window against the operator's cash floor. Pure — walks
+ * the already-projected days (each carries its end-of-day balance + that day's
+ * obligations). Returns null when no floor is set or there's nothing to project
+ * (honest degradation — no floor, no alarm). A sweep is "at risk" when the day
+ * ends below the floor but WOULD have stayed above it without that day's sweep
+ * outflow — i.e. holding the sweep is the fix.
+ */
+export function assessCashFloor(
+  floor: number | null,
+  days: readonly ForwardCashDay[],
+  lowPoint: ForwardCashLowPoint | null,
+): CashFloorAssessment | null {
+  if (floor == null || floor < 0 || days.length === 0 || lowPoint == null) return null;
+
+  let breachDate: string | null = null;
+  let sweepAtRisk: CashFloorAssessment["sweepAtRisk"] = null;
+  for (const day of days) {
+    if (breachDate == null && day.balance < floor) breachDate = day.date;
+    if (sweepAtRisk == null) {
+      const sweepOut = day.obligations
+        .filter((o) => o.kind === "sweep" && o.amount > 0)
+        .reduce((sum, o) => sum + o.amount, 0);
+      // The sweep tips it under: below the floor now, but above it if the sweep were held.
+      if (sweepOut > 0 && day.balance < floor && day.balance + sweepOut >= floor) {
+        sweepAtRisk = { date: day.date, amount: r2(sweepOut), balanceAfter: day.balance };
+      }
+    }
+  }
+
+  const breached = lowPoint.balance < floor;
+  if (!breached) {
+    return {
+      floor,
+      state: "ok",
+      breachDate: null,
+      lowBalance: lowPoint.balance,
+      shortfall: null,
+      sweepAtRisk: null,
+      readout: `Projected cash holds above your ${usd(floor)} floor over the next ${days.length} days (low-point ${usd(lowPoint.balance)}).`,
+    };
+  }
+
+  const shortfall = r2(floor - lowPoint.balance);
+  const readout = sweepAtRisk
+    ? `The ${monthDay(sweepAtRisk.date)} Profit + Owner's Pay sweep (~${usd(sweepAtRisk.amount)}) drops projected cash to ${usd(sweepAtRisk.balanceAfter)}, below your ${usd(floor)} floor. Hold or trim it.`
+    : `Projected cash bottoms at ${usd(lowPoint.balance)} on ${monthDay(lowPoint.date)} — ${usd(shortfall)} below your ${usd(floor)} floor. Move a bill or top up before then.`;
+
+  return {
+    floor,
+    state: "breach",
+    breachDate,
+    lowBalance: lowPoint.balance,
+    shortfall,
+    sweepAtRisk,
+    readout,
+  };
+}
+
 export async function loadForwardCash(restaurantId: string): Promise<ForwardCashData> {
   // Starting cash + as-of date come from Cash Runway (anchor + net flow since).
   // Not db-injectable: the sub-loaders (Cash Runway / Recurring / ledger snapshot)
   // read the prisma singleton directly. Correctness lives in the pure functions
   // above, which ARE unit-tested; this is thin assembly over already-tested loaders.
-  const runway = await loadCashRunway(restaurantId);
+  const [runway, restaurant] = await Promise.all([
+    loadCashRunway(restaurantId),
+    prisma.restaurant.findUnique({ where: { id: restaurantId }, select: { cashFloor: true } }),
+  ]);
+  const cashFloor = restaurant?.cashFloor != null ? n(restaurant.cashFloor) : null;
 
   const base: ForwardCashData = {
     hasAnchor: runway.hasAnchor,
@@ -194,6 +285,8 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
     endBalance: runway.currentCash,
     totalScheduledOut: 0,
     breachesZero: false,
+    cashFloor,
+    floor: null,
     obligationCount: 0,
     note: "",
   };
@@ -239,6 +332,7 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
     endBalance: projection.endBalance,
     totalScheduledOut: projection.totalScheduledOut,
     breachesZero: projection.breachesZero,
+    floor: assessCashFloor(cashFloor, projection.days, projection.lowPoint),
     obligationCount: obligations.length,
     note,
   };

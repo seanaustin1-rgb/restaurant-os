@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { RecurringVendor } from "@/lib/modules/recurring";
 import {
+  assessCashFloor,
   estimateSweepOutflow,
   projectForwardCash,
   projectRecurringObligations,
   sweepDatesInWindow,
+  type ForwardCashDay,
 } from "./forward-cash";
 
 const d = (s: string) => new Date(`${s}T00:00:00.000Z`);
@@ -117,5 +119,53 @@ describe("estimateSweepOutflow", () => {
   });
   it("is 0 with no sweep history", () => {
     expect(estimateSweepOutflow([])).toBe(0);
+  });
+});
+
+const day = (date: string, balance: number, obligations: ForwardCashDay["obligations"] = []): ForwardCashDay => ({
+  date,
+  balance,
+  obligations,
+});
+
+describe("assessCashFloor", () => {
+  const days = [day("2026-07-01", 16000), day("2026-07-25", 11800, [{ label: "Profit + Owner's Pay sweep", amount: 4200, kind: "sweep" }])];
+
+  it("returns null when no floor is set, or there's nothing to project", () => {
+    expect(assessCashFloor(null, days, { date: "2026-07-25", balance: 11800 })).toBeNull();
+    expect(assessCashFloor(15000, [], null)).toBeNull();
+    expect(assessCashFloor(15000, days, null)).toBeNull();
+  });
+
+  it("stays ok when the projected low-point holds above the floor", () => {
+    const ok = assessCashFloor(10000, days, { date: "2026-07-25", balance: 11800 });
+    expect(ok).toMatchObject({ state: "ok", breachDate: null, shortfall: null, sweepAtRisk: null });
+    expect(ok?.readout).toMatch(/holds above your \$10,000 floor/);
+  });
+
+  it("names the sweep that tips the balance under the floor (pre-sweep warning)", () => {
+    const breach = assessCashFloor(15000, days, { date: "2026-07-25", balance: 11800 });
+    expect(breach).toMatchObject({
+      state: "breach",
+      breachDate: "2026-07-25",
+      lowBalance: 11800,
+      shortfall: 3200,
+      sweepAtRisk: { date: "2026-07-25", amount: 4200, balanceAfter: 11800 },
+    });
+    expect(breach?.readout).toMatch(/sweep .* Hold or trim it\./);
+  });
+
+  it("reports a plain breach (no sweep at risk) when a bill, not a sweep, sinks it", () => {
+    const billDays = [day("2026-07-01", 12000), day("2026-07-10", 8000, [{ label: "Rent", amount: 4000, kind: "recurring" }])];
+    const breach = assessCashFloor(10000, billDays, { date: "2026-07-10", balance: 8000 });
+    expect(breach).toMatchObject({ state: "breach", breachDate: "2026-07-10", shortfall: 2000, sweepAtRisk: null });
+    expect(breach?.readout).toMatch(/bottoms at \$8,000 .* below your \$10,000 floor/);
+  });
+
+  it("does not flag a sweep at risk when the day was already under the floor before it", () => {
+    // Balance already 9000 (under a 15000 floor) and the sweep only deepens it — holding it wouldn't fix the breach.
+    const deep = [day("2026-07-10", 9000, [{ label: "sweep", amount: 1000, kind: "sweep" }])];
+    const breach = assessCashFloor(15000, deep, { date: "2026-07-10", balance: 9000 });
+    expect(breach).toMatchObject({ state: "breach", sweepAtRisk: null });
   });
 });

@@ -126,6 +126,11 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
         readout: "Demo tax pulls are within the sample tolerance for this tour.",
       },
     },
+    forwardCash: {
+      cashFloor: null,
+      lowPointBalance: null,
+      floor: null,
+    },
     rentalPropertyRollup: null,
     goLiveCoach: assessGoLiveReadiness({
       periodLabel: MONTH,

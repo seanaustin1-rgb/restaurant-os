@@ -50,7 +50,8 @@ function forwardCash(overrides: Partial<ForwardCashData> = {}): ForwardCashData 
   return {
     hasAnchor: true, hasData: true, startDate: "2026-06-30", startBalance: 40_000,
     windowDays: 30, staleDays: 1, days: [], lowPoint: { date: "2026-07-10", balance: 12_000 },
-    endBalance: 20_000, totalScheduledOut: 28_000, breachesZero: false, obligationCount: 4, note: "",
+    endBalance: 20_000, totalScheduledOut: 28_000, breachesZero: false, cashFloor: null, floor: null,
+    obligationCount: 4, note: "",
     ...overrides,
   };
 }

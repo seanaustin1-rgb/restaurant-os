@@ -103,6 +103,11 @@ function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
         readout: "DAVO pulls are within 5.0% of Toast accrued tax over the trailing 30 days.",
       },
     },
+    forwardCash: {
+      cashFloor: null,
+      lowPointBalance: null,
+      floor: null,
+    },
     sourceSetup: {
       minimumAutoInput: "",
       requiredCount: 2,
@@ -207,6 +212,49 @@ describe("dashboard signals", () => {
     const attention = deriveAttention(data);
     expect(attention[0]).toMatchObject({ id: "tax-sales-drift", severity: "red" });
     expect(deriveTopPressure(data)).toMatchObject({ state: "pressure", id: "tax-sales-drift" });
+  });
+
+  it("surfaces a cash-floor breach as a red top-pressure candidate", () => {
+    const data = dashboard({
+      forwardCash: {
+        cashFloor: 15000,
+        lowPointBalance: 8200,
+        floor: {
+          floor: 15000,
+          state: "breach",
+          breachDate: "2026-07-24",
+          lowBalance: 8200,
+          shortfall: 6800,
+          sweepAtRisk: { date: "2026-07-25", amount: 4200, balanceAfter: 11800 },
+          readout: "The Jul 25 Profit + Owner's Pay sweep (~$4,200) drops projected cash to $11,800, below your $15,000 floor. Hold or trim it.",
+        },
+      },
+    });
+
+    const attention = deriveAttention(data);
+    expect(attention[0]).toMatchObject({ id: "cash-floor-breach", severity: "red" });
+    expect(deriveTopPressure(data)).toMatchObject({ state: "pressure", id: "cash-floor-breach" });
+  });
+
+  it("stays quiet when the cash-floor projection holds (or no floor is set)", () => {
+    const ok = dashboard({
+      forwardCash: {
+        cashFloor: 5000,
+        lowPointBalance: 9000,
+        floor: {
+          floor: 5000,
+          state: "ok",
+          breachDate: null,
+          lowBalance: 9000,
+          shortfall: null,
+          sweepAtRisk: null,
+          readout: "Projected cash holds above your $5,000 floor over the next 30 days (low-point $9,000).",
+        },
+      },
+    });
+    expect(deriveAttention(ok).some((i) => i.id === "cash-floor-breach")).toBe(false);
+    // Default fixture has no floor configured → also silent.
+    expect(deriveAttention(dashboard()).some((i) => i.id === "cash-floor-breach")).toBe(false);
   });
 
   it("does not invent a top pressure when no operating data is loaded", () => {

@@ -184,7 +184,8 @@ test / direct operator decision), and a **Next action** when applicable.
   then brokerage leadership route + investor gate, agent demo-path decision, vacation-rental copy, demo-funnel routing.
   Not UI polish (Claude's lane). Codex to self-log its own lane section.
 - **NEXT-006 [Claude] — extend day-in-life narrative to Agent + Rental** (DECISION-002 spine), generated-data-only, on
-  `claude/demo-broker-day-in-life-p0`; PR #112 grows to a three-tab narrative. Status **In Progress**.
+  `claude/demo-broker-day-in-life-p0`; PR #112 grows to a three-tab narrative. Status **Done** · Evidence: SUCCESS-006 /
+  commit `a4c0237`.
 
 ---
 
@@ -356,6 +357,17 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-006: day-in-life narrative extended to Agent + Rental (all three tabs).**
+  NEXT-006 done. Applied the DECISION-002 spine (greeting → Executive Brief → One-Thing-with-action → roster/detail →
+  acknowledgment state) to `AgentApp.tsx` and `RentalCockpit.tsx`, matching the Broker cockpit. **Agent:** "Your morning"
+  brief (3 health-dotted lines, line 1 reactive) + actionable One-Thing (214 Highland Park funding today / missing
+  compliance docs) → Open-the-file / Mark-handled → green "On it." + Undo. **Rental:** "Portfolio brief" + the Brundage
+  red alert made actionable (Dispatch technician / Open property) → green "Dispatched." + Undo. New markup renders inline
+  in each component so styled-jsx scoping stays correct (co-located `<style jsx>`, per SUCCESS-004). Generated-data-only;
+  no backend/db/auth/migration. Evidence: commit `a4c0237` on `claude/demo-broker-day-in-life-p0` (PR #112 now a
+  three-tab narrative); tsc clean, 340 tests, prod build green; verified rendering + both interactive acknowledgment
+  flows at 390×844 and 1440×900. Remaining: same as before — Sean's visual approval; merge #111 then retarget #112.
 
 - **2026-07-13 (EOD+1) [Claude] — Coordination re-established with Codex; lanes reassigned.** Sean confirmed Codex is
   back online. **Lane split (agreed):** Codex takes **repo-green + route/auth/data correctness** (Step 1: the

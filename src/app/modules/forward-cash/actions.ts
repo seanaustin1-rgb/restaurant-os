@@ -6,11 +6,17 @@ import { prisma } from "@/lib/prisma";
 
 const PATH = "/modules/forward-cash";
 
+// Product decision (2026-07-13): the cash floor is owner-level — only the
+// top-of-tenant role (OPERATOR; the "broker" for a brokerage tenant) may set it.
+// MANAGER is intentionally deferred and may be added later; keep this list the
+// single edit point when that decision is made.
+const CASH_FLOOR_EDIT_ROLES = ["OPERATOR"] as const;
+
 async function requireRestaurant(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: ["OPERATOR", "MANAGER"] } },
+    where: { clerkUserId: userId, role: { in: [...CASH_FLOOR_EDIT_ROLES] } },
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");

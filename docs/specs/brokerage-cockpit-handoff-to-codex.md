@@ -176,6 +176,12 @@ Broker → agent drill-down: expanding an agent in the roster shows that agent's
 closings / listing appts / inspections / calls), with a note that appointments sync to the client file in the CRM.
 ![Broker → agent detail with real-estate calendar](mockups/broker-agent-calendar.png)
 
+Clicking any calendar entry opens a voice-driven AI appointment assistant (DEMO mock): "Speak to update" → AI-extracted
+actions (reschedule / add to client history / draft email / set reminder), and an "After the appointment" recap that
+captures future expectations as reminders. Live speech-to-text + AI writes to CRM/calendar are a Codex/backend follow-up.
+![Appointment assistant — voice update + AI actions](mockups/broker-appt-voice.png)
+![Appointment assistant — post-appointment recap + future reminder](mockups/broker-appt-recap.png)
+
 **Agent app** — "Your morning" brief + One-Thing (214 Highland Park funding today) → "Open the file" → "On it." state.
 - Desktop: `mockups/agent-desktop.png` · after action: `mockups/agent-desktop-handled.png`
 - Mobile: `mockups/agent-mobile.png`
@@ -425,6 +431,20 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-011: clickable calendar entries → voice/AI appointment assistant (DEMO mock).**
+  Commit `c202e47`. Every calendar entry on the broker cockpit (each agent's real-estate calendar row + the broker's
+  "Your week" appointments) is clickable and opens an `ApptDrawer` with a voice-driven AI flow: **"Speak to update"** →
+  simulated transcript → AI-extracted actions the operator applies individually (reschedule the appointment, add a note
+  to the **client's history**, draft a **follow-up email** to the client, set a **future reminder** that lands on the
+  calendar with an alert); **"After the appointment"** → voice recap → sentiment + auto-logged notes + a captured future
+  expectation that creates a reminder ("revisit rental purchase (fall) → Sep 1, you'll be alerted"). Self-contained
+  component with its own `<style jsx>` (correct scoping). tsc clean, 340 tests, build green. Mockups:
+  `broker-appt-voice.png`, `broker-appt-recap.png`.
+  **⚠️ For Codex / backend (NEEDS you):** the DEMO mocks the voice + AI + the writes. The **live** feature is your lane —
+  speech-to-text, an LLM to extract intents/actions, and writing to the CRM client record + calendar/reminders. When
+  that track opens, the demo's action list (reschedule / add-to-history / draft-email / set-reminder / post-appt recap)
+  is the contract to implement against. Sean confirmed Codex said this is possible.
 
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-010: agent real-estate calendar is now click-to-expand.** Commit `3a9e237`.
   Per Sean, the per-agent calendar in the roster detail is collapsed by default (header "Real-estate calendar · N this

@@ -66,8 +66,29 @@ export interface ForwardCashData {
   breachesZero: boolean;
   cashFloor: number | null; // operator-set minimum operating balance (B6)
   floor: CashFloorAssessment | null; // floor safety, when a floor is set + anchored
+  payroll: PayrollInference | null; // inferred forward payroll accrual (B7)
   obligationCount: number;
   note: string;
+}
+
+/**
+ * Inferred forward payroll accrual (B7) — no payroll API. Payroll is the largest
+ * predictable outflow, but the legacy path only ever showed cleared pulls. Here
+ * we detect the pay cadence from recent cleared payroll-cash pulls and size the
+ * next runs at the average of the last (≤4) pulls, so Forward Cash stops
+ * under-counting the biggest bill on the calendar. Payroll TAX is unaffected —
+ * that stays cleared-pulls-only until a real payroll feed exists.
+ */
+export type PayrollCadence = "weekly" | "biweekly" | "monthly" | "irregular";
+
+export interface PayrollInference {
+  cadence: PayrollCadence;
+  intervalDays: number | null; // median days between pay runs
+  amount: number; // avg of the last (≤4) pay-run totals — the projected per-run outflow
+  pullsUsed: number; // how many pay runs the amount averaged
+  runsSeen: number; // distinct pay runs detected in the lookback
+  lastDate: string | null; // most recent pay-run date (YYYY-MM-DD)
+  confident: boolean; // steady cadence + enough runs to project forward
 }
 
 const n = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -262,6 +283,148 @@ export function assessCashFloor(
   };
 }
 
+const PAYROLL_RUN_MERGE_DAYS = 3; // DD + trailing paper checks within a few days = one run
+const PAYROLL_AVG_RUNS = 4; // "avg of the last 4 pulls"
+
+function medianOf(values: number[]): number {
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+}
+
+function payrollCadence(intervalDays: number): PayrollCadence {
+  if (intervalDays <= 9) return "weekly";
+  if (intervalDays <= 18) return "biweekly"; // folds semi-monthly (~15d) in — close enough for a 30-day window
+  if (intervalDays <= 35) return "monthly";
+  return "irregular";
+}
+
+/**
+ * Collapse raw payroll-cash outflows into pay-run events: sum same-day pulls,
+ * then merge runs within a few days of each other (a Thursday direct deposit and
+ * the paper checks that trail it are ONE pay run, not three). Returns one
+ * {date, amount} per run, ascending, anchored at the earliest date in the run.
+ * Pure.
+ */
+export function aggregatePayrollPulls(
+  raw: readonly { date: string; amount: number }[],
+  mergeDays = PAYROLL_RUN_MERGE_DAYS,
+): { date: string; amount: number }[] {
+  const byDate = new Map<string, number>();
+  for (const r of raw) {
+    if (!(r.amount > 0)) continue;
+    byDate.set(r.date, (byDate.get(r.date) ?? 0) + r.amount);
+  }
+  const dates = [...byDate.keys()].sort();
+  const runs: { date: string; amount: number }[] = [];
+  for (const date of dates) {
+    const amount = byDate.get(date)!;
+    const prev = runs[runs.length - 1];
+    if (prev && (parseISO(date).getTime() - parseISO(prev.date).getTime()) / DAY_MS <= mergeDays) {
+      prev.amount = r2(prev.amount + amount); // merge into the earlier-anchored run
+    } else {
+      runs.push({ date, amount: r2(amount) });
+    }
+  }
+  return runs;
+}
+
+/**
+ * Infer the forward payroll accrual from aggregated pay runs (ascending). Cadence
+ * = the median interval between runs; the projected per-run amount = the average
+ * of the last {@link PAYROLL_AVG_RUNS} runs (smooths one atypical run). Confident
+ * only with a steady cadence over enough runs — otherwise degrade honestly and
+ * let Forward Cash fall back to its recurring-vendor payroll path. Pure.
+ */
+export function inferPayroll(pulls: readonly { date: string; amount: number }[]): PayrollInference | null {
+  if (pulls.length === 0) return null;
+
+  const recent = pulls.slice(-PAYROLL_AVG_RUNS);
+  const amount = r2(recent.reduce((s, p) => s + p.amount, 0) / recent.length);
+  const lastDate = pulls[pulls.length - 1].date;
+
+  if (pulls.length < 3) {
+    // Not enough runs to trust a cadence — expose what we saw, but don't project.
+    return { cadence: "irregular", intervalDays: null, amount, pullsUsed: recent.length, runsSeen: pulls.length, lastDate, confident: false };
+  }
+
+  const intervals: number[] = [];
+  for (let i = 1; i < pulls.length; i++) {
+    intervals.push((parseISO(pulls[i].date).getTime() - parseISO(pulls[i - 1].date).getTime()) / DAY_MS);
+  }
+  const intervalDays = Math.round(medianOf(intervals));
+  const cadence = payrollCadence(intervalDays);
+
+  return {
+    cadence,
+    intervalDays,
+    amount,
+    pullsUsed: recent.length,
+    runsSeen: pulls.length,
+    lastDate,
+    confident: cadence !== "irregular" && amount > 0,
+  };
+}
+
+/**
+ * Project the inferred payroll forward into the window at its cadence, stepping
+ * from the last run. Mirrors {@link projectRecurringObligations}' guarded stepping.
+ * Empty (no obligations) when the inference isn't confident. Pure.
+ */
+export function projectPayrollObligations(
+  inf: PayrollInference | null,
+  startDate: Date,
+  windowDays: number,
+): ScheduledObligation[] {
+  if (!inf || !inf.confident || inf.intervalDays == null || inf.intervalDays <= 0 || inf.lastDate == null || inf.amount <= 0) {
+    return [];
+  }
+  const interval = inf.intervalDays;
+  const end = new Date(startDate.getTime() + windowDays * DAY_MS);
+  const out: ScheduledObligation[] = [];
+  let next = new Date(parseISO(inf.lastDate).getTime() + interval * DAY_MS);
+  let guard = 0;
+  while (next.getTime() <= startDate.getTime() && guard < 400) {
+    next = new Date(next.getTime() + interval * DAY_MS);
+    guard += 1;
+  }
+  guard = 0;
+  while (next.getTime() <= end.getTime() && guard < 400) {
+    out.push({ date: iso(next), label: "Payroll (inferred)", amount: inf.amount, kind: "payroll" });
+    next = new Date(next.getTime() + interval * DAY_MS);
+    guard += 1;
+  }
+  return out;
+}
+
+/**
+ * Read recent payroll-CASH pulls (LABOR-bucket categories named "payroll" — so
+ * "Payroll — Direct Deposit/Paper Checks", "Staff Payroll", but never the
+ * TAX_PAYROLL "Payroll Tax"), aggregated into pay runs. Also returns the payroll
+ * category names so the caller can drop them from the recurring path (no
+ * double-count). Outflows are stored positive.
+ */
+async function loadPayrollPulls(
+  restaurantId: string,
+): Promise<{ pulls: { date: string; amount: number }[]; payrollCategoryNames: Set<string> }> {
+  const cats = await prisma.category.findMany({
+    where: { restaurantId },
+    select: { id: true, name: true, tapBucket: true },
+  });
+  const payrollCats = cats.filter((c) => String(c.tapBucket) === "LABOR" && /payroll/i.test(c.name));
+  const payrollCategoryNames = new Set(payrollCats.map((c) => c.name));
+  if (payrollCats.length === 0) return { pulls: [], payrollCategoryNames };
+
+  const txns = await prisma.transaction.findMany({
+    where: { restaurantId, amount: { gt: 0 }, categoryId: { in: payrollCats.map((c) => c.id) } },
+    orderBy: { date: "desc" },
+    take: 120, // enough raw rows to span several pay runs even for check-heavy payrolls
+    select: { date: true, amount: true },
+  });
+  const raw = txns.map((t) => ({ date: t.date.toISOString().slice(0, 10), amount: n(t.amount) }));
+  return { pulls: aggregatePayrollPulls(raw), payrollCategoryNames };
+}
+
 export async function loadForwardCash(restaurantId: string): Promise<ForwardCashData> {
   // Starting cash + as-of date come from Cash Runway (anchor + net flow since).
   // Not db-injectable: the sub-loaders (Cash Runway / Recurring / ledger snapshot)
@@ -287,6 +450,7 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
     breachesZero: false,
     cashFloor,
     floor: null,
+    payroll: null,
     obligationCount: 0,
     note: "",
   };
@@ -298,10 +462,24 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
     };
   }
 
-  const [recurring, snapshot] = await Promise.all([loadRecurring(restaurantId), getLedgerSnapshot(restaurantId)]);
+  const [recurring, snapshot, payrollData] = await Promise.all([
+    loadRecurring(restaurantId),
+    getLedgerSnapshot(restaurantId),
+    loadPayrollPulls(restaurantId),
+  ]);
   const start = parseISO(runway.asOfDate);
 
-  const recurringObligations = projectRecurringObligations(recurring.vendors, start, WINDOW_DAYS);
+  // B7: prefer the dedicated payroll accrual (cadence + avg last 4 pulls). When
+  // it's confident, drop payroll vendors from the recurring path so payroll
+  // isn't counted twice; otherwise keep the old recurring-vendor payroll behavior.
+  const payroll = inferPayroll(payrollData.pulls);
+  const usePayrollInference = payroll?.confident === true;
+  const recurringVendors = usePayrollInference
+    ? recurring.vendors.filter((v) => !(v.categoryName != null && payrollData.payrollCategoryNames.has(v.categoryName)))
+    : recurring.vendors;
+
+  const recurringObligations = projectRecurringObligations(recurringVendors, start, WINDOW_DAYS);
+  const payrollObligations = usePayrollInference ? projectPayrollObligations(payroll, start, WINDOW_DAYS) : [];
   const sweepOutflow = estimateSweepOutflow(snapshot.recentSweeps);
   const sweepObligations: ScheduledObligation[] =
     sweepOutflow > 0
@@ -313,7 +491,7 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
         }))
       : [];
 
-  const obligations = [...recurringObligations, ...sweepObligations];
+  const obligations = [...recurringObligations, ...payrollObligations, ...sweepObligations];
   const projection = projectForwardCash({
     startDate: runway.asOfDate,
     startBalance: runway.currentCash,
@@ -333,6 +511,7 @@ export async function loadForwardCash(restaurantId: string): Promise<ForwardCash
     totalScheduledOut: projection.totalScheduledOut,
     breachesZero: projection.breachesZero,
     floor: assessCashFloor(cashFloor, projection.days, projection.lowPoint),
+    payroll,
     obligationCount: obligations.length,
     note,
   };

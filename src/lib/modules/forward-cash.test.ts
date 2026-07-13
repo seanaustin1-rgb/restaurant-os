@@ -1,9 +1,12 @@
 import { describe, it, expect } from "vitest";
 import type { RecurringVendor } from "@/lib/modules/recurring";
 import {
+  aggregatePayrollPulls,
   assessCashFloor,
   estimateSweepOutflow,
+  inferPayroll,
   projectForwardCash,
+  projectPayrollObligations,
   projectRecurringObligations,
   sweepDatesInWindow,
   type ForwardCashDay,
@@ -167,5 +170,123 @@ describe("assessCashFloor", () => {
     const deep = [day("2026-07-10", 9000, [{ label: "sweep", amount: 1000, kind: "sweep" }])];
     const breach = assessCashFloor(15000, deep, { date: "2026-07-10", balance: 9000 });
     expect(breach).toMatchObject({ state: "breach", sweepAtRisk: null });
+  });
+});
+
+describe("aggregatePayrollPulls", () => {
+  it("sums same-day pulls and merges runs within a few days into one pay-run", () => {
+    const runs = aggregatePayrollPulls([
+      { date: "2026-06-04", amount: 8000 }, // Thu direct deposit
+      { date: "2026-06-04", amount: 2000 }, // same-day second batch
+      { date: "2026-06-05", amount: 1200 }, // Fri paper check — same run
+      { date: "2026-06-18", amount: 9500 }, // next run, two weeks later
+    ]);
+    expect(runs).toEqual([
+      { date: "2026-06-04", amount: 11200 }, // 8000 + 2000 + 1200, anchored at the earliest date
+      { date: "2026-06-18", amount: 9500 },
+    ]);
+  });
+
+  it("ignores non-positive amounts and returns runs ascending", () => {
+    const runs = aggregatePayrollPulls([
+      { date: "2026-06-18", amount: 9500 },
+      { date: "2026-06-04", amount: 8000 },
+      { date: "2026-06-04", amount: -50 }, // refund/credit — not a pull
+    ]);
+    expect(runs).toEqual([
+      { date: "2026-06-04", amount: 8000 },
+      { date: "2026-06-18", amount: 9500 },
+    ]);
+  });
+});
+
+describe("inferPayroll", () => {
+  const biweekly = [
+    { date: "2026-05-07", amount: 9000 },
+    { date: "2026-05-21", amount: 9200 },
+    { date: "2026-06-04", amount: 9100 },
+    { date: "2026-06-18", amount: 9500 },
+    { date: "2026-06-30", amount: 9300 }, // last 4 → 9200,9100,9500,9300 avg 9275
+  ];
+
+  it("detects a biweekly cadence and averages the last 4 runs", () => {
+    const inf = inferPayroll(biweekly);
+    expect(inf).toMatchObject({ cadence: "biweekly", intervalDays: 14, confident: true, pullsUsed: 4, runsSeen: 5, lastDate: "2026-06-30" });
+    expect(inf?.amount).toBe(9275); // (9200 + 9100 + 9500 + 9300) / 4
+  });
+
+  it("classifies weekly and monthly cadences", () => {
+    expect(inferPayroll([
+      { date: "2026-06-01", amount: 4000 },
+      { date: "2026-06-08", amount: 4100 },
+      { date: "2026-06-15", amount: 4050 },
+    ])?.cadence).toBe("weekly");
+    expect(inferPayroll([
+      { date: "2026-04-01", amount: 12000 },
+      { date: "2026-05-01", amount: 12500 },
+      { date: "2026-06-01", amount: 12200 },
+    ])?.cadence).toBe("monthly");
+  });
+
+  // KNOWN LIMITATION (B7): semi-monthly payroll (paid on the 15th + month-end,
+  // ~15-16 day intervals) is APPROXIMATED as biweekly — it lands in the same
+  // cadence bucket and projects at the ~15-day median, not on true 15th/EOM
+  // anchors. This is documented, not exact payroll-system data; the test pins
+  // the approximation so a future explicit semi-monthly model is a deliberate change.
+  it("approximates semi-monthly payroll as biweekly (documented limitation)", () => {
+    const inf = inferPayroll([
+      { date: "2026-05-15", amount: 9000 },
+      { date: "2026-05-31", amount: 9000 }, // 16d
+      { date: "2026-06-15", amount: 9000 }, // 15d
+      { date: "2026-06-30", amount: 9000 }, // 15d
+    ]);
+    expect(inf).toMatchObject({ cadence: "biweekly", confident: true });
+    expect(inf?.intervalDays).toBeGreaterThanOrEqual(15); // ~15-16d median, not true semi-monthly
+  });
+
+  it("is not confident with fewer than 3 runs or an irregular cadence", () => {
+    expect(inferPayroll([{ date: "2026-06-01", amount: 5000 }, { date: "2026-06-15", amount: 5200 }])).toMatchObject({
+      confident: false,
+      intervalDays: null,
+      runsSeen: 2,
+    });
+    const irregular = inferPayroll([
+      { date: "2026-01-01", amount: 5000 },
+      { date: "2026-02-10", amount: 5200 }, // ~40d
+      { date: "2026-06-01", amount: 5100 }, // ~111d — median interval huge → irregular
+    ]);
+    expect(irregular?.confident).toBe(false);
+    expect(irregular?.cadence).toBe("irregular");
+  });
+
+  it("returns null when there are no pulls", () => {
+    expect(inferPayroll([])).toBeNull();
+  });
+});
+
+describe("projectPayrollObligations", () => {
+  const inf = inferPayroll([
+    { date: "2026-05-21", amount: 9000 },
+    { date: "2026-06-04", amount: 9000 },
+    { date: "2026-06-18", amount: 9000 },
+  ]); // biweekly, interval 14, last 2026-06-18, amount 9000
+
+  it("projects the inferred cadence forward, strictly after the start, within the window", () => {
+    const obs = projectPayrollObligations(inf, d("2026-06-20"), 30); // window end 2026-07-20
+    expect(obs).toEqual([
+      { date: "2026-07-02", label: "Payroll (inferred)", amount: 9000, kind: "payroll" },
+      { date: "2026-07-16", label: "Payroll (inferred)", amount: 9000, kind: "payroll" },
+    ]);
+  });
+
+  it("advances a stale last-run forward instead of emitting catch-up dates", () => {
+    const stale = projectPayrollObligations(inf, d("2026-08-01"), 30); // last run well before start
+    expect(stale.every((o) => o.date > "2026-08-01")).toBe(true);
+    expect(stale.length).toBeGreaterThan(0);
+  });
+
+  it("emits nothing when the inference isn't confident", () => {
+    expect(projectPayrollObligations(null, d("2026-06-20"), 30)).toEqual([]);
+    expect(projectPayrollObligations({ ...inf!, confident: false }, d("2026-06-20"), 30)).toEqual([]);
   });
 });

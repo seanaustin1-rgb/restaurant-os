@@ -109,13 +109,21 @@ const QUEUE: QueueCard[] = [
   },
 ];
 
+type LeadKind = "email" | "text" | "call" | "snooze";
+interface LeadAction {
+  t: string;
+  kind: LeadKind;
+  u?: boolean;
+  phone?: string;
+  draft?: { subject?: string; body: string };
+}
 interface Lead {
   nm: string;
   flag: Flag;
   meta: string;
   why: string;
-  primary: { t: string; u?: boolean };
-  ghost: string;
+  primary: LeadAction;
+  ghost: LeadAction;
 }
 const LEADS: Lead[] = [
   {
@@ -123,32 +131,65 @@ const LEADS: Lead[] = [
     flag: "r",
     meta: "Referral from Priya · new 41 min ago",
     why: "Past the 30-minute red line. Referrals contacted within 10 minutes close 3× more often.",
-    primary: { t: "Call now", u: true },
-    ghost: "Send SMS template",
+    primary: { t: "Call now", kind: "call", u: true, phone: "(208) 555-0148" },
+    ghost: {
+      t: "Send SMS template",
+      kind: "text",
+      draft: {
+        body: "Hi Sam — Priya passed your info along, I'm with Cascade Realty. I'd love to help with your home search. Do you have 10 minutes for a quick call today? — Priya",
+      },
+    },
   },
   {
     nm: "The Whitfields",
     flag: "y",
     meta: "Zillow inquiry · 22 min ago",
     why: "In the 15–30 min yellow window — still recoverable if you touch it now.",
-    primary: { t: "Send email template" },
-    ghost: "Text",
+    primary: {
+      t: "Send email template",
+      kind: "email",
+      draft: {
+        subject: "Your Zillow inquiry — Boise homes",
+        body: "Hi — thanks for reaching out on Zillow about the Boise listing. I pulled a few similar homes in your range and can set up private tours this week. What days work for you? Happy to answer anything in the meantime.\n\n— Priya, Cascade Realty",
+      },
+    },
+    ghost: {
+      t: "Text",
+      kind: "text",
+      draft: {
+        body: "Hi! It's Priya with Cascade Realty following up on your Zillow inquiry — want me to send a couple similar listings and line up tours this week?",
+      },
+    },
   },
   {
     nm: "Marcus Lindqvist",
     flag: "g",
     meta: "Open-house sign-in · 6 min ago",
     why: "Fresh and under the 15-min target — a quick intro locks it in.",
-    primary: { t: "Send intro" },
-    ghost: "Snooze",
+    primary: {
+      t: "Send intro",
+      kind: "email",
+      draft: {
+        subject: "Great meeting you at the open house",
+        body: "Hi Marcus — great chatting at the open house today. Here's my info and a link to homes like the one you toured. If you'd like, I can set up a few showings this week — just say the word.\n\n— Priya, Cascade Realty",
+      },
+    },
+    ghost: { t: "Snooze", kind: "snooze" },
   },
   {
     nm: "Dana Whitfield (past client)",
     flag: "y",
     meta: "60-day nurture · re-engage",
     why: "Two new Ridgeline listings match her saved search — the automated match sequence works here.",
-    primary: { t: "Send listing match" },
-    ghost: "Skip",
+    primary: {
+      t: "Send listing match",
+      kind: "email",
+      draft: {
+        subject: "2 new listings that match your saved search",
+        body: "Hi Dana — two new Ridgeline listings just hit that match what you saved: 77 Ridgeline ($465k) and 512 Foothills Dr ($548k). Want me to schedule private tours this weekend? Great to reconnect.\n\n— Priya, Cascade Realty",
+      },
+    },
+    ghost: { t: "Skip", kind: "snooze" },
   },
 ];
 
@@ -229,7 +270,38 @@ function QueueCardView({ c }: { c: QueueCard }) {
 
 function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const [done, setDone] = useState(false);
+  const [compose, setCompose] = useState<LeadAction | null>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [sent, setSent] = useState(false);
+  const [phone, setPhone] = useState<string | null>(null);
   const f = FLAG[l.flag];
+
+  const act = (a: LeadAction) => {
+    if (a.kind === "email" || a.kind === "text") {
+      setPhone(null);
+      if (compose && compose.t === a.t) {
+        setCompose(null);
+        return;
+      }
+      setCompose(a);
+      setSubject(a.draft?.subject ?? "");
+      setBody(a.draft?.body ?? "");
+      setSent(false);
+    } else if (a.kind === "call") {
+      setCompose(null);
+      setPhone(phone ? null : a.phone ?? "");
+    } else {
+      setDone(true);
+      onFire("Queued — I'll resurface this lead later.");
+    }
+  };
+  const send = () => {
+    setSent(true);
+    setDone(true);
+    onFire(compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.");
+  };
+
   return (
     <div className={`lead ${l.flag} ${done ? "done" : ""}`}>
       <div className="lhead">
@@ -245,21 +317,66 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
       <div className="lmeta">{l.meta}</div>
       <div className="lwhy">{l.why}</div>
       <div className="lact">
-        <button
-          type="button"
-          className={l.primary.u ? "btn urgent" : "btn primary"}
-          onClick={() => {
-            if (done) return;
-            setDone(true);
-            onFire("Follow-up fired from template — logged to the lead.");
-          }}
-        >
-          {done ? "✓ Sent" : l.primary.t}
+        <button type="button" className={l.primary.u ? "btn urgent" : "btn primary"} onClick={() => act(l.primary)}>
+          {l.primary.t}
         </button>
-        <button type="button" className="btn ghost" onClick={() => onFire("Queued.")}>
-          {l.ghost}
+        <button type="button" className="btn ghost" onClick={() => act(l.ghost)}>
+          {l.ghost.t}
         </button>
       </div>
+
+      {phone && (
+        <div className="lcall">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+          </svg>
+          <span className="lcall-n">{phone}</span>
+          <span className="lcall-h">tap to dial · generated demo contact</span>
+        </div>
+      )}
+
+      {compose && (
+        <div className="compose">
+          <div className="cmp-hd">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              {compose.kind === "email" ? (
+                <>
+                  <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                  <path d="m22 6-10 7L2 6" />
+                </>
+              ) : (
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              )}
+            </svg>
+            {compose.kind === "email" ? "Email to" : "Text"} {l.nm}
+            <span className="cmp-tag">AI-drafted · edit before sending</span>
+          </div>
+          {compose.kind === "email" && (
+            <input
+              className="cmp-subj"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Subject"
+              disabled={sent}
+            />
+          )}
+          <textarea
+            className={`cmp-body ${compose.kind}`}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={compose.kind === "email" ? 7 : 3}
+            disabled={sent}
+          />
+          <div className="cmp-act">
+            <button type="button" className="btn primary" disabled={sent} onClick={send}>
+              {sent ? "✓ Sent" : compose.kind === "text" ? "Send text" : "Send email"}
+            </button>
+            <button type="button" className="btn ghost" onClick={() => setCompose(null)}>
+              {sent ? "Close" : "Cancel"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1094,6 +1211,114 @@ export default function AgentApp() {
           gap: 8px;
           margin-top: 10px;
           flex-wrap: wrap;
+        }
+        .agent :global(.lcall) {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-top: 10px;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--surface);
+          padding: 10px 12px;
+        }
+        .agent :global(.lcall svg) {
+          width: 15px;
+          height: 15px;
+          color: var(--copper-soft);
+          flex: none;
+        }
+        .agent :global(.lcall-n) {
+          font-family: var(--font-mono);
+          font-size: 16px;
+          color: var(--copper-soft);
+        }
+        .agent :global(.lcall-h) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.compose) {
+          margin-top: 10px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 12px 13px;
+        }
+        .agent :global(.cmp-hd) {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          flex-wrap: wrap;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .agent :global(.cmp-hd svg) {
+          width: 15px;
+          height: 15px;
+          color: var(--copper-soft);
+          flex: none;
+        }
+        .agent :global(.cmp-tag) {
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--muted);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 2px 8px;
+          margin-left: auto;
+        }
+        .agent :global(.cmp-subj) {
+          width: 100%;
+          margin-top: 10px;
+          font: inherit;
+          font-size: 13px;
+          color: var(--text);
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 8px 10px;
+        }
+        .agent :global(.cmp-body) {
+          width: 100%;
+          margin-top: 8px;
+          font: inherit;
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+          background: var(--surface);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: 9px 11px;
+          resize: vertical;
+        }
+        .agent :global(.cmp-body.text) {
+          border-radius: 14px;
+        }
+        .agent :global(.cmp-subj:focus),
+        .agent :global(.cmp-body:focus) {
+          outline: none;
+          border-color: var(--copper-dim);
+        }
+        .agent :global(.cmp-subj:disabled),
+        .agent :global(.cmp-body:disabled) {
+          opacity: 0.7;
+        }
+        .agent :global(.cmp-act) {
+          display: flex;
+          gap: 8px;
+          margin-top: 10px;
+          flex-wrap: wrap;
+        }
+        .agent :global(.cmp-act .btn.primary:disabled) {
+          background: var(--green);
+          border-color: var(--green);
+          color: var(--ink);
+          cursor: default;
+          filter: none;
         }
         .guard {
           border: 1px solid color-mix(in srgb, var(--red) 40%, var(--line));

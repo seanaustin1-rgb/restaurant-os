@@ -206,6 +206,22 @@ const TICKER = [
   { l: "New listings", v: "62/wk", a: "up" },
 ];
 
+type ApptKind = "showing" | "closing" | "listing" | "inspection" | "call" | "open";
+interface AgentAppt {
+  when: string;
+  kind: ApptKind;
+  what: string;
+  who: string;
+}
+const APPT_LABEL: Record<ApptKind, string> = {
+  showing: "Showing",
+  closing: "Closing",
+  listing: "Listing",
+  inspection: "Inspection",
+  call: "Call",
+  open: "Open house",
+};
+
 interface AgentRow {
   key: string;
   name: string;
@@ -218,6 +234,7 @@ interface AgentRow {
   status: string;
   flag?: string;
   detail: { pipeline: string; response: string; note: string };
+  cal: AgentAppt[];
 }
 
 // Exceptions-first: the two agents who need the broker lead the roster.
@@ -238,6 +255,11 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 9.1h — slowest on the roster",
       note: "Strong closer, weak on compliance hygiene. The disclosure gap is a liability today; his lead ROI is under 1× because spend outruns closings.",
     },
+    cal: [
+      { when: "Wed 2:00 PM", kind: "closing", what: "214 Highland Park", who: "Osei family" },
+      { when: "Thu 11:00 AM", kind: "listing", what: "88 Cedar Bluff", who: "Rivera" },
+      { when: "Fri 4:30 PM", kind: "showing", what: "3 homes · foothills", who: "Jordan Blake" },
+    ],
   },
   {
     key: "chloe",
@@ -255,6 +277,11 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 5.4h",
       note: "Volume is fine, conversion is stuck. A coaching touch on follow-up cadence likely unblocks two of the three cold leads.",
     },
+    cal: [
+      { when: "Wed 5:00 PM", kind: "showing", what: "1102 Alderwood", who: "The Whitfields" },
+      { when: "Thu 1:00 PM", kind: "call", what: "Saved-search match", who: "Dana Whitfield" },
+      { when: "Sat 10:00 AM", kind: "open", what: "77 Ridgeline", who: "public" },
+    ],
   },
   {
     key: "priya",
@@ -271,6 +298,10 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 1.2h — fastest on the roster",
       note: "The blend's best lead ROI. Nearing cap — company dollar on her deals compresses next month; nothing to fix.",
     },
+    cal: [
+      { when: "Wed 3:30 PM", kind: "closing", what: "9 Maple Row", who: "Nguyen" },
+      { when: "Fri 9:00 AM", kind: "listing", what: "512 Foothills Dr", who: "Park" },
+    ],
   },
   {
     key: "theo",
@@ -287,6 +318,10 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 2.8h",
       note: "Steady, on-target lead ROI. No action needed this week.",
     },
+    cal: [
+      { when: "Thu 2:00 PM", kind: "inspection", what: "640 Birchwood", who: "Alvarez buyer" },
+      { when: "Fri 12:00 PM", kind: "listing", what: "210 Sun Valley Rd", who: "Kowalski" },
+    ],
   },
   {
     key: "sofia",
@@ -303,6 +338,10 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 3.1h",
       note: "Right at the target ROI line. Consistent; watch for a lead-volume dip.",
     },
+    cal: [
+      { when: "Wed 4:00 PM", kind: "showing", what: "2 condos · downtown", who: "Reyes referral" },
+      { when: "Fri 3:00 PM", kind: "closing", what: "45 Aspen Ct — prep", who: "Delgado" },
+    ],
   },
   {
     key: "drew",
@@ -319,6 +358,10 @@ const AGENTS: AgentRow[] = [
       response: "Avg response 4.0h",
       note: "First quarter on the desk. ROI already above break-even — ramping as expected.",
     },
+    cal: [
+      { when: "Thu 10:30 AM", kind: "open", what: "Shadowing Priya", who: "77 Ridgeline" },
+      { when: "Fri 1:30 PM", kind: "showing", what: "First solo showing", who: "Lindqvist" },
+    ],
   },
 ];
 
@@ -725,6 +768,25 @@ function BrokerCockpit() {
                       </div>
                     </div>
                     <p className="anote">{a.detail.note}</p>
+                    <div className="acal">
+                      <div className="acal-h">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" />
+                          <path d="M3 10h18M8 2v4M16 2v4" />
+                        </svg>
+                        Real-estate calendar · appointments sync to the client file in your CRM
+                      </div>
+                      {a.cal.map((c, i) => (
+                        <div className="acal-row" key={i}>
+                          <span className="acal-when">{c.when}</span>
+                          <span className={`akind ${c.kind}`}>{APPT_LABEL[c.kind]}</span>
+                          <span className="acal-what">
+                            {c.what}
+                            <small>{c.who}</small>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1749,6 +1811,89 @@ function BrokerCockpit() {
           font-size: 12.5px;
           color: var(--muted);
           line-height: 1.55;
+        }
+        .acal {
+          margin-top: 13px;
+          border-top: 1px solid var(--line-soft);
+          padding-top: 11px;
+        }
+        .acal-h {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--copper-soft);
+          margin-bottom: 4px;
+        }
+        .acal-h :global(svg) {
+          width: 13px;
+          height: 13px;
+          flex: none;
+        }
+        .acal-row {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+          padding: 7px 0;
+          border-top: 1px solid var(--line-soft);
+          font-size: 12.5px;
+        }
+        .acal-row:first-of-type {
+          border-top: 0;
+        }
+        .acal-when {
+          font-family: var(--font-mono);
+          font-size: 11.5px;
+          color: var(--text-soft);
+          white-space: nowrap;
+          min-width: 84px;
+          flex: none;
+        }
+        .akind {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2px 7px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          white-space: nowrap;
+          flex: none;
+          align-self: center;
+        }
+        .akind.closing {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .akind.showing,
+        .akind.listing,
+        .akind.open {
+          color: var(--copper-soft);
+          border-color: var(--copper-dim);
+          background: var(--copper-wash);
+        }
+        .akind.inspection {
+          color: var(--yellow);
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .akind.call {
+          color: var(--muted);
+        }
+        .acal-what {
+          flex: 1;
+          min-width: 0;
+          color: var(--text-soft);
+        }
+        .acal-what :global(small) {
+          display: block;
+          color: var(--muted);
+          font-size: 11px;
+          margin-top: 1px;
         }
         .rmeta {
           font-size: 11.5px;

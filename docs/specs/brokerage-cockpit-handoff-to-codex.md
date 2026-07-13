@@ -253,6 +253,17 @@ weighs in per Sean.
   translation/original-language visibility, simulated-send wording, reset behavior, responsive/accessibility regressions,
   and zero production writes. Confirm Broker and Agent remain unchanged. After Claude finishes, record findings and the
   pass/fail result here before Sean's visual approval and merge.
+- **DECISION-009 — Maintenance demo lane ownership clarified.** Date 2026-07-13 · Owner [Sean/Codex] · Status
+  **Approved** · Evidence: operator handoff and clarification after repository-state check. **Claude owns the contained,
+  generated-data-only Maintenance Center implementation in
+  `src/app/demo/real-estate-cockpit/native/RentalCockpit.tsx` on PR #115**: dispatch → Spanish field update → reviewed
+  English translation → completion evidence → owner-report preview → visible cockpit state change. **Codex owns only the
+  future persisted data/reporting contract, accounting guardrails, and independent final review; Codex will not edit
+  Claude's Rental demo UI.** The Project Raven Command Center is the in-repository artifact
+  `docs/specs/brokerage-cockpit-handoff-to-codex.md` on PR #115 (restored from earlier branches); both lanes must update
+  it after meaningful work. Next action: Claude implements the demo-only flow and records its completion; Codex reviews
+  the resulting diff against NEXT-009.
+
 
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 

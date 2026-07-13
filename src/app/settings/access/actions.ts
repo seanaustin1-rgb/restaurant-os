@@ -17,6 +17,10 @@ const ROLE_LABELS: Record<UserRole, string> = {
   CONSULTANT: "consultant/accountant",
   INVESTOR: "investor",
   MANAGER: "manager",
+  // Real-estate brokerage roles (not yet assignable via this restaurant access
+  // form — ALLOWED_ROLES gates that — but labeled here to satisfy the Record).
+  BROKER: "broker/admin",
+  AGENT: "agent",
 };
 
 async function requireOperator() {

@@ -19,6 +19,7 @@ import { loadForwardCash } from "@/lib/modules/forward-cash";
 import { buildDailyDigest } from "@/lib/modules/daily-digest";
 import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
 import { digestRecipientEmails } from "@/lib/email/digest-recipients";
+import { sendLeadAlert } from "@/lib/realestate/notify";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -249,6 +250,70 @@ export const sendDailyDigest = inngest.createFunction(
   },
 );
 
+/**
+ * Speed-to-lead alert + escalation ladder. Fires on a genuinely new lead
+ * (enqueued by the BoldTrail webhook). Alerts the primary agent immediately,
+ * re-pings at 5 min, then escalates to BACKUP at 15 min and BROKER at 30 min —
+ * cancelling the moment the lead is touched (firstTouchAt set). Escalation
+ * writes Lead.escalation, which the broker roster reads as leakage. Thresholds
+ * mirror response-clock.ts. Notifications go through the gated adapter (logs
+ * until OneSignal/Twilio are configured).
+ */
+export const leadReceivedAlert = inngest.createFunction(
+  { id: "realestate-lead-received", retries: 3 },
+  { event: "realestate/lead.received" },
+  async ({ event, step }) => {
+    const restaurantId = event.data.restaurantId as string;
+    const leadId = event.data.leadId as string;
+
+    const loadLead = () =>
+      prisma.lead.findUnique({
+        where: { id: leadId },
+        select: { firstTouchAt: true, agentId: true, fullName: true },
+      });
+
+    // Immediate alert to the primary agent.
+    const initial = await step.run("alert-primary", async () => {
+      const lead = await loadLead();
+      if (!lead) return { gone: true, touched: true };
+      await sendLeadAlert({ restaurantId, leadId, agentId: lead.agentId, leadName: lead.fullName, level: "new" });
+      return { gone: false, touched: !!lead.firstTouchAt };
+    });
+    if (initial.touched) return { stopped: "touched-before-5m" };
+
+    // 5-min reminder (still PRIMARY).
+    await step.sleep("wait-5m", "5m");
+    const remind = await step.run("remind", async () => {
+      const lead = await loadLead();
+      if (!lead || lead.firstTouchAt) return { touched: true };
+      await sendLeadAlert({ restaurantId, leadId, agentId: lead.agentId, leadName: lead.fullName, level: "reminder" });
+      return { touched: false };
+    });
+    if (remind.touched) return { stopped: "touched-by-5m" };
+
+    // 15 min → escalate to BACKUP.
+    await step.sleep("wait-to-15m", "10m");
+    const backup = await step.run("escalate-backup", async () => {
+      const lead = await loadLead();
+      if (!lead || lead.firstTouchAt) return { touched: true };
+      await prisma.lead.update({ where: { id: leadId }, data: { escalation: "BACKUP", escalatedAt: new Date() } });
+      await sendLeadAlert({ restaurantId, leadId, agentId: lead.agentId, leadName: lead.fullName, level: "backup" });
+      return { touched: false };
+    });
+    if (backup.touched) return { stopped: "touched-by-15m" };
+
+    // 30 min → escalate to BROKER.
+    await step.sleep("wait-to-30m", "15m");
+    return step.run("escalate-broker", async () => {
+      const lead = await loadLead();
+      if (!lead || lead.firstTouchAt) return { stopped: "touched-by-30m" };
+      await prisma.lead.update({ where: { id: leadId }, data: { escalation: "BROKER", escalatedAt: new Date() } });
+      await sendLeadAlert({ restaurantId, leadId, agentId: lead.agentId, leadName: lead.fullName, level: "broker" });
+      return { escalated: "broker" };
+    });
+  },
+);
+
 export const functions = [
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
@@ -259,4 +324,5 @@ export const functions = [
   dailyAuraIntentSnapshot,
   dailyDigestScheduler,
   sendDailyDigest,
+  leadReceivedAlert,
 ];

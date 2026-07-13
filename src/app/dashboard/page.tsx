@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { loadDashboardData, type DashboardData } from "@/lib/dashboard/data";
 import { loadDashboardLayout } from "@/lib/dashboard/layout-store";
 import { DashboardView } from "@/components/dashboard/DashboardView";
+import type { UserRole } from "@prisma/client";
+import type { RoleKey } from "@/lib/mock/dashboard";
+import { DASHBOARD_ROLES } from "@/lib/access/roles";
 
 // Loads live data for each restaurant the signed-in user belongs to.
 export default async function DashboardPage() {
@@ -52,7 +55,11 @@ export default async function DashboardPage() {
 
   const layout = await loadDashboardLayout(userId);
 
-  const roleAssignments = roles.map((role) => ({ restaurantId: role.restaurantId, role: role.role }));
+  // The restaurant dashboard only speaks restaurant roles; brokerage roles
+  // (BROKER/AGENT) don't belong in its role switcher, so narrow to RoleKey.
+  const roleAssignments = roles
+    .filter((r) => (DASHBOARD_ROLES as readonly UserRole[]).includes(r.role))
+    .map((r) => ({ restaurantId: r.restaurantId, role: r.role as RoleKey }));
 
   return (
     <DashboardView

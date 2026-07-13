@@ -14,6 +14,8 @@ const isPublicRoute = createRouteMatcher([
   "/heartbeat(.*)",
   // Inngest authenticates via its signing key, not Clerk.
   "/api/inngest(.*)",
+  // BoldTrail lead webhook — authenticates via a shared secret, not Clerk.
+  "/api/realestate/leads(.*)",
   // Dev-only helper routes (additionally guarded by NODE_ENV inside each handler).
   "/api/dev(.*)",
 ]);

@@ -43,3 +43,28 @@ export async function setCashAnchor(balance: number, dateISO: string): Promise<v
   });
   revalidatePath(PATH);
 }
+
+/**
+ * Set (or clear) the minimum cash floor (B6): the least operating cash the
+ * operator wants to keep on hand. Drives the deterministic cash-floor breach
+ * signal + pre-sweep warning. Pass null to clear it (the signal goes silent).
+ */
+export async function setCashFloor(floor: number | null): Promise<void> {
+  const restaurantId = await requireRestaurant();
+
+  let value: number | null = null;
+  if (floor != null) {
+    if (typeof floor !== "number" || Number.isNaN(floor)) {
+      throw new Error("Floor must be a number");
+    }
+    if (floor < 0) throw new Error("Floor can't be negative");
+    if (floor > 100_000_000) throw new Error("Floor looks like a typo");
+    value = Math.round(floor * 100) / 100;
+  }
+
+  await prisma.restaurant.update({
+    where: { id: restaurantId },
+    data: { minCashFloor: value },
+  });
+  revalidatePath(PATH);
+}

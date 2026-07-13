@@ -31,6 +31,7 @@ export interface CashRunwayData {
   staleDays: number | null; // days between asOf and today — honesty signal
   hasData: boolean; // any transactions at all
   cashOxygen: CashOxygenFloor;
+  minCashFloor: number | null; // operator-set minimum cash floor (B6); null = not configured
 }
 
 const n = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -45,7 +46,7 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
   const [restaurant, txns] = await Promise.all([
     prisma.restaurant.findUnique({
       where: { id: restaurantId },
-      select: { cashBalanceAnchor: true, cashBalanceAnchorDate: true },
+      select: { cashBalanceAnchor: true, cashBalanceAnchorDate: true, minCashFloor: true },
     }),
     prisma.transaction.findMany({
       where: { restaurantId },
@@ -53,6 +54,8 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
       select: { date: true, amount: true },
     }),
   ]);
+
+  const minCashFloor = restaurant?.minCashFloor != null ? n(restaurant.minCashFloor) : null;
 
   const empty: CashRunwayData = {
     hasAnchor: false,
@@ -69,6 +72,7 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
     staleDays: null,
     hasData: txns.length > 0,
     cashOxygen,
+    minCashFloor,
   };
 
   if (!restaurant?.cashBalanceAnchor || !restaurant.cashBalanceAnchorDate) {
@@ -149,5 +153,6 @@ export async function loadCashRunway(restaurantId: string): Promise<CashRunwayDa
     staleDays,
     hasData: txns.length > 0,
     cashOxygen,
+    minCashFloor,
   };
 }

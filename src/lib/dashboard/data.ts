@@ -18,6 +18,7 @@ import type { CostRatioGauge } from "@/components/dashboard/BeverageCostGauges";
 import { loadGoLiveCoach, type GoLiveCoachData } from "@/lib/modules/go-live-coach";
 import { loadCashOxygenFloor, type CashOxygenFloor } from "@/lib/modules/cash-oxygen";
 import { loadPrimeCost } from "@/lib/modules/prime-cost";
+import { loadTaxVault, type TaxDrift } from "@/lib/modules/tax-vault";
 import { loadRentalPropertyRollup, type RentalPropertyRollupData } from "@/lib/modules/rental-property-rollup";
 import { loadAura, type AuraData } from "@/lib/modules/aura";
 import { loadSourceConfigSnapshots } from "@/lib/source-status";
@@ -35,6 +36,7 @@ export interface DashboardData {
   goLiveCoach: GoLiveCoachData;
   cashSafety: DashboardCashSafety;
   aura: DashboardAuraSummary;
+  taxVault: DashboardTaxVaultSummary;
   sourceSetup: SourceSetupSummary;
   rentalPropertyRollup: RentalPropertyRollupData | null;
   gauges: TapGauge[];
@@ -72,6 +74,10 @@ export interface DashboardAuraSummary {
   health: AuraData["health"];
   hasAnyData: boolean;
   intentMetrics: AuraData["intentMetrics"];
+}
+
+export interface DashboardTaxVaultSummary {
+  salesTaxDrift: TaxDrift;
 }
 
 export interface SourceSetupSummary {
@@ -294,11 +300,12 @@ export async function loadDashboardData(
 
   const rentalPropertyRollup = businessType === "VACATION_RENTAL" ? await loadRentalPropertyRollup(restaurantId, db) : null;
   const aura = await loadDashboardAura(restaurantId);
-  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost] = await Promise.all([
+  const [cashOxygen, sourceSetup, netCashChangePeriod, primeCost, taxVault] = await Promise.all([
     loadCashOxygenFloor(restaurantId, db),
     loadSourceSetupSummary(restaurantId, sourceMapFor(businessType), db),
     loadPeriodNetCashChange(restaurantId, start, end, db),
     loadPrimeCost(restaurantId, 8, db),
+    loadTaxVault(restaurantId, db),
   ]);
   const goLiveCoach = await loadGoLiveCoach(restaurantId, db, cashOxygen);
   const operatingProfitAmount = revenue - (cogsFood + cogsLiquor + cogsBeverage) - labor - opex;
@@ -333,6 +340,9 @@ export async function loadDashboardData(
       status: cashOxygen.status,
     },
     aura,
+    taxVault: {
+      salesTaxDrift: taxVault.sales.drift,
+    },
     sourceSetup,
     rentalPropertyRollup,
     heartbeat: {

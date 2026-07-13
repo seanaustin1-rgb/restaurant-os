@@ -91,6 +91,18 @@ function dashboard(overrides: Partial<DashboardData> = {}): DashboardData {
       hasAnyData: false,
       intentMetrics: [],
     },
+    taxVault: {
+      salesTaxDrift: {
+        state: "ok",
+        accrued: 1000,
+        cleared: 980,
+        variance: 20,
+        variancePct: 2,
+        thresholdPct: 5,
+        windowDays: 30,
+        readout: "DAVO pulls are within 5.0% of Toast accrued tax over the trailing 30 days.",
+      },
+    },
     sourceSetup: {
       minimumAutoInput: "",
       requiredCount: 2,
@@ -174,6 +186,27 @@ describe("dashboard signals", () => {
     });
 
     expect(deriveTopPressure(data)).toMatchObject({ state: "pressure", id: "gauge-opex" });
+  });
+
+  it("surfaces sales-tax drift as a red top-pressure candidate", () => {
+    const data = dashboard({
+      taxVault: {
+        salesTaxDrift: {
+          state: "drift",
+          accrued: 1000,
+          cleared: 850,
+          variance: 150,
+          variancePct: 15,
+          thresholdPct: 5,
+          windowDays: 30,
+          readout: "Cleared DAVO pulls are 15.0% below Toast accrued tax over the trailing 30 days.",
+        },
+      },
+    });
+
+    const attention = deriveAttention(data);
+    expect(attention[0]).toMatchObject({ id: "tax-sales-drift", severity: "red" });
+    expect(deriveTopPressure(data)).toMatchObject({ state: "pressure", id: "tax-sales-drift" });
   });
 
   it("does not invent a top pressure when no operating data is loaded", () => {

@@ -114,6 +114,18 @@ export function buildDemoTourData(type: BusinessType): DashboardData {
         { key: "views", label: "Profile views", state: "live", value: 18420, detail: "Last 30 days from Google Business Profile." },
       ],
     },
+    taxVault: {
+      salesTaxDrift: {
+        state: "ok",
+        accrued: taxReserveModel,
+        cleared: taxReserveCleared,
+        variance: taxReserveModel - taxReserveCleared,
+        variancePct: taxReserveModel > 0 ? Math.round((Math.abs(taxReserveModel - taxReserveCleared) / taxReserveModel) * 10_000) / 100 : null,
+        thresholdPct: 30,
+        windowDays: 30,
+        readout: "Demo tax pulls are within the sample tolerance for this tour.",
+      },
+    },
     rentalPropertyRollup: null,
     goLiveCoach: assessGoLiveReadiness({
       periodLabel: MONTH,

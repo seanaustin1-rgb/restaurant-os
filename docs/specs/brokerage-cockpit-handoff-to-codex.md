@@ -130,6 +130,44 @@ test / direct operator decision), and a **Next action** when applicable.
 - **NEXT-004 — Merge order.** Owner [Sean/Claude] · Status **Proposed** · After approval: merge PR #111 to `main`, then
   retarget PR #112's base from `claude/fix-demo-render-p0-ebh2gr` to `main`. Do not merge #112 before #111.
 
+## Demo Mockups — rendered evidence (2026-07-13, Claude)
+
+Rendered from a **local production build** of `claude/demo-broker-day-in-life-p0` (PR #112 = P0 fix #111 + three-tab
+day-in-life narrative) with Playwright. Generated-data-only, public route `/demo/real-estate-cockpit`. These are the
+authoritative visual reference for the demo state (SUCCESS-004/005/006). Previews:
+#111 `restaurant-os-git-claude-fix-demo-render-p0-ebh2gr-outfrontdata.vercel.app`,
+#112 `restaurant-os-git-claude-demo-broker-day-in-8563a3-outfrontdata.vercel.app`.
+
+**Broker cockpit** — greeting → Executive Brief → One-Thing ("Open Whitaker's file") → agent roster/detail → Handled state.
+- Desktop (1440×900): `mockups/broker-desktop.png` · after action: `mockups/broker-desktop-handled.png`
+- Mobile (390×844): `mockups/broker-mobile.png`
+
+![Broker cockpit — desktop](mockups/broker-desktop.png)
+![Broker cockpit — desktop, handled](mockups/broker-desktop-handled.png)
+![Broker cockpit — mobile](mockups/broker-mobile.png)
+
+**Agent app** — "Your morning" brief + One-Thing (214 Highland Park funding today) → "Open the file" → "On it." state.
+- Desktop: `mockups/agent-desktop.png` · after action: `mockups/agent-desktop-handled.png`
+- Mobile: `mockups/agent-mobile.png`
+
+![Agent app — desktop](mockups/agent-desktop.png)
+![Agent app — desktop, handled](mockups/agent-desktop-handled.png)
+![Agent app — mobile](mockups/agent-mobile.png)
+
+**Rental cockpit** — "Portfolio brief" + One-Thing (Brundage red) → "Dispatch technician" → "Dispatched." state; property drawer.
+- Desktop: `mockups/rental-desktop.png` · after action: `mockups/rental-desktop-handled.png` · drawer: `mockups/rental-desktop-drawer.png`
+- Mobile: `mockups/rental-mobile.png`
+
+![Rental cockpit — desktop](mockups/rental-desktop.png)
+![Rental cockpit — desktop, dispatched](mockups/rental-desktop-handled.png)
+![Rental cockpit — property drawer](mockups/rental-desktop-drawer.png)
+![Rental cockpit — mobile](mockups/rental-mobile.png)
+
+> **For Codex:** these render the intended demo state for the readiness pass (leadership route + investor gate, agent
+> demo-path decision, vacation-rental copy, demo-funnel routing). The demo shell is generated-data-only and touches no
+> backend/db/auth/migration. Root cause of the earlier P0 render break is FAILURE-003 → SUCCESS-004 (styled-jsx
+> child-component scoping — not a Babel config).
+
 ## Shared Current State — Raven (2026-07-13)
 
 - July 14 Luke demo hinges on the **public** `/demo/real-estate-cockpit` three-tab experience (Broker / Agent / Rental),
@@ -357,6 +395,12 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — Added demo mockups to the Command Center for Codex.** Committed 10 rendered PNGs to
+  `docs/specs/mockups/` (Broker/Agent/Rental at desktop 1440×900 + mobile 390×844, each interactive "handled" state, and
+  the rental property drawer) and referenced them inline from the new **Demo Mockups** section above. So Codex (and Sean)
+  can see the intended demo state in-repo without a preview deploy. Captured from a local prod build of
+  `claude/demo-broker-day-in-life-p0` (commit at time of capture). Generated-data-only.
 
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-006: day-in-life narrative extended to Agent + Rental (all three tabs).**
   NEXT-006 done. Applied the DECISION-002 spine (greeting → Executive Brief → One-Thing-with-action → roster/detail →

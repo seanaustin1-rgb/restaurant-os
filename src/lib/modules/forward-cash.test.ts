@@ -228,6 +228,22 @@ describe("inferPayroll", () => {
     ])?.cadence).toBe("monthly");
   });
 
+  // KNOWN LIMITATION (B7): semi-monthly payroll (paid on the 15th + month-end,
+  // ~15-16 day intervals) is APPROXIMATED as biweekly — it lands in the same
+  // cadence bucket and projects at the ~15-day median, not on true 15th/EOM
+  // anchors. This is documented, not exact payroll-system data; the test pins
+  // the approximation so a future explicit semi-monthly model is a deliberate change.
+  it("approximates semi-monthly payroll as biweekly (documented limitation)", () => {
+    const inf = inferPayroll([
+      { date: "2026-05-15", amount: 9000 },
+      { date: "2026-05-31", amount: 9000 }, // 16d
+      { date: "2026-06-15", amount: 9000 }, // 15d
+      { date: "2026-06-30", amount: 9000 }, // 15d
+    ]);
+    expect(inf).toMatchObject({ cadence: "biweekly", confident: true });
+    expect(inf?.intervalDays).toBeGreaterThanOrEqual(15); // ~15-16d median, not true semi-monthly
+  });
+
   it("is not confident with fewer than 3 runs or an irregular cadence", () => {
     expect(inferPayroll([{ date: "2026-06-01", amount: 5000 }, { date: "2026-06-15", amount: 5200 }])).toMatchObject({
       confident: false,

@@ -583,6 +583,16 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — Today's game plan made ACTIONABLE (SUCCESS-014 extended, PR #115, commit `e3236d1`).**
+  Sean's screenshot feedback: the plan listed actions but offered no way to *act* (no call/text/email). Each game-plan
+  item now expands ("Take action") into the same call / text / email affordances the Lead action center uses — a dial
+  chip for calls, an editable pre-written draft for texts/emails; **Send** fires a toast and checks the item off (demo —
+  no real send). Drafts per item: Highland Park docs → request-e-signature email + text the title officer + "mark
+  uploaded"; Sam Ortega → call + text + intro email; inspection → text/call the inspector; Cedar Bluff → confirm-appt
+  text + pricing-prep email; Ridgeline → convert-to-listing email + nudge text. Reuses the global `.compose`/`.cmp-*`/
+  `.btn`/`.lcall` styles; `GamePlanItem` is a separate component so all `.gp-*` CSS is now global-scoped under `.agent`
+  (SUCCESS-004 styled-jsx child-scoping rule). Generated-data-only; no backend/API/persistence/auth. Gates re-run green:
+  `tsc` clean · `vitest` 340 passed · `npm run build` green. Still held for Sean's visual approval (NEXT-007).
 - **2026-07-13 (EOD+1) [Claude] — July-14 finalization: Today's game plan + merge/revert consolidation (PR #115).**
   Delivered the one authorized remaining feature and reconciled the merge state.
   **Feature (SUCCESS-014, OBJECTIVE-005):** added a compact, time-boxed, checkable **Today's game plan** to the demo

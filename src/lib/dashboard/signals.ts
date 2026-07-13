@@ -49,6 +49,7 @@ export interface SourceTrust {
  * deterministic and defensible.
  */
 const PRIORITY: Record<string, number> = {
+  "tax-sales-drift": 0,
   "bucket-tax-reserve": 0,
   "bucket-labor": 1,
   "gauge-labor": 1,
@@ -122,6 +123,18 @@ export function deriveAttention(data: DashboardData): AttentionItem[] {
         systemNote: b.note,
       });
     }
+  }
+
+  const drift = data.taxVault?.salesTaxDrift;
+  if (drift?.state === "drift") {
+    items.push({
+      id: "tax-sales-drift",
+      label: "Sales Tax Drift",
+      severity: "red",
+      readout: drift.readout,
+      overByPct: drift.variancePct != null ? Math.max(0, drift.variancePct - drift.thresholdPct) : null,
+      systemNote: `Accrued ${drift.accrued.toFixed(2)} vs cleared ${drift.cleared.toFixed(2)} over ${drift.windowDays} days.`,
+    });
   }
 
   return rankAttention(items);

@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { loadTaxVault, splitLedgerTaxPulls, splitLegacyTaxPulls } from "./tax-vault";
+import {
+  calculateTaxDrift,
+  loadTaxVault,
+  parseTaxProfile,
+  splitLedgerTaxPulls,
+  splitLegacyTaxPulls,
+} from "./tax-vault";
 
 describe("splitLedgerTaxPulls", () => {
   it("routes TAX_PAYROLL lines to payroll and everything else on TAX_VAULT to sales", () => {
@@ -42,6 +48,70 @@ describe("splitLegacyTaxPulls", () => {
   });
 });
 
+describe("tax profile and drift", () => {
+  it("parses tenant tax profile config with safe defaults", () => {
+    expect(
+      parseTaxProfile({
+        label: "PA retail liquor license",
+        taxableRatePct: 6,
+        effectiveRateNote: "Alcohol is exempt.",
+        driftThresholdPct: 4,
+        driftWindowDays: 45,
+      }),
+    ).toEqual({
+      label: "PA retail liquor license",
+      taxableRatePct: 6,
+      effectiveRateNote: "Alcohol is exempt.",
+      driftThresholdPct: 4,
+      driftWindowDays: 45,
+    });
+
+    expect(parseTaxProfile({ driftThresholdPct: -1, driftWindowDays: 0 }).driftThresholdPct).toBe(5);
+    expect(parseTaxProfile(null).label).toMatch(/generic/i);
+  });
+
+  it("flags drift when cleared tax pulls diverge past the threshold", () => {
+    const drift = calculateTaxDrift({ accrued: 1000, cleared: 900, thresholdPct: 5, windowDays: 30 });
+
+    expect(drift).toMatchObject({
+      state: "drift",
+      accrued: 1000,
+      cleared: 900,
+      variance: 100,
+      variancePct: 10,
+      thresholdPct: 5,
+      windowDays: 30,
+    });
+    expect(drift.readout).toMatch(/below Toast accrued tax/i);
+  });
+
+  it("stays ok inside threshold and degrades when accrued tax is missing", () => {
+    expect(calculateTaxDrift({ accrued: 1000, cleared: 970, thresholdPct: 5, windowDays: 30 })).toMatchObject({
+      state: "ok",
+      variancePct: 3,
+    });
+    expect(calculateTaxDrift({ accrued: 0, cleared: 100, thresholdPct: 5, windowDays: 30 })).toMatchObject({
+      state: "insufficient-data",
+      variancePct: null,
+    });
+  });
+
+  it("degrades when accrued tax exists but no cleared remittance channel is visible", () => {
+    const drift = calculateTaxDrift({ accrued: 1000, cleared: 0, thresholdPct: 5, windowDays: 30 });
+
+    expect(drift).toMatchObject({
+      state: "insufficient-data",
+      accrued: 1000,
+      cleared: 0,
+      variance: 1000,
+      variancePct: null,
+      thresholdPct: 5,
+      windowDays: 30,
+    });
+    expect(drift.readout).toMatch(/no cleared tax remittances/i);
+  });
+});
+
 // Minimal Prisma stand-in for the ledger-first-vs-legacy switch. `ledgerCount`
 // drives which spine assessLedgerCoverage picks; the branch-specific readers
 // (ledgerEntry.findMany / transaction.findMany) return the configured rows.
@@ -60,6 +130,17 @@ function fakeDb(opts: FakeOpts) {
     { date: new Date("2026-06-02T00:00:00.000Z"), netSales: 4000, salesTaxCollected: 240 },
   ];
   return {
+    restaurant: {
+      findUnique: async () => ({
+        taxProfile: {
+          label: "PA retail liquor license",
+          taxableRatePct: 6,
+          effectiveRateNote: "Alcohol is exempt; York County has no add-on.",
+          driftThresholdPct: 5,
+          driftWindowDays: 30,
+        },
+      }),
+    },
     dailySales: {
       findFirst: async () => ({ date: june }),
       findMany: async () => dailySales,
@@ -103,6 +184,8 @@ describe("loadTaxVault — ledger-first / legacy fallback switch", () => {
     expect(data.sales.pulled).toBe(500);
     expect(data.payroll.pulled).toBe(300);
     expect(data.sales.collected).toBe(600); // 360 + 240 from Toast
+    expect(data.taxProfile.label).toBe("PA retail liquor license");
+    expect(data.sales.drift.state).toBe("drift");
     expect(data.sales.reserve).toBe(100); // 600 collected − 500 pulled
   });
 

@@ -653,11 +653,15 @@ _Logged here so the Engineering picture is complete; Codex to absorb/own. Full h
 
 ## Codex Next-Run Brief (Design Authority → Codex)
 
-_Standing task brief for Codex's next run. Source of truth is this Command Center; read the Execution Plan, PD-001…PD-014,
-resolved R7–R10, Design Review §3/§7/§8, and REV-1/REV-2 before coding._
+**▶ CODEX — START HERE. Current task = Increment 2 (Agent → Owner rollup demo).** This Command Center is the full handoff;
+read the Execution Plan, PD-001…PD-014, Design Review §8, and REV-2, then build the "Build" list below to its acceptance conditions.
 
-**Branch:** start from `main` **after PR #106 merges** (so you have the Morning Ritual + the speed-to-lead spine). Target for
-Luke's first look is **Checkpoint B**; ship this increment on its own PR, CI green, and hand back for Design review (PD-010).
+**Branch (handles the current un-merged state):**
+- The **Morning Ritual** is on **PR #106 / branch `work` (@ 28a9fa4)**; these **specs** are on **PR #103 / branch
+  `claude/a6-operator-laptop-run-9j934q`**. They have not yet been reconciled onto `main`.
+- **Base Increment 2 on the branch that has the Morning Ritual (`work` / PR #106)** so you don't regress it, and follow this
+  Increment-2 brief. If PR #106 has already been merged to `main` by the time you start, branch from `main` instead.
+- Ship on its own PR, CI green, hand back for Design review (PD-010). Target for Luke's first look is **Checkpoint B**.
 
 **Increment 1 — DONE** (PR #106, embedded `LukeFirstLoginPanel`; REV-2 **PASS**; PD-014). The standalone route (PR #105) is retired.
 

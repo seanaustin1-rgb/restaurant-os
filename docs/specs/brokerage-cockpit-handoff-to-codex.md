@@ -12,7 +12,7 @@ Progress Log after every step, so the other agent always knows what's done and w
 
 **Branch:** `feat/heartbeat-landing` (original tandem) · current Claude working branches `claude/fix-demo-render-p0-ebh2gr`
 (P0 fix, PR #111) + `claude/demo-broker-day-in-life-p0` (broker narrative rebased on P0, PR #112) ·
-**Last updated:** 2026-07-13 (EOD) by Claude · **Related specs:** `brokerage-data-sources.md`,
+**Last updated:** 2026-07-13 (EOD+1) by Claude · **Related specs:** `brokerage-data-sources.md`,
 `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
 
 ---
@@ -240,13 +240,18 @@ captures future expectations as reminders. Live speech-to-text + AI writes to CR
 > backend/db/auth/migration. Root cause of the earlier P0 render break is FAILURE-003 → SUCCESS-004 (styled-jsx
 > child-component scoping — not a Babel config).
 
-## Shared Current State — Raven (2026-07-13)
+## Shared Current State — Raven (2026-07-13, updated EOD+1)
 
 - July 14 Luke demo hinges on the **public** `/demo/real-estate-cockpit` three-tab experience (Broker / Agent / Rental),
-  generated-data-only. All three tabs exist and PR #104 is deployed, **but a P0 render failure means the demo is not yet
-  visually approved** (FAILURE-002 / BLOCKER-001).
-- Active demo work is on `claude/demo-broker-day-in-life` (broker narrative, committed UNTESTED). The P0 fix will take a
-  **separate** branch off main. Nothing merges to main until Sean visually approves a preview (DECISION-004).
+  generated-data-only. **The P0 render failure is FIXED (SUCCESS-004, PR #111) and the three-tab day-in-life narrative is
+  DONE (SUCCESS-005/006, PR #112).** Both PRs are **open drafts**; gates are green (tsc clean · `npm test` 340 passed ·
+  `npm run build` green); Vercel previews are **Ready** for both. The **only** remaining item is **Sean's visual approval**
+  before merge (BLOCKER-001 narrowed → NEXT-003; DECISION-004).
+- Active demo work is on **`claude/fix-demo-render-p0-ebh2gr`** (P0 fix, PR #111) and **`claude/demo-broker-day-in-life-p0`**
+  (three-tab narrative stacked on the P0 fix, PR #112). The old `claude/demo-broker-day-in-life` branch (the UNTESTED
+  broker-only commit `b646e61`) is **superseded** — its narrative was cherry-picked, tested, and verified onto the P0 fix.
+  **This Command Center doc lives on `claude/demo-broker-day-in-life-p0` (PR #112); read that branch, not `main`.** Nothing
+  merges to main until Sean visually approves a preview (DECISION-004).
 - PRs #107–#110 shipped to production (Tax Vault, cash floor, payroll, demo/prod isolation) but are off the visual-demo
   critical path. PR #105 / #106 remain unmerged and are not required for July 14 (DECISION-005).
 
@@ -275,9 +280,13 @@ captures future expectations as reminders. Live speech-to-text + AI writes to CR
 
 ## Blockers — Raven
 
-- **BLOCKER-001** — public demo not visually approved. **Narrowed:** the P0 repair (OBJECTIVE-003) is done and gate-green
-  (SUCCESS-004) and the narrative is done (SUCCESS-005); the *only* remaining item is **Sean's visual approval of the
-  previews** (NEXT-003) before merge to main (DECISION-004). No engineering blocker remains.
+- **BLOCKER-001** — public demo not visually approved. **Status: Narrowed to visual-approval-only (no engineering blocker
+  remains).** The P0 repair (OBJECTIVE-003) is done and gate-green (SUCCESS-004, PR #111) and the three-tab narrative is
+  done (SUCCESS-005/006, PR #112). Evidence bundle satisfying NEED-001: **tsc clean · `npm test` 340 passed · `npm run
+  build` green** on both branches; **viewport verification at 390×844 (mobile) + 1440×900 (desktop)** across all three tabs
+  (Broker/Agent/Rental) + the rental drawer + the interactive "Open Whitaker's file" flow, on a local prod build with
+  Playwright; **Vercel previews Ready** (#111 `…fix-demo-render-p0-ebh2gr…`, #112 `…demo-broker-day-in-8563a3…`). The
+  *only* remaining item is **Sean's visual approval of the previews** (NEXT-003) before merge to main (DECISION-004).
 
 ## Next Actions — Raven
 
@@ -467,6 +476,22 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — Command Center reconciled to true completion state (per Codex request).** Codex flagged
+  that the remote doc still read P0 as not-started/in-progress and the narrative as blocked/untested. Reconciled the
+  status-bearing sections so the doc matches reality: **OBJECTIVE-003 = Passed (pending approval)** — P0 render fix, PR
+  #111 (`claude/fix-demo-render-p0-ebh2gr`, commit `1f0eb99`), root cause = styled-jsx child-component scoping (SUCCESS-004).
+  **OBJECTIVE-004 = Passed (pending approval)** — three-tab day-in-life narrative, PR #112 (`claude/demo-broker-day-in-life-p0`,
+  commit `ed3b8bf`, stacked on #111). **BLOCKER-001 narrowed** to visual-approval-only (no engineering blocker). Updated
+  the stale **Shared Current State** block (it still described the pre-fix world + the superseded `claude/demo-broker-day-in-life`
+  branch) and **Claude Lane Status / Next Actions** (NEXT-001/002 DONE). **Evidence bundle (NEED-001):** `npx tsc --noEmit`
+  clean on both branches · `npm test` **340 passed** (49 files) · `npm run build` green on both · CI Typecheck ✓ / Test ✓
+  on #111 · **viewport verification at 390×844 + 1440×900** across Broker/Agent/Rental + rental drawer + the interactive
+  "Open Whitaker's file" flow (local prod build, Playwright) · **Vercel previews Ready** (#111 `…fix-demo-render-p0-ebh2gr…`,
+  #112 `…demo-broker-day-in-8563a3…`). **Remaining completeness work:** (1) Sean's visual approval of the two previews is
+  the sole open item; (2) merge order — #111 to `main` first, then retarget #112's base to `main` (NEXT-004); (3) the two
+  agent-app asks (coaching daily-plan + agent appointment assistant) are on hold pending Codex's NEED-C1/C2/C3 answers.
+  Doc-only change; no code touched.
 
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-013: lead email template picker + home-value market report.** Commit
   `ac62ee6` (AgentApp.tsx). The lead email compose now offers multiple templates grouped by intent, plus a home-value

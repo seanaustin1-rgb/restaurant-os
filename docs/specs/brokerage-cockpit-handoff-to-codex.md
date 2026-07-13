@@ -426,6 +426,12 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-010: agent real-estate calendar is now click-to-expand.** Commit `3a9e237`.
+  Per Sean, the per-agent calendar in the roster detail is collapsed by default (header "Real-estate calendar · N this
+  week" + chevron) and expands on click to show the appointments + the CRM-sync note. `openCal` toggle, resets when
+  switching agents. tsc clean, 340 tests, build green. Also confirmed for Sean: the mockups ARE in-repo on this branch
+  (`docs/specs/mockups/`, 13 PNGs) — they only live on the PR #112 branch, not `main` (nothing merged yet).
+
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-009: trend arrows + quantified change on every tracked broker metric.** Commit
   `d44cf94`. Added a reusable directional `Trend` chip (up/down/flat → green/red/muted) and wired it into: the 4 company
   gauges (retention **▼1.2 pts** vs last mo, cash oxygen **▲5 days**, lead ROI **▲0.4×**, reputation **▲0.1**), each

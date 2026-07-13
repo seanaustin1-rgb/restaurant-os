@@ -149,6 +149,10 @@ agent roster → **Your week** calendar (follow-ups + appointments) → **Compan
 ![Broker cockpit — desktop, resolved](mockups/broker-desktop-handled.png)
 ![Broker cockpit — mobile](mockups/broker-mobile.png)
 
+Broker → agent drill-down: expanding an agent in the roster shows that agent's **real-estate calendar** (showings /
+closings / listing appts / inspections / calls), with a note that appointments sync to the client file in the CRM.
+![Broker → agent detail with real-estate calendar](mockups/broker-agent-calendar.png)
+
 **Agent app** — "Your morning" brief + One-Thing (214 Highland Park funding today) → "Open the file" → "On it." state.
 - Desktop: `mockups/agent-desktop.png` · after action: `mockups/agent-desktop-handled.png`
 - Mobile: `mockups/agent-mobile.png`
@@ -398,6 +402,13 @@ phantom diffs); gate on **tsc + vitest**.
 ## Progress Log
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-008: broker drill-down shows each agent's real-estate calendar.** Commit
+  `9ff8409`. Expanding an agent in the roster now reveals that agent's real-estate calendar — upcoming showings,
+  closings, listing appointments, inspections, and client calls (per-agent generated data, tagged by type) — with a
+  header noting appointments sync back to the client file in the CRM. Kept **CRM-neutral** (not "BoldTrail") per the
+  BoldTrail→CRM genericization, which is Codex-owned source-label copy — flagging for Codex in case it wants to align the
+  exact CRM wording. tsc clean, 340 tests, prod build green. Mockup: `mockups/broker-agent-calendar.png`.
 
 - **2026-07-13 (EOD+1) [Claude] — SUCCESS-007: broker cockpit deepened per Sean's demo feedback.** Commit `62a9304`
   (RealEstateDemo.tsx, generated-data-only). (1) Greeting → **"Welcome, Luke"** (this demo is for Luke, not "Marcus").

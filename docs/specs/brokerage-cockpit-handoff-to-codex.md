@@ -184,6 +184,10 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-11 [Codex]** Started the unblocked Morning Brief implementation: added an owner-mode `/morning-brief` route backed by the deterministic Daily Digest/Forward Cash builders, with voice-first entry, skip/type fallback, and One Thing First framing.
+- **2026-07-11 [Codex]** Continued source-onboarding lane by keeping OAuth/partner-API profiles (Google Workspace, BoldTrail) on request/approval paths instead of routing them to brokerage import; CSV-only profiles still use import planning.
+- **2026-07-11 [Codex]** Continued Sprint 3 Google Workspace onboarding by carrying the Command Center product principle into onboarding: source cards now show the first value each profile unlocks before asking the operator to expand to more systems.
+- **2026-07-11 [Codex]** Luke pilot path: added Google Workspace as an honest planned/import-ready source profile and onboarding source-map option for brokerage/rental operating signals. It is explicitly OAuth-after-scope-approval with Workspace admin export fallback; no live sync or connected status is claimed.
 - **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
   Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
   casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM

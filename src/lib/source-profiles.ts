@@ -3,6 +3,7 @@ import type { SourceCategory } from "./source-map";
 export type SourceProfileId =
   | "boldtrail-crm"
   | "follow-up-boss-crm"
+  | "google-workspace"
   | "boldtrail-backoffice"
   | "appfiles-transactions"
   | "escapia-operations"
@@ -20,7 +21,7 @@ export const IMPORT_SETUP_REQUESTED_TEXT = "Import setup requested.";
 export interface SourceProfile {
   id: SourceProfileId;
   label: string;
-  vendor: "BoldTrail" | "Follow Up Boss" | "BoldTrail BackOffice" | "AppFiles" | "Escapia";
+  vendor: "BoldTrail" | "Follow Up Boss" | "Google Workspace" | "BoldTrail BackOffice" | "AppFiles" | "Escapia";
   category: SourceCategory;
   connectionPath: SourceConnectionPath;
   connectionLabel: string;
@@ -97,6 +98,32 @@ export const SOURCE_PROFILES: Record<SourceProfileId, SourceProfile> = {
     riskNotes: [
       "CRM pipeline is forecast data, not closed cash.",
       "An agent-level API key may only see assigned contacts; use brokerage-approved admin scope for brokerage-wide reporting.",
+    ],
+  },
+  "google-workspace": {
+    id: "google-workspace",
+    label: "Google Workspace",
+    vendor: "Google Workspace",
+    category: "aura",
+    connectionPath: "oauth",
+    connectionLabel: "Owner OAuth or Workspace admin export",
+    clientSetup: "Brokerage or property-management owner grants read-only Google access, or exports directory/calendar/activity reports from Workspace admin.",
+    consultantSetup: "Consultant confirms the primary domain, shared inbox/calendar names, and which team activity signals are approved before any OAuth connection is marked live.",
+    apiReality: "OAuth is the right live path, but only after Sean confirms scopes and Luke approves domain-wide or owner-consented access. Until then, keep this planned/import-ready.",
+    csvFallback: "Admin export first: users, groups, shared calendars, appointment/event counts, and approved activity summaries by team or property.",
+    importedEntities: ["Users", "Groups", "Shared calendars", "Activity summaries", "Review/request touchpoints"],
+    requiredIdentity: ["workspace domain", "user email", "group or team", "calendar id", "approved activity window"],
+    apiAccessNeeds: ["Luke/admin approval", "Google Workspace domain", "Read-only OAuth scopes decision", "Admin export or owner OAuth path", "Team/property identity mapping"],
+    credentialIntake: [
+      { key: "admin-approval", label: "Workspace admin approval", detail: "Confirms Luke or a Workspace admin approved reporting access for the pilot.", kind: "approval", sensitivity: "none", required: true, collectVia: "vendor_admin" },
+      { key: "workspace-domain", label: "Workspace domain", detail: "Primary Google Workspace domain used to match users and shared calendars.", kind: "account_id", sensitivity: "restricted", required: true, collectVia: "settings" },
+      { key: "oauth-scopes", label: "Read-only scope decision", detail: "Operator must approve the exact read-only scopes before OAuth is enabled.", kind: "approval", sensitivity: "restricted", required: true, collectVia: "vendor_admin" },
+      { key: "admin-export", label: "Workspace admin export", detail: "CSV/export is the pilot-safe fallback while OAuth scopes are being approved.", kind: "csv_export", sensitivity: "restricted", required: false, collectVia: "csv_import" },
+    ],
+    dashboardUnlocks: ["Team responsiveness", "Calendar coverage", "Lead handoff hygiene", "Owner/operator operating rhythm"],
+    riskNotes: [
+      "Do not read email bodies or calendar descriptions unless a later operator-approved scope explicitly allows it.",
+      "Workspace activity is an operating signal, not money truth; keep it separate from QBO, bank, and commission data.",
     ],
   },
   "boldtrail-backoffice": {

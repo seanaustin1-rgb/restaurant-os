@@ -20,6 +20,7 @@ describe("onboarding source selection", () => {
       updatedBy: "user_123",
       selectedSources: [
         { category: "cash", providerName: "Plaid" },
+        { category: "aura", providerName: "Google Workspace" },
         { category: "pipeline", providerName: "BoldTrail CRM / export" },
         { category: "pipeline", providerName: "appFiles transaction export" },
         { category: "sales", providerName: "Escapia API / export" },
@@ -30,11 +31,13 @@ describe("onboarding source selection", () => {
       "cash::Plaid",
       "pipeline::BoldTrail CRM / export",
       "pipeline::appFiles transaction export",
+      "aura::Google Workspace",
     ]);
     expect(rows.every((row) => row.status === "PLANNED")).toBe(true);
     expect(rows.every((row) => row.updatedBy === "user_123")).toBe(true);
     expect(rows.find((row) => row.providerName === "BoldTrail CRM / export")?.notes).toContain("selected during onboarding");
     expect(rows.find((row) => row.providerName === "BoldTrail CRM / export")?.notes).not.toContain("API setup requested");
+    expect(rows.find((row) => row.providerName === "Google Workspace")?.notes).toContain("Owner OAuth or Workspace admin export");
   });
 
   it("keeps vacation-rental Escapia profile selections available from onboarding", () => {

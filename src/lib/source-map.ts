@@ -52,6 +52,7 @@ const auraGroup: SourceGroup = {
   purpose: "Reads demand, reputation, search intent, and customer action.",
   options: [
     { name: "Google Business Profile", role: "Calls, directions, website clicks, search impressions, reviews", unlocks: ["Aura", "demand intent", "review trend"], minimum: true },
+    { name: "Google Workspace", role: "Email, calendar, contacts, and approved team activity. OAuth after scope approval; export first.", unlocks: ["team responsiveness", "calendar coverage", "handoff hygiene"], profileId: "google-workspace" },
     { name: "Yelp", role: "Reviews and rating trend", unlocks: ["review health", "complaint themes"] },
     { name: "Meta / Instagram", role: "Social engagement", unlocks: ["brand momentum", "campaign response"] },
   ],
@@ -155,6 +156,7 @@ export const SOURCE_MAPS: Record<BusinessType, BusinessSourceMap> = {
         purpose: "Tracks whether the market is leaning in before commissions land.",
         options: [
           { name: "Google Business Profile", role: "Calls, website clicks, search impressions, reviews", unlocks: ["referral momentum", "local demand"] },
+          { name: "Google Workspace", role: "Email, calendar, contacts, and approved team activity. OAuth after scope approval; export first.", unlocks: ["team responsiveness", "calendar coverage", "handoff hygiene"], profileId: "google-workspace" },
           { name: "Zillow / Realtor.com", role: "Lead and profile activity", unlocks: ["portal ROI", "listing attention"] },
           { name: "Meta / Google Ads", role: "Ad spend and leads", unlocks: ["lead ROI", "campaign pressure"] },
         ],

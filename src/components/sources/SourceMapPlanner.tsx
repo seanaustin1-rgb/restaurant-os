@@ -80,6 +80,15 @@ function providerGuide(category: SourceCategory, option: SourceOption): Onboardi
   const name = option.name.toLowerCase();
   const profile = sourceProfile(option.profileId);
   if (profile) {
+    if (profile.connectionPath !== "csv_export") {
+      return {
+        mode: "planned",
+        owner: profile.connectionPath === "oauth" ? "owner" : "support",
+        headline: profile.connectionLabel,
+        detail: `${profile.apiReality} ${profile.csvFallback}`,
+        primaryLabel: profile.connectionPath === "oauth" ? "Request owner approval" : "Request setup help",
+      };
+    }
     return {
       mode: "upload",
       owner: "advisor",
@@ -174,6 +183,7 @@ function statusCopy(status: DataSourceStatus, guide: OnboardingGuide): { label: 
   if (status === "NOT_NEEDED") return { label: "Skip for now", detail: "Not needed for the current onboarding path." };
   if (guide.mode === "oauth") return { label: "Ready to connect", detail: "Customer can start this with a provider login." };
   if (guide.mode === "upload") return { label: "Upload path", detail: "Use a file/import path until a direct connector exists." };
+  if (guide.mode === "planned") return { label: "Approval path", detail: "Save the setup request while owner approval, scopes, or partner access are pending." };
   return { label: "Support setup", detail: "Support should confirm the setup path." };
 }
 
@@ -196,6 +206,7 @@ function requiresGoogleAuthorization(option: SourceOption): boolean {
 }
 
 function profileSetupButtonLabel(profile: NonNullable<ReturnType<typeof sourceProfile>>): string {
+  if (profile.connectionPath === "oauth") return "Request OAuth setup";
   return profile.connectionPath === "csv_export" ? "Plan import setup" : "Request API setup";
 }
 

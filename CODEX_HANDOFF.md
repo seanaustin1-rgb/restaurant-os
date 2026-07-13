@@ -1,5 +1,41 @@
 # CODEX_HANDOFF
 
+## Product Reviews — Command Center
+
+### Product Review – 2026-07-11 (GPT)
+
+**Decision:** ✅ APPROVED
+
+**Accepted**
+
+- Google Workspace added as a first-class source for Brokerage and Aura.
+- “Export first, OAuth after scope approval” remains the correct MVP strategy.
+- Source hierarchy aligns with Luke pilot priorities.
+
+**Product Refinement**
+
+Update Google Workspace description to:
+
+> Email, calendar, contacts, and approved team activity. OAuth after scope approval; export first.
+
+This is clearer for first-time users than “directory.”
+
+**Sprint 3 Priority**
+
+1. Google Workspace onboarding
+2. BoldTrail onboarding
+3. Executive Brief using connected data
+4. Escapia onboarding
+5. QuickBooks onboarding
+
+**Product Principle**
+
+Connect → Show Value → Expand
+
+Users should see immediate value after each connection before being asked to connect another system.
+
+---
+
 ## Latest - 2026-07-04 (from Codex) - onboarding source selection branch
 
 Current branch: `feat/onboarding-source-simplification`.

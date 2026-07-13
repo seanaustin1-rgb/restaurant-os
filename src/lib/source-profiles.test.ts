@@ -15,6 +15,7 @@ import {
 const PILOT_PROFILE_IDS: SourceProfileId[] = [
   "boldtrail-crm",
   "follow-up-boss-crm",
+  "google-workspace",
   "boldtrail-backoffice",
   "appfiles-transactions",
   "escapia-operations",
@@ -75,6 +76,15 @@ describe("source profiles", () => {
     expect(note.toLowerCase()).not.toContain("paste");
     expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("API:"), expect.stringContaining("CSV fallback:")]));
     expect(checklist).toEqual(expect.arrayContaining([expect.stringContaining("Intake: Follow Up Boss API key via secure_support (secret)")]));
+  });
+
+  it("keeps Google Workspace OAuth planned until scopes are approved", () => {
+    const profile = sourceProfile("google-workspace");
+    expect(profile?.connectionPath).toBe("oauth");
+    expect(profile?.apiReality).toContain("scopes");
+    expect(profile?.csvFallback).toContain("Admin export");
+    expect(profile?.riskNotes.join(" ")).toContain("Do not read email bodies");
+    expect(sourceApiSetupState({ profile: profile!, status: "PLANNED", notes: buildSourceSelectedNote(profile!) })).toBe("api_available");
   });
 
   it("builds an onboarding selected note without marking API setup requested", () => {

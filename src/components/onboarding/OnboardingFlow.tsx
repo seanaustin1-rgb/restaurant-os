@@ -228,6 +228,9 @@ export function OnboardingFlow({
         <div className="space-y-5">
           <h1 className="font-display text-2xl text-copper-soft">How should setup begin?</h1>
           <p className="text-sm text-muted">Pick the starting path. After this, the app will show exactly what to connect or confirm.</p>
+          <p className="rounded-md border border-line bg-ink/60 px-3 py-2 text-xs leading-relaxed text-muted">
+            Product path: connect one source, show the first useful readout, then expand to the next system.
+          </p>
           {businessType === "REAL_ESTATE_BROKERAGE" && (
             <p className="rounded-md border border-copper-dim/50 bg-copper/10 px-3 py-2 text-xs leading-relaxed text-copper-soft">
               Brokerage setup can begin without live API keys. A CSV/export of agents, deals, splits, caps, and lead
@@ -277,6 +280,11 @@ export function OnboardingFlow({
                               {profile && <span className="rounded-full border border-line px-2 py-0.5 text-[10px] text-muted">{profile.connectionLabel}</span>}
                             </span>
                             <span className="mt-1 block text-xs leading-relaxed text-muted">{option.role}</span>
+                            {profile && (
+                              <span className="mt-1 block text-[11px] leading-relaxed text-copper-soft">
+                                First value: {profile.dashboardUnlocks.slice(0, 2).join(" + ")}
+                              </span>
+                            )}
                             {profile && <span className="mt-1 block text-[11px] leading-relaxed text-muted">CSV/import fallback: {profile.csvFallback}</span>}
                           </span>
                         </label>

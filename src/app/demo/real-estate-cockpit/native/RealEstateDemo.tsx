@@ -206,6 +206,122 @@ const TICKER = [
   { l: "New listings", v: "62/wk", a: "up" },
 ];
 
+interface AgentRow {
+  key: string;
+  name: string;
+  role: string;
+  gci: string;
+  capPct: number;
+  cap: string;
+  roi: string;
+  tone: Tone;
+  status: string;
+  flag?: string;
+  detail: { pipeline: string; response: string; note: string };
+}
+
+// Exceptions-first: the two agents who need the broker lead the roster.
+const AGENTS: AgentRow[] = [
+  {
+    key: "whitaker",
+    name: "Whitaker Cole",
+    role: "Senior agent",
+    gci: "$41.2k",
+    capPct: 0.86,
+    cap: "86% to cap",
+    roi: "0.8×",
+    tone: "red",
+    status: "Needs you",
+    flag: "Missing legal disclosures on a Pending file — 26h in, past the 24h deadline.",
+    detail: {
+      pipeline: "4 active · 1 Pending at risk · 2 buyer-side, 1 listing",
+      response: "Avg response 9.1h — slowest on the roster",
+      note: "Strong closer, weak on compliance hygiene. The disclosure gap is a liability today; his lead ROI is under 1× because spend outruns closings.",
+    },
+  },
+  {
+    key: "chloe",
+    name: "Chloe Bennett",
+    role: "Agent",
+    gci: "$22.8k",
+    capPct: 0.34,
+    cap: "34% to cap",
+    roi: "1.1×",
+    tone: "yellow",
+    status: "Stalled",
+    flag: "Pipeline hasn't advanced a stage in 11 days — 3 leads going cold.",
+    detail: {
+      pipeline: "5 active · 0 Pending · all buyer-side, early stage",
+      response: "Avg response 5.4h",
+      note: "Volume is fine, conversion is stuck. A coaching touch on follow-up cadence likely unblocks two of the three cold leads.",
+    },
+  },
+  {
+    key: "priya",
+    name: "Priya Nair",
+    role: "Top producer",
+    gci: "$68.5k",
+    capPct: 0.71,
+    cap: "71% to cap",
+    roi: "6.9×",
+    tone: "green",
+    status: "On track",
+    detail: {
+      pipeline: "6 active · 2 Pending · balanced buy/list",
+      response: "Avg response 1.2h — fastest on the roster",
+      note: "The blend's best lead ROI. Nearing cap — company dollar on her deals compresses next month; nothing to fix.",
+    },
+  },
+  {
+    key: "theo",
+    name: "Theo Alvarez",
+    role: "Agent",
+    gci: "$31.0k",
+    capPct: 0.48,
+    cap: "48% to cap",
+    roi: "3.4×",
+    tone: "green",
+    status: "On track",
+    detail: {
+      pipeline: "4 active · 1 Pending · listing-heavy",
+      response: "Avg response 2.8h",
+      note: "Steady, on-target lead ROI. No action needed this week.",
+    },
+  },
+  {
+    key: "sofia",
+    name: "Sofia Reyes",
+    role: "Agent",
+    gci: "$27.6k",
+    capPct: 0.4,
+    cap: "40% to cap",
+    roi: "3.0×",
+    tone: "green",
+    status: "On track",
+    detail: {
+      pipeline: "3 active · 1 Pending · buyer-side",
+      response: "Avg response 3.1h",
+      note: "Right at the target ROI line. Consistent; watch for a lead-volume dip.",
+    },
+  },
+  {
+    key: "drew",
+    name: "Drew Halloran",
+    role: "New agent",
+    gci: "$12.4k",
+    capPct: 0.16,
+    cap: "16% to cap",
+    roi: "2.2×",
+    tone: "green",
+    status: "Ramping",
+    detail: {
+      pipeline: "2 active · 0 Pending · buyer-side",
+      response: "Avg response 4.0h",
+      note: "First quarter on the desk. ROI already above break-even — ramping as expected.",
+    },
+  },
+];
+
 function GaugeCard({ g, open, onToggle }: { g: GaugeSpec; open: boolean; onToggle: () => void }) {
   return (
     <button type="button" className="gauge" aria-expanded={open} onClick={onToggle}>
@@ -231,7 +347,15 @@ function GaugeCard({ g, open, onToggle }: { g: GaugeSpec; open: boolean; onToggl
 function BrokerCockpit() {
   const [openGauge, setOpenGauge] = useState<string | null>(null);
   const [tickerOpen, setTickerOpen] = useState(false);
+  const [openAgent, setOpenAgent] = useState<string | null>(null);
+  const [handled, setHandled] = useState(false);
   const active = FIN_GAUGES.find((g) => g.key === openGauge) ?? null;
+  const needNow = handled ? 1 : 2;
+
+  const openWhitaker = () => {
+    setHandled(true);
+    setOpenAgent("whitaker");
+  };
 
   const tickerRow = (
     <>
@@ -254,25 +378,90 @@ function BrokerCockpit() {
       <div className="header">
         <div>
           <span className="eyebrow" style={{ color: "var(--copper-soft)" }}>
-            Executive Cockpit
+            Executive Cockpit · Wed, June 11
           </span>
-          <h1>Cascade Realty Group</h1>
-          <div className="sub">June 2026 · Boise, ID · 12 agents</div>
+          <h1>Good morning, Marcus</h1>
+          <div className="sub">Cascade Realty Group · Boise, ID · 12 agents</div>
         </div>
         <span className="badge partial">
           <span className="tnum">3/4</span> sources
         </span>
       </div>
 
-      <div className="onething">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2zM9 21h6M10 17v4M14 17v4" />
-        </svg>
-        <p>
-          <b>Compliance red flag:</b> Whitaker Cole has missing legal disclosures on a Pending file — 26h in, past the 24h
-          deadline. Clear it before it&apos;s a liability, then Chloe Bennett&apos;s stalled pipeline.
-        </p>
+      {/* executive brief — the 20-second read before the one thing */}
+      <div className="brief">
+        <span className="eyebrow">Executive brief</span>
+        <ul className="brief-list">
+          <li>
+            <span className="bdot" style={{ background: "var(--red)" }} />
+            <span>
+              {handled ? (
+                <>
+                  <b>Whitaker&apos;s disclosure file is open</b> — one compliance exposure was clearing; Chloe&apos;s stalled
+                  pipeline is the only item still needing you.
+                </>
+              ) : (
+                <>
+                  <b>One compliance exposure</b> needs you before anything else — a missing-disclosure file past deadline.
+                </>
+              )}
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--yellow)" }} />
+            <span>
+              Company-dollar retention is <b>28.4%</b> vs a 30% target — ≈$2.4k of company dollar soft, $9.4k at risk as
+              three agents near cap.
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--green)" }} />
+            <span>
+              Cash oxygen holds at <b>47 days</b> and lead ROI blends to <b>4.2×</b>; the market is accelerating in your
+              favor.
+            </span>
+          </li>
+        </ul>
       </div>
+
+      {handled ? (
+        <div className="onething done">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          <p>
+            <b>Handled.</b> Whitaker&apos;s file is open below and the compliance clock is acknowledged. Next up: Chloe
+            Bennett&apos;s stalled pipeline.
+          </p>
+          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
+            Undo
+          </button>
+        </div>
+      ) : (
+        <div className="onething">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2zM9 21h6M10 17v4M14 17v4" />
+          </svg>
+          <div className="ot-body">
+            <p>
+              <b>One thing first — compliance red flag:</b> Whitaker Cole has missing legal disclosures on a Pending file —
+              26h in, past the 24h deadline. Clear it before it&apos;s a liability, then Chloe Bennett&apos;s stalled
+              pipeline.
+            </p>
+            <div className="ot-actions">
+              <button type="button" className="ot-go" onClick={openWhitaker}>
+                Open Whitaker&apos;s file
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+              <button type="button" className="ot-ghost" onClick={() => setHandled(true)}>
+                Mark handled
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* financial gauges */}
       <div className="gauges">
@@ -293,6 +482,96 @@ function BrokerCockpit() {
           </div>
         </div>
       )}
+
+      {/* agent roster — exceptions first, click through to detail */}
+      <div className="section">
+        <div className="st">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            Agent roster
+          </span>
+          <span className="rmeta">
+            12 agents · <b className={needNow > 1 ? "rneed" : "rok"}>{needNow} need you now</b>
+          </span>
+        </div>
+        <div className="roster">
+          {AGENTS.map((a) => {
+            const cleared = a.key === "whitaker" && handled;
+            const tone: Tone = cleared ? "green" : a.tone;
+            const status = cleared ? "Opened" : a.status;
+            const isOpen = openAgent === a.key;
+            return (
+              <div className="arow-wrap" key={a.key}>
+                <button
+                  type="button"
+                  className="arow"
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenAgent(isOpen ? null : a.key)}
+                >
+                  <span className="adot" style={{ background: TONE[tone] }} />
+                  <span className="aname">
+                    {a.name}
+                    <small>{a.role}</small>
+                  </span>
+                  <span className="acap">
+                    <span className="capbar">
+                      <span className="capfill" style={{ width: `${Math.round(a.capPct * 100)}%`, background: TONE[tone] }} />
+                    </span>
+                    <small>{a.cap}</small>
+                  </span>
+                  <span className="agci">
+                    {a.gci}
+                    <small>GCI MTD</small>
+                  </span>
+                  <span className="astatus" style={{ color: TONE[tone] }}>
+                    {status}
+                  </span>
+                  <svg className="achev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {isOpen && (
+                  <div className="adetail">
+                    {(cleared || a.flag) && (
+                      <div className={`aflag ${cleared ? "aflag-clear" : ""}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                          {cleared ? (
+                            <path d="M20 6 9 17l-5-5" />
+                          ) : (
+                            <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                          )}
+                        </svg>
+                        <span>
+                          {cleared
+                            ? "Disclosure file opened from the cockpit — compliance clock acknowledged, awaiting upload."
+                            : a.flag}
+                        </span>
+                      </div>
+                    )}
+                    <div className="astats">
+                      <div className="astat">
+                        <span className="ak">Pipeline</span>
+                        <span className="av">{a.detail.pipeline}</span>
+                      </div>
+                      <div className="astat">
+                        <span className="ak">Responsiveness</span>
+                        <span className="av">{a.detail.response}</span>
+                      </div>
+                      <div className="astat">
+                        <span className="ak">Lead ROI</span>
+                        <span className="av">{a.roi} return on lead spend</span>
+                      </div>
+                    </div>
+                    <p className="anote">{a.detail.note}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* market intelligence — ticker + drop-down */}
       <div className="section">
@@ -447,6 +726,324 @@ function BrokerCockpit() {
         .onething :global(b) {
           color: var(--copper-soft);
           font-weight: 600;
+        }
+        .onething .ot-body {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething .ot-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 11px;
+        }
+        .ot-go {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border: 1px solid var(--copper-soft);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+        }
+        .ot-go:hover {
+          background: var(--copper);
+          border-color: var(--copper);
+        }
+        .ot-go :global(svg) {
+          width: 14px;
+          height: 14px;
+          margin: 0;
+          color: var(--ink);
+        }
+        .ot-ghost {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--copper-soft);
+          background: transparent;
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .ot-ghost:hover {
+          border-color: var(--copper-soft);
+          color: var(--text);
+        }
+        .onething.done {
+          align-items: center;
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .onething.done :global(svg) {
+          color: var(--green);
+        }
+        .onething.done p {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething.done :global(b) {
+          color: var(--green);
+        }
+        .ot-undo {
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          flex: none;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .ot-undo:hover {
+          color: var(--text);
+          border-color: var(--copper-dim);
+        }
+        .brief {
+          margin-top: 16px;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          border-radius: 11px;
+          padding: 13px 15px;
+        }
+        .brief-list {
+          list-style: none;
+          margin: 9px 0 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .brief-list li {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+        }
+        .brief-list :global(b) {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .bdot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          flex: none;
+          margin-top: 6px;
+        }
+        .roster {
+          margin-top: 10px;
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          background: var(--panel);
+          overflow: hidden;
+        }
+        .arow-wrap {
+          border-top: 1px solid var(--line-soft);
+        }
+        .arow-wrap:first-of-type {
+          border-top: 0;
+        }
+        .arow {
+          width: 100%;
+          display: grid;
+          grid-template-columns: auto 1.4fr 1.3fr 0.9fr auto 18px;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          font: inherit;
+          text-align: left;
+          color: inherit;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .arow:hover {
+          background: var(--surface);
+        }
+        .arow[aria-expanded="true"] {
+          background: var(--surface);
+        }
+        .adot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex: none;
+        }
+        .aname {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--text);
+          line-height: 1.2;
+          min-width: 0;
+        }
+        .aname :global(small) {
+          display: block;
+          font-size: 10.5px;
+          font-weight: 400;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .acap {
+          min-width: 0;
+        }
+        .capbar {
+          display: block;
+          height: 5px;
+          border-radius: 999px;
+          background: var(--line);
+          overflow: hidden;
+        }
+        .capfill {
+          display: block;
+          height: 100%;
+          border-radius: 999px;
+        }
+        .acap :global(small) {
+          display: block;
+          font-size: 10px;
+          color: var(--muted);
+          margin-top: 4px;
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+        }
+        .agci {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          font-size: 14px;
+          color: var(--text);
+          text-align: right;
+          line-height: 1.15;
+        }
+        .agci :global(small) {
+          display: block;
+          font-family: var(--font-display);
+          font-size: 9.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .astatus {
+          font-size: 11.5px;
+          font-weight: 600;
+          text-align: right;
+          white-space: nowrap;
+        }
+        .arow :global(.achev) {
+          width: 16px;
+          height: 16px;
+          color: var(--muted);
+          transition: transform 0.2s, color 0.2s;
+        }
+        .arow[aria-expanded="true"] :global(.achev) {
+          transform: rotate(180deg);
+          color: var(--copper-soft);
+        }
+        .adetail {
+          padding: 4px 16px 16px 34px;
+          background: var(--surface);
+        }
+        .aflag {
+          display: flex;
+          gap: 9px;
+          align-items: flex-start;
+          border: 1px solid color-mix(in srgb, var(--red) 35%, transparent);
+          background: var(--red-wash);
+          border-radius: 9px;
+          padding: 10px 12px;
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.45;
+        }
+        .aflag :global(svg) {
+          width: 14px;
+          height: 14px;
+          flex: none;
+          margin-top: 2px;
+          color: var(--red);
+        }
+        .aflag.aflag-clear {
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .aflag.aflag-clear :global(svg) {
+          color: var(--green);
+        }
+        .astats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 10px 18px;
+          margin-top: 12px;
+        }
+        .astat {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .astat .ak {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--muted);
+          font-weight: 600;
+        }
+        .astat .av {
+          font-size: 12.5px;
+          color: var(--text-soft);
+        }
+        .anote {
+          margin: 11px 0 0;
+          font-size: 12.5px;
+          color: var(--muted);
+          line-height: 1.55;
+        }
+        .rmeta {
+          font-size: 11.5px;
+          color: var(--muted);
+        }
+        .rmeta :global(.rneed) {
+          color: var(--red);
+          font-weight: 600;
+        }
+        .rmeta :global(.rok) {
+          color: var(--green);
+          font-weight: 600;
+        }
+        @media (max-width: 640px) {
+          .arow {
+            grid-template-columns: auto 1fr auto auto 18px;
+            gap: 10px;
+          }
+          .acap {
+            display: none;
+          }
+          .agci {
+            font-size: 13px;
+          }
+          .agci :global(small) {
+            display: none;
+          }
+          .astatus {
+            font-size: 11px;
+          }
+          .adetail {
+            padding-left: 16px;
+          }
         }
         .gauges {
           display: grid;

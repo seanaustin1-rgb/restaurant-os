@@ -122,16 +122,22 @@ weighs in per Sean.
 - **OBJECTIVE-002 — July 14 Luke demo.** Date 2026-07-13 · Owner [Sean] · Status **In Progress** · Evidence: public
   route `/demo/real-estate-cockpit`. Show, in one public demo: the **broker day**, the **agent day**, and the
   **vacation-property platform**. Next action: unblock via OBJECTIVE-003 (P0) then OBJECTIVE-004 (broker narrative).
+  **(EOD+1)** all three are now delivered and carried by the single consolidated **PR #115** (+ OBJECTIVE-005 game plan),
+  held for Sean's one-shot visual approval (DECISION-007 / NEXT-007).
 - **OBJECTIVE-003 — P0: repair responsive rendering across Broker, Agent, Rental.** Date 2026-07-13 · Owner [Claude] ·
   Status **Passed (pending Sean's visual approval)** · Evidence: PR #111 (`claude/fix-demo-render-p0-ebh2gr`, commit
   `1f0eb99`); root cause = styled-jsx child-component scoping (SUCCESS-004); before/after screenshots at 390×844 +
   1440×900, all three tabs + rental drawer; tsc clean, 340 tests, prod build green; Vercel preview Ready. See SUCCESS-004
   and FAILURE-002 resolution. Remaining: Sean's visual approval + merge (BLOCKER-001, DECISION-004).
+  **(EOD+1) Superseded packaging:** now delivered inside the consolidated **PR #115** (was briefly merged as #111 then
+  reverted, PR #114 — DECISION-007). The fix itself is unchanged.
 - **OBJECTIVE-004 — Complete the contained Broker day-in-life narrative.** Date 2026-07-13 · Owner [Claude] ·
   Status **Passed (pending Sean's visual approval)** · Evidence: PR #112 (`claude/demo-broker-day-in-life-p0`, narrative
   cherry-picked from `b646e61` onto the P0 fix, commit `ed3b8bf`); tsc clean, 340 tests, prod build green; broker
   screenshots at both viewports incl. the interactive "Open Whitaker's file" flow; stacked on PR #111 (SUCCESS-005).
   Remaining: retarget base to `main` after #111 merges; Sean's visual approval.
+  **(EOD+1) Superseded packaging:** now delivered inside the consolidated **PR #115** (was briefly merged as #112 then
+  reverted, PR #114 — DECISION-007). The narrative itself is unchanged.
 - **NEED-001 — Required evidence before Sean's visual approval.** Date 2026-07-13 · Owner [Sean] · Status **Proposed** ·
   Evidence gate: **preview URL + desktop screenshots + mobile screenshots + all three tabs (Broker/Agent/Rental) tested
   + typecheck + tests + build**, all green, before any approval or merge. Applies to both OBJECTIVE-003 and -004.
@@ -186,8 +192,93 @@ weighs in per Sean.
 - **NEXT-003 — Sean visually approves (or rejects) the P0 + narrative previews** against NEED-001 before any merge.
   Owner [Sean] · Status **Proposed** · Evidence gate open: previews Ready but not reachable from the build sandbox
   (Vercel egress blocked → verification done on a local prod build instead). This is the sole remaining blocker.
-- **NEXT-004 — Merge order.** Owner [Sean/Claude] · Status **Proposed** · After approval: merge PR #111 to `main`, then
-  retarget PR #112's base from `claude/fix-demo-render-p0-ebh2gr` to `main`. Do not merge #112 before #111.
+- **NEXT-004 — Merge order.** Owner [Sean/Claude] · Status **Superseded by NEXT-008** · Original plan: merge #111 then
+  retarget #112. Replaced by the single consolidated PR #115 (see DECISION-007 / NEXT-008).
+
+### 2026-07-13 (EOD+1) — July-14 finalization (Claude)
+
+- **DECISION-007 — Consolidate to one demo PR; approve-first gate re-affirmed.** Date 2026-07-13 (EOD+1) · Owner [Sean] ·
+  Status **Approved** · Evidence: direct operator instructions this session. Sequence of record: (1) On a live "land the
+  stack" instruction, #111 then #112 were squash-merged to `main` (`893908a`, `67502b0`) — this **temporarily overrode
+  DECISION-004**. (2) Sean then chose to **revert** to restore the approve-first gate; **PR #114** reverted both
+  (squash `885acb3`), returning `main` byte-identical to pre-demo `483a26f` (production shows the prior render until
+  re-approval). (3) The full demo is re-consolidated onto **one branch** (`claude/raven-july14-demo`) as **PR #115**
+  (P0 fix + narrative + Today's game plan), held as a **draft for one visual approval + one merge**. DECISION-004 stands.
+- **OBJECTIVE-005 — Agent "Today's game plan" (final authorized feature).** Date 2026-07-13 · Owner [Sean] · Status
+  **Passed (pending Sean's visual approval)** · Evidence: SUCCESS-014. Time-boxed, checkable daily execution plan on the
+  demo Agent tab; generated-data-only; the only feature addition authorized before July 14.
+- **SUCCESS-014 — "Today's game plan" shipped on the Agent tab (PR #115).** Date 2026-07-13 · Owner [Claude] · Status
+  **Passed (pending approval)** · Evidence: commit `1956ffc` in `src/app/demo/real-estate-cockpit/native/AgentApp.tsx`.
+  A compact `Today · game plan` section between One Thing First and the priority queue, in three buckets — **Before noon**
+  (clear 214 Highland Park compliance docs [closing/compliance, red]; call Sam Ortega back [lead follow-up, yellow]),
+  **This afternoon** (confirm the Highland Park inspection window [inspection]; prep the 88 Cedar Bluff listing
+  appointment [appointment]), **Before end of day** (nudge the Ridgeline sellers to convert to a listing [transaction
+  follow-up]). Each row carries urgency + a concise next step; checking flips a green check + strikethrough and fires a
+  toast (visible state change). Complements — does not duplicate — the Executive Brief / One Thing First / priority queue
+  / lead center / calendar guard. Rendered **inline** so its styled-jsx scope stays on-component (the SUCCESS-004
+  pattern). **No schema/backend/API/persistence/auth.** Gates: `tsc --noEmit` clean · `vitest run` **340 passed** ·
+  `npm run build` green · dev server serves `/demo/real-estate-cockpit` HTTP 200 with the new code. Browser screenshots
+  not capturable from the build sandbox (no browser egress) → the 390×844 / 1440×900 visual pass is Sean's approval step.
+- **NEXT-007 — Sean's visual approval on the single PR #115 preview** (all three tabs, both viewports, game-plan +
+  broker + rental interactions, no oversized icons / clipping / overlap / ticker expansion, generated-data label visible).
+  Owner [Sean] · Status **Proposed** · Evidence gate: preview
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`.
+- **NEXT-008 — Consolidated merge sequence.** Owner [Sean/Claude] · Status **Proposed** · See "Merge sequence" below.
+
+## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
+
+**Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`
+**Static fallback:** `https://www.outfrontdata.com/demo/real-estate-cockpit.html`
+**Reset between runs:** refresh the page (or use the on-screen **Undo** controls) before restarting so every acknowledgment/state change starts clean.
+
+**Broker (~2 min)**
+1. Open the public demo — land on the **Broker** tab.
+2. "Welcome, Luke" greeting.
+3. Read the **Executive Brief** (the 20-second state of the brokerage).
+4. **One Thing First** — the single most important move today.
+5. **Open Whitaker's compliance file** — missing disclosures surfaced.
+6. Show the **suggested action / contact tools** on the file.
+7. **Mark / acknowledge** the issue → cockpit updates (green Handled + Undo).
+8. Show the **changed cockpit** (roster count drops, Whitaker turns green).
+9. **Open an agent** from the roster.
+10. Show that agent's **calendar, performance, trends, and Company Aura**.
+
+**Agent (~2 min)**
+1. Switch to the **Agent** tab.
+2. Explain the **Executive Brief** and **One Thing First** (214 Highland Park funds at 2 PM).
+3. Walk through **Today's game plan** — Before noon / This afternoon / Before EOD; **check off** the Highland Park docs item (green check + toast).
+4. **Open the urgent file** (Highland Park) via One Thing First.
+5. Show **lead-response urgency** in the Lead action center (Sam Ortega past the 30-min line).
+6. Show the **calendar guard** hard-block (Saturday double-booking) — resolve it.
+7. **Complete / acknowledge** an action (green state change).
+
+**Rental (~2 min)**
+1. Switch to the **Rental** tab.
+2. Explain the **portfolio picture** (portfolio brief).
+3. Show **occupancy, ADR, RevPAR, and booking pace**.
+4. Open the **exception-first property** (Brundage red alert).
+5. Show **maintenance, review, and pricing** context in the drawer.
+6. **Dispatch the technician**.
+7. Show the **acknowledged state** (green Dispatched + Undo).
+8. Close on **owner-reporting value**.
+
+## Deferred pilot work (NOT built for July 14 — recorded per handoff)
+
+Agent appointment "talk-to-update" assistant · shared broker/agent appointment component extraction · real voice
+processing · real calendar writes · CRM client-history writes · message sending · server persistence · BoldTrail
+integration · Google Workspace OAuth · Escapia integration · database changes / migrations · PR #105 / #106
+reconciliation · broad Morning Ritual redesign · any unrelated product feature. See also NEED-C1/C2/C3 (open questions
+for Codex) above.
+
+## Merge sequence — consolidated (PR #115) — NEXT-008
+
+Do **not** auto-merge. `main` currently sits at the reverted state (PR #114). After Sean visually approves the single
+PR #115 preview:
+1. Confirm required checks are green on the PR head (Vercel; CI typecheck/test/build).
+2. Sean re-verifies the preview (all three tabs, 390×844 + 1440×900).
+3. Merge **PR #115** to `main` (single squash merge — no stacking; #111/#112 are already reverted and superseded).
+4. Verify the **public production URL** (`https://www.outfrontdata.com/demo/real-estate-cockpit`) on phone + laptop.
+5. Record production verification here (new SUCCESS entry + Progress Log).
 
 ## Demo Mockups — rendered evidence (2026-07-13, Claude)
 
@@ -270,6 +361,13 @@ captures future expectations as reminders. Live speech-to-text + AI writes to CR
 - ✅ Corrected the process failure (FAILURE-001): visual browser verification is now a hard gate (NEED-001) — this cycle
   was verified against a **local production build** with Playwright, because the Vercel previews are not reachable from
   the build sandbox (egress-blocked).
+- ✅ **(EOD+1) July-14 finalization — game plan + consolidation, PR #115 (draft).** Added **Today's game plan** to the
+  Agent tab (OBJECTIVE-005 / SUCCESS-014, commit `1956ffc`) — time-boxed, checkable, generated-data-only, no backend.
+  Reconciled the merge state per Sean (DECISION-007): #111/#112 were briefly merged then **reverted** (PR #114, `main`
+  back to pre-demo `483a26f`), and the whole demo is re-consolidated onto **one branch/PR #115** for a single visual
+  approval + merge. Gates re-run green on the consolidated branch: `tsc` clean · `vitest` 340 passed · `npm run build`
+  green · dev server serves the demo route HTTP 200. Browser screenshots not capturable from this sandbox (no browser
+  egress) → the 390×844 / 1440×900 visual pass is Sean's approval on the PR #115 preview.
 
 ## Codex Lane Status — Raven (2026-07-13)
 
@@ -287,6 +385,9 @@ captures future expectations as reminders. Live speech-to-text + AI writes to CR
   (Broker/Agent/Rental) + the rental drawer + the interactive "Open Whitaker's file" flow, on a local prod build with
   Playwright; **Vercel previews Ready** (#111 `…fix-demo-render-p0-ebh2gr…`, #112 `…demo-broker-day-in-8563a3…`). The
   *only* remaining item is **Sean's visual approval of the previews** (NEXT-003) before merge to main (DECISION-004).
+  **(EOD+1 update)** #111/#112 are now **superseded** — briefly merged then reverted (PR #114); everything is
+  re-consolidated into **one draft, PR #115** (+ Today's game plan), gate-green. The single remaining item is unchanged:
+  **Sean's visual approval of the PR #115 preview** (NEXT-007) before the single merge to `main` (NEXT-008, DECISION-004).
 
 ## Next Actions — Raven
 
@@ -294,8 +395,13 @@ captures future expectations as reminders. Live speech-to-text + AI writes to CR
 - **NEXT-002 [Claude] — DONE** — Broker day-in-life narrative finished; PR #112 (draft, stacked on #111) (SUCCESS-005).
 - **NEXT-003 [Sean]** — visually approve (or reject) the P0 preview (#111) and the narrative preview (#112) against
   NEED-001 before any merge to main.
-- **NEXT-004 [Sean/Claude]** — on approval: merge #111 to `main`, then retarget #112's base to `main` (do not merge #112
-  first).
+- **NEXT-004 [Sean/Claude] — SUPERSEDED** — original stacked merge order replaced by the single consolidated PR #115
+  (DECISION-007). #111/#112 were reverted (PR #114, `main` back to `483a26f`).
+- **NEXT-007 [Sean] — visually approve PR #115** — one preview, all three tabs at 390×844 + 1440×900, game-plan/broker/
+  rental interactions, no oversized icons / clipping / overlap / ticker expansion, generated-data label visible. Preview:
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`.
+- **NEXT-008 [Sean/Claude] — single merge of PR #115** after approval (see "Merge sequence — consolidated"); then verify
+  the public production URL on phone + laptop and record production verification here.
 - **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule. (Codex advisory reviews on
   #111/#112 both errored on an OpenAI billing quota — non-blocking; the required gates are typecheck/test/build.)
 - **NEXT-005 [Codex] — back online; repo-green + route/auth/data.** Status **In Progress (relayed)** · fix the
@@ -477,6 +583,29 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — July-14 finalization: Today's game plan + merge/revert consolidation (PR #115).**
+  Delivered the one authorized remaining feature and reconciled the merge state.
+  **Feature (SUCCESS-014, OBJECTIVE-005):** added a compact, time-boxed, checkable **Today's game plan** to the demo
+  Agent tab (`src/app/demo/real-estate-cockpit/native/AgentApp.tsx`, commit `1956ffc`) — Before noon / This afternoon /
+  Before EOD, five actions covering closing-compliance, lead follow-up, inspection, appointment, and a listing-conversion
+  follow-up; each with urgency + a concise next step; checking flips a green check + strikethrough + toast. Complements
+  (does not duplicate) the Brief / One Thing First / queue / lead center / calendar guard. Inline render → styled-jsx
+  scope stays on-component (SUCCESS-004 pattern). **Generated-data-only; no schema/backend/API/persistence/auth.**
+  **Merge saga (DECISION-007):** #111 then #112 were squash-merged to `main` (`893908a`, `67502b0`) on a live
+  "land the stack" instruction (temporarily overriding DECISION-004); Sean then chose to restore the approve-first gate,
+  so **PR #114 reverted both** (squash `885acb3`, `main` byte-identical to pre-demo `483a26f`). The full demo is
+  re-consolidated onto **`claude/raven-july14-demo` → PR #115** (P0 fix + narrative + game plan), a single draft for one
+  visual approval + one merge. **Also fixed (PR #113, separate):** the advisory Codex-review workflow now stays silent on
+  quota/auth failures instead of posting an error comment on every push (it had spammed 16+ comments/day).
+  **Evidence:** `tsc --noEmit` clean · `vitest run` **340 passed (49 files)** · `npm run build` green · dev server serves
+  `/demo/real-estate-cockpit` HTTP 200 with the new code. Browser screenshots **not** capturable from this sandbox
+  (no browser network egress: loopback hidden from Chromium; external via a tunnel it can't negotiate) → the
+  390×844 / 1440×900 visual pass across all three tabs + interactions is Sean's approval step on the PR #115 preview
+  (`https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`).
+  **Deferred (recorded):** appointment talk-to-update assistant, shared broker/agent appointment component, real
+  voice/calendar/CRM/message writes, server persistence, BoldTrail / Google Workspace / Escapia, DB/migrations,
+  #105/#106 reconciliation, Morning-Ritual redesign. **Next:** NEXT-007 (Sean visual approval) → NEXT-008 (single merge)
+  → verify production on phone + laptop → log a production-verified SUCCESS entry.
 - **2026-07-13 (EOD+1) [Claude] — Command Center reconciled to true completion state (per Codex request).** Codex flagged
   that the remote doc still read P0 as not-started/in-progress and the narrative as blocked/untested. Reconciled the
   status-bearing sections so the doc matches reality: **OBJECTIVE-003 = Passed (pending approval)** — P0 render fix, PR

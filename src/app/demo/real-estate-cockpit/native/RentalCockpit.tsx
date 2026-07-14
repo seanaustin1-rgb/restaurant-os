@@ -65,7 +65,7 @@ const PROPS: Prop[] = [
   {
     n: "Brundage Chalet",
     flag: "r",
-    reason: "Critical maintenance open 52h (furnace) + a 3.2★ review below the 3.5 threshold.",
+    reason: "Critical work order open — possible water leak under the kitchen sink, flagged before Thursday's guest — plus a 3.2★ review below the 3.5 threshold.",
     occ: 61,
     adr: 340,
     revpar: 207,
@@ -73,11 +73,11 @@ const PROPS: Prop[] = [
     profile: "Medium",
     floor: null,
     maint: [
-      { tier: "Critical", st: "Open · 52h", t: "Furnace not igniting — guest-reported" },
+      { tier: "Critical", st: "Open · WO-4021", t: "Kitchen-sink moisture / leak — pre-arrival check" },
       { tier: "Standard", st: "In progress · 1d", t: "Hot tub pH low" },
     ],
     rating: 3.2,
-    rnote: "“Cold first night, slow to respond.” — 2 days ago",
+    rnote: "“A maintenance issue at check-in; slow to respond.” — 2 days ago",
   },
   {
     n: "Foothills Loft",
@@ -187,10 +187,10 @@ const OWNER_ACTIONS: OwnerAction[] = [
     kind: "email",
     flag: "r",
     title: "Update the Brundage owner",
-    line: "Close the loop on the furnace ticket and the 3.2★ review before the owner hears it from the guest.",
-    subject: "Brundage Chalet — furnace being resolved, Thursday check-in protected",
+    line: "Close the loop on the kitchen-sink work order and the 3.2★ review before the owner hears it from the guest.",
+    subject: "Brundage Chalet — kitchen-sink leak resolved, Thursday check-in protected",
     body:
-      "Hi,\n\nA heads-up with the resolution already in motion: a guest reported the furnace not igniting at Brundage Chalet. We flagged it Critical, dispatched a technician today, and it's being repaired ahead of Thursday's check-in — the booking is protected.\n\nWe also responded to the recent 3.2★ review directly. I'll confirm the moment the furnace ticket closes.\n\nThis period: 61% occupancy · $340 ADR · $207 RevPAR.\n\nBest,\nYour property team",
+      "Hi,\n\nA heads-up with the resolution already in motion: a pre-arrival moisture check at Brundage Chalet found a small leak under the kitchen sink. Our team replaced the supply hose today and verified it dry ahead of Thursday's check-in — the booking is protected.\n\nWe also responded to the recent 3.2★ review directly. I'll confirm the moment the work order closes.\n\nThis period: 61% occupancy · $340 ADR · $207 RevPAR.\n\nBest,\nYour property team",
   },
   {
     id: "brundage-guest",
@@ -199,7 +199,7 @@ const OWNER_ACTIONS: OwnerAction[] = [
     title: "Reassure the Thursday guest",
     line: "A quick proactive text keeps the arrival smooth and heads off another low review.",
     body:
-      "Hi! This is your host team for Brundage Chalet — we've had a technician service the furnace ahead of your Thursday check-in, so the cabin will be warm and ready. Anything you need before you arrive, just reply here.",
+      "Hi! This is your host team for Brundage Chalet — we did a pre-arrival check and took care of a small kitchen-sink item ahead of your Thursday check-in, so everything's fresh and ready. Anything you need before you arrive, just reply here.",
   },
   {
     id: "sawtooth-report",
@@ -212,6 +212,74 @@ const OWNER_ACTIONS: OwnerAction[] = [
       "Hi,\n\nYour monthly summary for Sawtooth Summit Lodge:\n\n• Occupancy 58% · ADR $714 · RevPAR $414\n• Pacing −18% vs the 3-year benchmark — held intentionally behind your $5,000/wk floor\n• Guest reviews averaging 4.8★\n\nYour asset is priced ~24% above market for comparable >4,000 sq ft homes. This premium strategy has held occupancy below local momentum — exactly as you directed. Happy to revisit the floor whenever you'd like.\n\nBest,\nYour property team",
   },
 ];
+
+// ── Maintenance Center — bilingual work-order thread (DECISION-009) ───────────
+// A contained, generated-data-only work order that lives INSIDE the Brundage
+// property file: manager instruction (EN→ES, reviewed before assigning) → assign
+// → staff acknowledgment → staff field report (ES→EN, reviewed before reporting)
+// → completion evidence → an explicit privacy decision → owner-ready report →
+// visible cockpit state change. DECISION-008: the original-language submission is
+// canonical truth; each machine translation is clearly labeled, reviewed
+// derivative copy, and never overwrites the original. Nothing here persists,
+// translates for real, uploads, or sends — every write is simulated.
+const MC_STAGES = [
+  "reported", // work order open; manager instruction drafted (EN)
+  "instrTranslated", // ES translation generated — review before assigning
+  "instrApproved", // manager approved the Spanish instruction
+  "assigned", // assigned to housekeeping; Seen + Acknowledged auto-generate
+  "taskDone", // staff marked the task complete → field report (ES) posts
+  "reportTranslated", // EN translation generated — review before reporting
+  "reportApproved", // manager approved → evidence + actual cost; Brundage resolves
+  "ownerIncluded", // manager included the approved summary in the owner report
+] as const;
+type McStage = (typeof MC_STAGES)[number];
+
+const WO = {
+  property: "Brundage Chalet",
+  id: "WO-4021",
+  title: "Kitchen sink — moisture check & leak",
+  category: "Plumbing",
+  openedAt: "Jul 14 · 8:38 AM",
+  completedAt: "Jul 14 · 11:20 AM",
+  manager: "You",
+  assignee: { name: "Rosa M.", team: "Housekeeping" },
+  estCost: 120,
+  actualCost: 185,
+  instruction: {
+    en: "Please check under the kitchen sink for moisture, photograph the cabinet floor, and report any odor before the next guest arrives.",
+    es: "Por favor, revise si hay humedad debajo del fregadero de la cocina, tome una foto del piso del gabinete e informe si detecta algún olor antes de que llegue el próximo huésped.",
+  },
+  fieldReport: {
+    es: "Encontré una fuga debajo del fregadero. Reemplacé la manguera y confirmé que ya no hay fuga. El costo total fue de $185.",
+    en: "I found a leak under the sink. I replaced the hose and confirmed there is no longer a leak. The total cost was $185.",
+  },
+  photos: [
+    { k: "before", label: "Before · cabinet floor" },
+    { k: "after", label: "After · hose replaced, dry" },
+  ],
+  evidence: [
+    "Leak located under the kitchen sink",
+    "Supply hose replaced",
+    "No further leak after a 10-minute run test",
+    "Cabinet floor dried — no odor",
+  ],
+  ownerSummary: {
+    issue: "A water leak under the kitchen sink, caught on a pre-arrival moisture check.",
+    resolution: "The supply hose was replaced and verified dry; the cabinet floor was cleared with no odor.",
+  },
+  ts: {
+    instr: "8:38 AM",
+    instrEs: "8:39 AM",
+    instrOk: "8:41 AM",
+    assigned: "8:42 AM",
+    seen: "9:02 AM",
+    ack: "9:05 AM",
+    done: "11:14 AM",
+    report: "11:16 AM",
+    reportEn: "11:17 AM",
+    completed: "11:20 AM",
+  },
+} as const;
 
 function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast: (m: string) => void }) {
   const [profile, setProfile] = useState<string>(p.profile);
@@ -336,7 +404,8 @@ function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast
 
 export default function RentalCockpit() {
   const [open, setOpen] = useState<Prop | null>(null);
-  const [handled, setHandled] = useState(false);
+  const [stage, setStage] = useState<McStage>("reported");
+  const [reportSent, setReportSent] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [oaOpen, setOaOpen] = useState<string | null>(null);
   const [oaSubject, setOaSubject] = useState("");
@@ -362,6 +431,26 @@ export default function RentalCockpit() {
     say(a.kind === "text" ? "Message sent to the guest." : "Owner report sent.");
   };
 
+  // Brundage kitchen-sink work-order lifecycle (Maintenance Center).
+  const si = MC_STAGES.indexOf(stage);
+  const reached = (s: McStage) => si >= MC_STAGES.indexOf(s);
+  const jobDone = reached("reportApproved"); // Brundage resolves once the field report is approved
+  const started = si > 0; // any action taken beyond the initial reported state
+  const ownerReady = reached("ownerIncluded");
+  const workStatus = jobDone ? "Completed" : reached("taskDone") ? "In progress" : reached("assigned") ? "Assigned" : "Reported";
+  const advance = (to: McStage, msg: string) => {
+    setStage(to);
+    say(msg);
+  };
+  const resetJob = () => {
+    setStage("reported");
+    setReportSent(false);
+    say("Maintenance demo reset.");
+  };
+  // Open counts for Brundage — the Critical work order clears on completion.
+  const criticalOpen = jobDone ? 0 : 1;
+  const standardOpen = 1; // hot-tub pH ticket stays in progress either way
+
   return (
     <div className="rental">
       {/* executive brief — the 20-second portfolio read */}
@@ -369,15 +458,19 @@ export default function RentalCockpit() {
         <span className="eyebrow">Portfolio brief</span>
         <ul className="brief-list">
           <li>
-            <span className="bdot" style={{ background: handled ? "var(--green)" : "var(--red)" }} />
+            <span className="bdot" style={{ background: jobDone ? "var(--green)" : started ? "var(--yellow)" : "var(--red)" }} />
             <span>
-              {handled ? (
+              {jobDone ? (
                 <>
-                  <b>Brundage dispatched</b> — technician en route and the guest reply is sent; Thursday check-in is safe.
+                  <b>Brundage sink leak resolved</b> — hose replaced and verified dry; the owner report is ready; Thursday check-in is safe.
+                </>
+              ) : started ? (
+                <>
+                  <b>Brundage work order in progress</b> — the kitchen-sink job is moving through the Maintenance Center below.
                 </>
               ) : (
                 <>
-                  <b>Brundage Chalet is red</b> — a Critical furnace ticket, 52h open, with a guest checking in Thursday.
+                  <b>Brundage Chalet is red</b> — a Critical kitchen-sink work order is open ahead of Thursday&apos;s check-in.
                 </>
               )}
             </span>
@@ -398,17 +491,30 @@ export default function RentalCockpit() {
       </div>
 
       {/* one thing first — an obvious action */}
-      {handled ? (
+      {jobDone ? (
         <div className="onething alert done">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
           <p>
-            <b>Dispatched.</b> A technician is assigned to Brundage&apos;s furnace. Close the loop below — update the owner
-            and reassure the Thursday guest — or reopen the property to track the ticket.
+            <b>Resolved.</b> Brundage&apos;s kitchen-sink leak is fixed and verified — actual cost ${WO.actualCost}. The bilingual
+            work-order thread is on file and the owner report is {ownerReady ? "ready to send" : "one approval away"}.
           </p>
-          <button type="button" className="ot-undo" onClick={() => setHandled(false)}>
-            Undo
+          <button type="button" className="ot-undo" onClick={resetJob}>
+            Reset
+          </button>
+        </div>
+      ) : started ? (
+        <div className="onething alert done inprog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 6v6l4 2M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+          </svg>
+          <p>
+            <b>Work order {WO.id} in progress.</b> Move the kitchen-sink job through the <b>Maintenance Center</b> below —
+            review each translation, complete, then report to the owner.
+          </p>
+          <button type="button" className="ot-undo" onClick={resetJob}>
+            Reset
           </button>
         </div>
       ) : (
@@ -418,12 +524,12 @@ export default function RentalCockpit() {
           </svg>
           <div className="ot-body">
             <p>
-              <b>One thing first — Brundage Chalet is red:</b> a Critical furnace work order has been open 52h (past 48h)
-              and a fresh 3.2★ review just posted. A guest checks in Thursday — dispatch and respond today.
+              <b>One thing first — Brundage Chalet is red:</b> a Critical kitchen-sink work order is open ahead of Thursday&apos;s
+              check-in, and a fresh 3.2★ review just posted. Send the team instruction and work it today.
             </p>
             <div className="ot-actions">
-              <button type="button" className="ot-go" onClick={() => { setHandled(true); say("Technician dispatched to Brundage; guest reply queued."); }}>
-                Dispatch technician
+              <button type="button" className="ot-go" onClick={() => advance("instrTranslated", "Instruction translated to Spanish — review before assigning.")}>
+                Send team instruction
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
@@ -476,6 +582,308 @@ export default function RentalCockpit() {
         </div>
       </div>
 
+      {/* maintenance center — bilingual work-order thread inside the property file (DECISION-009) */}
+      <div className="section">
+        <div className="sh">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2z" />
+            </svg>
+            Maintenance Center
+          </span>
+          <span className={`mc-count ${criticalOpen ? "crit" : "clear"}`}>
+            {criticalOpen} critical · {standardOpen} standard open
+          </span>
+        </div>
+
+        <div className={`mc-card ${jobDone ? "done" : ""}`}>
+          {/* property-file breadcrumb — the work order lives inside Brundage's Raven file */}
+          <div className="mc-crumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M9 22V12h6v10" />
+            </svg>
+            {WO.property}
+            <span className="mc-sep">›</span>
+            Work order {WO.id}
+          </div>
+
+          <div className="mc-jobhd">
+            <span className={`mtag ${jobDone ? "std" : "crit"}`}>{jobDone ? WO.category : `${WO.category} · Critical`}</span>
+            <div className="mc-jobmeta">
+              <div className="mc-jobt">{WO.title}</div>
+              <div className="mc-jobs">
+                Opened {WO.openedAt}
+                {jobDone ? ` · Completed ${WO.completedAt}` : ""}
+              </div>
+            </div>
+            <span className={`mc-pstatus ${jobDone ? "g" : started ? "y" : "r"}`}>{workStatus}</span>
+          </div>
+
+          <div className="mc-meta">
+            <div>
+              <span className="mc-mk">Assignee</span>
+              <span className="mc-mv">{reached("assigned") ? `${WO.assignee.name} · ${WO.assignee.team}` : "Unassigned"}</span>
+            </div>
+            <div>
+              <span className="mc-mk">Est. cost</span>
+              <span className="mc-mv">${WO.estCost}</span>
+            </div>
+            <div>
+              <span className="mc-mk">Actual cost</span>
+              <span className="mc-mv">{jobDone ? `$${WO.actualCost}` : "—"}</span>
+            </div>
+          </div>
+
+          <div className="mc-threadhd">
+            Work-order thread
+            <span className="mc-threadnote">internal · retained in the property file</span>
+          </div>
+
+          <div className="mc-thread">
+            {/* 1 — manager instruction (EN original) */}
+            <div className="mc-item out">
+              <div className="mc-ihd">
+                <span className="mc-who mgr">You · Manager</span>
+                <span className="mc-time">{WO.ts.instr}</span>
+              </div>
+              <div className="mc-bubble">
+                <div className="mc-langrow">
+                  <span className="mc-lang orig">EN · Original</span>
+                </div>
+                <div className="mc-text">{WO.instruction.en}</div>
+              </div>
+              {stage === "reported" && (
+                <button type="button" className="mc-btn" onClick={() => advance("instrTranslated", "Instruction translated to Spanish — review before assigning.")}>
+                  Translate to Spanish
+                </button>
+              )}
+            </div>
+
+            {/* 2 — Spanish translation of the instruction (reviewed before assigning) */}
+            {reached("instrTranslated") && (
+              <div className="mc-item out">
+                <div className="mc-ihd">
+                  <span className="mc-who auto">Auto-translation</span>
+                  <span className="mc-time">{WO.ts.instrEs}</span>
+                </div>
+                <div className={`mc-bubble ${reached("instrApproved") ? "" : "warn"}`}>
+                  <div className="mc-langrow">
+                    <span className="mc-lang mt">ES · Translation</span>
+                    <span className={`mc-revstate ${reached("instrApproved") ? "ok" : "pending"}`}>
+                      {reached("instrApproved") ? "approved" : "Machine translated · review before assigning"}
+                    </span>
+                  </div>
+                  <div className="mc-text" lang="es">{WO.instruction.es}</div>
+                  <div className="mc-note">Machine-generated — the English above stays the source of truth.</div>
+                </div>
+                {stage === "instrTranslated" && (
+                  <button type="button" className="mc-btn approve" onClick={() => advance("instrApproved", "Spanish instruction approved — ready to assign.")}>
+                    Review &amp; approve
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 3 — assign to housekeeping */}
+            {stage === "instrApproved" && (
+              <div className="mc-item">
+                <button type="button" className="mc-btn" onClick={() => advance("assigned", `Assigned to ${WO.assignee.name} · ${WO.assignee.team}.`)}>
+                  Assign to {WO.assignee.name} · {WO.assignee.team}
+                </button>
+              </div>
+            )}
+
+            {/* 4 — assignment + Seen / Acknowledged (staff side) */}
+            {reached("assigned") && (
+              <>
+                <div className="mc-sysnote">
+                  <span className="mc-time">{WO.ts.assigned}</span> Assigned to <b>{WO.assignee.name}</b> · {WO.assignee.team}
+                </div>
+                <div className="mc-item in">
+                  <div className="mc-ihd">
+                    <span className="mc-who staff">{WO.assignee.name}</span>
+                    <span className="mc-badges">
+                      <span className="mc-badge">Seen {WO.ts.seen}</span>
+                      <span className="mc-badge ok">Acknowledged {WO.ts.ack}</span>
+                    </span>
+                  </div>
+                  <div className="mc-bubble muted">Entendido — paso antes del próximo check-in.</div>
+                </div>
+                {stage === "assigned" && (
+                  <button type="button" className="mc-check" onClick={() => advance("taskDone", "Task marked complete — field report posted.")}>
+                    <span className="mc-checkbox" />
+                    Mark task complete
+                    <span className="mc-checkhint">staff</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* 5 — staff field report (ES original, canonical) */}
+            {reached("taskDone") && (
+              <div className="mc-item in">
+                <div className="mc-ihd">
+                  <span className="mc-who staff">{WO.assignee.name}</span>
+                  <span className="mc-time">{WO.ts.report}</span>
+                </div>
+                <div className="mc-bubble">
+                  <div className="mc-langrow">
+                    <span className="mc-lang orig">ES · Original</span>
+                    <span className="mc-canon">canonical · as submitted</span>
+                  </div>
+                  <div className="mc-text" lang="es">{WO.fieldReport.es}</div>
+                </div>
+                {stage === "taskDone" && (
+                  <button type="button" className="mc-btn" onClick={() => advance("reportTranslated", "Field report translated to English — review before reporting.")}>
+                    Translate to English
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 6 — English translation of the field report (reviewed before reporting) */}
+            {reached("reportTranslated") && (
+              <div className="mc-item in">
+                <div className="mc-ihd">
+                  <span className="mc-who auto">Auto-translation</span>
+                  <span className="mc-time">{WO.ts.reportEn}</span>
+                </div>
+                <div className={`mc-bubble ${jobDone ? "" : "warn"}`}>
+                  <div className="mc-langrow">
+                    <span className="mc-lang mt">EN · Translation</span>
+                    <span className={`mc-revstate ${jobDone ? "ok" : "pending"}`}>
+                      {jobDone ? "approved" : "Machine translated · review before reporting"}
+                    </span>
+                  </div>
+                  <div className="mc-text">{WO.fieldReport.en}</div>
+                  <div className="mc-note">Machine-generated — must be approved before it can appear in the owner report. The Spanish original stays the source of truth.</div>
+                </div>
+                {stage === "reportTranslated" && (
+                  <button type="button" className="mc-btn approve" onClick={() => advance("reportApproved", `Report approved — work order complete, actual cost $${WO.actualCost}.`)}>
+                    Review &amp; approve for reporting
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 7 — completion: evidence, photos, cost (system) */}
+            {jobDone && (
+              <div className="mc-item sys">
+                <div className="mc-sysnote">
+                  <span className="mc-time">{WO.ts.completed}</span> Work order <b>completed</b> · actual cost <b>${WO.actualCost}</b>
+                </div>
+                <div className="mc-evidence">
+                  <div className="mc-photos">
+                    {WO.photos.map((ph) => (
+                      <div className={`mc-photo ${ph.k}`} key={ph.k}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        <span>{ph.label}</span>
+                        <span className="mc-genlabel">generated</span>
+                      </div>
+                    ))}
+                  </div>
+                  <ul className="mc-evlist">
+                    {WO.evidence.map((e) => (
+                      <li key={e}>{e}</li>
+                    ))}
+                  </ul>
+                  <div className="mc-cost">
+                    Est. ${WO.estCost} → Actual <b>${WO.actualCost}</b> <span className="mc-costnote">parts + labor</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* owner report — privacy gate: internal by default, explicit inclusion decision */}
+          {jobDone && (
+            <div className="mc-owner">
+              <div className="mc-ownerhd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Owner report
+                <span className={`mc-revstate ${ownerReady ? "ok" : "pending"}`}>{ownerReady ? "Ready" : "Internal by default"}</span>
+              </div>
+              {!ownerReady ? (
+                <>
+                  <div className="mc-privacy">
+                    The full team thread and translations stay <b>internal</b>. Choose exactly what the owner sees — the original
+                    Spanish is retained for audit, <b>not</b> shown to the owner.
+                  </div>
+                  <div className="mc-incl">
+                    <div className="mc-incl-t">Owner will see — approved only:</div>
+                    <ul className="mc-incl-list">
+                      <li>Issue — {WO.ownerSummary.issue}</li>
+                      <li>Resolution — {WO.ownerSummary.resolution}</li>
+                      <li>Team — {WO.assignee.name} · {WO.assignee.team}</li>
+                      <li>Opened {WO.openedAt} · Completed {WO.completedAt}</li>
+                      <li>Actual cost — ${WO.actualCost}</li>
+                      <li>Approved completion evidence + English summary</li>
+                    </ul>
+                  </div>
+                  <button type="button" className="mc-btn approve" onClick={() => advance("ownerIncluded", "Approved summary added to the owner report.")}>
+                    Include approved summary in owner report
+                  </button>
+                </>
+              ) : (
+                <div className="mc-report">
+                  <div className="mc-report-subj">Brundage Chalet — kitchen-sink work order resolved</div>
+                  <dl className="mc-rlist">
+                    <div>
+                      <dt>Issue</dt>
+                      <dd>{WO.ownerSummary.issue}</dd>
+                    </div>
+                    <div>
+                      <dt>Resolution</dt>
+                      <dd>{WO.ownerSummary.resolution}</dd>
+                    </div>
+                    <div>
+                      <dt>Team</dt>
+                      <dd>
+                        {WO.assignee.name} · {WO.assignee.team}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Dates</dt>
+                      <dd>
+                        Opened {WO.openedAt} · Completed {WO.completedAt}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Actual cost</dt>
+                      <dd>${WO.actualCost}</dd>
+                    </div>
+                  </dl>
+                  <div className="mc-report-foot">Approved English summary is shown to the owner · original Spanish retained for audit (not displayed).</div>
+                  <div className="mc-report-act">
+                    <button type="button" className="mc-btn approve" disabled={reportSent} onClick={() => { setReportSent(true); say("Owner report — simulated send (demo only)."); }}>
+                      {reportSent ? "✓ Simulated" : "Send owner report"}
+                    </button>
+                    {reportSent && <span className="mc-sent">Demo only · Not actually sent</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mc-foot">
+            <span className="mc-datalabel">
+              <span className="d" /> Generated demo data · in-app messaging, translation &amp; photos are a design-partner roadmap item
+            </span>
+            {started && (
+              <button type="button" className="mc-reset" onClick={resetJob}>
+                Reset demo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* property roster */}
       <div className="section">
         <div className="sh">
@@ -497,12 +905,16 @@ export default function RentalCockpit() {
             <span className="r">RevPAR</span>
             <span />
           </div>
-          {SORTED.map((p) => (
+          {SORTED.map((p) => {
+            const resolved = jobDone && p.n === WO.property;
+            const flag: Flag = resolved ? "g" : p.flag;
+            const word = resolved ? "Resolved" : FLAGWORD[p.flag];
+            return (
             <button type="button" className="prow" key={p.n} aria-label={`Open ${p.n}`} onClick={() => setOpen(p)}>
-              <span className={`dot ${p.flag}`} />
+              <span className={`dot ${flag}`} />
               <span className="pname">
                 <span className="nm">{p.n}</span>
-                <span className={`pill ${p.flag}`}>{FLAGWORD[p.flag]}</span>
+                <span className={`pill ${flag}`}>{word}</span>
               </span>
               <span className="cell-num r col-hide" style={{ color: TONE[occTone(p.occ)] }}>
                 {p.occ}%
@@ -515,7 +927,8 @@ export default function RentalCockpit() {
                 </svg>
               </span>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -579,7 +992,25 @@ export default function RentalCockpit() {
         roadmap — nothing here is a live production account.
       </div>
 
-      {open && <Drawer p={open} onClose={() => setOpen(null)} onToast={say} />}
+      {open && (
+        <Drawer
+          p={
+            jobDone && open.n === WO.property
+              ? {
+                  ...open,
+                  flag: "g",
+                  reason: `Kitchen-sink leak repaired & verified today (actual cost $${WO.actualCost}) — Thursday check-in protected.`,
+                  maint: [
+                    { tier: "Standard", st: "Resolved · today", t: "Kitchen-sink supply hose replaced — verified dry" },
+                    ...open.maint.filter((m) => m.tier !== "Critical"),
+                  ],
+                }
+              : open
+          }
+          onClose={() => setOpen(null)}
+          onToast={say}
+        />
+      )}
 
       <div className={`demo-toast ${toast ? "show" : ""}`} role="status" aria-live="polite">
         {toast}
@@ -1056,6 +1487,629 @@ export default function RentalCockpit() {
           border: 1px solid var(--line);
           background: transparent;
           color: var(--text-soft);
+        }
+
+        /* ── Maintenance Center — bilingual work-order thread ─── */
+        .mc-count {
+          font-size: 11px;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          padding: 2px 9px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          color: var(--muted);
+          white-space: nowrap;
+        }
+        .mc-count.crit {
+          color: var(--red);
+          border-color: color-mix(in srgb, var(--red) 40%, transparent);
+          background: var(--red-wash);
+        }
+        .mc-count.clear {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-card {
+          border: 1px solid color-mix(in srgb, var(--red) 32%, var(--line));
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 14px;
+        }
+        .mc-card.done {
+          border-color: color-mix(in srgb, var(--green) 34%, var(--line));
+        }
+        .mc-crumb {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: var(--muted);
+          margin-bottom: 10px;
+        }
+        .mc-crumb :global(svg) {
+          width: 13px;
+          height: 13px;
+          flex: none;
+          color: var(--copper-soft);
+        }
+        .mc-sep {
+          color: var(--line);
+        }
+        .mc-jobhd {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          flex-wrap: wrap;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--line-soft);
+        }
+        .mc-jobmeta {
+          flex: 1;
+          min-width: 0;
+        }
+        .mc-jobt {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .mc-jobs {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .mc-pstatus {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 3px 8px;
+          border-radius: 999px;
+          border: 1px solid;
+          flex: none;
+          white-space: nowrap;
+        }
+        .mc-pstatus.r {
+          color: var(--red);
+          border-color: color-mix(in srgb, var(--red) 40%, transparent);
+          background: var(--red-wash);
+        }
+        .mc-pstatus.y {
+          color: var(--yellow);
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .mc-pstatus.g {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-meta {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin: 12px 0;
+        }
+        .mc-meta > div {
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          min-width: 0;
+        }
+        .mc-mk {
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+        }
+        .mc-mv {
+          font-size: 12.5px;
+          color: var(--text);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mc-threadhd {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+          font-size: 10.5px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: var(--muted);
+          margin: 4px 0 10px;
+        }
+        .mc-threadnote {
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: none;
+          letter-spacing: 0;
+          color: var(--copper-soft);
+        }
+        .mc-thread {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .mc-item {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          border-left: 2px solid var(--line);
+          padding-left: 11px;
+        }
+        .mc-item.out {
+          border-left-color: var(--copper-dim);
+        }
+        .mc-item.in {
+          border-left-color: color-mix(in srgb, var(--green) 45%, var(--line));
+        }
+        .mc-item.sys {
+          border-left-color: var(--line);
+        }
+        .mc-ihd {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .mc-who {
+          font-size: 11.5px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .mc-who.mgr {
+          color: var(--copper-soft);
+        }
+        .mc-who.staff {
+          color: color-mix(in srgb, var(--green) 70%, var(--text));
+        }
+        .mc-who.auto {
+          color: var(--muted);
+          font-weight: 600;
+        }
+        .mc-time {
+          font-size: 10.5px;
+          color: var(--muted);
+          font-variant-numeric: tabular-nums;
+        }
+        .mc-badges {
+          display: inline-flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .mc-badge {
+          font-size: 9.5px;
+          font-weight: 600;
+          color: var(--muted);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 1px 7px;
+        }
+        .mc-badge.ok {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-bubble {
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 10px 11px;
+        }
+        .mc-bubble.warn {
+          border-color: color-mix(in srgb, var(--yellow) 42%, var(--line));
+          background: var(--yellow-wash);
+        }
+        .mc-bubble.muted {
+          font-size: 12.5px;
+          color: var(--text-soft);
+          font-style: italic;
+        }
+        .mc-langrow {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 6px;
+        }
+        .mc-lang {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 2px 7px;
+          border-radius: 999px;
+        }
+        .mc-lang.orig {
+          color: var(--text);
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+        }
+        .mc-lang.mt {
+          color: var(--muted);
+          border: 1px solid var(--line);
+        }
+        .mc-canon {
+          font-size: 10px;
+          color: var(--copper-soft);
+          font-weight: 600;
+        }
+        .mc-revstate {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          text-align: right;
+        }
+        .mc-revstate.pending {
+          color: var(--yellow);
+        }
+        .mc-revstate.ok {
+          color: var(--green);
+        }
+        .mc-text {
+          font-size: 12.5px;
+          color: var(--text);
+          line-height: 1.55;
+        }
+        .mc-note {
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 7px;
+          line-height: 1.45;
+        }
+        .mc-sysnote {
+          font-size: 11.5px;
+          color: var(--muted);
+          text-align: center;
+          padding: 2px 0;
+        }
+        .mc-sysnote :global(b) {
+          color: var(--text-soft);
+        }
+        .mc-check {
+          font: inherit;
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text);
+          background: var(--panel);
+          border: 1px solid var(--copper-dim);
+          border-radius: 9px;
+          padding: 9px 12px;
+          cursor: pointer;
+          align-self: flex-start;
+        }
+        .mc-check:hover {
+          border-color: var(--copper-soft);
+        }
+        .mc-checkbox {
+          width: 15px;
+          height: 15px;
+          border-radius: 4px;
+          border: 1.5px solid var(--copper-soft);
+          flex: none;
+        }
+        .mc-checkhint {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--muted);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 1px 6px;
+        }
+        .mc-evidence {
+          margin-top: 9px;
+          font-size: 12.5px;
+        }
+        .mc-photos {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+        .mc-photo {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          color: var(--muted);
+          border: 1px dashed var(--line);
+          border-radius: 8px;
+          padding: 9px 10px;
+        }
+        .mc-photo :global(svg) {
+          width: 14px;
+          height: 14px;
+          flex: none;
+        }
+        .mc-photo span:first-of-type {
+          flex: 1;
+          min-width: 0;
+        }
+        .mc-photo.after {
+          border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+        }
+        .mc-genlabel {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--copper-soft);
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          padding: 1px 6px;
+          flex: none;
+        }
+        .mc-evlist {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .mc-evlist li {
+          position: relative;
+          padding-left: 20px;
+          color: var(--text-soft);
+          line-height: 1.4;
+        }
+        .mc-evlist li::before {
+          content: "✓";
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: var(--green);
+          font-weight: 700;
+        }
+        .mc-cost {
+          font-size: 13px;
+          color: var(--text-soft);
+          margin-top: 10px;
+        }
+        .mc-cost :global(b) {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          font-size: 15px;
+          color: var(--text);
+        }
+        .mc-costnote {
+          font-size: 11px;
+          color: var(--muted);
+          margin-left: 6px;
+        }
+        .mc-btn {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+          align-self: flex-start;
+          transition: filter 0.15s;
+        }
+        .mc-btn:hover {
+          filter: brightness(1.06);
+        }
+        .mc-btn.approve {
+          border-color: color-mix(in srgb, var(--green) 55%, transparent);
+          background: color-mix(in srgb, var(--green) 22%, var(--surface));
+          color: var(--text);
+        }
+        .mc-btn:disabled {
+          opacity: 0.7;
+          cursor: default;
+        }
+        .mc-owner {
+          margin-top: 14px;
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          border-radius: 11px;
+          padding: 13px;
+        }
+        .mc-ownerhd {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--copper-soft);
+        }
+        .mc-ownerhd :global(svg) {
+          width: 15px;
+          height: 15px;
+          flex: none;
+        }
+        .mc-ownerhd .mc-revstate {
+          margin-left: auto;
+        }
+        .mc-privacy {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.5;
+          margin-top: 9px;
+        }
+        .mc-privacy :global(b) {
+          color: var(--text);
+        }
+        .mc-incl {
+          margin: 10px 0;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 10px 11px;
+        }
+        .mc-incl-t {
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--green);
+          margin-bottom: 7px;
+        }
+        .mc-incl-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .mc-incl-list li {
+          position: relative;
+          padding-left: 18px;
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.45;
+        }
+        .mc-incl-list li::before {
+          content: "✓";
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: var(--green);
+          font-weight: 700;
+        }
+        .mc-report {
+          border: 1px solid var(--line);
+          background: var(--panel);
+          border-radius: 10px;
+          padding: 12px;
+        }
+        .mc-report-subj {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .mc-rlist {
+          margin: 9px 0 0;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .mc-rlist > div {
+          display: grid;
+          grid-template-columns: 92px 1fr;
+          gap: 10px;
+          align-items: baseline;
+        }
+        .mc-rlist dt {
+          font-size: 9.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+          font-weight: 700;
+        }
+        .mc-rlist dd {
+          margin: 0;
+          font-size: 12.5px;
+          color: var(--text);
+          line-height: 1.5;
+        }
+        .mc-report-foot {
+          font-size: 11px;
+          color: var(--copper-soft);
+          margin-top: 10px;
+          line-height: 1.45;
+        }
+        .mc-report-act {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 11px;
+          flex-wrap: wrap;
+        }
+        .mc-sent {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: var(--muted);
+        }
+        .mc-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 13px;
+          padding-top: 12px;
+          border-top: 1px solid var(--line-soft);
+        }
+        .mc-datalabel {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .mc-datalabel .d {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--copper-soft);
+          flex: none;
+        }
+        .mc-reset {
+          font: inherit;
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .mc-reset:hover {
+          color: var(--text);
+          border-color: var(--copper-dim);
+        }
+        @media (max-width: 480px) {
+          .mc-meta {
+            grid-template-columns: 1fr;
+          }
+          .mc-photos {
+            grid-template-columns: 1fr;
+          }
+          .mc-rlist > div {
+            grid-template-columns: 1fr;
+            gap: 2px;
+          }
+        }
+        .onething.alert.done.inprog {
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .onething.alert.done.inprog :global(svg) {
+          color: var(--yellow);
+        }
+        .onething.alert.done.inprog :global(b) {
+          color: var(--text);
         }
         .rental :global(.backdrop) {
           position: fixed;

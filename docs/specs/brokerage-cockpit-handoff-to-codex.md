@@ -264,6 +264,38 @@ weighs in per Sean.
   it after meaningful work. Next action: Claude implements the demo-only flow and records its completion; Codex reviews
   the resulting diff against NEXT-009.
 
+### 2026-07-14 — Claude lane: bilingual Maintenance Center shipped (PR #115)
+
+- **SUCCESS-016 — Bilingual Maintenance Center shipped inside the Rental property file (PR #115).** Date 2026-07-14 ·
+  Owner [Claude] · Status **Passed (pending Sean's visual approval)** · Evidence: local production build driven with
+  Playwright at 390×844 + 1440×900, full walkthrough, **0 page errors**. Contained, generated-data-only, entirely within
+  `src/app/demo/real-estate-cockpit/native/RentalCockpit.tsx` — no schema/backend/auth/persistence/real translation/real
+  uploads/real send. Implements DECISION-008/009 as a **work order that lives inside Brundage's property file**
+  (breadcrumb `Brundage Chalet › WO-4021`), with a two-way message thread:
+  - **Manager→staff (EN→ES):** the manager instruction shows **EN · Original**, generates a **ES · Translation** labeled
+    *Machine translated · review before assigning*, and **requires Review & approve before assignment**; then assign to
+    **Rosa M. · Housekeeping** with generated **Seen** + **Acknowledged** states and a **completion checkbox**.
+  - **Staff→manager (ES→EN):** the field report is preserved as **ES · Original** (canonical); a **EN · Translation** is
+    labeled *Machine translated · review before reporting* and **requires Review & approve before it can enter the owner
+    report**. Both languages are always preserved; neither overwrites the other.
+  - **Thread history retained in-file:** instruction, translation, assignment, acknowledgment, field update, translation,
+    **before/after photo placeholders** (clearly labeled *generated* — no real upload), timestamps, assignee, status
+    history (Reported → Assigned → In progress → Completed), and **est. $120 → actual $185**.
+  - **Privacy rule:** the internal thread stays **internal by default**; an explicit **"Include approved summary in owner
+    report"** decision publishes only issue / resolution / team / dates / actual cost / approved evidence / approved
+    English summary — **original Spanish retained for audit, not shown to the owner**.
+  - **Visible cockpit state change:** on report approval the Brundage exception resolves (roster **Red → Resolved**,
+    property status **Red → Completed**), the open-issue chip drops to **0 critical**, actual cost becomes **$185**, the
+    portfolio brief + One-Thing-First flip green, and the owner report becomes **Ready**. **Send owner report** is
+    simulated and reads **"Demo only · Not actually sent."** A **Reset demo** control replays the whole walkthrough.
+  - Gates: `npx tsc --noEmit` clean · `npm test` **340 passed (49 files)** · `npm run build` success. Broker + Agent
+    unchanged (no regressions); no oversized SVG / clipping / overflow / styled-jsx regression at either viewport
+    (child-component styling kept on-component per SUCCESS-004; the section is rendered inline in `RentalCockpit`).
+- **NEXT-010 — Sean's visual approval of the Rental Maintenance Center** on the PR #115 preview (both viewports; the full
+  bilingual loop + privacy gate + simulated send + reset). Owner [Sean] · Status **Proposed** · Evidence gate: preview
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`. Feeds NEXT-009
+  (Codex review) and the DECISION-004 merge gate.
+
 
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 
@@ -292,15 +324,15 @@ weighs in per Sean.
 6. Show the **calendar guard** hard-block (Saturday double-booking) — resolve it.
 7. **Complete / acknowledge** an action (green state change).
 
-**Rental (~2 min)**
-1. Switch to the **Rental** tab.
-2. Explain the **portfolio picture** (portfolio brief).
-3. Show **occupancy, ADR, RevPAR, and booking pace**.
-4. Open the **exception-first property** (Brundage red alert).
-5. Show **maintenance, review, and pricing** context in the drawer.
-6. **Dispatch the technician**.
-7. Show the **acknowledged state** (green Dispatched + Undo).
-8. Close on **owner-reporting value**.
+**Rental — bilingual Maintenance Center (~60–90 sec)**
+1. Switch to the **Rental** tab — portfolio brief + occupancy / ADR / RevPAR / booking pace; **Brundage Chalet** is the red exception.
+2. In the **Maintenance Center**, note the work order lives **inside the property file** (`Brundage Chalet › WO-4021`) — status **Reported**, chip **1 critical open**.
+3. **Manager → staff:** the instruction shows **EN · Original** → click **Translate to Spanish** → **ES · Translation** ("machine translated · review before assigning") → **Review & approve** (approval gates assignment) → **Assign to Rosa M. · Housekeeping** (watch **Seen** + **Acknowledged** appear).
+4. **Mark task complete** → the **staff field report posts in Spanish** (**ES · Original**, canonical).
+5. **Staff → manager:** click **Translate to English** → **EN · Translation** ("machine translated · review before reporting") → **Review & approve for reporting** — both languages stay on file, neither overwrites the other.
+6. Watch the cockpit change: **Brundage resolves** (roster Red → Resolved), open issues **→ 0 critical**, actual cost **$185**, before/after photo evidence, brief + One-Thing-First flip green.
+7. **Privacy:** the thread is **internal by default** — click **Include approved summary in owner report** (owner sees only the approved summary; original Spanish is retained for audit, not shown).
+8. **Send owner report** → **"Demo only · Not actually sent."** Close on the retained bilingual record + owner-reporting value. Use **Reset demo** to replay.
 
 ## Deferred pilot work (NOT built for July 14 — recorded per handoff)
 

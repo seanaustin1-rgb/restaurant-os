@@ -1053,6 +1053,191 @@ function GamePlanItem({ it, checked, onToggle, say }: { it: PlanItem; checked: b
   );
 }
 
+// Agent Business Coach — a fractional-COO voice modeled on real-estate growth
+// coaches: gamify leading indicators (reps, not GCI), protect the agent's own
+// Profit First margins, and turn every insight into an action taken right now.
+// Generated-data-only, like the rest of the demo.
+const COACH_KPIS: { l: string; v: string; goal: string; frac: number; note: string }[] = [
+  { l: "Conversations", v: "6", goal: "12", frac: 0.5, note: "+2 vs your daily average · 4-day streak" },
+  { l: "Contact rate", v: "38%", goal: "40%", frac: 0.95, note: "2 dials from today's target" },
+  { l: "Database touches", v: "9", goal: "15", frac: 0.6, note: "6 more keeps your sphere warm" },
+];
+const COACH_PF: { l: string; v: string; note: string; ok?: boolean }[] = [
+  { l: "Pipeline net", v: "$48,200", note: "your side after the split · 3 files closing this week" },
+  { l: "Tax reserve", v: "$14,460", note: "30% held · on track", ok: true },
+  { l: "Safe owner pay", v: "$6,800", note: "you can pay yourself this now" },
+  { l: "Cash runway", v: "5.2 mo", note: "fixed costs covered if the pipeline paused" },
+];
+const COACH_ASKS: { q: string; a: string }[] = [
+  { q: "What's my one number today?", a: "Conversations — you're at 6 of 12. Nothing else on this screen outranks getting to twelve real conversations. Appointments follow reps, not wishes." },
+  { q: "Can I pay myself yet?", a: "Yes. $6,800 is safe with your tax reserve already funded. Take it — underpaying yourself isn't discipline, it's a leak." },
+  { q: "Should I buy more leads?", a: "Not yet. At a 2.1% appointment rate you'd be pouring water into a leaky bucket. Get your contact rate over 3% for two weeks, then we scale spend." },
+];
+const COACH_TEXT =
+  "Hi Sam — Priya with Cascade Realty. Sorry I missed you earlier. I've already pulled three homes that fit what you described and can get you in this week. What's easier for a quick 10-minute call — today at 4, or tomorrow morning?";
+
+function AgentCoach({ say }: { say: (m: string) => void }) {
+  const [draft, setDraft] = useState(false);
+  const [body, setBody] = useState(COACH_TEXT);
+  const [sent, setSent] = useState(false);
+  const [phone, setPhone] = useState(false);
+  const [ask, setAsk] = useState<number | null>(null);
+
+  return (
+    <div className="section">
+      <div className="sh">
+        <span className="eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+          </svg>
+          Agent Business Coach · Profit First
+        </span>
+        <span className="desc">your plain-talk AI coach · generated demo</span>
+      </div>
+
+      <div className="coach">
+        {/* plain-talk assistant — jumps straight to the insight, peer-to-peer */}
+        <div className="coach-say">
+          <span className="coach-ava">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+            </svg>
+          </span>
+          <p className="coach-line">
+            Morning, Priya. Your money&apos;s in good shape — today&apos;s gap is <b>reps, not results</b>. Two conversations
+            before noon and the week takes care of itself.
+          </p>
+        </div>
+
+        {/* gamified leading indicators */}
+        <div className="coach-block">
+          <span className="eyebrow">Today&apos;s scoreboard · leading indicators</span>
+          <div className="coach-kpis">
+            {COACH_KPIS.map((k) => (
+              <div className="ckpi" key={k.l}>
+                <div className="ck-top">
+                  <span className="ck-l">{k.l}</span>
+                  <span className="ck-v">
+                    {k.v}
+                    <small> / {k.goal}</small>
+                  </span>
+                </div>
+                <div className="ck-bar">
+                  <span className="ck-fill" style={{ width: `${Math.round(k.frac * 100)}%` }} />
+                </div>
+                <div className="ck-note">{k.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Profit First — the agent's own income treated like a business */}
+        <div className="coach-block">
+          <span className="eyebrow">Profit First · your commission income</span>
+          <div className="coach-pf">
+            {COACH_PF.map((r) => (
+              <div className="pf-row" key={r.l}>
+                <span className="pf-l">
+                  {r.l}
+                  {r.ok && (
+                    <svg className="pf-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
+                </span>
+                <span className="pf-v">{r.v}</span>
+                <span className="pf-note">{r.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* lead-spend coaching guardrail */}
+        <div className="coach-guard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <div>
+            <b>Lead-spend guardrail.</b> You&apos;re at <b>$1,240/mo</b> on portal leads at a <b>2.1%</b> appointment rate.
+            Rule: don&apos;t scale spend under <b>3%</b> — the leak is speed-to-lead, not volume. Fix the Sam-Ortega gap
+            first, then we open the tap.
+          </div>
+        </div>
+
+        {/* drive instant action — the next move, right now */}
+        <div className="coach-next">
+          <p className="cn-head">
+            <span className="cn-kicker">Next action, right now</span>
+            <b>Sam Ortega — referral, 41 min cold.</b> A referral going cold is money you already earned walking out the
+            door. One text stops the bleed.
+          </p>
+          <div className="lact">
+            <button type="button" className={`btn ${draft ? "primary" : "ghost"}`} onClick={() => { setDraft((d) => !d); setPhone(false); setSent(false); }}>
+              <span className="gp-bi"><GpIcon kind="text" /></span>
+              Draft the text
+            </button>
+            <button type="button" className={`btn ${phone ? "primary" : "ghost"}`} onClick={() => { setPhone((p) => !p); setDraft(false); }}>
+              <span className="gp-bi"><GpIcon kind="call" /></span>
+              Call Sam now
+            </button>
+          </div>
+
+          {phone && (
+            <div className="lcall">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+              </svg>
+              <span className="lcall-n">(208) 555-0142</span>
+              <span className="lcall-h">Twilio click-to-dial · generated demo contact</span>
+            </div>
+          )}
+
+          {draft && (
+            <div className="compose">
+              <div className="cmp-hd">
+                <GpIcon kind="text" />
+                Text · Sam Ortega
+                <span className="cmp-tag">AI-drafted · edit before sending</span>
+              </div>
+              <textarea className="cmp-body text" value={body} onChange={(e) => setBody(e.target.value)} rows={4} disabled={sent} />
+              <div className="cmp-act">
+                <button type="button" className="btn primary" disabled={sent} onClick={() => { setSent(true); say("Text queued to Sam Ortega · Twilio trigger (demo only · not sent)"); }}>
+                  {sent ? "✓ Sent via Twilio" : "Send via Twilio"}
+                </button>
+                <button type="button" className="btn ghost" onClick={() => setDraft(false)}>
+                  {sent ? "Close" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ask the coach — plain-talk Q&A */}
+        <div className="coach-ask">
+          <span className="eyebrow">Ask your coach</span>
+          <div className="ask-chips">
+            {COACH_ASKS.map((qa, i) => (
+              <button type="button" key={qa.q} className={`ask-chip ${ask === i ? "on" : ""}`} onClick={() => setAsk((a) => (a === i ? null : i))}>
+                {qa.q}
+              </button>
+            ))}
+          </div>
+          {ask !== null && (
+            <div className="ask-ans">
+              <span className="coach-ava sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+                </svg>
+              </span>
+              <p>{COACH_ASKS[ask].a}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
   const [handled, setHandled] = useState(false);
@@ -1139,6 +1324,9 @@ export default function AgentApp() {
           </div>
         </div>
       )}
+
+      {/* agent business coach — the fractional-COO advisor voice */}
+      <AgentCoach say={say} />
 
       {/* today's game plan — time-boxed, checkable rollup of the day */}
       <div className="section gameplan">
@@ -1661,6 +1849,257 @@ export default function AgentApp() {
           font-size: 11.5px;
           color: var(--muted);
         }
+
+        /* agent business coach */
+        .agent :global(.coach) {
+          border: 1px solid var(--copper-dim);
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .agent :global(.coach-say) {
+          display: flex;
+          gap: 11px;
+          align-items: flex-start;
+        }
+        .agent :global(.coach-ava) {
+          flex: none;
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+          display: grid;
+          place-items: center;
+        }
+        .agent :global(.coach-ava svg) {
+          width: 17px;
+          height: 17px;
+        }
+        .agent :global(.coach-ava.sm) {
+          width: 24px;
+          height: 24px;
+        }
+        .agent :global(.coach-ava.sm svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .agent :global(.coach-line) {
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: var(--text);
+          margin: 2px 0 0;
+        }
+        .agent :global(.coach-line b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.coach-block) {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .agent :global(.coach-kpis) {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+        .agent :global(.ckpi) {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 10px 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .agent :global(.ck-top) {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 6px;
+        }
+        .agent :global(.ck-l) {
+          font-size: 11px;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          font-weight: 600;
+        }
+        .agent :global(.ck-v) {
+          font-family: var(--font-mono);
+          font-size: 17px;
+          color: var(--text);
+          line-height: 1;
+        }
+        .agent :global(.ck-v small) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.ck-bar) {
+          height: 5px;
+          border-radius: 999px;
+          background: var(--line);
+          overflow: hidden;
+        }
+        .agent :global(.ck-fill) {
+          display: block;
+          height: 100%;
+          border-radius: 999px;
+          background: var(--copper-soft);
+        }
+        .agent :global(.ck-note) {
+          font-size: 11px;
+          color: var(--text-soft);
+          line-height: 1.35;
+        }
+        .agent :global(.coach-pf) {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        .agent :global(.pf-row) {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas: "label value" "note note";
+          gap: 2px 10px;
+          padding: 9px 12px;
+          background: var(--panel);
+        }
+        .agent :global(.pf-row + .pf-row) {
+          border-top: 1px solid var(--line);
+        }
+        .agent :global(.pf-l) {
+          grid-area: label;
+          font-size: 12.5px;
+          color: var(--text);
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .agent :global(.pf-ok) {
+          width: 12px;
+          height: 12px;
+          color: var(--green);
+        }
+        .agent :global(.pf-v) {
+          grid-area: value;
+          font-family: var(--font-mono);
+          font-size: 14px;
+          color: var(--text);
+          text-align: right;
+        }
+        .agent :global(.pf-note) {
+          grid-area: note;
+          font-size: 11px;
+          color: var(--muted);
+          line-height: 1.35;
+        }
+        .agent :global(.coach-guard) {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          padding: 11px 12px;
+          border: 1px solid var(--yellow);
+          border-radius: 10px;
+          background: color-mix(in srgb, var(--yellow) 9%, transparent);
+        }
+        .agent :global(.coach-guard svg) {
+          width: 16px;
+          height: 16px;
+          flex: none;
+          margin-top: 1px;
+          color: var(--yellow);
+        }
+        .agent :global(.coach-guard div) {
+          font-size: 12px;
+          line-height: 1.5;
+          color: var(--text-soft);
+        }
+        .agent :global(.coach-guard b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.coach-next) {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .agent :global(.cn-head) {
+          margin: 0;
+          font-size: 12.5px;
+          line-height: 1.5;
+          color: var(--text-soft);
+        }
+        .agent :global(.cn-head b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.cn-kicker) {
+          display: block;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          font-weight: 700;
+          color: var(--copper-soft);
+          margin-bottom: 4px;
+        }
+        .agent :global(.coach-ask) {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .agent :global(.ask-chips) {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+        }
+        .agent :global(.ask-chip) {
+          border: 1px solid var(--line);
+          background: var(--panel);
+          color: var(--text-soft);
+          border-radius: 999px;
+          padding: 6px 12px;
+          font: inherit;
+          font-size: 12px;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .agent :global(.ask-chip:hover) {
+          border-color: var(--copper-dim);
+          color: var(--text);
+        }
+        .agent :global(.ask-chip.on) {
+          border-color: var(--copper-soft);
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+        }
+        .agent :global(.ask-ans) {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          padding: 11px 12px;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+        }
+        .agent :global(.ask-ans p) {
+          margin: 0;
+          font-size: 12.5px;
+          line-height: 1.5;
+          color: var(--text);
+        }
+        @media (max-width: 560px) {
+          .agent :global(.coach-kpis) {
+            grid-template-columns: 1fr;
+          }
+        }
+
         .queue {
           display: flex;
           flex-direction: column;

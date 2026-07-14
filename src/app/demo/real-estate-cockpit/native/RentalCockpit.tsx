@@ -428,7 +428,7 @@ export default function RentalCockpit() {
   };
   const sendOwnerAction = (a: OwnerAction) => {
     setOaSent(true);
-    say(a.kind === "text" ? "Message sent to the guest." : "Owner report sent.");
+    say(a.kind === "text" ? "Guest message — simulated send (demo only)." : "Owner report — simulated send (demo only).");
   };
 
   // Brundage kitchen-sink work-order lifecycle (Maintenance Center).
@@ -462,7 +462,8 @@ export default function RentalCockpit() {
             <span>
               {jobDone ? (
                 <>
-                  <b>Brundage sink leak resolved</b> — hose replaced and verified dry; the owner report is ready; Thursday check-in is safe.
+                  <b>Brundage sink leak resolved</b> — hose replaced and verified dry; the owner report is{" "}
+                  {ownerReady ? "ready to send" : "awaiting your approval to include"}. Still flagged on its 3.2★ review.
                 </>
               ) : started ? (
                 <>
@@ -906,15 +907,17 @@ export default function RentalCockpit() {
             <span />
           </div>
           {SORTED.map((p) => {
-            const resolved = jobDone && p.n === WO.property;
-            const flag: Flag = resolved ? "g" : p.flag;
-            const word = resolved ? "Resolved" : FLAGWORD[p.flag];
+            // The kitchen-sink work order clears the Critical MAINTENANCE driver, but
+            // Brundage stays red on its 3.2★ review (< the 3.5 threshold) — so the roster
+            // flag is unchanged. A "maint resolved" hint shows the work is done honestly.
+            const maintResolved = jobDone && p.n === WO.property;
             return (
             <button type="button" className="prow" key={p.n} aria-label={`Open ${p.n}`} onClick={() => setOpen(p)}>
-              <span className={`dot ${flag}`} />
+              <span className={`dot ${p.flag}`} />
               <span className="pname">
                 <span className="nm">{p.n}</span>
-                <span className={`pill ${flag}`}>{word}</span>
+                <span className={`pill ${p.flag}`}>{FLAGWORD[p.flag]}</span>
+                {maintResolved && <span className="pill-note">maint resolved · review 3.2★</span>}
               </span>
               <span className="cell-num r col-hide" style={{ color: TONE[occTone(p.occ)] }}>
                 {p.occ}%
@@ -972,11 +975,12 @@ export default function RentalCockpit() {
                     <textarea className="oc-body" value={oaBody} onChange={(e) => setOaBody(e.target.value)} rows={a.kind === "email" ? 8 : 3} disabled={oaSent} />
                     <div className="oc-act">
                       <button type="button" className="oc-send" disabled={oaSent} onClick={() => sendOwnerAction(a)}>
-                        {oaSent ? "✓ Sent" : a.kind === "email" ? "Send report" : "Send text"}
+                        {oaSent ? "✓ Simulated" : a.kind === "email" ? "Simulate send" : "Simulate send"}
                       </button>
                       <button type="button" className="oc-cancel" onClick={() => setOaOpen(null)}>
                         {oaSent ? "Close" : "Cancel"}
                       </button>
+                      {oaSent && <span className="oc-sent">Demo only · Not actually sent</span>}
                     </div>
                   </div>
                 )}
@@ -998,10 +1002,11 @@ export default function RentalCockpit() {
             jobDone && open.n === WO.property
               ? {
                   ...open,
-                  flag: "g",
-                  reason: `Kitchen-sink leak repaired & verified today (actual cost $${WO.actualCost}) — Thursday check-in protected.`,
+                  // Maintenance is resolved, but the property stays red on its 3.2★ review
+                  // (below the 3.5 threshold) — keep the flag honest, matching the roster.
+                  reason: `Kitchen-sink work order resolved today (actual cost $${WO.actualCost}) — Thursday check-in protected. Still flagged: the 3.2★ review sits below the 3.5 threshold.`,
                   maint: [
-                    { tier: "Standard", st: "Resolved · today", t: "Kitchen-sink supply hose replaced — verified dry" },
+                    { tier: "Standard", st: "Resolved · today", t: "Kitchen-sink supply hose replaced — verified dry (WO-4021)" },
                     ...open.maint.filter((m) => m.tier !== "Critical"),
                   ],
                 }
@@ -1352,6 +1357,22 @@ export default function RentalCockpit() {
           color: var(--muted);
           border-color: var(--line);
         }
+        .pill-note {
+          font-size: 9px;
+          font-weight: 600;
+          color: var(--green);
+          border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+          background: var(--green-wash);
+          border-radius: 999px;
+          padding: 1px 6px;
+          flex: none;
+          white-space: nowrap;
+        }
+        @media (max-width: 600px) {
+          .pill-note {
+            display: none;
+          }
+        }
         .cell-num {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
@@ -1487,6 +1508,14 @@ export default function RentalCockpit() {
           border: 1px solid var(--line);
           background: transparent;
           color: var(--text-soft);
+        }
+        .oc-sent {
+          align-self: center;
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: var(--muted);
         }
 
         /* ── Maintenance Center — bilingual work-order thread ─── */

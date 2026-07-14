@@ -322,6 +322,21 @@ weighs in per Sean.
   **Proposed** · Claude applies only the four corrections above in `RentalCockpit.tsx`, re-runs typecheck/tests/build and
   both viewport walkthroughs, pushes to PR #115, and records evidence. Codex then reviews the delta, resolves NEXT-009,
   and gives Sean a merge/no-merge recommendation. No backend/schema/integration expansion.
+- **SUCCESS-017 — BLOCKER-002 four contained corrections applied (PR #115).** Date 2026-07-14 · Owner [Claude] ·
+  Status **Passed (pending Codex re-review + Sean visual approval)** · Scope: `RentalCockpit.tsx` only — no
+  backend/schema/auth/integration change. Evidence: local prod build driven with Playwright at 390×844 + 1440×900,
+  **0 page errors**; `npx tsc --noEmit` clean · `npm test` 340 passed (49 files) · `npm run build` success.
+  1. **Property-health truth:** completing WO-4021 clears the Critical maintenance (count → **0 critical**) but the roster
+     keeps **Brundage red** on its 3.2★ review (< 3.5), with a "maint resolved · review 3.2★" hint — no longer flips to a
+     false green "Resolved".
+  2. **Property-file consistency:** the Brundage drawer now reflects the same state — maintenance shown **Resolved · today
+     (WO-4021)**, the 3.2★ review still **below 3.5 threshold**, header flag red (matches the roster); no stale open data.
+  3. **Owner-report gate:** the portfolio brief now reads "owner report **awaiting your approval to include**" until the
+     manager clicks **Include approved summary**, and only then "**ready to send**" (owner panel: *Internal by default* →
+     *Ready*).
+  4. **Simulated-send truth:** the older Rental owner/guest actions now say **Simulate send** → **✓ Simulated** with a
+     **"Demo only · Not actually sent"** note and simulated-send toasts — no surface implies real delivery.
+  Next: Codex re-reviews the delta (NEXT-009/NEXT-011); Sean visually approves the corrected preview before merge.
 
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 

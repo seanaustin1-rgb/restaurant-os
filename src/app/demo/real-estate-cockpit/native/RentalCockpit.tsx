@@ -65,7 +65,7 @@ const PROPS: Prop[] = [
   {
     n: "Brundage Chalet",
     flag: "r",
-    reason: "Critical maintenance open 52h (furnace) + a 3.2★ review below the 3.5 threshold.",
+    reason: "Critical work order open — possible water leak under the kitchen sink, flagged before Thursday's guest — plus a 3.2★ review below the 3.5 threshold.",
     occ: 61,
     adr: 340,
     revpar: 207,
@@ -73,11 +73,11 @@ const PROPS: Prop[] = [
     profile: "Medium",
     floor: null,
     maint: [
-      { tier: "Critical", st: "Open · 52h", t: "Furnace not igniting — guest-reported" },
+      { tier: "Critical", st: "Open · WO-4021", t: "Kitchen-sink moisture / leak — pre-arrival check" },
       { tier: "Standard", st: "In progress · 1d", t: "Hot tub pH low" },
     ],
     rating: 3.2,
-    rnote: "“Cold first night, slow to respond.” — 2 days ago",
+    rnote: "“A maintenance issue at check-in; slow to respond.” — 2 days ago",
   },
   {
     n: "Foothills Loft",
@@ -177,6 +177,109 @@ const FLAGWORD: Record<Flag, string> = { r: "Red", y: "Yellow", g: "OK" };
 const PROFILES = ["Low", "Medium", "High"] as const;
 const occTone = (o: number): Tone => (o >= 75 ? "green" : o >= 65 ? "yellow" : "red");
 const SORTED = [...PROPS].sort((a, b) => (RANK[a.flag] !== RANK[b.flag] ? RANK[a.flag] - RANK[b.flag] : b.revpar - a.revpar));
+
+// Owner updates & follow-up — close the loop on concerns and prompt proactive
+// owner reporting. Generated demo data; "send" is a toast, no real delivery.
+type OwnerAction = { id: string; kind: "email" | "text"; flag: Flag; title: string; line: string; subject?: string; body: string };
+const OWNER_ACTIONS: OwnerAction[] = [
+  {
+    id: "brundage-owner",
+    kind: "email",
+    flag: "r",
+    title: "Update the Brundage owner",
+    line: "Close the loop on the kitchen-sink work order and the 3.2★ review before the owner hears it from the guest.",
+    subject: "Brundage Chalet — kitchen-sink leak resolved, Thursday check-in protected",
+    body:
+      "Hi,\n\nA heads-up with the resolution already in motion: a pre-arrival moisture check at Brundage Chalet found a small leak under the kitchen sink. Our team replaced the supply hose today and verified it dry ahead of Thursday's check-in — the booking is protected.\n\nWe also responded to the recent 3.2★ review directly. I'll confirm the moment the work order closes.\n\nThis period: 61% occupancy · $340 ADR · $207 RevPAR.\n\nBest,\nYour property team",
+  },
+  {
+    id: "brundage-guest",
+    kind: "text",
+    flag: "r",
+    title: "Reassure the Thursday guest",
+    line: "A quick proactive text keeps the arrival smooth and heads off another low review.",
+    body:
+      "Hi! This is your host team for Brundage Chalet — we did a pre-arrival check and took care of a small kitchen-sink item ahead of your Thursday check-in, so everything's fresh and ready. Anything you need before you arrive, just reply here.",
+  },
+  {
+    id: "sawtooth-report",
+    kind: "email",
+    flag: "g",
+    title: "Send the Sawtooth owner their monthly report",
+    line: "Premium-strategy owner — proactively show the numbers behind the plan they chose.",
+    subject: "Sawtooth Summit Lodge — your monthly owner report",
+    body:
+      "Hi,\n\nYour monthly summary for Sawtooth Summit Lodge:\n\n• Occupancy 58% · ADR $714 · RevPAR $414\n• Pacing −18% vs the 3-year benchmark — held intentionally behind your $5,000/wk floor\n• Guest reviews averaging 4.8★\n\nYour asset is priced ~24% above market for comparable >4,000 sq ft homes. This premium strategy has held occupancy below local momentum — exactly as you directed. Happy to revisit the floor whenever you'd like.\n\nBest,\nYour property team",
+  },
+];
+
+// ── Maintenance Center — bilingual work-order thread (DECISION-009) ───────────
+// A contained, generated-data-only work order that lives INSIDE the Brundage
+// property file: manager instruction (EN→ES, reviewed before assigning) → assign
+// → staff acknowledgment → staff field report (ES→EN, reviewed before reporting)
+// → completion evidence → an explicit privacy decision → owner-ready report →
+// visible cockpit state change. DECISION-008: the original-language submission is
+// canonical truth; each machine translation is clearly labeled, reviewed
+// derivative copy, and never overwrites the original. Nothing here persists,
+// translates for real, uploads, or sends — every write is simulated.
+const MC_STAGES = [
+  "reported", // work order open; manager instruction drafted (EN)
+  "instrTranslated", // ES translation generated — review before assigning
+  "instrApproved", // manager approved the Spanish instruction
+  "assigned", // assigned to housekeeping; Seen + Acknowledged auto-generate
+  "taskDone", // staff marked the task complete → field report (ES) posts
+  "reportTranslated", // EN translation generated — review before reporting
+  "reportApproved", // manager approved → evidence + actual cost; Brundage resolves
+  "ownerIncluded", // manager included the approved summary in the owner report
+] as const;
+type McStage = (typeof MC_STAGES)[number];
+
+const WO = {
+  property: "Brundage Chalet",
+  id: "WO-4021",
+  title: "Kitchen sink — moisture check & leak",
+  category: "Plumbing",
+  openedAt: "Jul 14 · 8:38 AM",
+  completedAt: "Jul 14 · 11:20 AM",
+  manager: "You",
+  assignee: { name: "Rosa M.", team: "Housekeeping" },
+  estCost: 120,
+  actualCost: 185,
+  instruction: {
+    en: "Please check under the kitchen sink for moisture, photograph the cabinet floor, and report any odor before the next guest arrives.",
+    es: "Por favor, revise si hay humedad debajo del fregadero de la cocina, tome una foto del piso del gabinete e informe si detecta algún olor antes de que llegue el próximo huésped.",
+  },
+  fieldReport: {
+    es: "Encontré una fuga debajo del fregadero. Reemplacé la manguera y confirmé que ya no hay fuga. El costo total fue de $185.",
+    en: "I found a leak under the sink. I replaced the hose and confirmed there is no longer a leak. The total cost was $185.",
+  },
+  photos: [
+    { k: "before", label: "Before · cabinet floor" },
+    { k: "after", label: "After · hose replaced, dry" },
+  ],
+  evidence: [
+    "Leak located under the kitchen sink",
+    "Supply hose replaced",
+    "No further leak after a 10-minute run test",
+    "Cabinet floor dried — no odor",
+  ],
+  ownerSummary: {
+    issue: "A water leak under the kitchen sink, caught on a pre-arrival moisture check.",
+    resolution: "The supply hose was replaced and verified dry; the cabinet floor was cleared with no odor.",
+  },
+  ts: {
+    instr: "8:38 AM",
+    instrEs: "8:39 AM",
+    instrOk: "8:41 AM",
+    assigned: "8:42 AM",
+    seen: "9:02 AM",
+    ack: "9:05 AM",
+    done: "11:14 AM",
+    report: "11:16 AM",
+    reportEn: "11:17 AM",
+    completed: "11:20 AM",
+  },
+} as const;
 
 function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast: (m: string) => void }) {
   const [profile, setProfile] = useState<string>(p.profile);
@@ -301,7 +404,14 @@ function Drawer({ p, onClose, onToast }: { p: Prop; onClose: () => void; onToast
 
 export default function RentalCockpit() {
   const [open, setOpen] = useState<Prop | null>(null);
+  const [stage, setStage] = useState<McStage>("reported");
+  const [reportSent, setReportSent] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [oaOpen, setOaOpen] = useState<string | null>(null);
+  const [oaSubject, setOaSubject] = useState("");
+  const [oaBody, setOaBody] = useState("");
+  const [oaSent, setOaSent] = useState(false);
+  const brundage = PROPS.find((p) => p.n === "Brundage Chalet") ?? null;
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
   const say = (m: string) => {
@@ -309,18 +419,131 @@ export default function RentalCockpit() {
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setToast(null), 2400);
   };
+  const openOwnerAction = (a: OwnerAction) => {
+    if (oaOpen === a.id) { setOaOpen(null); return; }
+    setOaOpen(a.id);
+    setOaSent(false);
+    setOaSubject(a.kind === "email" ? a.subject ?? "" : "");
+    setOaBody(a.body);
+  };
+  const sendOwnerAction = (a: OwnerAction) => {
+    setOaSent(true);
+    say(a.kind === "text" ? "Guest message — simulated send (demo only)." : "Owner report — simulated send (demo only).");
+  };
+
+  // Brundage kitchen-sink work-order lifecycle (Maintenance Center).
+  const si = MC_STAGES.indexOf(stage);
+  const reached = (s: McStage) => si >= MC_STAGES.indexOf(s);
+  const jobDone = reached("reportApproved"); // Brundage resolves once the field report is approved
+  const started = si > 0; // any action taken beyond the initial reported state
+  const ownerReady = reached("ownerIncluded");
+  const workStatus = jobDone ? "Completed" : reached("taskDone") ? "In progress" : reached("assigned") ? "Assigned" : "Reported";
+  const advance = (to: McStage, msg: string) => {
+    setStage(to);
+    say(msg);
+  };
+  const resetJob = () => {
+    setStage("reported");
+    setReportSent(false);
+    say("Maintenance demo reset.");
+  };
+  // Open counts for Brundage — the Critical work order clears on completion.
+  const criticalOpen = jobDone ? 0 : 1;
+  const standardOpen = 1; // hot-tub pH ticket stays in progress either way
 
   return (
     <div className="rental">
-      <div className="onething alert">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-        </svg>
-        <p>
-          <b>Brundage Chalet is red:</b> a Critical furnace work order has been open 52h (past 48h) and a fresh 3.2★ review just
-          posted. A guest checks in Thursday — dispatch and respond today.
-        </p>
+      {/* executive brief — the 20-second portfolio read */}
+      <div className="brief">
+        <span className="eyebrow">Portfolio brief</span>
+        <ul className="brief-list">
+          <li>
+            <span className="bdot" style={{ background: jobDone ? "var(--green)" : started ? "var(--yellow)" : "var(--red)" }} />
+            <span>
+              {jobDone ? (
+                <>
+                  <b>Brundage sink leak resolved</b> — hose replaced and verified dry; the owner report is{" "}
+                  {ownerReady ? "ready to send" : "awaiting your approval to include"}. Still flagged on its 3.2★ review.
+                </>
+              ) : started ? (
+                <>
+                  <b>Brundage work order in progress</b> — the kitchen-sink job is moving through the Maintenance Center below.
+                </>
+              ) : (
+                <>
+                  <b>Brundage Chalet is red</b> — a Critical kitchen-sink work order is open ahead of Thursday&apos;s check-in.
+                </>
+              )}
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--yellow)" }} />
+            <span>
+              Portfolio occupancy is <b>72%</b> and pace runs <b>−5%</b> vs 3-year; two units carry price-drop flags.
+            </span>
+          </li>
+          <li>
+            <span className="bdot" style={{ background: "var(--green)" }} />
+            <span>
+              Blended RevPAR holds at <b>$295</b> and reviews average <b>4.6★</b> across the portfolio.
+            </span>
+          </li>
+        </ul>
       </div>
+
+      {/* one thing first — an obvious action */}
+      {jobDone ? (
+        <div className="onething alert done">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          <p>
+            <b>Resolved.</b> Brundage&apos;s kitchen-sink leak is fixed and verified — actual cost ${WO.actualCost}. The bilingual
+            work-order thread is on file and the owner report is {ownerReady ? "ready to send" : "one approval away"}.
+          </p>
+          <button type="button" className="ot-undo" onClick={resetJob}>
+            Reset
+          </button>
+        </div>
+      ) : started ? (
+        <div className="onething alert done inprog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 6v6l4 2M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
+          </svg>
+          <p>
+            <b>Work order {WO.id} in progress.</b> Move the kitchen-sink job through the <b>Maintenance Center</b> below —
+            review each translation, complete, then report to the owner.
+          </p>
+          <button type="button" className="ot-undo" onClick={resetJob}>
+            Reset
+          </button>
+        </div>
+      ) : (
+        <div className="onething alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+          </svg>
+          <div className="ot-body">
+            <p>
+              <b>One thing first — Brundage Chalet is red:</b> a Critical kitchen-sink work order is open ahead of Thursday&apos;s
+              check-in, and a fresh 3.2★ review just posted. Send the team instruction and work it today.
+            </p>
+            <div className="ot-actions">
+              <button type="button" className="ot-go" onClick={() => advance("instrTranslated", "Instruction translated to Spanish — review before assigning.")}>
+                Send team instruction
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </button>
+              {brundage && (
+                <button type="button" className="ot-ghost" onClick={() => setOpen(brundage)}>
+                  Open property
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* portfolio tiles */}
       <div className="ptiles">
@@ -360,6 +583,308 @@ export default function RentalCockpit() {
         </div>
       </div>
 
+      {/* maintenance center — bilingual work-order thread inside the property file (DECISION-009) */}
+      <div className="section">
+        <div className="sh">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2-2z" />
+            </svg>
+            Maintenance Center
+          </span>
+          <span className={`mc-count ${criticalOpen ? "crit" : "clear"}`}>
+            {criticalOpen} critical · {standardOpen} standard open
+          </span>
+        </div>
+
+        <div className={`mc-card ${jobDone ? "done" : ""}`}>
+          {/* property-file breadcrumb — the work order lives inside Brundage's Raven file */}
+          <div className="mc-crumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <path d="M9 22V12h6v10" />
+            </svg>
+            {WO.property}
+            <span className="mc-sep">›</span>
+            Work order {WO.id}
+          </div>
+
+          <div className="mc-jobhd">
+            <span className={`mtag ${jobDone ? "std" : "crit"}`}>{jobDone ? WO.category : `${WO.category} · Critical`}</span>
+            <div className="mc-jobmeta">
+              <div className="mc-jobt">{WO.title}</div>
+              <div className="mc-jobs">
+                Opened {WO.openedAt}
+                {jobDone ? ` · Completed ${WO.completedAt}` : ""}
+              </div>
+            </div>
+            <span className={`mc-pstatus ${jobDone ? "g" : started ? "y" : "r"}`}>{workStatus}</span>
+          </div>
+
+          <div className="mc-meta">
+            <div>
+              <span className="mc-mk">Assignee</span>
+              <span className="mc-mv">{reached("assigned") ? `${WO.assignee.name} · ${WO.assignee.team}` : "Unassigned"}</span>
+            </div>
+            <div>
+              <span className="mc-mk">Est. cost</span>
+              <span className="mc-mv">${WO.estCost}</span>
+            </div>
+            <div>
+              <span className="mc-mk">Actual cost</span>
+              <span className="mc-mv">{jobDone ? `$${WO.actualCost}` : "—"}</span>
+            </div>
+          </div>
+
+          <div className="mc-threadhd">
+            Work-order thread
+            <span className="mc-threadnote">internal · retained in the property file</span>
+          </div>
+
+          <div className="mc-thread">
+            {/* 1 — manager instruction (EN original) */}
+            <div className="mc-item out">
+              <div className="mc-ihd">
+                <span className="mc-who mgr">You · Manager</span>
+                <span className="mc-time">{WO.ts.instr}</span>
+              </div>
+              <div className="mc-bubble">
+                <div className="mc-langrow">
+                  <span className="mc-lang orig">EN · Original</span>
+                </div>
+                <div className="mc-text">{WO.instruction.en}</div>
+              </div>
+              {stage === "reported" && (
+                <button type="button" className="mc-btn" onClick={() => advance("instrTranslated", "Instruction translated to Spanish — review before assigning.")}>
+                  Translate to Spanish
+                </button>
+              )}
+            </div>
+
+            {/* 2 — Spanish translation of the instruction (reviewed before assigning) */}
+            {reached("instrTranslated") && (
+              <div className="mc-item out">
+                <div className="mc-ihd">
+                  <span className="mc-who auto">Auto-translation</span>
+                  <span className="mc-time">{WO.ts.instrEs}</span>
+                </div>
+                <div className={`mc-bubble ${reached("instrApproved") ? "" : "warn"}`}>
+                  <div className="mc-langrow">
+                    <span className="mc-lang mt">ES · Translation</span>
+                    <span className={`mc-revstate ${reached("instrApproved") ? "ok" : "pending"}`}>
+                      {reached("instrApproved") ? "approved" : "Machine translated · review before assigning"}
+                    </span>
+                  </div>
+                  <div className="mc-text" lang="es">{WO.instruction.es}</div>
+                  <div className="mc-note">Machine-generated — the English above stays the source of truth.</div>
+                </div>
+                {stage === "instrTranslated" && (
+                  <button type="button" className="mc-btn approve" onClick={() => advance("instrApproved", "Spanish instruction approved — ready to assign.")}>
+                    Review &amp; approve
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 3 — assign to housekeeping */}
+            {stage === "instrApproved" && (
+              <div className="mc-item">
+                <button type="button" className="mc-btn" onClick={() => advance("assigned", `Assigned to ${WO.assignee.name} · ${WO.assignee.team}.`)}>
+                  Assign to {WO.assignee.name} · {WO.assignee.team}
+                </button>
+              </div>
+            )}
+
+            {/* 4 — assignment + Seen / Acknowledged (staff side) */}
+            {reached("assigned") && (
+              <>
+                <div className="mc-sysnote">
+                  <span className="mc-time">{WO.ts.assigned}</span> Assigned to <b>{WO.assignee.name}</b> · {WO.assignee.team}
+                </div>
+                <div className="mc-item in">
+                  <div className="mc-ihd">
+                    <span className="mc-who staff">{WO.assignee.name}</span>
+                    <span className="mc-badges">
+                      <span className="mc-badge">Seen {WO.ts.seen}</span>
+                      <span className="mc-badge ok">Acknowledged {WO.ts.ack}</span>
+                    </span>
+                  </div>
+                  <div className="mc-bubble muted">Entendido — paso antes del próximo check-in.</div>
+                </div>
+                {stage === "assigned" && (
+                  <button type="button" className="mc-check" onClick={() => advance("taskDone", "Task marked complete — field report posted.")}>
+                    <span className="mc-checkbox" />
+                    Mark task complete
+                    <span className="mc-checkhint">staff</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* 5 — staff field report (ES original, canonical) */}
+            {reached("taskDone") && (
+              <div className="mc-item in">
+                <div className="mc-ihd">
+                  <span className="mc-who staff">{WO.assignee.name}</span>
+                  <span className="mc-time">{WO.ts.report}</span>
+                </div>
+                <div className="mc-bubble">
+                  <div className="mc-langrow">
+                    <span className="mc-lang orig">ES · Original</span>
+                    <span className="mc-canon">canonical · as submitted</span>
+                  </div>
+                  <div className="mc-text" lang="es">{WO.fieldReport.es}</div>
+                </div>
+                {stage === "taskDone" && (
+                  <button type="button" className="mc-btn" onClick={() => advance("reportTranslated", "Field report translated to English — review before reporting.")}>
+                    Translate to English
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 6 — English translation of the field report (reviewed before reporting) */}
+            {reached("reportTranslated") && (
+              <div className="mc-item in">
+                <div className="mc-ihd">
+                  <span className="mc-who auto">Auto-translation</span>
+                  <span className="mc-time">{WO.ts.reportEn}</span>
+                </div>
+                <div className={`mc-bubble ${jobDone ? "" : "warn"}`}>
+                  <div className="mc-langrow">
+                    <span className="mc-lang mt">EN · Translation</span>
+                    <span className={`mc-revstate ${jobDone ? "ok" : "pending"}`}>
+                      {jobDone ? "approved" : "Machine translated · review before reporting"}
+                    </span>
+                  </div>
+                  <div className="mc-text">{WO.fieldReport.en}</div>
+                  <div className="mc-note">Machine-generated — must be approved before it can appear in the owner report. The Spanish original stays the source of truth.</div>
+                </div>
+                {stage === "reportTranslated" && (
+                  <button type="button" className="mc-btn approve" onClick={() => advance("reportApproved", `Report approved — work order complete, actual cost $${WO.actualCost}.`)}>
+                    Review &amp; approve for reporting
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* 7 — completion: evidence, photos, cost (system) */}
+            {jobDone && (
+              <div className="mc-item sys">
+                <div className="mc-sysnote">
+                  <span className="mc-time">{WO.ts.completed}</span> Work order <b>completed</b> · actual cost <b>${WO.actualCost}</b>
+                </div>
+                <div className="mc-evidence">
+                  <div className="mc-photos">
+                    {WO.photos.map((ph) => (
+                      <div className={`mc-photo ${ph.k}`} key={ph.k}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        <span>{ph.label}</span>
+                        <span className="mc-genlabel">generated</span>
+                      </div>
+                    ))}
+                  </div>
+                  <ul className="mc-evlist">
+                    {WO.evidence.map((e) => (
+                      <li key={e}>{e}</li>
+                    ))}
+                  </ul>
+                  <div className="mc-cost">
+                    Est. ${WO.estCost} → Actual <b>${WO.actualCost}</b> <span className="mc-costnote">parts + labor</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* owner report — privacy gate: internal by default, explicit inclusion decision */}
+          {jobDone && (
+            <div className="mc-owner">
+              <div className="mc-ownerhd">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Owner report
+                <span className={`mc-revstate ${ownerReady ? "ok" : "pending"}`}>{ownerReady ? "Ready" : "Internal by default"}</span>
+              </div>
+              {!ownerReady ? (
+                <>
+                  <div className="mc-privacy">
+                    The full team thread and translations stay <b>internal</b>. Choose exactly what the owner sees — the original
+                    Spanish is retained for audit, <b>not</b> shown to the owner.
+                  </div>
+                  <div className="mc-incl">
+                    <div className="mc-incl-t">Owner will see — approved only:</div>
+                    <ul className="mc-incl-list">
+                      <li>Issue — {WO.ownerSummary.issue}</li>
+                      <li>Resolution — {WO.ownerSummary.resolution}</li>
+                      <li>Team — {WO.assignee.name} · {WO.assignee.team}</li>
+                      <li>Opened {WO.openedAt} · Completed {WO.completedAt}</li>
+                      <li>Actual cost — ${WO.actualCost}</li>
+                      <li>Approved completion evidence + English summary</li>
+                    </ul>
+                  </div>
+                  <button type="button" className="mc-btn approve" onClick={() => advance("ownerIncluded", "Approved summary added to the owner report.")}>
+                    Include approved summary in owner report
+                  </button>
+                </>
+              ) : (
+                <div className="mc-report">
+                  <div className="mc-report-subj">Brundage Chalet — kitchen-sink work order resolved</div>
+                  <dl className="mc-rlist">
+                    <div>
+                      <dt>Issue</dt>
+                      <dd>{WO.ownerSummary.issue}</dd>
+                    </div>
+                    <div>
+                      <dt>Resolution</dt>
+                      <dd>{WO.ownerSummary.resolution}</dd>
+                    </div>
+                    <div>
+                      <dt>Team</dt>
+                      <dd>
+                        {WO.assignee.name} · {WO.assignee.team}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Dates</dt>
+                      <dd>
+                        Opened {WO.openedAt} · Completed {WO.completedAt}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Actual cost</dt>
+                      <dd>${WO.actualCost}</dd>
+                    </div>
+                  </dl>
+                  <div className="mc-report-foot">Approved English summary is shown to the owner · original Spanish retained for audit (not displayed).</div>
+                  <div className="mc-report-act">
+                    <button type="button" className="mc-btn approve" disabled={reportSent} onClick={() => { setReportSent(true); say("Owner report — simulated send (demo only)."); }}>
+                      {reportSent ? "✓ Simulated" : "Send owner report"}
+                    </button>
+                    {reportSent && <span className="mc-sent">Demo only · Not actually sent</span>}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="mc-foot">
+            <span className="mc-datalabel">
+              <span className="d" /> Generated demo data · in-app messaging, translation &amp; photos are a design-partner roadmap item
+            </span>
+            {started && (
+              <button type="button" className="mc-reset" onClick={resetJob}>
+                Reset demo
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* property roster */}
       <div className="section">
         <div className="sh">
@@ -381,12 +906,18 @@ export default function RentalCockpit() {
             <span className="r">RevPAR</span>
             <span />
           </div>
-          {SORTED.map((p) => (
+          {SORTED.map((p) => {
+            // The kitchen-sink work order clears the Critical MAINTENANCE driver, but
+            // Brundage stays red on its 3.2★ review (< the 3.5 threshold) — so the roster
+            // flag is unchanged. A "maint resolved" hint shows the work is done honestly.
+            const maintResolved = jobDone && p.n === WO.property;
+            return (
             <button type="button" className="prow" key={p.n} aria-label={`Open ${p.n}`} onClick={() => setOpen(p)}>
               <span className={`dot ${p.flag}`} />
               <span className="pname">
                 <span className="nm">{p.n}</span>
                 <span className={`pill ${p.flag}`}>{FLAGWORD[p.flag]}</span>
+                {maintResolved && <span className="pill-note">maint resolved · review 3.2★</span>}
               </span>
               <span className="cell-num r col-hide" style={{ color: TONE[occTone(p.occ)] }}>
                 {p.occ}%
@@ -399,7 +930,63 @@ export default function RentalCockpit() {
                 </svg>
               </span>
             </button>
-          ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* owner updates & follow-up — close the loop on concerns + proactive owner reports */}
+      <div className="section">
+        <div className="sh">
+          <span className="eyebrow">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+              <path d="m22 6-10 7L2 6" />
+            </svg>
+            Owner updates &amp; follow-up
+          </span>
+          <span className="desc">close the loop on concerns · proactive owner reporting</span>
+        </div>
+        <div className="oalist">
+          {OWNER_ACTIONS.map((a) => {
+            const isOpen = oaOpen === a.id;
+            return (
+              <div className={`ocard ${a.flag}`} key={a.id}>
+                <div className="oc-t">{a.title}</div>
+                <div className="oc-l">{a.line}</div>
+                <button type="button" className="oc-go" aria-expanded={isOpen} onClick={() => openOwnerAction(a)}>
+                  {a.kind === "email" ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                      <path d="m22 6-10 7L2 6" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  )}
+                  {isOpen ? "Hide draft" : a.kind === "email" ? "Email a report" : "Text the guest"}
+                </button>
+                {isOpen && (
+                  <div className="ocompose">
+                    {a.kind === "email" && (
+                      <input className="oc-subj" value={oaSubject} onChange={(e) => setOaSubject(e.target.value)} placeholder="Subject" disabled={oaSent} />
+                    )}
+                    <textarea className="oc-body" value={oaBody} onChange={(e) => setOaBody(e.target.value)} rows={a.kind === "email" ? 8 : 3} disabled={oaSent} />
+                    <div className="oc-act">
+                      <button type="button" className="oc-send" disabled={oaSent} onClick={() => sendOwnerAction(a)}>
+                        {oaSent ? "✓ Simulated" : a.kind === "email" ? "Simulate send" : "Simulate send"}
+                      </button>
+                      <button type="button" className="oc-cancel" onClick={() => setOaOpen(null)}>
+                        {oaSent ? "Close" : "Cancel"}
+                      </button>
+                      {oaSent && <span className="oc-sent">Demo only · Not actually sent</span>}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -409,13 +996,148 @@ export default function RentalCockpit() {
         roadmap — nothing here is a live production account.
       </div>
 
-      {open && <Drawer p={open} onClose={() => setOpen(null)} onToast={say} />}
+      {open && (
+        <Drawer
+          p={
+            jobDone && open.n === WO.property
+              ? {
+                  ...open,
+                  // Maintenance is resolved, but the property stays red on its 3.2★ review
+                  // (below the 3.5 threshold) — keep the flag honest, matching the roster.
+                  reason: `Kitchen-sink work order resolved today (actual cost $${WO.actualCost}) — Thursday check-in protected. Still flagged: the 3.2★ review sits below the 3.5 threshold.`,
+                  maint: [
+                    { tier: "Standard", st: "Resolved · today", t: "Kitchen-sink supply hose replaced — verified dry (WO-4021)" },
+                    ...open.maint.filter((m) => m.tier !== "Critical"),
+                  ],
+                }
+              : open
+          }
+          onClose={() => setOpen(null)}
+          onToast={say}
+        />
+      )}
 
       <div className={`demo-toast ${toast ? "show" : ""}`} role="status" aria-live="polite">
         {toast}
       </div>
 
       <style jsx>{`
+        .brief {
+          margin-top: 16px;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          border-radius: 11px;
+          padding: 13px 15px;
+        }
+        .brief-list {
+          list-style: none;
+          margin: 9px 0 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .brief-list li {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          font-size: 13px;
+          color: var(--text-soft);
+          line-height: 1.5;
+        }
+        .brief-list :global(b) {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .bdot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          flex: none;
+          margin-top: 6px;
+        }
+        .onething.alert .ot-body {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething.alert .ot-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 11px;
+        }
+        .ot-go {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #fff;
+          background: var(--red);
+          border: 1px solid var(--red);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: filter 0.15s;
+        }
+        .ot-go:hover {
+          filter: brightness(1.08);
+        }
+        .ot-go :global(svg) {
+          width: 14px;
+          height: 14px;
+          margin: 0;
+          color: #fff;
+        }
+        .ot-ghost {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-soft);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 7px 14px;
+          cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
+        }
+        .ot-ghost:hover {
+          border-color: var(--copper-dim);
+          color: var(--text);
+        }
+        .onething.alert.done {
+          align-items: center;
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .onething.alert.done :global(svg) {
+          color: var(--green);
+        }
+        .onething.alert.done p {
+          flex: 1;
+          min-width: 0;
+        }
+        .onething.alert.done :global(b) {
+          color: var(--green);
+        }
+        .ot-undo {
+          font: inherit;
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          flex: none;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .ot-undo:hover {
+          color: var(--text);
+          border-color: var(--copper-dim);
+        }
         .onething.alert {
           display: flex;
           gap: 10px;
@@ -635,6 +1357,22 @@ export default function RentalCockpit() {
           color: var(--muted);
           border-color: var(--line);
         }
+        .pill-note {
+          font-size: 9px;
+          font-weight: 600;
+          color: var(--green);
+          border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+          background: var(--green-wash);
+          border-radius: 999px;
+          padding: 1px 6px;
+          flex: none;
+          white-space: nowrap;
+        }
+        @media (max-width: 600px) {
+          .pill-note {
+            display: none;
+          }
+        }
         .cell-num {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
@@ -658,7 +1396,751 @@ export default function RentalCockpit() {
         .footnote :global(b) {
           color: var(--text-soft);
         }
-        .backdrop {
+        .oalist {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .ocard {
+          border: 1px solid var(--line);
+          background: var(--surface);
+          border-radius: 11px;
+          padding: 12px 13px;
+        }
+        .ocard.r {
+          border-color: color-mix(in srgb, var(--red) 32%, var(--line));
+        }
+        .oc-t {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .oc-l {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.45;
+          margin-top: 3px;
+        }
+        .oc-go {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          margin-top: 10px;
+          padding: 7px 13px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+          transition: filter 0.15s;
+        }
+        .oc-go:hover {
+          filter: brightness(1.06);
+        }
+        .oc-go :global(svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .ocompose {
+          margin-top: 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .oc-subj,
+        .oc-body {
+          font: inherit;
+          width: 100%;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          color: var(--text);
+          padding: 9px 10px;
+        }
+        .oc-subj {
+          font-size: 12.5px;
+          font-weight: 600;
+        }
+        .oc-body {
+          font-size: 12.5px;
+          line-height: 1.5;
+          resize: vertical;
+          white-space: pre-wrap;
+        }
+        .oc-subj:focus,
+        .oc-body:focus {
+          outline: none;
+          border-color: var(--copper-dim);
+        }
+        .oc-subj:disabled,
+        .oc-body:disabled {
+          opacity: 0.7;
+        }
+        .oc-act {
+          display: flex;
+          gap: 8px;
+        }
+        .oc-send {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+        }
+        .oc-send:disabled {
+          opacity: 0.7;
+          cursor: default;
+        }
+        .oc-cancel {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--line);
+          background: transparent;
+          color: var(--text-soft);
+        }
+        .oc-sent {
+          align-self: center;
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: var(--muted);
+        }
+
+        /* ── Maintenance Center — bilingual work-order thread ─── */
+        .mc-count {
+          font-size: 11px;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          padding: 2px 9px;
+          border-radius: 999px;
+          border: 1px solid var(--line);
+          color: var(--muted);
+          white-space: nowrap;
+        }
+        .mc-count.crit {
+          color: var(--red);
+          border-color: color-mix(in srgb, var(--red) 40%, transparent);
+          background: var(--red-wash);
+        }
+        .mc-count.clear {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-card {
+          border: 1px solid color-mix(in srgb, var(--red) 32%, var(--line));
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 14px;
+        }
+        .mc-card.done {
+          border-color: color-mix(in srgb, var(--green) 34%, var(--line));
+        }
+        .mc-crumb {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: var(--muted);
+          margin-bottom: 10px;
+        }
+        .mc-crumb :global(svg) {
+          width: 13px;
+          height: 13px;
+          flex: none;
+          color: var(--copper-soft);
+        }
+        .mc-sep {
+          color: var(--line);
+        }
+        .mc-jobhd {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          flex-wrap: wrap;
+          padding-bottom: 12px;
+          border-bottom: 1px solid var(--line-soft);
+        }
+        .mc-jobmeta {
+          flex: 1;
+          min-width: 0;
+        }
+        .mc-jobt {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .mc-jobs {
+          font-size: 12px;
+          color: var(--muted);
+          margin-top: 2px;
+        }
+        .mc-pstatus {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 3px 8px;
+          border-radius: 999px;
+          border: 1px solid;
+          flex: none;
+          white-space: nowrap;
+        }
+        .mc-pstatus.r {
+          color: var(--red);
+          border-color: color-mix(in srgb, var(--red) 40%, transparent);
+          background: var(--red-wash);
+        }
+        .mc-pstatus.y {
+          color: var(--yellow);
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .mc-pstatus.g {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-meta {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin: 12px 0;
+        }
+        .mc-meta > div {
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 8px 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+          min-width: 0;
+        }
+        .mc-mk {
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+        }
+        .mc-mv {
+          font-size: 12.5px;
+          color: var(--text);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .mc-threadhd {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+          font-size: 10.5px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          color: var(--muted);
+          margin: 4px 0 10px;
+        }
+        .mc-threadnote {
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: none;
+          letter-spacing: 0;
+          color: var(--copper-soft);
+        }
+        .mc-thread {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .mc-item {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          border-left: 2px solid var(--line);
+          padding-left: 11px;
+        }
+        .mc-item.out {
+          border-left-color: var(--copper-dim);
+        }
+        .mc-item.in {
+          border-left-color: color-mix(in srgb, var(--green) 45%, var(--line));
+        }
+        .mc-item.sys {
+          border-left-color: var(--line);
+        }
+        .mc-ihd {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .mc-who {
+          font-size: 11.5px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .mc-who.mgr {
+          color: var(--copper-soft);
+        }
+        .mc-who.staff {
+          color: color-mix(in srgb, var(--green) 70%, var(--text));
+        }
+        .mc-who.auto {
+          color: var(--muted);
+          font-weight: 600;
+        }
+        .mc-time {
+          font-size: 10.5px;
+          color: var(--muted);
+          font-variant-numeric: tabular-nums;
+        }
+        .mc-badges {
+          display: inline-flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .mc-badge {
+          font-size: 9.5px;
+          font-weight: 600;
+          color: var(--muted);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 1px 7px;
+        }
+        .mc-badge.ok {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+          background: var(--green-wash);
+        }
+        .mc-bubble {
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 10px 11px;
+        }
+        .mc-bubble.warn {
+          border-color: color-mix(in srgb, var(--yellow) 42%, var(--line));
+          background: var(--yellow-wash);
+        }
+        .mc-bubble.muted {
+          font-size: 12.5px;
+          color: var(--text-soft);
+          font-style: italic;
+        }
+        .mc-langrow {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 6px;
+        }
+        .mc-lang {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          padding: 2px 7px;
+          border-radius: 999px;
+        }
+        .mc-lang.orig {
+          color: var(--text);
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+        }
+        .mc-lang.mt {
+          color: var(--muted);
+          border: 1px solid var(--line);
+        }
+        .mc-canon {
+          font-size: 10px;
+          color: var(--copper-soft);
+          font-weight: 600;
+        }
+        .mc-revstate {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          text-align: right;
+        }
+        .mc-revstate.pending {
+          color: var(--yellow);
+        }
+        .mc-revstate.ok {
+          color: var(--green);
+        }
+        .mc-text {
+          font-size: 12.5px;
+          color: var(--text);
+          line-height: 1.55;
+        }
+        .mc-note {
+          font-size: 11px;
+          color: var(--muted);
+          margin-top: 7px;
+          line-height: 1.45;
+        }
+        .mc-sysnote {
+          font-size: 11.5px;
+          color: var(--muted);
+          text-align: center;
+          padding: 2px 0;
+        }
+        .mc-sysnote :global(b) {
+          color: var(--text-soft);
+        }
+        .mc-check {
+          font: inherit;
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text);
+          background: var(--panel);
+          border: 1px solid var(--copper-dim);
+          border-radius: 9px;
+          padding: 9px 12px;
+          cursor: pointer;
+          align-self: flex-start;
+        }
+        .mc-check:hover {
+          border-color: var(--copper-soft);
+        }
+        .mc-checkbox {
+          width: 15px;
+          height: 15px;
+          border-radius: 4px;
+          border: 1.5px solid var(--copper-soft);
+          flex: none;
+        }
+        .mc-checkhint {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--muted);
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 1px 6px;
+        }
+        .mc-evidence {
+          margin-top: 9px;
+          font-size: 12.5px;
+        }
+        .mc-photos {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+        .mc-photo {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          color: var(--muted);
+          border: 1px dashed var(--line);
+          border-radius: 8px;
+          padding: 9px 10px;
+        }
+        .mc-photo :global(svg) {
+          width: 14px;
+          height: 14px;
+          flex: none;
+        }
+        .mc-photo span:first-of-type {
+          flex: 1;
+          min-width: 0;
+        }
+        .mc-photo.after {
+          border-color: color-mix(in srgb, var(--green) 35%, var(--line));
+        }
+        .mc-genlabel {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--copper-soft);
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          padding: 1px 6px;
+          flex: none;
+        }
+        .mc-evlist {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .mc-evlist li {
+          position: relative;
+          padding-left: 20px;
+          color: var(--text-soft);
+          line-height: 1.4;
+        }
+        .mc-evlist li::before {
+          content: "✓";
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: var(--green);
+          font-weight: 700;
+        }
+        .mc-cost {
+          font-size: 13px;
+          color: var(--text-soft);
+          margin-top: 10px;
+        }
+        .mc-cost :global(b) {
+          font-family: var(--font-mono);
+          font-variant-numeric: tabular-nums;
+          font-size: 15px;
+          color: var(--text);
+        }
+        .mc-costnote {
+          font-size: 11px;
+          color: var(--muted);
+          margin-left: 6px;
+        }
+        .mc-btn {
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          padding: 7px 14px;
+          border-radius: 999px;
+          cursor: pointer;
+          border: 1px solid var(--copper-soft);
+          background: var(--copper-soft);
+          color: var(--ink);
+          align-self: flex-start;
+          transition: filter 0.15s;
+        }
+        .mc-btn:hover {
+          filter: brightness(1.06);
+        }
+        .mc-btn.approve {
+          border-color: color-mix(in srgb, var(--green) 55%, transparent);
+          background: color-mix(in srgb, var(--green) 22%, var(--surface));
+          color: var(--text);
+        }
+        .mc-btn:disabled {
+          opacity: 0.7;
+          cursor: default;
+        }
+        .mc-owner {
+          margin-top: 14px;
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          border-radius: 11px;
+          padding: 13px;
+        }
+        .mc-ownerhd {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--copper-soft);
+        }
+        .mc-ownerhd :global(svg) {
+          width: 15px;
+          height: 15px;
+          flex: none;
+        }
+        .mc-ownerhd .mc-revstate {
+          margin-left: auto;
+        }
+        .mc-privacy {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.5;
+          margin-top: 9px;
+        }
+        .mc-privacy :global(b) {
+          color: var(--text);
+        }
+        .mc-incl {
+          margin: 10px 0;
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 10px 11px;
+        }
+        .mc-incl-t {
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--green);
+          margin-bottom: 7px;
+        }
+        .mc-incl-list {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .mc-incl-list li {
+          position: relative;
+          padding-left: 18px;
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.45;
+        }
+        .mc-incl-list li::before {
+          content: "✓";
+          position: absolute;
+          left: 0;
+          top: 0;
+          color: var(--green);
+          font-weight: 700;
+        }
+        .mc-report {
+          border: 1px solid var(--line);
+          background: var(--panel);
+          border-radius: 10px;
+          padding: 12px;
+        }
+        .mc-report-subj {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .mc-rlist {
+          margin: 9px 0 0;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .mc-rlist > div {
+          display: grid;
+          grid-template-columns: 92px 1fr;
+          gap: 10px;
+          align-items: baseline;
+        }
+        .mc-rlist dt {
+          font-size: 9.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--muted);
+          font-weight: 700;
+        }
+        .mc-rlist dd {
+          margin: 0;
+          font-size: 12.5px;
+          color: var(--text);
+          line-height: 1.5;
+        }
+        .mc-report-foot {
+          font-size: 11px;
+          color: var(--copper-soft);
+          margin-top: 10px;
+          line-height: 1.45;
+        }
+        .mc-report-act {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 11px;
+          flex-wrap: wrap;
+        }
+        .mc-sent {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: var(--muted);
+        }
+        .mc-foot {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 13px;
+          padding-top: 12px;
+          border-top: 1px solid var(--line-soft);
+        }
+        .mc-datalabel {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .mc-datalabel .d {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--copper-soft);
+          flex: none;
+        }
+        .mc-reset {
+          font: inherit;
+          font-size: 11.5px;
+          font-weight: 600;
+          color: var(--muted);
+          background: transparent;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 5px 12px;
+          cursor: pointer;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .mc-reset:hover {
+          color: var(--text);
+          border-color: var(--copper-dim);
+        }
+        @media (max-width: 480px) {
+          .mc-meta {
+            grid-template-columns: 1fr;
+          }
+          .mc-photos {
+            grid-template-columns: 1fr;
+          }
+          .mc-rlist > div {
+            grid-template-columns: 1fr;
+            gap: 2px;
+          }
+        }
+        .onething.alert.done.inprog {
+          border-color: color-mix(in srgb, var(--yellow) 40%, transparent);
+          background: var(--yellow-wash);
+        }
+        .onething.alert.done.inprog :global(svg) {
+          color: var(--yellow);
+        }
+        .onething.alert.done.inprog :global(b) {
+          color: var(--text);
+        }
+        .rental :global(.backdrop) {
           position: fixed;
           inset: 0;
           background: rgba(0, 0, 0, 0.55);
@@ -667,11 +2149,11 @@ export default function RentalCockpit() {
           transition: opacity 0.2s;
           z-index: 40;
         }
-        .backdrop.show {
+        .rental :global(.backdrop.show) {
           opacity: 1;
           pointer-events: auto;
         }
-        .drawer {
+        .rental :global(.drawer) {
           position: fixed;
           top: 0;
           right: 0;
@@ -685,10 +2167,10 @@ export default function RentalCockpit() {
           overflow-y: auto;
           padding: 22px 20px 40px;
         }
-        .drawer.show {
+        .rental :global(.drawer.show) {
           transform: none;
         }
-        .dclose {
+        .rental :global(.dclose) {
           position: absolute;
           top: 14px;
           right: 14px;
@@ -702,14 +2184,14 @@ export default function RentalCockpit() {
           display: grid;
           place-items: center;
         }
-        .dclose:hover {
+        .rental :global(.dclose:hover) {
           color: var(--text);
         }
-        .dclose :global(svg) {
+        .rental :global(.dclose svg) {
           width: 15px;
           height: 15px;
         }
-        .dhd {
+        .rental :global(.dhd) {
           display: flex;
           gap: 11px;
           align-items: flex-start;
@@ -717,55 +2199,55 @@ export default function RentalCockpit() {
           border-bottom: 1px solid var(--line);
           padding-bottom: 15px;
         }
-        .dflag {
+        .rental :global(.dflag) {
           width: 10px;
           height: 10px;
           border-radius: 50%;
           margin-top: 6px;
           flex: none;
         }
-        .dflag.r {
+        .rental :global(.dflag.r) {
           background: var(--red);
         }
-        .dflag.y {
+        .rental :global(.dflag.y) {
           background: var(--yellow);
         }
-        .dflag.g {
+        .rental :global(.dflag.g) {
           background: var(--green);
         }
-        .dhd h3 {
+        .rental :global(.dhd h3) {
           margin: 0;
           font-family: var(--font-display);
           font-size: 23px;
           color: var(--text);
           line-height: 1.05;
         }
-        .dreason {
+        .rental :global(.dreason) {
           font-size: 12.5px;
           color: var(--muted);
           margin-top: 4px;
           line-height: 1.45;
         }
-        .dstats {
+        .rental :global(.dstats) {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 10px;
           margin-top: 16px;
         }
-        .dstats > div {
+        .rental :global(.dstats > div) {
           border: 1px solid var(--line);
           border-radius: 9px;
           background: var(--panel);
           padding: 10px 11px;
           text-align: center;
         }
-        .dstats .dk {
+        .rental :global(.dstats .dk) {
           font-size: 9px;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--muted);
         }
-        .dstats .dv2 {
+        .rental :global(.dstats .dv2) {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 17px;
@@ -773,7 +2255,7 @@ export default function RentalCockpit() {
           display: block;
           color: var(--text);
         }
-        .dsec {
+        .rental :global(.dsec) {
           font-size: 10.5px;
           font-weight: 600;
           text-transform: uppercase;
@@ -781,7 +2263,7 @@ export default function RentalCockpit() {
           color: var(--muted);
           margin: 20px 0 8px;
         }
-        .mrow {
+        .rental :global(.mrow) {
           display: flex;
           gap: 10px;
           align-items: flex-start;
@@ -789,10 +2271,10 @@ export default function RentalCockpit() {
           border-top: 1px solid var(--line-soft);
           font-size: 12.5px;
         }
-        .mrow:first-of-type {
+        .rental :global(.mrow:first-of-type) {
           border-top: 0;
         }
-        .mtag {
+        .rental :global(.mtag) {
           font-size: 9px;
           font-weight: 700;
           text-transform: uppercase;
@@ -802,24 +2284,24 @@ export default function RentalCockpit() {
           flex: none;
           margin-top: 1px;
         }
-        .mtag.crit {
+        .rental :global(.mtag.crit) {
           color: var(--red);
           border: 1px solid color-mix(in srgb, var(--red) 40%, transparent);
           background: var(--red-wash);
         }
-        .mtag.std {
+        .rental :global(.mtag.std) {
           color: var(--muted);
           border: 1px solid var(--line);
         }
-        .mrow .mt {
+        .rental :global(.mrow .mt) {
           color: var(--text-soft);
         }
-        .mrow .ms {
+        .rental :global(.mrow .ms) {
           color: var(--muted);
           font-size: 11px;
           margin-top: 1px;
         }
-        .revbox {
+        .rental :global(.revbox) {
           display: flex;
           align-items: center;
           gap: 12px;
@@ -828,24 +2310,24 @@ export default function RentalCockpit() {
           background: var(--panel);
           padding: 12px;
         }
-        .revbox .rr {
+        .rental :global(.revbox .rr) {
           font-family: var(--font-mono);
           font-variant-numeric: tabular-nums;
           font-size: 26px;
         }
-        .revbox .rn {
+        .rental :global(.revbox .rn) {
           font-size: 12px;
           color: var(--muted);
           line-height: 1.4;
         }
-        .seg {
+        .rental :global(.seg) {
           display: flex;
           border: 1px solid var(--line);
           border-radius: 9px;
           overflow: hidden;
           margin-top: 2px;
         }
-        .seg button {
+        .rental :global(.seg button) {
           font: inherit;
           font-size: 11.5px;
           padding: 8px 10px;
@@ -857,61 +2339,61 @@ export default function RentalCockpit() {
           flex: 1;
           transition: background 0.15s, color 0.15s;
         }
-        .seg button:last-child {
+        .rental :global(.seg button:last-child) {
           border-right: 0;
         }
-        .seg button[aria-pressed="true"] {
+        .rental :global(.seg button[aria-pressed="true"]) {
           color: var(--ink);
           background: var(--copper-soft);
           font-weight: 600;
         }
-        .strat-note {
+        .rental :global(.strat-note) {
           margin-top: 10px;
           font-size: 12.5px;
           line-height: 1.5;
           border-radius: 9px;
           padding: 11px 12px;
         }
-        .strat-note.drop {
+        .rental :global(.strat-note.drop) {
           border: 1px solid color-mix(in srgb, var(--yellow) 40%, var(--line));
           background: var(--yellow-wash);
           color: var(--text);
         }
-        .strat-note.suppress {
+        .rental :global(.strat-note.suppress) {
           border: 1px solid var(--copper-dim);
           background: var(--copper-wash);
           color: var(--text);
         }
-        .strat-note.ok {
+        .rental :global(.strat-note.ok) {
           border: 1px solid var(--line);
           background: var(--panel);
           color: var(--text-soft);
         }
-        .strat-note :global(b) {
+        .rental :global(.strat-note b) {
           color: var(--text);
         }
-        .ownerbox {
+        .rental :global(.ownerbox) {
           margin-top: 12px;
           border: 1px solid var(--copper-dim);
           background: var(--copper-wash);
           border-radius: 10px;
           padding: 13px;
         }
-        .ownerbox .ot {
+        .rental :global(.ownerbox .ot) {
           font-size: 11px;
           font-weight: 600;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           color: var(--copper-soft);
         }
-        .ownerbox .oq {
+        .rental :global(.ownerbox .oq) {
           font-size: 13px;
           color: var(--text);
           margin-top: 7px;
           line-height: 1.55;
           font-style: italic;
         }
-        .obtn {
+        .rental :global(.obtn) {
           font: inherit;
           font-size: 12px;
           font-weight: 600;
@@ -926,13 +2408,13 @@ export default function RentalCockpit() {
           align-items: center;
           gap: 6px;
         }
-        .obtn :global(svg) {
+        .rental :global(.obtn svg) {
           width: 13px;
           height: 13px;
         }
         @media (prefers-reduced-motion: reduce) {
-          .drawer,
-          .backdrop {
+          .rental :global(.drawer),
+          .rental :global(.backdrop) {
             transition: none;
           }
         }

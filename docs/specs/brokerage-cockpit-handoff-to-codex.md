@@ -10,8 +10,520 @@ Progress Log after every step, so the other agent always knows what's done and w
   by coordination (don't rewrite the other's intent).
 - Both append to `## Progress Log` with a `[Claude]` / `[Codex]` tag. `## Reference` is stable; change by coordination.
 
-**Branch:** `feat/heartbeat-landing` · **Last updated:** 2026-07-01 by Codex ·
-**Related specs:** `brokerage-data-sources.md`, `investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+**Branch:** `feat/heartbeat-landing` (original tandem) · current Claude working branches `claude/fix-demo-render-p0-ebh2gr`
+(P0 fix, PR #111) + `claude/demo-broker-day-in-life-p0` (broker narrative rebased on P0, PR #112) ·
+**Last updated:** 2026-07-13 (EOD+1) by Claude · **Related specs:** `brokerage-data-sources.md`,
+`investor-owner-dashboard-plan-v2.md`, `executive-cockpit-tile-set.md`.
+
+---
+
+# 🛰️ PROJECT RAVEN — COMMAND CENTER
+
+**This is the single Project Raven Command Center. Do not create another master document.** Everything below
+(Product Decision Log, Current Execution Ledger, dated lane status, Progress Log) is authoritative and append-only.
+Earlier dated sections further down (2026-07-01/03/04 tandem plan + lanes) are **history — never rewrite or delete them**.
+
+**Permanent coordination rule (agreed 2026-07-13):** After **every meaningful task**, Claude and Codex must update
+their own lane section **and** append a dated `[Claude]` / `[Codex]` entry to the Progress Log. **A PR description or a
+chat response does not replace the Command Center update.** If it isn't logged here, it didn't happen.
+
+**Entry labels:** `DECISION-###` · `OBJECTIVE-###` · `NEED-###` · `SUCCESS-###` · `FAILURE-###` · `BLOCKER-###` ·
+`NEXT-###`. Every entry carries **Date**, **Owner** (`[Sean]` / `[Claude]` / `[Codex]`), **Status** (Proposed,
+Approved, In Progress, Passed, Failed, Blocked, Deferred, Superseded), **Evidence** (PR / commit / route / screenshot /
+test / direct operator decision), and a **Next action** when applicable.
+
+## This session at a glance — for Codex (2026-07-13, Claude)
+
+Everything below is logged in full in the Progress Log; this is the 30-second delta so you don't have to scroll.
+All changes are **demo-shell only** (`src/app/demo/real-estate-cockpit/native/*`), **generated-data-only**, no backend/db/
+auth/migration. Two open **draft** PRs (do not merge): **#111** P0 render fix, **#112** three-tab narrative stacked on it.
+
+- **P0 render fix (#111, SUCCESS-004).** Root cause was **styled-jsx child-component scoping**, not a Babel config
+  (FAILURE-003). Fixed CSS-only across RealEstateDemo/AgentApp/RentalCockpit.
+- **Day-in-life narrative on all three tabs (#112, SUCCESS-005/006).** Broker + Agent + Rental each run
+  greeting → Executive Brief → One-Thing-with-action → roster/detail → acknowledgment.
+- **Broker deepened per Sean (SUCCESS-007):** "Welcome, Luke" greeting; "Open Whitaker's file" opens a real compliance
+  file (missing disclosures + Call + ready-to-send reminder draft + Mark resolved); clickable Executive Brief with
+  "Suggested fix"; a **broker calendar** ("Your week"); a **Company Aura** reputation section.
+- **Broker → agent real-estate calendar (SUCCESS-008):** expanding an agent shows their showings/closings/listings/etc.,
+  with a note that appointments sync to the client file in the CRM. **Kept CRM-neutral (not "BoldTrail")** per the
+  genericization — **your call on the exact CRM wording** (source-label copy is your lane).
+- **Trend arrows on every tracked metric (SUCCESS-009):** gauges, per-agent GCI MoM, and Aura (incl. "4.5★ avg over the
+  last 4 weeks — trending up") all carry a direction + quantified change.
+
+Rendered mockups for all of the above are in the **Demo Mockups** section below (`docs/specs/mockups/`). **Nothing here
+touches your lane** (schema/migrations/`brokerage-analytics.ts`/`src/lib/brokerage/**`/ingestion). One flag for you: the
+CRM label in the agent calendar (SUCCESS-008) — align to the canonical source-label wording if you want.
+
+## ❓ OPEN QUESTIONS FOR CODEX — agent coaching + appointment assistant (2026-07-13, Claude)
+
+Sean wants two things on the **demo Agent app** (`/demo/real-estate-cockpit`, Agent tab) and asked me to get Codex's read
+**before building**, to avoid rebuilding anything that already exists. Context + what I found in-repo:
+
+**(A) "Coaching / what to do today, before noon" for the agent.** Sean feels the agent has lost the prescriptive,
+time-boxed daily direction ("get this done before noon", follow-ups for today).
+- **What already exists (Codex-owned):** `deriveAgentCoachingSignals()` → `BrokerageAgentCoachingSignal[]` in
+  `src/lib/modules/brokerage-analytics.ts` (keys `goal_gap | pipeline_deficit | cap_sprint | lead_waste | activity_gap |
+  conversion_leak | speed_to_lead_missing`; `severity red|yellow`; `label/readout/action/source`), rendered as a ranked
+  **"Coaching queue"** in `src/app/modules/brokerage/agent-cockpit/page.tsx` ("Ranked from current production, pipeline,
+  lead, cap, and activity signals"). This is **performance** coaching, and it lives only in the **authenticated** cockpit
+  — not in the public demo.
+- **The gap:** Sean's ask is a **daily execution plan** (time-boxed: before noon / afternoon / EOD, checkable tasks tied
+  to today's closings/leads/inspections) — a *different* concept from the performance signals, and it doesn't exist.
+- **NEED-C1 [Codex]:** (1) Is there any existing **daily-plan / next-best-action / task** model I should reuse instead of
+  inventing one? (2) Should the demo's coaching section render against the existing `BrokerageAgentCoachingSignal` shape
+  (so it's consistent + wireable later) or is a standalone generated-data mock fine for the demo? (3) Is any
+  timing/deadline field on the roadmap for coaching, or is "before noon" bucketing net-new?
+
+**(B) Contact + "Talk to update" on the agent's own appointments.** I already built (broker cockpit) an appointment
+assistant — voice "Speak to update" → AI actions (reschedule / add to client history / draft email / set reminder) +
+"After the appointment" recap — and email/text/call compose with templates + a home-value CMA (SUCCESS-011/012/013).
+Sean wants the **agent's** calendar appointments to open the same thing (call/text/email + talk-to-update).
+- **NEED-C2 [Codex]:** What are the **canonical entities** for an agent's appointments/tasks in the data model (is there
+  an Appointment/CalendarEvent, and a transaction-task/checklist entity)? Which of the demo's agent surfaces map to them —
+  the **priority-queue cards** (closings/inspections/messages = transaction tasks) and/or the **calendar-guard items**
+  (listing appt / closing / buyer tour = calendar events)? I want the demo to mirror the real shape.
+- **NEED-C3 [Codex]:** For the eventual **live** assistant, what's the write contract (CRM client-history write, calendar
+  write, message send, speech-to-text/LLM)? I'd extract ONE shared "contact + appointment assistant" component for broker
+  + agent; I want its action interface to match what backend will implement so the demo isn't throwaway.
+
+**Claude's recommendation (pending Codex):** time-boxed "Today's game plan" section for (A); make both priority-queue and
+calendar items open the assistant for (B); extract a shared assistant/compose component for (C). Not building until Codex
+weighs in per Sean.
+
+## Product Decision Log
+
+- **DECISION-001 — Single Command Center doc.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence: direct
+  operator instruction 2026-07-13 ("The single Project Raven Command Center is `docs/specs/brokerage-cockpit-handoff-to-codex.md`.
+  Do not create another master document."). This file is it; no parallel master docs.
+- **DECISION-002 — Locked Morning Ritual sequence.** Date 2026-07-13 · Owner [Sean] · Status **Approved (locked)** ·
+  Evidence: operator-approved broker day-in-life scope 2026-07-13. The ritual each operator lands in is:
+  **(1) personalized greeting → (2) concise Executive Brief → (3) One Thing First with an obvious action →
+  (4) agent-roster → agent-detail interaction → (5) a visible acknowledgment / state change after the action.**
+  This is the same day-in-life spine Raven's Morning Ritual (PR #106 concept) expresses; #106's implementation stays
+  unmerged (see DECISION-005). Next action: keep Broker/Agent/Rental narratives faithful to this sequence.
+- **DECISION-003 — Generated-data visual demo, NOT a connected-data demo.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Approved** · Evidence: `/demo/real-estate-cockpit` is public, generated-data-only, "Generated demo data"
+  labeled; no backend/db/auth/integration/migration in scope. Next action: every demo change stays generated-data-only.
+- **DECISION-004 — No merge to main until Sean visually approves the preview.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Approved** · Evidence: direct operator instruction (P0 + broker-patch scopes both say "Do not merge to main").
+  Next action: all demo work lands on dedicated branches + preview deploys only.
+- **DECISION-005 — PR #105 and PR #106 are NOT required for the July 14 public demo.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Deferred** · Evidence: readiness audit + operator decision; #106 (Raven Morning Ritual — 58 files, stale base,
+  login-gated) and #105 (owner morning brief) both remain unmerged and are not on the demo critical path.
+- **DECISION-006 — Permanent lane-update rule.** Date 2026-07-13 · Owner [Sean] · Status **Approved** · Evidence:
+  operator instruction 2026-07-13. Recorded as the "Permanent coordination rule" above; binding on both lanes.
+
+## Current Execution Ledger
+
+- **OBJECTIVE-001 — Raven mission.** Date 2026-07-13 · Owner [Sean] · Status **In Progress** · Evidence: product history
+  in this doc. Give each vertical operator a 30-second "operating cockpit" plus a guided daily Morning Ritual
+  (DECISION-002) across Brokerage (broker + agent) and Vacation Rental — honest, deterministic, source-labeled.
+- **OBJECTIVE-002 — July 14 Luke demo.** Date 2026-07-13 · Owner [Sean] · Status **In Progress** · Evidence: public
+  route `/demo/real-estate-cockpit`. Show, in one public demo: the **broker day**, the **agent day**, and the
+  **vacation-property platform**. Next action: unblock via OBJECTIVE-003 (P0) then OBJECTIVE-004 (broker narrative).
+  **(EOD+1)** all three are now delivered and carried by the single consolidated **PR #115** (+ OBJECTIVE-005 game plan),
+  held for Sean's one-shot visual approval (DECISION-007 / NEXT-007).
+- **OBJECTIVE-003 — P0: repair responsive rendering across Broker, Agent, Rental.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Passed (pending Sean's visual approval)** · Evidence: PR #111 (`claude/fix-demo-render-p0-ebh2gr`, commit
+  `1f0eb99`); root cause = styled-jsx child-component scoping (SUCCESS-004); before/after screenshots at 390×844 +
+  1440×900, all three tabs + rental drawer; tsc clean, 340 tests, prod build green; Vercel preview Ready. See SUCCESS-004
+  and FAILURE-002 resolution. Remaining: Sean's visual approval + merge (BLOCKER-001, DECISION-004).
+  **(EOD+1) Superseded packaging:** now delivered inside the consolidated **PR #115** (was briefly merged as #111 then
+  reverted, PR #114 — DECISION-007). The fix itself is unchanged.
+- **OBJECTIVE-004 — Complete the contained Broker day-in-life narrative.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Passed (pending Sean's visual approval)** · Evidence: PR #112 (`claude/demo-broker-day-in-life-p0`, narrative
+  cherry-picked from `b646e61` onto the P0 fix, commit `ed3b8bf`); tsc clean, 340 tests, prod build green; broker
+  screenshots at both viewports incl. the interactive "Open Whitaker's file" flow; stacked on PR #111 (SUCCESS-005).
+  Remaining: retarget base to `main` after #111 merges; Sean's visual approval.
+  **(EOD+1) Superseded packaging:** now delivered inside the consolidated **PR #115** (was briefly merged as #112 then
+  reverted, PR #114 — DECISION-007). The narrative itself is unchanged.
+- **NEED-001 — Required evidence before Sean's visual approval.** Date 2026-07-13 · Owner [Sean] · Status **Proposed** ·
+  Evidence gate: **preview URL + desktop screenshots + mobile screenshots + all three tabs (Broker/Agent/Rental) tested
+  + typecheck + tests + build**, all green, before any approval or merge. Applies to both OBJECTIVE-003 and -004.
+- **SUCCESS-001 — PR #104 merged; public three-tab demo deployed.** Date (merged) pre-2026-07-13 · Owner [Codex/Claude] ·
+  Status **Passed (with caveat)** · Evidence: PR #104; live route `/demo/real-estate-cockpit` (+ static fallback).
+  Caveat: deployed ≠ visually correct — see FAILURE-002 / BLOCKER-001.
+- **SUCCESS-002 — Agent and Rental experiences exist.** Date 2026-07-13 · Owner [Claude] · Status **Passed** ·
+  Evidence: `native/AgentApp.tsx`, `native/RentalCockpit.tsx`; both render under the Agent and Rental tabs.
+- **SUCCESS-003 — PRs #107–#110 merged to main.** Date pre-2026-07-13 · Owner [Claude] · Status **Passed (off critical
+  path)** · Evidence: #107 Tax Vault, #108 cash floor, #109 payroll, #110 demo/prod isolation. Valuable production work
+  but did **not** directly advance the visual demo; noted so the ledger reflects true demo progress.
+- **FAILURE-001 — Source-based readiness audit wrongly cleared the demo.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Failed** · Evidence: prior "ready as-is" assessment was made from source inspection, **without rendered
+  browser verification**. Corrective rule → NEED-001 (visual evidence is mandatory before "ready").
+- **FAILURE-002 — P0 rendering failure exposed by Sean's screenshots.** Date 2026-07-13 · Owner [Sean] · Status
+  **Resolved by SUCCESS-004** · Evidence: mobile — gauges/warning/checkmark/info SVGs massively oversized, escaping
+  containers; desktop — MLS ticker expands into a huge unspaced text block, cockpit content pushed off-screen. The
+  leading hypothesis (scoped CSS stripped by a stray Babel config disabling SWC) was **disproven** — see FAILURE-003;
+  the real cause is styled-jsx child-component scoping (SUCCESS-004). Fixed in PR #111.
+- **FAILURE-003 — Leading "stray Babel config / prod-only" hypothesis was wrong.** Date 2026-07-13 · Owner [Claude] ·
+  Status **Corrected** · Evidence: no `.babelrc`/`babel.config.*` exists anywhere in the repo (grep-verified); SWC +
+  styled-jsx compile normally. The bug reproduces in **both dev and prod** — it never rendered correctly, nothing
+  "regressed" in prod. Correct root cause recorded as SUCCESS-004. Lesson: reproduce and read the actual scoping
+  mechanism before trusting a build-config hypothesis.
+- **SUCCESS-004 — P0 root cause found + fixed (PR #111).** Date 2026-07-13 · Owner [Claude] · Status **Passed (pending
+  approval)** · Root cause: **styled-jsx only stamps its scope class onto DOM elements rendered by the component that
+  owns the `<style jsx>` block.** `BrokerCockpit` (+ children `GaugeCard`/`GaugeDial`/`HealthWord`), `AgentApp`'s
+  `QueueCardView`/`LeadView`, and `RentalCockpit`'s `Drawer` rendered markup whose scoped rules lived in a *different*
+  component, so those rules silently dropped. The inline SVGs carry no width/height (sized purely by that dropped CSS) →
+  browser default 300×150; the ticker lost `white-space:nowrap`. Fix (CSS/scoping only — no logic/data/layout/backend/
+  auth/migration): `BrokerCockpit` gets its own co-located `<style jsx>` with gauge internals anchored on
+  `.gauges :global(...)`; `AgentApp` child selectors re-anchored under `.agent :global(...)`; `RentalCockpit` Drawer
+  under `.rental :global(...)`. Evidence: PR #111 commit `1f0eb99`; tsc clean; `npm test` 340 passed; `npm run build`
+  green; CI Typecheck ✓ / Test ✓; before/after screenshots at 390×844 + 1440×900 for Broker/Agent/Rental + drawer;
+  Vercel preview Ready. Next action: NEED-001 satisfied → Sean visual approval (BLOCKER-001).
+- **SUCCESS-005 — Broker day-in-life narrative shipped as a stacked PR (PR #112).** Date 2026-07-13 · Owner [Claude] ·
+  Status **Passed (pending approval)** · Evidence: PR #112 base = `claude/fix-demo-render-p0-ebh2gr` (stacked on #111),
+  commit `ed3b8bf`; narrative from `b646e61` cherry-picked onto the P0 fix — its new markup is inline in `BrokerCockpit`
+  and its CSS lands in `BrokerCockpit`'s own block, so scoping is correct (no new child-scoping gaps). Verified: greeting,
+  Executive Brief, One-Thing-with-action, agent-roster→detail, and the acknowledgment state change all render + interact
+  at both viewports (incl. the "Open Whitaker's file" flow: brief updates, one-thing→green Handled+Undo, roster 2→1,
+  Whitaker red→green "Opened" auto-expanded). tsc clean; 340 tests; prod build green; Vercel preview Ready. Agent/Rental
+  are byte-identical to the P0 branch. Next action: retarget base to `main` after #111 merges (NEXT-004).
+- **BLOCKER-001 — Public demo is NOT visually approved / not meeting-ready.** Date 2026-07-13 · Owner [Sean] ·
+  Status **Blocked** · Evidence: FAILURE-002. Blocks OBJECTIVE-002. Clears only when OBJECTIVE-003 is verified against
+  NEED-001 and Sean visually approves the preview.
+- **NEXT-001 — Repair the P0** on a dedicated branch off main + preview; deliver root cause, preview URL,
+  before/after screenshots at both viewports, all-three-tabs confirmation, and typecheck/tests/build. Owner [Claude] ·
+  Status **Passed** · Evidence: SUCCESS-004 / PR #111.
+- **NEXT-002 — Resume the Broker day-in-life narrative** (OBJECTIVE-004) after P0 is verified: rebase onto the fix,
+  run gates, push, open a draft PR, capture evidence. Owner [Claude] · Status **Passed** · Evidence: SUCCESS-005 / PR #112.
+- **NEXT-003 — Sean visually approves (or rejects) the P0 + narrative previews** against NEED-001 before any merge.
+  Owner [Sean] · Status **Proposed** · Evidence gate open: previews Ready but not reachable from the build sandbox
+  (Vercel egress blocked → verification done on a local prod build instead). This is the sole remaining blocker.
+- **NEXT-004 — Merge order.** Owner [Sean/Claude] · Status **Superseded by NEXT-008** · Original plan: merge #111 then
+  retarget #112. Replaced by the single consolidated PR #115 (see DECISION-007 / NEXT-008).
+
+### 2026-07-13 (EOD+1) — July-14 finalization (Claude)
+
+- **DECISION-007 — Consolidate to one demo PR; approve-first gate re-affirmed.** Date 2026-07-13 (EOD+1) · Owner [Sean] ·
+  Status **Approved** · Evidence: direct operator instructions this session. Sequence of record: (1) On a live "land the
+  stack" instruction, #111 then #112 were squash-merged to `main` (`893908a`, `67502b0`) — this **temporarily overrode
+  DECISION-004**. (2) Sean then chose to **revert** to restore the approve-first gate; **PR #114** reverted both
+  (squash `885acb3`), returning `main` byte-identical to pre-demo `483a26f` (production shows the prior render until
+  re-approval). (3) The full demo is re-consolidated onto **one branch** (`claude/raven-july14-demo`) as **PR #115**
+  (P0 fix + narrative + Today's game plan), held as a **draft for one visual approval + one merge**. DECISION-004 stands.
+- **OBJECTIVE-005 — Agent "Today's game plan" (final authorized feature).** Date 2026-07-13 · Owner [Sean] · Status
+  **Passed (pending Sean's visual approval)** · Evidence: SUCCESS-014. Time-boxed, checkable daily execution plan on the
+  demo Agent tab; generated-data-only; the only feature addition authorized before July 14.
+- **SUCCESS-014 — "Today's game plan" shipped on the Agent tab (PR #115).** Date 2026-07-13 · Owner [Claude] · Status
+  **Passed (pending approval)** · Evidence: commit `1956ffc` in `src/app/demo/real-estate-cockpit/native/AgentApp.tsx`.
+  A compact `Today · game plan` section between One Thing First and the priority queue, in three buckets — **Before noon**
+  (clear 214 Highland Park compliance docs [closing/compliance, red]; call Sam Ortega back [lead follow-up, yellow]),
+  **This afternoon** (confirm the Highland Park inspection window [inspection]; prep the 88 Cedar Bluff listing
+  appointment [appointment]), **Before end of day** (nudge the Ridgeline sellers to convert to a listing [transaction
+  follow-up]). Each row carries urgency + a concise next step; checking flips a green check + strikethrough and fires a
+  toast (visible state change). Complements — does not duplicate — the Executive Brief / One Thing First / priority queue
+  / lead center / calendar guard. Rendered **inline** so its styled-jsx scope stays on-component (the SUCCESS-004
+  pattern). **No schema/backend/API/persistence/auth.** Gates: `tsc --noEmit` clean · `vitest run` **340 passed** ·
+  `npm run build` green · dev server serves `/demo/real-estate-cockpit` HTTP 200 with the new code. Browser screenshots
+  not capturable from the build sandbox (no browser egress) → the 390×844 / 1440×900 visual pass is Sean's approval step.
+- **NEXT-007 — Sean's visual approval on the single PR #115 preview** (all three tabs, both viewports, game-plan +
+  broker + rental interactions, no oversized icons / clipping / overlap / ticker expansion, generated-data label visible).
+  Owner [Sean] · Status **Proposed** · Evidence gate: preview
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`.
+- **NEXT-008 — Consolidated merge sequence.** Owner [Sean/Claude] · Status **Proposed** · See "Merge sequence" below.
+
+### 2026-07-13 (EOD+1) — Codex lane: bilingual maintenance reporting architecture
+
+- **NEED-002 — Canonical bilingual maintenance reporting contract.** Date 2026-07-13 · Owner [Codex] · Status
+  **In Progress** · Evidence: repository audit of `RentalMaintenanceIssue`, `RentalExpense`,
+  `RentalOwnerStatement`, `RentalProperty`, `loadRentalPropertyRollup`, and the generated-data Rental demo.
+  Existing foundation already keys maintenance issues to tenant/property/source and stores status, opened/resolved dates,
+  estimated/actual cost, repeat-issue state, and provider payload. The live contract must add append-only field updates
+  (original language + original text/transcript + reviewed translation + approval/audit metadata), assignments/status
+  history, completion attachments, owner identity/delivery preferences, and an immutable owner-report snapshot. Next
+  action: review Claude's demo implementation against this contract without editing Claude-owned Rental UI files.
+- **FAILURE-004 — Maintenance cost can be double-counted in the current rental rollup.** Date 2026-07-13 · Owner [Codex] ·
+  Status **Identified; deferred outside tomorrow's generated-data demo** · Evidence:
+  `src/lib/modules/rental-property-rollup.ts` currently computes maintenance cost as the sum of all
+  `RentalExpense(kind=MAINTENANCE)` amounts plus every included maintenance issue's `actualCost ?? estimatedCost`.
+  If an imported work order and its booked expense represent the same repair, the property/owner economics can count it
+  twice. Required live rule: issue cost is operational estimate; once a linked booked expense exists, that expense is
+  financial truth. Add an explicit issue↔expense link or deterministic provider identity before using this flow for real
+  owner proceeds. No schema or rollup change is authorized in PR #115.
+- **DECISION-008 — Preserve original-language truth; translation is reviewed derivative copy.** Date 2026-07-13 ·
+  Owner [Sean/Codex] · Status **Approved for demo contract** · Evidence: Sean identified bilingual maintenance reporting
+  as a major selling point. Every translated field update must preserve the original submission, clearly label the
+  machine translation, and require review/approval before owner-facing delivery. Structured facts (property, timestamps,
+  status, assignee, cost, checklist) remain canonical and are never inferred solely from translated prose.
+- **NEXT-009 — Codex review gate for the bilingual Maintenance Center.** Date 2026-07-13 · Owner [Codex] · Status
+  **In Progress** · Review the completed PR #115 diff for demo-only containment, honest generated-data labeling,
+  translation/original-language visibility, simulated-send wording, reset behavior, responsive/accessibility regressions,
+  and zero production writes. Confirm Broker and Agent remain unchanged. After Claude finishes, record findings and the
+  pass/fail result here before Sean's visual approval and merge.
+- **DECISION-009 — Maintenance demo lane ownership clarified.** Date 2026-07-13 · Owner [Sean/Codex] · Status
+  **Approved** · Evidence: operator handoff and clarification after repository-state check. **Claude owns the contained,
+  generated-data-only Maintenance Center implementation in
+  `src/app/demo/real-estate-cockpit/native/RentalCockpit.tsx` on PR #115**: dispatch → Spanish field update → reviewed
+  English translation → completion evidence → owner-report preview → visible cockpit state change. **Codex owns only the
+  future persisted data/reporting contract, accounting guardrails, and independent final review; Codex will not edit
+  Claude's Rental demo UI.** The Project Raven Command Center is the in-repository artifact
+  `docs/specs/brokerage-cockpit-handoff-to-codex.md` on PR #115 (restored from earlier branches); both lanes must update
+  it after meaningful work. Next action: Claude implements the demo-only flow and records its completion; Codex reviews
+  the resulting diff against NEXT-009.
+
+### 2026-07-14 — Claude lane: bilingual Maintenance Center shipped (PR #115)
+
+- **SUCCESS-016 — Bilingual Maintenance Center shipped inside the Rental property file (PR #115).** Date 2026-07-14 ·
+  Owner [Claude] · Status **Passed (pending Sean's visual approval)** · Evidence: local production build driven with
+  Playwright at 390×844 + 1440×900, full walkthrough, **0 page errors**. Contained, generated-data-only, entirely within
+  `src/app/demo/real-estate-cockpit/native/RentalCockpit.tsx` — no schema/backend/auth/persistence/real translation/real
+  uploads/real send. Implements DECISION-008/009 as a **work order that lives inside Brundage's property file**
+  (breadcrumb `Brundage Chalet › WO-4021`), with a two-way message thread:
+  - **Manager→staff (EN→ES):** the manager instruction shows **EN · Original**, generates a **ES · Translation** labeled
+    *Machine translated · review before assigning*, and **requires Review & approve before assignment**; then assign to
+    **Rosa M. · Housekeeping** with generated **Seen** + **Acknowledged** states and a **completion checkbox**.
+  - **Staff→manager (ES→EN):** the field report is preserved as **ES · Original** (canonical); a **EN · Translation** is
+    labeled *Machine translated · review before reporting* and **requires Review & approve before it can enter the owner
+    report**. Both languages are always preserved; neither overwrites the other.
+  - **Thread history retained in-file:** instruction, translation, assignment, acknowledgment, field update, translation,
+    **before/after photo placeholders** (clearly labeled *generated* — no real upload), timestamps, assignee, status
+    history (Reported → Assigned → In progress → Completed), and **est. $120 → actual $185**.
+  - **Privacy rule:** the internal thread stays **internal by default**; an explicit **"Include approved summary in owner
+    report"** decision publishes only issue / resolution / team / dates / actual cost / approved evidence / approved
+    English summary — **original Spanish retained for audit, not shown to the owner**.
+  - **Visible cockpit state change:** on report approval the Brundage exception resolves (roster **Red → Resolved**,
+    property status **Red → Completed**), the open-issue chip drops to **0 critical**, actual cost becomes **$185**, the
+    portfolio brief + One-Thing-First flip green, and the owner report becomes **Ready**. **Send owner report** is
+    simulated and reads **"Demo only · Not actually sent."** A **Reset demo** control replays the whole walkthrough.
+  - Gates: `npx tsc --noEmit` clean · `npm test` **340 passed (49 files)** · `npm run build` success. Broker + Agent
+    unchanged (no regressions); no oversized SVG / clipping / overflow / styled-jsx regression at either viewport
+    (child-component styling kept on-component per SUCCESS-004; the section is rendered inline in `RentalCockpit`).
+- **NEXT-010 — Sean's visual approval of the Rental Maintenance Center** on the PR #115 preview (both viewports; the full
+  bilingual loop + privacy gate + simulated send + reset). Owner [Sean] · Status **Proposed** · Evidence gate: preview
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`. Feeds NEXT-009
+  (Codex review) and the DECISION-004 merge gate.
+
+
+### 2026-07-14 — Codex review: bilingual Maintenance Center (commit `8925d70`)
+
+- **BLOCKER-002 — Codex review of bilingual Maintenance Center found four demo-truth inconsistencies.** Date 2026-07-14 ·
+  Owner [Codex] · Status **Blocked pending contained correction** · Evidence: source review of commit `8925d70` plus
+  Vercel success on PR #115. The generated bilingual sequence, approval gates, original-language preservation, privacy
+  gate, completion evidence, reset, and explicit maintenance-report simulated send are correctly contained in
+  `RentalCockpit.tsx`; no backend/schema/auth/external writes were introduced. Before merge, correct:
+  1. **Property health truth:** completing WO-4021 currently turns Brundage roster Red → green "Resolved", but Brundage
+     still has a **3.2★ review below the demo's own 3.5 red threshold** and a Standard hot-tub ticket in progress. Resolve
+     the maintenance work order and clear the Critical count, but keep the property exception honest (red for the review,
+     with maintenance shown resolved) unless the remaining exception is explicitly resolved too.
+  2. **Property-file consistency:** after WO-4021 completes, the roster changes but opening Brundage's property drawer
+     still renders the original red/open work-order data. The drawer and Maintenance Center must reflect the same state.
+  3. **Owner-report gate:** the portfolio brief says the owner report is ready immediately after translation approval,
+     before the manager chooses "Include approved summary in owner report." Show "awaiting inclusion/approval" until
+     `ownerIncluded`; only then call it Ready.
+  4. **Simulated-send truth:** the older Rental owner/guest actions still say "Send report" / "Send text", then "Sent",
+     with toasts "Owner report sent" / "Message sent to the guest." Align them with the new rule: **Demo only · Not
+     actually sent** (or "Simulate send") so no surface implies a real delivery.
+  PR #115 remains draft and GitHub currently reports `mergeable: false`; do not merge until GitHub reports clean,
+  required checks are green, Sean visually approves the corrected preview, and Codex re-reviews the final head.
+- **NEXT-011 — Contained correction and Codex re-review.** Date 2026-07-14 · Owner [Claude→Codex] · Status
+  **Proposed** · Claude applies only the four corrections above in `RentalCockpit.tsx`, re-runs typecheck/tests/build and
+  both viewport walkthroughs, pushes to PR #115, and records evidence. Codex then reviews the delta, resolves NEXT-009,
+  and gives Sean a merge/no-merge recommendation. No backend/schema/integration expansion.
+- **SUCCESS-017 — BLOCKER-002 four contained corrections applied (PR #115).** Date 2026-07-14 · Owner [Claude] ·
+  Status **Passed (pending Codex re-review + Sean visual approval)** · Scope: `RentalCockpit.tsx` only — no
+  backend/schema/auth/integration change. Evidence: local prod build driven with Playwright at 390×844 + 1440×900,
+  **0 page errors**; `npx tsc --noEmit` clean · `npm test` 340 passed (49 files) · `npm run build` success.
+  1. **Property-health truth:** completing WO-4021 clears the Critical maintenance (count → **0 critical**) but the roster
+     keeps **Brundage red** on its 3.2★ review (< 3.5), with a "maint resolved · review 3.2★" hint — no longer flips to a
+     false green "Resolved".
+  2. **Property-file consistency:** the Brundage drawer now reflects the same state — maintenance shown **Resolved · today
+     (WO-4021)**, the 3.2★ review still **below 3.5 threshold**, header flag red (matches the roster); no stale open data.
+  3. **Owner-report gate:** the portfolio brief now reads "owner report **awaiting your approval to include**" until the
+     manager clicks **Include approved summary**, and only then "**ready to send**" (owner panel: *Internal by default* →
+     *Ready*).
+  4. **Simulated-send truth:** the older Rental owner/guest actions now say **Simulate send** → **✓ Simulated** with a
+     **"Demo only · Not actually sent"** note and simulated-send toasts — no surface implies real delivery.
+  Next: Codex re-reviews the delta (NEXT-009/NEXT-011); Sean visually approves the corrected preview before merge.
+
+## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
+
+**Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`
+**Static fallback:** `https://www.outfrontdata.com/demo/real-estate-cockpit.html`
+**Reset between runs:** refresh the page (or use the on-screen **Undo** controls) before restarting so every acknowledgment/state change starts clean.
+
+**Broker (~2 min)**
+1. Open the public demo — land on the **Broker** tab.
+2. "Welcome, Luke" greeting.
+3. Read the **Executive Brief** (the 20-second state of the brokerage).
+4. **One Thing First** — the single most important move today.
+5. **Open Whitaker's compliance file** — missing disclosures surfaced.
+6. Show the **suggested action / contact tools** on the file.
+7. **Mark / acknowledge** the issue → cockpit updates (green Handled + Undo).
+8. Show the **changed cockpit** (roster count drops, Whitaker turns green).
+9. **Open an agent** from the roster.
+10. Show that agent's **calendar, performance, trends, and Company Aura**.
+
+**Agent (~2 min)**
+1. Switch to the **Agent** tab.
+2. Explain the **Executive Brief** and **One Thing First** (214 Highland Park funds at 2 PM).
+3. Walk through **Today's game plan** — Before noon / This afternoon / Before EOD; **check off** the Highland Park docs item (green check + toast).
+4. **Open the urgent file** (Highland Park) via One Thing First.
+5. Show **lead-response urgency** in the Lead action center (Sam Ortega past the 30-min line).
+6. Show the **calendar guard** hard-block (Saturday double-booking) — resolve it.
+7. **Complete / acknowledge** an action (green state change).
+
+**Rental — bilingual Maintenance Center (~60–90 sec)**
+1. Switch to the **Rental** tab — portfolio brief + occupancy / ADR / RevPAR / booking pace; **Brundage Chalet** is the red exception.
+2. In the **Maintenance Center**, note the work order lives **inside the property file** (`Brundage Chalet › WO-4021`) — status **Reported**, chip **1 critical open**.
+3. **Manager → staff:** the instruction shows **EN · Original** → click **Translate to Spanish** → **ES · Translation** ("machine translated · review before assigning") → **Review & approve** (approval gates assignment) → **Assign to Rosa M. · Housekeeping** (watch **Seen** + **Acknowledged** appear).
+4. **Mark task complete** → the **staff field report posts in Spanish** (**ES · Original**, canonical).
+5. **Staff → manager:** click **Translate to English** → **EN · Translation** ("machine translated · review before reporting") → **Review & approve for reporting** — both languages stay on file, neither overwrites the other.
+6. Watch the cockpit change: **Brundage resolves** (roster Red → Resolved), open issues **→ 0 critical**, actual cost **$185**, before/after photo evidence, brief + One-Thing-First flip green.
+7. **Privacy:** the thread is **internal by default** — click **Include approved summary in owner report** (owner sees only the approved summary; original Spanish is retained for audit, not shown).
+8. **Send owner report** → **"Demo only · Not actually sent."** Close on the retained bilingual record + owner-reporting value. Use **Reset demo** to replay.
+
+## Deferred pilot work (NOT built for July 14 — recorded per handoff)
+
+Agent appointment "talk-to-update" assistant · shared broker/agent appointment component extraction · real voice
+processing · real calendar writes · CRM client-history writes · message sending · server persistence · BoldTrail
+integration · Google Workspace OAuth · Escapia integration · database changes / migrations · PR #105 / #106
+reconciliation · broad Morning Ritual redesign · any unrelated product feature. See also NEED-C1/C2/C3 (open questions
+for Codex) above.
+
+## Merge sequence — consolidated (PR #115) — NEXT-008
+
+Do **not** auto-merge. `main` currently sits at the reverted state (PR #114). After Sean visually approves the single
+PR #115 preview:
+1. Confirm required checks are green on the PR head (Vercel; CI typecheck/test/build).
+2. Sean re-verifies the preview (all three tabs, 390×844 + 1440×900).
+3. Merge **PR #115** to `main` (single squash merge — no stacking; #111/#112 are already reverted and superseded).
+4. Verify the **public production URL** (`https://www.outfrontdata.com/demo/real-estate-cockpit`) on phone + laptop.
+5. Record production verification here (new SUCCESS entry + Progress Log).
+
+## Demo Mockups — rendered evidence (2026-07-13, Claude)
+
+Rendered from a **local production build** of `claude/demo-broker-day-in-life-p0` (PR #112 = P0 fix #111 + three-tab
+day-in-life narrative) with Playwright. Generated-data-only, public route `/demo/real-estate-cockpit`. These are the
+authoritative visual reference for the demo state (SUCCESS-004/005/006). Previews:
+#111 `restaurant-os-git-claude-fix-demo-render-p0-ebh2gr-outfrontdata.vercel.app`,
+#112 `restaurant-os-git-claude-demo-broker-day-in-8563a3-outfrontdata.vercel.app`.
+
+**Broker cockpit** — "Welcome, Luke" → clickable Executive Brief (each line expands a *Suggested fix*) → One-Thing
+("Open Whitaker's file") → **real compliance file** (2 missing disclosures, Call/Send-reminder-draft/Mark-resolved) →
+agent roster → **Your week** calendar (follow-ups + appointments) → **Company Aura** reputation → Resolved state.
+- Desktop (1440×900): `mockups/broker-desktop.png` · compliance file + email draft: `mockups/broker-desktop-file.png` · resolved: `mockups/broker-desktop-handled.png`
+- Mobile (390×844): `mockups/broker-mobile.png`
+
+![Broker cockpit — desktop (Welcome Luke, brief, calendar, Aura)](mockups/broker-desktop.png)
+![Broker cockpit — Open Whitaker's file → compliance file + reminder draft](mockups/broker-desktop-file.png)
+![Broker cockpit — desktop, resolved](mockups/broker-desktop-handled.png)
+![Broker cockpit — mobile](mockups/broker-mobile.png)
+
+Broker → agent drill-down: expanding an agent in the roster shows that agent's **real-estate calendar** (showings /
+closings / listing appts / inspections / calls), with a note that appointments sync to the client file in the CRM.
+![Broker → agent detail with real-estate calendar](mockups/broker-agent-calendar.png)
+
+Clicking any calendar entry opens a voice-driven AI appointment assistant (DEMO mock): "Speak to update" → AI-extracted
+actions (reschedule / add to client history / draft email / set reminder), and an "After the appointment" recap that
+captures future expectations as reminders. Live speech-to-text + AI writes to CRM/calendar are a Codex/backend follow-up.
+![Appointment assistant — voice update + AI actions](mockups/broker-appt-voice.png)
+![Appointment assistant — post-appointment recap + future reminder](mockups/broker-appt-recap.png)
+
+**Agent app** — "Your morning" brief + One-Thing (214 Highland Park funding today) → "Open the file" → "On it." state.
+- Desktop: `mockups/agent-desktop.png` · after action: `mockups/agent-desktop-handled.png`
+- Mobile: `mockups/agent-mobile.png`
+
+![Agent app — desktop](mockups/agent-desktop.png)
+![Agent app — desktop, handled](mockups/agent-desktop-handled.png)
+![Agent app — mobile](mockups/agent-mobile.png)
+
+**Rental cockpit** — "Portfolio brief" + One-Thing (Brundage red) → "Dispatch technician" → "Dispatched." state; property drawer.
+- Desktop: `mockups/rental-desktop.png` · after action: `mockups/rental-desktop-handled.png` · drawer: `mockups/rental-desktop-drawer.png`
+- Mobile: `mockups/rental-mobile.png`
+
+![Rental cockpit — desktop](mockups/rental-desktop.png)
+![Rental cockpit — desktop, dispatched](mockups/rental-desktop-handled.png)
+![Rental cockpit — property drawer](mockups/rental-desktop-drawer.png)
+![Rental cockpit — mobile](mockups/rental-mobile.png)
+
+> **For Codex:** these render the intended demo state for the readiness pass (leadership route + investor gate, agent
+> demo-path decision, vacation-rental copy, demo-funnel routing). The demo shell is generated-data-only and touches no
+> backend/db/auth/migration. Root cause of the earlier P0 render break is FAILURE-003 → SUCCESS-004 (styled-jsx
+> child-component scoping — not a Babel config).
+
+## Shared Current State — Raven (2026-07-13, updated EOD+1)
+
+- July 14 Luke demo hinges on the **public** `/demo/real-estate-cockpit` three-tab experience (Broker / Agent / Rental),
+  generated-data-only. **The P0 render failure is FIXED (SUCCESS-004, PR #111) and the three-tab day-in-life narrative is
+  DONE (SUCCESS-005/006, PR #112).** Both PRs are **open drafts**; gates are green (tsc clean · `npm test` 340 passed ·
+  `npm run build` green); Vercel previews are **Ready** for both. The **only** remaining item is **Sean's visual approval**
+  before merge (BLOCKER-001 narrowed → NEXT-003; DECISION-004).
+- Active demo work is on **`claude/fix-demo-render-p0-ebh2gr`** (P0 fix, PR #111) and **`claude/demo-broker-day-in-life-p0`**
+  (three-tab narrative stacked on the P0 fix, PR #112). The old `claude/demo-broker-day-in-life` branch (the UNTESTED
+  broker-only commit `b646e61`) is **superseded** — its narrative was cherry-picked, tested, and verified onto the P0 fix.
+  **This Command Center doc lives on `claude/demo-broker-day-in-life-p0` (PR #112); read that branch, not `main`.** Nothing
+  merges to main until Sean visually approves a preview (DECISION-004).
+- PRs #107–#110 shipped to production (Tax Vault, cash floor, payroll, demo/prod isolation) but are off the visual-demo
+  critical path. PR #105 / #106 remain unmerged and are not required for July 14 (DECISION-005).
+
+## Claude Lane Status — Raven (2026-07-13)
+
+- ✅ **P0 (OBJECTIVE-003) — fixed, PR #111 open (draft), gates green.** Root cause was **styled-jsx child-component
+  scoping**, not a Babel config (FAILURE-003 corrected the hypothesis). Reproduced on a local prod build in both dev and
+  prod; fixed CSS-only across `RealEstateDemo`/`AgentApp`/`RentalCockpit` (SUCCESS-004). NEED-001 evidence delivered
+  (root cause, preview URL, before/after at both viewports, all three tabs + drawer, tsc/tests/build). Awaiting Sean's
+  visual approval before merge.
+- ✅ **Broker day-in-life narrative (OBJECTIVE-004) — done, PR #112 (draft, stacked on #111).** Cherry-picked `b646e61`
+  onto the P0 fix (`ed3b8bf`); gates green; verified rendering + interaction at both viewports (SUCCESS-005). Agent/Rental
+  byte-identical to the P0 branch. The two docs-only commits from the parked `claude/demo-broker-day-in-life` (handoff
+  update + this Command Center restoration) were intentionally left out of #112's code; this report brings the Command
+  Center forward + logs completion.
+- ✅ Corrected the process failure (FAILURE-001): visual browser verification is now a hard gate (NEED-001) — this cycle
+  was verified against a **local production build** with Playwright, because the Vercel previews are not reachable from
+  the build sandbox (egress-blocked).
+- ✅ **(EOD+1) July-14 finalization — game plan + consolidation, PR #115 (draft).** Added **Today's game plan** to the
+  Agent tab (OBJECTIVE-005 / SUCCESS-014, commit `1956ffc`) — time-boxed, checkable, generated-data-only, no backend.
+  Reconciled the merge state per Sean (DECISION-007): #111/#112 were briefly merged then **reverted** (PR #114, `main`
+  back to pre-demo `483a26f`), and the whole demo is re-consolidated onto **one branch/PR #115** for a single visual
+  approval + merge. Gates re-run green on the consolidated branch: `tsc` clean · `vitest` 340 passed · `npm run build`
+  green · dev server serves the demo route HTTP 200. Browser screenshots not capturable from this sandbox (no browser
+  egress) → the 390×844 / 1440×900 visual pass is Sean's approval on the PR #115 preview.
+
+## Codex Lane Status — Raven (2026-07-13)
+
+- **No known Codex activity on the P0 render issue or the July-14 demo.** Last recorded Codex work is 2026-07-04 (PR #92
+  `feat/source-profile-scaffolds` — source onboarding copy cleanup). Codex lane state beyond that is **unknown from
+  Claude's side and is deliberately not invented here.** If Codex picks up any Raven work, it must self-log per the
+  permanent coordination rule.
+
+## Blockers — Raven
+
+- **BLOCKER-001** — public demo not visually approved. **Status: Narrowed to visual-approval-only (no engineering blocker
+  remains).** The P0 repair (OBJECTIVE-003) is done and gate-green (SUCCESS-004, PR #111) and the three-tab narrative is
+  done (SUCCESS-005/006, PR #112). Evidence bundle satisfying NEED-001: **tsc clean · `npm test` 340 passed · `npm run
+  build` green** on both branches; **viewport verification at 390×844 (mobile) + 1440×900 (desktop)** across all three tabs
+  (Broker/Agent/Rental) + the rental drawer + the interactive "Open Whitaker's file" flow, on a local prod build with
+  Playwright; **Vercel previews Ready** (#111 `…fix-demo-render-p0-ebh2gr…`, #112 `…demo-broker-day-in-8563a3…`). The
+  *only* remaining item is **Sean's visual approval of the previews** (NEXT-003) before merge to main (DECISION-004).
+  **(EOD+1 update)** #111/#112 are now **superseded** — briefly merged then reverted (PR #114); everything is
+  re-consolidated into **one draft, PR #115** (+ Today's game plan), gate-green. The single remaining item is unchanged:
+  **Sean's visual approval of the PR #115 preview** (NEXT-007) before the single merge to `main` (NEXT-008, DECISION-004).
+
+## Next Actions — Raven
+
+- **NEXT-001 [Claude] — DONE** — P0 render failure repaired; PR #111 (draft), NEED-001 evidence delivered (SUCCESS-004).
+- **NEXT-002 [Claude] — DONE** — Broker day-in-life narrative finished; PR #112 (draft, stacked on #111) (SUCCESS-005).
+- **NEXT-003 [Sean]** — visually approve (or reject) the P0 preview (#111) and the narrative preview (#112) against
+  NEED-001 before any merge to main.
+- **NEXT-004 [Sean/Claude] — SUPERSEDED** — original stacked merge order replaced by the single consolidated PR #115
+  (DECISION-007). #111/#112 were reverted (PR #114, `main` back to `483a26f`).
+- **NEXT-007 [Sean] — visually approve PR #115** — one preview, all three tabs at 390×844 + 1440×900, game-plan/broker/
+  rental interactions, no oversized icons / clipping / overlap / ticker expansion, generated-data label visible. Preview:
+  `https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`.
+- **NEXT-008 [Sean/Claude] — single merge of PR #115** after approval (see "Merge sequence — consolidated"); then verify
+  the public production URL on phone + laptop and record production verification here.
+- **[Codex]** — if engaged on Raven, self-log lane + Progress Log per the permanent rule. (Codex advisory reviews on
+  #111/#112 both errored on an OpenAI billing quota — non-blocking; the required gates are typecheck/test/build.)
+- **NEXT-005 [Codex] — back online; repo-green + route/auth/data.** Status **In Progress (relayed)** · fix the
+  Prisma/`Restaurant.cashFloor` stale-client typecheck blocker (`npx prisma generate`), run `npm test` + `npm run build`,
+  then brokerage leadership route + investor gate, agent demo-path decision, vacation-rental copy, demo-funnel routing.
+  Not UI polish (Claude's lane). Codex to self-log its own lane section.
+- **NEXT-006 [Claude] — extend day-in-life narrative to Agent + Rental** (DECISION-002 spine), generated-data-only, on
+  `claude/demo-broker-day-in-life-p0`; PR #112 grows to a three-tab narrative. Status **Done** · Evidence: SUCCESS-006 /
+  commit `a4c0237`.
 
 ---
 
@@ -184,6 +696,207 @@ phantom diffs); gate on **tsc + vitest**.
 
 _Append-only, newest first. Tag every entry `[Claude]` / `[Codex]`._
 
+- **2026-07-13 (EOD+1) [Claude] — Rental tab: owner updates & follow-up (SUCCESS-015, PR #115, commit `6e7f139`).**
+  Sean's feedback on the vacation tab: it surfaced concerns and dispatch but had no follow-up on concerns and no prompt
+  to email ownership with a report. Added an **Owner updates & follow-up** section on the main Rental view with editable,
+  ready-to-send drafts: (1) **Update the Brundage owner** — email closing the loop on the furnace ticket + the 3.2★
+  review with the period's occ/ADR/RevPAR; (2) **Reassure the Thursday guest** — proactive text ahead of check-in;
+  (3) **Send the Sawtooth owner their monthly report** — the numbers behind the premium-floor strategy. Each opens an
+  editable draft; Send fires a toast (demo — no real delivery). The dispatched "One thing first" state now points here to
+  close the loop. Rendered inline in `RentalCockpit` so scoped styles apply. Generated-data-only; no backend/API/
+  persistence/auth. Gates green: `tsc` clean · `vitest` 340 passed · `npm run build` green. Held for Sean's approval.
+- **2026-07-13 (EOD+1) [Claude] — Today's game plan made ACTIONABLE (SUCCESS-014 extended, PR #115, commit `e3236d1`).**
+  Sean's screenshot feedback: the plan listed actions but offered no way to *act* (no call/text/email). Each game-plan
+  item now expands ("Take action") into the same call / text / email affordances the Lead action center uses — a dial
+  chip for calls, an editable pre-written draft for texts/emails; **Send** fires a toast and checks the item off (demo —
+  no real send). Drafts per item: Highland Park docs → request-e-signature email + text the title officer + "mark
+  uploaded"; Sam Ortega → call + text + intro email; inspection → text/call the inspector; Cedar Bluff → confirm-appt
+  text + pricing-prep email; Ridgeline → convert-to-listing email + nudge text. Reuses the global `.compose`/`.cmp-*`/
+  `.btn`/`.lcall` styles; `GamePlanItem` is a separate component so all `.gp-*` CSS is now global-scoped under `.agent`
+  (SUCCESS-004 styled-jsx child-scoping rule). Generated-data-only; no backend/API/persistence/auth. Gates re-run green:
+  `tsc` clean · `vitest` 340 passed · `npm run build` green. Still held for Sean's visual approval (NEXT-007).
+- **2026-07-13 (EOD+1) [Claude] — July-14 finalization: Today's game plan + merge/revert consolidation (PR #115).**
+  Delivered the one authorized remaining feature and reconciled the merge state.
+  **Feature (SUCCESS-014, OBJECTIVE-005):** added a compact, time-boxed, checkable **Today's game plan** to the demo
+  Agent tab (`src/app/demo/real-estate-cockpit/native/AgentApp.tsx`, commit `1956ffc`) — Before noon / This afternoon /
+  Before EOD, five actions covering closing-compliance, lead follow-up, inspection, appointment, and a listing-conversion
+  follow-up; each with urgency + a concise next step; checking flips a green check + strikethrough + toast. Complements
+  (does not duplicate) the Brief / One Thing First / queue / lead center / calendar guard. Inline render → styled-jsx
+  scope stays on-component (SUCCESS-004 pattern). **Generated-data-only; no schema/backend/API/persistence/auth.**
+  **Merge saga (DECISION-007):** #111 then #112 were squash-merged to `main` (`893908a`, `67502b0`) on a live
+  "land the stack" instruction (temporarily overriding DECISION-004); Sean then chose to restore the approve-first gate,
+  so **PR #114 reverted both** (squash `885acb3`, `main` byte-identical to pre-demo `483a26f`). The full demo is
+  re-consolidated onto **`claude/raven-july14-demo` → PR #115** (P0 fix + narrative + game plan), a single draft for one
+  visual approval + one merge. **Also fixed (PR #113, separate):** the advisory Codex-review workflow now stays silent on
+  quota/auth failures instead of posting an error comment on every push (it had spammed 16+ comments/day).
+  **Evidence:** `tsc --noEmit` clean · `vitest run` **340 passed (49 files)** · `npm run build` green · dev server serves
+  `/demo/real-estate-cockpit` HTTP 200 with the new code. Browser screenshots **not** capturable from this sandbox
+  (no browser network egress: loopback hidden from Chromium; external via a tunnel it can't negotiate) → the
+  390×844 / 1440×900 visual pass across all three tabs + interactions is Sean's approval step on the PR #115 preview
+  (`https://restaurant-os-git-claude-raven-july14-demo-outfrontdata.vercel.app/demo/real-estate-cockpit`).
+  **Deferred (recorded):** appointment talk-to-update assistant, shared broker/agent appointment component, real
+  voice/calendar/CRM/message writes, server persistence, BoldTrail / Google Workspace / Escapia, DB/migrations,
+  #105/#106 reconciliation, Morning-Ritual redesign. **Next:** NEXT-007 (Sean visual approval) → NEXT-008 (single merge)
+  → verify production on phone + laptop → log a production-verified SUCCESS entry.
+- **2026-07-13 (EOD+1) [Claude] — Command Center reconciled to true completion state (per Codex request).** Codex flagged
+  that the remote doc still read P0 as not-started/in-progress and the narrative as blocked/untested. Reconciled the
+  status-bearing sections so the doc matches reality: **OBJECTIVE-003 = Passed (pending approval)** — P0 render fix, PR
+  #111 (`claude/fix-demo-render-p0-ebh2gr`, commit `1f0eb99`), root cause = styled-jsx child-component scoping (SUCCESS-004).
+  **OBJECTIVE-004 = Passed (pending approval)** — three-tab day-in-life narrative, PR #112 (`claude/demo-broker-day-in-life-p0`,
+  commit `ed3b8bf`, stacked on #111). **BLOCKER-001 narrowed** to visual-approval-only (no engineering blocker). Updated
+  the stale **Shared Current State** block (it still described the pre-fix world + the superseded `claude/demo-broker-day-in-life`
+  branch) and **Claude Lane Status / Next Actions** (NEXT-001/002 DONE). **Evidence bundle (NEED-001):** `npx tsc --noEmit`
+  clean on both branches · `npm test` **340 passed** (49 files) · `npm run build` green on both · CI Typecheck ✓ / Test ✓
+  on #111 · **viewport verification at 390×844 + 1440×900** across Broker/Agent/Rental + rental drawer + the interactive
+  "Open Whitaker's file" flow (local prod build, Playwright) · **Vercel previews Ready** (#111 `…fix-demo-render-p0-ebh2gr…`,
+  #112 `…demo-broker-day-in-8563a3…`). **Remaining completeness work:** (1) Sean's visual approval of the two previews is
+  the sole open item; (2) merge order — #111 to `main` first, then retarget #112's base to `main` (NEXT-004); (3) the two
+  agent-app asks (coaching daily-plan + agent appointment assistant) are on hold pending Codex's NEED-C1/C2/C3 answers.
+  Doc-only change; no code touched.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-013: lead email template picker + home-value market report.** Commit
+  `ac62ee6` (AgentApp.tsx). The lead email compose now offers multiple templates grouped by intent, plus a home-value
+  generator: **New lead** (What's my home worth? · How buying works · Get pre-approved), **Follow-up** (Listings matching
+  your search · Intro follow-up after a call), **Re-engage / cold clients** (Neighborhood market update · Still thinking
+  about a move? · Equity/anniversary check-in · Just listed near you). The **"What's my home worth?"** template shows an
+  address field (for when the lead didn't supply one) and generates a deterministic mock **CMA** (est. value range, 6
+  comps, median $/sqft, DOM, YoY trend) embedded in the follow-up email. Picking a template loads its editable subject +
+  body. tsc clean, 340 tests, build green. Mockup: `agent-lead-templates.png`.
+  **For Codex/backend:** live versions of these (a real CMA/AVM for the home-value report, and template send) are the
+  same integration track as SUCCESS-011/012.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-012: Agent lead action center opens editable email/text drafts.** Commit
+  `e52d323` (AgentApp.tsx). The suggested lead actions no longer just fire a toast — they open an inline compose panel
+  with an **AI-drafted, editable** message: email actions (Send email template / Send intro / Send listing match) →
+  editable Subject + Body; text/SMS actions (Send SMS template / Text) → editable message window; Call reveals a direct
+  line; Snooze/Skip queue. Each draft is per-lead and pre-filled; Send logs it to the lead. Compose styles anchored under
+  `.agent :global(...)` (LeadView is a child component). tsc clean, 340 tests, build green. Mockups:
+  `agent-lead-email.png`, `agent-lead-text.png`. (Live send/AI-draft is the same backend track as SUCCESS-011 — Codex.)
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-011: clickable calendar entries → voice/AI appointment assistant (DEMO mock).**
+  Commit `c202e47`. Every calendar entry on the broker cockpit (each agent's real-estate calendar row + the broker's
+  "Your week" appointments) is clickable and opens an `ApptDrawer` with a voice-driven AI flow: **"Speak to update"** →
+  simulated transcript → AI-extracted actions the operator applies individually (reschedule the appointment, add a note
+  to the **client's history**, draft a **follow-up email** to the client, set a **future reminder** that lands on the
+  calendar with an alert); **"After the appointment"** → voice recap → sentiment + auto-logged notes + a captured future
+  expectation that creates a reminder ("revisit rental purchase (fall) → Sep 1, you'll be alerted"). Self-contained
+  component with its own `<style jsx>` (correct scoping). tsc clean, 340 tests, build green. Mockups:
+  `broker-appt-voice.png`, `broker-appt-recap.png`.
+  **⚠️ For Codex / backend (NEEDS you):** the DEMO mocks the voice + AI + the writes. The **live** feature is your lane —
+  speech-to-text, an LLM to extract intents/actions, and writing to the CRM client record + calendar/reminders. When
+  that track opens, the demo's action list (reschedule / add-to-history / draft-email / set-reminder / post-appt recap)
+  is the contract to implement against. Sean confirmed Codex said this is possible.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-010: agent real-estate calendar is now click-to-expand.** Commit `3a9e237`.
+  Per Sean, the per-agent calendar in the roster detail is collapsed by default (header "Real-estate calendar · N this
+  week" + chevron) and expands on click to show the appointments + the CRM-sync note. `openCal` toggle, resets when
+  switching agents. tsc clean, 340 tests, build green. Also confirmed for Sean: the mockups ARE in-repo on this branch
+  (`docs/specs/mockups/`, 13 PNGs) — they only live on the PR #112 branch, not `main` (nothing merged yet).
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-009: trend arrows + quantified change on every tracked broker metric.** Commit
+  `d44cf94`. Added a reusable directional `Trend` chip (up/down/flat → green/red/muted) and wired it into: the 4 company
+  gauges (retention **▼1.2 pts** vs last mo, cash oxygen **▲5 days**, lead ROI **▲0.4×**, reputation **▲0.1**), each
+  agent's GCI month-over-month in the roster (Priya ▲15%, Chloe ▼4%, Drew ▲22%, …), and the Company Aura (rating **▲0.1**
+  vs last month + **"4.5★ average over the last 4 weeks — trending up"**, Google ▲0.1 / Zillow steady, intent tiles
+  ▲12% / ▲9 / ▲6). Chip is a `.demo-root :global(.trend)` global so it also works inside child components (GaugeCard).
+  Per Sean: "anything being tracked should have an arrow and a quantifiable change." tsc clean, 340 tests, build green.
+  Refreshed `broker-desktop.png` + added `broker-gauges-trends.png`.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-008: broker drill-down shows each agent's real-estate calendar.** Commit
+  `9ff8409`. Expanding an agent in the roster now reveals that agent's real-estate calendar — upcoming showings,
+  closings, listing appointments, inspections, and client calls (per-agent generated data, tagged by type) — with a
+  header noting appointments sync back to the client file in the CRM. Kept **CRM-neutral** (not "BoldTrail") per the
+  BoldTrail→CRM genericization, which is Codex-owned source-label copy — flagging for Codex in case it wants to align the
+  exact CRM wording. tsc clean, 340 tests, prod build green. Mockup: `mockups/broker-agent-calendar.png`.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-007: broker cockpit deepened per Sean's demo feedback.** Commit `62a9304`
+  (RealEstateDemo.tsx, generated-data-only). (1) Greeting → **"Welcome, Luke"** (this demo is for Luke, not "Marcus").
+  (2) **"Open Whitaker's file" now opens an actual file** — a compliance panel with the 2 missing disclosures (SPDS +
+  Lead-Based Paint, with filenames), a **Call Whitaker** action revealing a direct line, a **ready-to-send reminder email
+  draft** (To/Subject/body → Send), and **Mark resolved** (acknowledges the one-thing) — not just a mark-complete.
+  (3) **Executive Brief lines are clickable** and expand a **"Suggested fix"** with concrete remediation; the red line
+  links to Open-the-compliance-file. (4) Added a **broker calendar** ("Your week" — follow-ups + upcoming appointments),
+  matching the agent. (5) Added a **"Company Aura · reputation"** section (blended 4.6, Google/Zillow split, profile-view/
+  direction/call intent signals, a recent review). tsc clean, 340 tests, prod build green; verified at both viewports.
+  Refreshed the broker demo mockups above (incl. `broker-desktop-file.png`).
+
+- **2026-07-13 (EOD+1) [Claude] — Added demo mockups to the Command Center for Codex.** Committed 10 rendered PNGs to
+  `docs/specs/mockups/` (Broker/Agent/Rental at desktop 1440×900 + mobile 390×844, each interactive "handled" state, and
+  the rental property drawer) and referenced them inline from the new **Demo Mockups** section above. So Codex (and Sean)
+  can see the intended demo state in-repo without a preview deploy. Captured from a local prod build of
+  `claude/demo-broker-day-in-life-p0` (commit at time of capture). Generated-data-only.
+
+- **2026-07-13 (EOD+1) [Claude] — SUCCESS-006: day-in-life narrative extended to Agent + Rental (all three tabs).**
+  NEXT-006 done. Applied the DECISION-002 spine (greeting → Executive Brief → One-Thing-with-action → roster/detail →
+  acknowledgment state) to `AgentApp.tsx` and `RentalCockpit.tsx`, matching the Broker cockpit. **Agent:** "Your morning"
+  brief (3 health-dotted lines, line 1 reactive) + actionable One-Thing (214 Highland Park funding today / missing
+  compliance docs) → Open-the-file / Mark-handled → green "On it." + Undo. **Rental:** "Portfolio brief" + the Brundage
+  red alert made actionable (Dispatch technician / Open property) → green "Dispatched." + Undo. New markup renders inline
+  in each component so styled-jsx scoping stays correct (co-located `<style jsx>`, per SUCCESS-004). Generated-data-only;
+  no backend/db/auth/migration. Evidence: commit `a4c0237` on `claude/demo-broker-day-in-life-p0` (PR #112 now a
+  three-tab narrative); tsc clean, 340 tests, prod build green; verified rendering + both interactive acknowledgment
+  flows at 390×844 and 1440×900. Remaining: same as before — Sean's visual approval; merge #111 then retarget #112.
+
+- **2026-07-13 (EOD+1) [Claude] — Coordination re-established with Codex; lanes reassigned.** Sean confirmed Codex is
+  back online. **Lane split (agreed):** Codex takes **repo-green + route/auth/data correctness** (Step 1: the
+  Prisma/`Restaurant.cashFloor` stale-generated-client typecheck blocker → `npx prisma generate` then `npx tsc --noEmit`;
+  Step 2: `npm test` + `npm run build`; Step 3: brokerage leadership route/investor-gate, agent demo path decision,
+  vacation-rental copy, demo-funnel routing — **not** UI polish, to avoid overlap). Claude takes **extending the
+  day-in-life narrative (DECISION-002 spine) to the Agent and Rental tabs** in `src/app/**`, generated-data-only.
+  **Data point for Codex:** on Claude's checkout `npx tsc --noEmit` is **green** on both `claude/fix-demo-render-p0-ebh2gr`
+  and `claude/demo-broker-day-in-life-p0` (Prisma client regenerated via `npm run build`/postinstall) — corroborates the
+  "stale generated client, not a code bug" diagnosis; `npx prisma generate` should clear it with no source change.
+  Claude staying out of `prisma/**`, `src/lib/brokerage/**`, `brokerage-analytics.ts`, migrations (Codex-owned).
+  Next: Agent + Rental narratives on `claude/demo-broker-day-in-life-p0` (PR #112 expands to all three tabs).
+
+- **2026-07-13 (EOD) [Claude] — COMPLETION REPORT: P0 render fix (#111) + Broker day-in-life narrative (#112).**
+
+  **What shipped (both DRAFT, not merged — DECISION-004).**
+  - **P0 (OBJECTIVE-003 → SUCCESS-004), PR #111** on `claude/fix-demo-render-p0-ebh2gr` (commit `1f0eb99`). CSS/scoping
+    only across `native/RealEstateDemo.tsx`, `native/AgentApp.tsx`, `native/RentalCockpit.tsx` — no logic, data, layout
+    intent, backend, auth, or migration change.
+  - **Broker narrative (OBJECTIVE-004 → SUCCESS-005), PR #112** on `claude/demo-broker-day-in-life-p0` (commit `ed3b8bf`),
+    **stacked on #111** (base = the P0 branch). Narrative cherry-picked from `b646e61`; only `RealEstateDemo.tsx` differs
+    from the P0 branch (Agent/Rental byte-identical).
+
+  **Root cause (corrects the leading hypothesis — FAILURE-003).** NOT a stray Babel config (none exists; grep-verified)
+  and NOT prod-only — the bug reproduced in **both dev and prod**. The real cause: **styled-jsx only stamps its scope
+  class onto DOM elements rendered by the component that owns the `<style jsx>` block.** Markup rendered by *child*
+  components (`BrokerCockpit`→`GaugeCard`/`GaugeDial`/`HealthWord`; `AgentApp`→`QueueCardView`/`LeadView`;
+  `RentalCockpit`→`Drawer`) never received the scope class, so its scoped rules silently dropped. The inline `<svg>`s
+  have no width/height (sized purely by that CSS) → fell back to the browser default 300×150; the ticker lost
+  `white-space:nowrap`. Fix: co-locate `BrokerCockpit`'s styles in its own `<style jsx>` (gauge internals anchored on
+  `.gauges :global(...)`); re-anchor `AgentApp` child selectors under `.agent :global(...)` and the `Drawer` under
+  `.rental :global(...)` — same idiom already in the file (`.demo-root :global(.eyebrow)`).
+
+  **Evidence (NEED-001 satisfied).** `npx tsc --noEmit` clean on both branches · `npm test` 340 passed (49 files) ·
+  `npm run build` succeeds on both · CI Typecheck ✓ / Test ✓ on #111. Verified on a **local production build**
+  (`npm run build && npm start`) with Playwright at **390×844** and **1440×900**: all three tabs (Broker/Agent/Rental)
+  + the rental property **drawer**; broker before/after; and the narrative's interactive "Open Whitaker's file" flow
+  (Executive Brief line updates, One-Thing → green Handled + Undo, roster "2 → 1 need you now", Whitaker row red→green
+  "Opened" auto-expanded). Roster cap-bars collapse correctly on mobile. Previews: #111 →
+  `restaurant-os-git-claude-fix-demo-render-p0-ebh2gr-outfrontdata.vercel.app`, #112 →
+  `restaurant-os-git-claude-demo-broker-day-in-8563a3-outfrontdata.vercel.app` (both Vercel **Ready**).
+
+  **Remaining gaps / caveats.** (1) **Sole open item = Sean's visual approval** of the two previews before any merge
+  (BLOCKER-001 / NEXT-003); no engineering blocker remains. (2) Vercel previews are **not reachable from the build
+  sandbox** (egress-blocked, HTTP 000) — verification was done on a local prod build; the "before" screenshots were
+  captured in dev (the bug is build-independent, proven identical in dev+prod). (3) **Merge order matters** — merge #111
+  first, then retarget #112 to `main` (NEXT-004). (4) #112 intentionally **excludes** the parked branch's two docs-only
+  commits (handoff update + Command Center restoration); this report brings the Command Center forward instead. (5) The
+  Codex advisory reviews on both PRs errored on an OpenAI billing quota — non-blocking. (6) Unrelated/out-of-scope: the
+  A6 Stone exception triage and any live-data wiring are untouched (demo stays generated-data-only, DECISION-003).
+
+- **2026-07-13 [Claude]** Restored the Project Raven coordination discipline in this Command Center. Added the
+  **Product Decision Log** (DECISION-001…006) and **Current Execution Ledger** (OBJECTIVE-001…004, NEED-001,
+  SUCCESS-001…003, FAILURE-001…002, BLOCKER-001, NEXT-001…002) at the top, plus dated 2026-07-13 Raven lane status for
+  Shared State / Claude / Codex (Codex "unknown, not invented"), Blockers, and Next Actions. Codified the permanent rule:
+  after every meaningful task both lanes update their own section **and** append a dated Progress Log entry — a PR
+  description or chat reply does not substitute. Context: Sean's mobile/desktop screenshots exposed a **P0 render
+  failure** on the public `/demo/real-estate-cockpit` (oversized SVGs escaping containers; MLS ticker overflowing the
+  page), invalidating the earlier source-only "ready" read (FAILURE-001). Broker day-in-life narrative committed UNTESTED
+  and parked on `claude/demo-broker-day-in-life` (`b646e61`); P0 repair (OBJECTIVE-003) is next and takes a separate
+  branch off main. No code changed in this entry — doc only. Earlier dated sections preserved unchanged.
 - **2026-07-04 [Codex]** On PR #92 / `feat/source-profile-scaffolds`, completed source onboarding cleanup for the
   Codex-owned July-3 QA findings: Agent Cockpit coaching/source copy is CRM-neutral, `AppFiles` displays with correct
   casing while preserving the persisted `appFiles transaction export` provider key, Follow Up Boss counts as a CRM

@@ -13,6 +13,100 @@ import { useEffect, useRef, useState } from "react";
 import AgentApp from "./AgentApp";
 import RentalCockpit from "./RentalCockpit";
 
+// ── Morning briefing audio (go-live preview) ─────────────────────────────────
+// Speaks the sign-in briefing aloud so you can hear what a broker/agent gets on
+// login. Uses the browser's built-in speech synthesis — no backend, no network,
+// so it works on-device today. Pass an optional `audioSrc` to play a pre-recorded
+// premium voice clip instead; that's the only change needed to upgrade the voice
+// at go-live. Voice/AI is a design-partner roadmap item — nothing records or sends.
+const BROKER_BRIEFING =
+  "Good morning, Luke. Here's Cascade Realty at a glance. One thing needs you before anything else — a compliance exposure: Whitaker Cole has a missing-disclosure file past deadline. Company-dollar retention is at twenty-eight point four percent against your thirty percent target, with about nine thousand dollars at risk as three agents near their cap. The good news — cash oxygen is healthy at forty-seven days, lead return is blending to four point two times, and the market is accelerating in your favor. Clear the compliance file first, then we'll work the roster.";
+const AGENT_BRIEFING =
+  "Good morning, Priya. Here's your day. First move: two-fourteen Highland Park funds at two p.m., but two compliance documents are still missing — clear those first. A referral, Sam Ortega, has been unanswered forty-one minutes and is cooling past the thirty-minute line — reach out now. And three files closing this week are on track, with the market moving in your favor. Let's make it a great day.";
+
+function BriefingPlayer({ script, audioSrc }: { script: string; audioSrc?: string }) {
+  const [supported, setSupported] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    setSupported((typeof window !== "undefined" && "speechSynthesis" in window) || !!audioSrc);
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      audioRef.current?.pause();
+    };
+  }, [audioSrc]);
+  const stop = () => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setPlaying(false);
+  };
+  const start = () => {
+    // Prefer a pre-recorded premium clip when provided; otherwise the on-device voice.
+    if (audioSrc) {
+      const a = audioRef.current ?? new Audio(audioSrc);
+      audioRef.current = a;
+      a.onended = () => setPlaying(false);
+      a.currentTime = 0;
+      a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      return;
+    }
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(script);
+    u.rate = 1;
+    u.pitch = 1;
+    u.onend = () => setPlaying(false);
+    u.onerror = () => setPlaying(false);
+    setPlaying(true);
+    synth.speak(u);
+  };
+  if (!supported) return null;
+  return (
+    <button
+      type="button"
+      onClick={playing ? stop : start}
+      aria-label={playing ? "Stop the morning briefing" : "Play your morning briefing"}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 7,
+        marginTop: 10,
+        padding: "7px 13px",
+        borderRadius: 999,
+        border: "1px solid var(--copper-dim)",
+        background: "var(--copper-wash)",
+        color: "var(--copper-soft)",
+        font: "inherit",
+        fontSize: 12.5,
+        fontWeight: 600,
+        cursor: "pointer",
+      }}
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        {playing ? (
+          <>
+            <rect x="6" y="5" width="4" height="14" />
+            <rect x="14" y="5" width="4" height="14" />
+          </>
+        ) : (
+          <>
+            <path d="M11 5 6 9H2v6h4l5 4z" />
+            <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
+          </>
+        )}
+      </svg>
+      {playing ? "Stop briefing" : "Play your morning briefing"}
+      {!audioSrc && (
+        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", opacity: 0.7 }}>demo voice</span>
+      )}
+    </button>
+  );
+}
+
 type Tone = "green" | "yellow" | "red" | "copper";
 const TONE: Record<Tone, string> = {
   green: "var(--green)",
@@ -1073,6 +1167,7 @@ function BrokerCockpit() {
           </span>
           <h1>Welcome, Luke</h1>
           <div className="sub">Cascade Realty Group · Boise, ID · 12 agents</div>
+          <BriefingPlayer script={BROKER_BRIEFING} />
         </div>
         <span className="badge partial">
           <span className="tnum">3/4</span> sources
@@ -3102,6 +3197,7 @@ export default function RealEstateDemo() {
                 </span>
                 <h1>Good morning, Priya</h1>
                 <div className="sub">Wednesday, June 11 · Boise, ID · 3 active files</div>
+                <BriefingPlayer script={AGENT_BRIEFING} />
               </div>
               <span className="badge partial">
                 <span className="tnum">2</span> need you now

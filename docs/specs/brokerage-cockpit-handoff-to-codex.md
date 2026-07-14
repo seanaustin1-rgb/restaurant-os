@@ -338,6 +338,26 @@ weighs in per Sean.
      **"Demo only · Not actually sent"** note and simulated-send toasts — no surface implies real delivery.
   Next: Codex re-reviews the delta (NEXT-009/NEXT-011); Sean visually approves the corrected preview before merge.
 
+### 2026-07-14 — PR #115 merged to main (production)
+
+- **SUCCESS-018 — PR #115 approved, reconciled, and merged to `main` (production).** Date 2026-07-14 · Owner [Claude] ·
+  Status **Merged; live phone/desktop visual check pending operator** · Evidence:
+  - **Sean visually approved** the corrected preview (DECISION-004 / NEXT-010 satisfied); Codex CI review **green** on the
+    final head.
+  - **`mergeable: false` resolved** by merging `main` (the #114 revert) into the branch and keeping the approved demo:
+    the merged tree is **byte-identical** to the approved head `c15e58a` (verified `git diff` empty). The `AgentApp.tsx`
+    auto-merge had silently reverted the styled-jsx `:global` child-scoping (the P0 pattern) — caught and force-restored
+    to the approved version, so no P0 regression shipped. Merge commit `503ae96`.
+  - **Required checks green on the final head `503ae96`:** Typecheck ✅ · Test ✅ (340 passed) · Build ✅ · Codex Review ✅
+    · Vercel deployment ✅. Local gates on the merged tree also green.
+  - **Draft → ready**, then **squash-merged** to `main` as **`17109d5`** (2026-07-14 00:38). `main` auto-deploys to
+    production via Vercel.
+  - **⚠️ Live production URL check is the operator's step.** This build environment's egress policy **blocks
+    `www.outfrontdata.com` (proxy 403)**, so the agent cannot load or screenshot the live site. The deployed tree is the
+    same one Sean approved and CI built; agent-captured screenshots of that exact tree are on file. **Sean/operator: open
+    `https://www.outfrontdata.com/demo/real-estate-cockpit` on phone (390-wide) and desktop, run the Rental Maintenance
+    Center walkthrough, and confirm — then log the live confirmation here.**
+
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 
 **Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`

@@ -297,6 +297,32 @@ weighs in per Sean.
   (Codex review) and the DECISION-004 merge gate.
 
 
+### 2026-07-14 — Codex review: bilingual Maintenance Center (commit `8925d70`)
+
+- **BLOCKER-002 — Codex review of bilingual Maintenance Center found four demo-truth inconsistencies.** Date 2026-07-14 ·
+  Owner [Codex] · Status **Blocked pending contained correction** · Evidence: source review of commit `8925d70` plus
+  Vercel success on PR #115. The generated bilingual sequence, approval gates, original-language preservation, privacy
+  gate, completion evidence, reset, and explicit maintenance-report simulated send are correctly contained in
+  `RentalCockpit.tsx`; no backend/schema/auth/external writes were introduced. Before merge, correct:
+  1. **Property health truth:** completing WO-4021 currently turns Brundage roster Red → green "Resolved", but Brundage
+     still has a **3.2★ review below the demo's own 3.5 red threshold** and a Standard hot-tub ticket in progress. Resolve
+     the maintenance work order and clear the Critical count, but keep the property exception honest (red for the review,
+     with maintenance shown resolved) unless the remaining exception is explicitly resolved too.
+  2. **Property-file consistency:** after WO-4021 completes, the roster changes but opening Brundage's property drawer
+     still renders the original red/open work-order data. The drawer and Maintenance Center must reflect the same state.
+  3. **Owner-report gate:** the portfolio brief says the owner report is ready immediately after translation approval,
+     before the manager chooses "Include approved summary in owner report." Show "awaiting inclusion/approval" until
+     `ownerIncluded`; only then call it Ready.
+  4. **Simulated-send truth:** the older Rental owner/guest actions still say "Send report" / "Send text", then "Sent",
+     with toasts "Owner report sent" / "Message sent to the guest." Align them with the new rule: **Demo only · Not
+     actually sent** (or "Simulate send") so no surface implies a real delivery.
+  PR #115 remains draft and GitHub currently reports `mergeable: false`; do not merge until GitHub reports clean,
+  required checks are green, Sean visually approves the corrected preview, and Codex re-reviews the final head.
+- **NEXT-011 — Contained correction and Codex re-review.** Date 2026-07-14 · Owner [Claude→Codex] · Status
+  **Proposed** · Claude applies only the four corrections above in `RentalCockpit.tsx`, re-runs typecheck/tests/build and
+  both viewport walkthroughs, pushes to PR #115, and records evidence. Codex then reviews the delta, resolves NEXT-009,
+  and gives Sean a merge/no-merge recommendation. No backend/schema/integration expansion.
+
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 
 **Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`

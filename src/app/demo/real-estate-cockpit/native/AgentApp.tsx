@@ -44,7 +44,16 @@ const QICON: Record<QType, string> = {
   Inspection: "M11 3a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM21 21l-4.3-4.3",
   Messages: "M4 4h16v12H5.2L4 17.5z",
 };
-type Task = { s: "done" | "miss" | "open"; t: string; f?: string };
+// A queue task can carry ways to *act* on it — a ready-to-send e-signature
+// email, a call, a text, or a simulated upload — plus, for the Messages card, the
+// full message body and a drafted reply. Generated demo data; "send" is a toast.
+type QAction =
+  | { kind: "email"; label: string; subject: string; body: string }
+  | { kind: "call"; label: string; phone: string }
+  | { kind: "text"; label: string; body: string }
+  | { kind: "upload"; label: string; done: string };
+type QMessage = { from: string; when: string; body: string; reply: string };
+type Task = { s: "done" | "miss" | "open"; t: string; f?: string; actions?: QAction[]; msg?: QMessage };
 interface QueueCard {
   type: QType;
   flag: Flag;
@@ -64,8 +73,36 @@ const QUEUE: QueueCard[] = [
     time: "2:00 PM",
     warn: "2 compliance items missing within 48h of close",
     tasks: [
-      { s: "miss", t: "Seller disclosure — signature", f: "SPDS_214Highland.pdf · unsigned" },
-      { s: "miss", t: "Final walkthrough form", f: "walkthrough_214.pdf · not uploaded" },
+      {
+        s: "miss",
+        t: "Seller disclosure — signature",
+        f: "SPDS_214Highland.pdf · unsigned",
+        actions: [
+          {
+            kind: "email",
+            label: "Email for e-signature",
+            subject: "Signature needed today — 214 Highland Park funds at 2 PM",
+            body:
+              "Hi Whitakers,\n\nWe're clear to close 214 Highland Park this afternoon — the last step is your e-signature on the seller disclosure (SPDS). I've just sent it to your email; signing within the hour keeps us on track to fund at 2 PM.\n\nI'll confirm the moment it lands. Thank you!\n\n— Priya, Cascade Realty",
+          },
+          { kind: "call", label: "Call the seller", phone: "(208) 555-0161" },
+        ],
+      },
+      {
+        s: "miss",
+        t: "Final walkthrough form",
+        f: "walkthrough_214.pdf · not uploaded",
+        actions: [
+          {
+            kind: "email",
+            label: "Email for e-signature",
+            subject: "One more form — final walkthrough for 214 Highland Park",
+            body:
+              "Hi Whitakers,\n\nAlmost there on 214 Highland Park. The final walkthrough form just needs your e-signature — I've sent it alongside the disclosure. Sign both and we stay on schedule to fund at 2 PM.\n\nThank you!\n\n— Priya, Cascade Realty",
+          },
+          { kind: "upload", label: "Mark uploaded", done: "walkthrough_214.pdf marked uploaded to the closing portal." },
+        ],
+      },
       { s: "done", t: "Title commitment cleared" },
       { s: "done", t: "Wire instructions verified" },
     ],
@@ -79,7 +116,19 @@ const QUEUE: QueueCard[] = [
     tasks: [
       { s: "done", t: "Inspection scheduled" },
       { s: "done", t: "Lockbox code sent to inspector" },
-      { s: "open", t: "Repair-request template ready to send" },
+      {
+        s: "open",
+        t: "Repair-request template ready to send",
+        actions: [
+          {
+            kind: "email",
+            label: "Send to buyer's agent",
+            subject: "1102 Alderwood — repair requests",
+            body:
+              "Hi,\n\nFollowing today's buyer inspection at 1102 Alderwood, here are our repair requests:\n\n1. Service the HVAC and replace the failed capacitor\n2. Repair the roof flashing over the garage\n3. GFCI outlets in the kitchen + baths\n\nHappy to discuss credits vs. repairs — let me know what works for your seller.\n\n— Priya, Cascade Realty",
+          },
+        ],
+      },
     ],
   },
   {
@@ -92,19 +141,62 @@ const QUEUE: QueueCard[] = [
     tasks: [
       { s: "done", t: "Appraisal received" },
       { s: "done", t: "Loan clear-to-close" },
-      { s: "open", t: "HOA estoppel requested" },
+      {
+        s: "open",
+        t: "HOA estoppel requested",
+        actions: [
+          {
+            kind: "email",
+            label: "Email the HOA",
+            subject: "Estoppel request — 88 Cedar Bluff",
+            body:
+              "Hi,\n\nWe have a closing scheduled for 88 Cedar Bluff on Jun 13 and need the HOA estoppel certificate. Could you send the current statement plus any transfer fees at your earliest convenience?\n\nThank you!\n\n— Priya, Cascade Realty",
+          },
+          { kind: "call", label: "Call the HOA", phone: "(208) 555-0199" },
+        ],
+      },
     ],
   },
   {
     type: "Messages",
     flag: "g",
     title: "3 unread messages",
-    meta: "1 lead gone quiet · 2 client updates",
+    meta: "1 lead gone quiet · 2 client updates · generated",
     time: "oldest 4h",
     tasks: [
-      { s: "open", t: "Jordan Blake — “are we still on for Saturday?”" },
-      { s: "open", t: "Osei family — inspection questions" },
-      { s: "open", t: "Pioneer Title — confirm closing time" },
+      {
+        s: "open",
+        t: "Jordan Blake — “are we still on for Saturday?”",
+        msg: {
+          from: "Jordan Blake · buyer lead",
+          when: "4h ago",
+          body: "Hey Priya — are we still on for Saturday to see the foothills homes? Also, is the 88 Cedar Bluff one still available?",
+          reply:
+            "Hi Jordan — yes, Saturday's on! Let's start at 10 AM. 88 Cedar Bluff is still available; I'll add it to our route and send the full list tonight. — Priya",
+        },
+      },
+      {
+        s: "open",
+        t: "Osei family — inspection questions",
+        msg: {
+          from: "Osei family · under contract",
+          when: "3h ago",
+          body: "Hi Priya, a couple of inspection questions: is the roof issue something we should push on, and how long do we have to respond?",
+          reply:
+            "Great questions — the roof is worth a repair request; it's not a dealbreaker. You have 5 days to respond, so we have time. I'll send the repair-request draft this afternoon. — Priya",
+        },
+      },
+      {
+        s: "open",
+        t: "Pioneer Title — confirm closing time",
+        msg: {
+          from: "Pioneer Title · closing",
+          when: "1h ago",
+          body: "Confirming the closing time for 214 Highland Park — still targeting 2:00 PM today? We need the signed disclosure + walkthrough before we can fund.",
+          reply:
+            "Yes, 2:00 PM today. The seller e-signatures are out now; I'll have the disclosure and walkthrough to your portal within the hour. — Priya",
+        },
+      },
     ],
   },
 ];
@@ -312,7 +404,176 @@ const DIALS = [
 ];
 
 // ── components ───────────────────────────────────────────────────────────────
-function QueueCardView({ c }: { c: QueueCard }) {
+function TaskBox({ done, miss }: { done: boolean; miss: boolean }) {
+  if (done)
+    return (
+      <span className="tbox done">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </span>
+    );
+  if (miss)
+    return (
+      <span className="tbox miss">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg>
+      </span>
+    );
+  return <span className="tbox" />;
+}
+
+// A single queue task. If it carries actions (e-signature email, call, text,
+// upload) or a message, the row expands to let you act on it right here —
+// ready-to-send drafts, a tap-to-dial number, or read + reply for messages.
+// Generated demo data; every send is a toast, nothing leaves the browser.
+function QueueTask({ t, say }: { t: Task; say: (m: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [compose, setCompose] = useState<Extract<QAction, { kind: "email" | "text" }> | null>(null);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [phone, setPhone] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+  const [reply, setReply] = useState(t.msg?.reply ?? "");
+  const [replySent, setReplySent] = useState(false);
+
+  const interactive = !!(t.actions?.length || t.msg);
+  const done = t.s === "done" || uploaded;
+
+  const pick = (a: QAction) => {
+    if (a.kind === "call") { setCompose(null); setPhone((p) => (p ? null : a.phone)); return; }
+    if (a.kind === "upload") { if (!uploaded) { setUploaded(true); say(a.done); } return; }
+    setPhone(null);
+    if (compose && compose.label === a.label) { setCompose(null); return; }
+    setCompose(a);
+    setSent(false);
+    setSubject(a.kind === "email" ? a.subject : "");
+    setBody(a.body);
+  };
+  const send = () => { setSent(true); say(`${compose?.kind === "email" ? "Email" : "Text"} ready — simulated send (demo only).`); };
+  const sendReply = () => { setReplySent(true); say("Reply — simulated send (demo only)."); };
+
+  if (!interactive) {
+    return (
+      <div className={`task ${done ? "done" : ""}`}>
+        <TaskBox done={done} miss={t.s === "miss"} />
+        <span className="tt">
+          {t.t}
+          {t.f && <span className="file">{t.f}</span>}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`task act ${done ? "done" : ""}`}>
+      <div className="task-row">
+        <TaskBox done={done} miss={t.s === "miss" && !uploaded} />
+        <button type="button" className="tt tt-btn" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <span className="tt-main">
+            {t.t}
+            {t.f && <span className="file">{t.f}</span>}
+          </span>
+          <span className="tt-cue">
+            {t.msg ? (open ? "Hide" : "Read") : open ? "Hide" : "Act"}
+            <svg style={{ transform: open ? "rotate(90deg)" : undefined }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </span>
+        </button>
+      </div>
+
+      {open && (
+        <div className="task-panel">
+          {t.msg && (
+            <>
+              <div className="qmsg">
+                <div className="qmsg-hd">
+                  <span className="qmsg-from">{t.msg.from}</span>
+                  <span className="qmsg-when">{t.msg.when}</span>
+                </div>
+                <div className="qmsg-body">{t.msg.body}</div>
+              </div>
+              <div className="qreply">
+                <div className="qreply-hd">
+                  Reply <span className="cmp-tag">drafted · edit before sending</span>
+                </div>
+                <textarea className="cmp-body" value={reply} onChange={(e) => setReply(e.target.value)} rows={3} disabled={replySent} />
+                <div className="cmp-act">
+                  <button type="button" className="btn primary" disabled={replySent} onClick={sendReply}>
+                    {replySent ? "✓ Simulated" : "Send reply"}
+                  </button>
+                  {replySent && <span className="qsent">Demo only · not sent</span>}
+                </div>
+              </div>
+            </>
+          )}
+
+          {t.actions?.length ? (
+            <div className="lact qt-lact">
+              {t.actions.map((a) => {
+                const active =
+                  (a.kind === "call" && phone !== null) ||
+                  ((a.kind === "email" || a.kind === "text") && compose?.label === a.label);
+                return (
+                  <button type="button" key={a.label} className={`btn ${active ? "primary" : "ghost"}`} onClick={() => pick(a)}>
+                    <span className="gp-bi">
+                      {a.kind === "upload" ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                        </svg>
+                      ) : (
+                        <GpIcon kind={a.kind} />
+                      )}
+                    </span>
+                    {a.label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {phone && (
+            <div className="lcall">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+              </svg>
+              <span className="lcall-n">{phone}</span>
+              <span className="lcall-h">tap to dial · generated demo contact</span>
+            </div>
+          )}
+
+          {compose && (
+            <div className="compose">
+              <div className="cmp-hd">
+                <GpIcon kind={compose.kind} />
+                {compose.kind === "email" ? "Email" : "Text"}
+                <span className="cmp-tag">drafted · edit before sending</span>
+              </div>
+              {compose.kind === "email" && (
+                <input className="cmp-subj" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" disabled={sent} />
+              )}
+              <textarea className={`cmp-body ${compose.kind}`} value={body} onChange={(e) => setBody(e.target.value)} rows={compose.kind === "email" ? 8 : 3} disabled={sent} />
+              <div className="cmp-act">
+                <button type="button" className="btn primary" disabled={sent} onClick={send}>
+                  {sent ? "✓ Simulated" : compose.kind === "email" ? "Send email" : "Send text"}
+                </button>
+                <button type="button" className="btn ghost" onClick={() => setCompose(null)}>
+                  {sent ? "Close" : "Cancel"}
+                </button>
+                {sent && <span className="qsent">Demo only · not sent</span>}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QueueCardView({ c, say }: { c: QueueCard; say: (m: string) => void }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`qcard ${c.flag}`}>
@@ -347,27 +608,7 @@ function QueueCardView({ c }: { c: QueueCard }) {
       {open && (
         <div className="qbody">
           {c.tasks.map((t, i) => (
-            <div className={`task ${t.s === "done" ? "done" : ""}`} key={i}>
-              {t.s === "done" ? (
-                <span className="tbox done">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                </span>
-              ) : t.s === "miss" ? (
-                <span className="tbox miss">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
-                </span>
-              ) : (
-                <span className="tbox" />
-              )}
-              <span className="tt">
-                {t.t}
-                {t.f && <span className="file">{t.f}</span>}
-              </span>
-            </div>
+            <QueueTask t={t} say={say} key={i} />
           ))}
         </div>
       )}
@@ -946,7 +1187,7 @@ export default function AgentApp() {
         </div>
         <div className="queue">
           {QUEUE.map((c) => (
-            <QueueCardView c={c} key={c.title} />
+            <QueueCardView c={c} say={say} key={c.title} />
           ))}
         </div>
       </div>
@@ -1561,6 +1802,99 @@ export default function AgentApp() {
           font-size: 11px;
           color: var(--red);
           margin-top: 2px;
+        }
+        /* interactive queue tasks — act / read + reply */
+        .agent :global(.task.act) {
+          display: block;
+        }
+        .agent :global(.task-row) {
+          display: flex;
+          gap: 9px;
+          align-items: flex-start;
+        }
+        .agent :global(.tt-btn) {
+          font: inherit;
+          text-align: left;
+          background: transparent;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 10px;
+          flex: 1;
+          min-width: 0;
+        }
+        .agent :global(.tt-main) {
+          min-width: 0;
+        }
+        .agent :global(.tt-cue) {
+          display: inline-flex;
+          align-items: center;
+          gap: 3px;
+          flex: none;
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--copper-soft);
+        }
+        .agent :global(.tt-cue svg) {
+          width: 13px;
+          height: 13px;
+          transition: transform 0.18s;
+        }
+        .agent :global(.task-panel) {
+          margin: 9px 0 4px 25px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .agent :global(.qt-lact) {
+          flex-wrap: wrap;
+        }
+        .agent :global(.qmsg) {
+          border: 1px solid var(--line);
+          border-radius: 9px;
+          background: var(--panel);
+          padding: 10px 11px;
+        }
+        .agent :global(.qmsg-hd) {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 5px;
+        }
+        .agent :global(.qmsg-from) {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .agent :global(.qmsg-when) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.qmsg-body) {
+          font-size: 12.5px;
+          color: var(--text-soft);
+          line-height: 1.5;
+        }
+        .agent :global(.qreply-hd) {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--muted);
+          margin-bottom: 6px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .agent :global(.qsent) {
+          align-self: center;
+          font-size: 10.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          color: var(--muted);
         }
         .mi {
           border: 1px solid var(--line);

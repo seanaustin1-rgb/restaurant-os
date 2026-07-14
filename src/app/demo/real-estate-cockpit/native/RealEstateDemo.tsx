@@ -1530,7 +1530,7 @@ function BrokerCockpit() {
                       </button>
                       {openCal === a.key && (
                         <div className="acal-body">
-                          <div className="acal-sync">Appointments sync to the client file in your CRM.</div>
+                          <div className="acal-sync">Tap any appointment to update it by voice · syncs to the client file in your CRM.</div>
                           {a.cal.map((c, i) => (
                             <button type="button" className="acal-row" key={i} onClick={() => setActiveAppt(c)}>
                               <span className="acal-when">{c.when}</span>
@@ -1539,9 +1539,12 @@ function BrokerCockpit() {
                                 {c.what}
                                 <small>{c.who}</small>
                               </span>
-                              <svg className="acal-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 6l6 6-6 6" />
-                              </svg>
+                              <span className="bvoice">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" />
+                                </svg>
+                                Voice
+                              </span>
                             </button>
                           ))}
                         </div>
@@ -1654,7 +1657,9 @@ function BrokerCockpit() {
             ))}
           </div>
           <div className="bcal-col">
-            <div className="bcal-h">Coming up</div>
+            <div className="bcal-h">
+              Coming up <span className="bcal-hint">tap to update by voice</span>
+            </div>
             {([
               { when: "Wed 3:00 PM", kind: "call", what: "Agent 1:1s", who: "Whitaker & Chloe" },
               { when: "Thu 10:00 AM", kind: "call", what: "Brokerage P&L review", who: "leadership" },
@@ -1667,9 +1672,12 @@ function BrokerCockpit() {
                   {c.what}
                   {c.who ? ` — ${c.who}` : ""}
                 </span>
-                <svg className="bappt-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
+                <span className="bvoice">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3" />
+                  </svg>
+                  Voice
+                </span>
               </button>
             ))}
           </div>
@@ -2316,12 +2324,36 @@ function BrokerCockpit() {
           min-width: 0;
           color: var(--text-soft);
         }
-        .bappt .bappt-go {
-          width: 14px;
-          height: 14px;
+        .bcal-hint {
+          font-size: 10px;
+          font-weight: 500;
+          text-transform: none;
+          letter-spacing: 0;
+          color: var(--copper-soft);
+          margin-left: 6px;
+        }
+        /* voice affordance on appointment rows — makes the "update by voice"
+           assistant discoverable instead of hidden behind a bare chevron */
+        .bvoice {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
           flex: none;
-          color: var(--muted);
           align-self: center;
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: var(--copper-soft);
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          border-radius: 999px;
+          padding: 2px 8px;
+          white-space: nowrap;
+        }
+        .bvoice :global(svg) {
+          width: 11px;
+          height: 11px;
         }
         /* ── company aura: reputation ──────────────────────────── */
         .aura {

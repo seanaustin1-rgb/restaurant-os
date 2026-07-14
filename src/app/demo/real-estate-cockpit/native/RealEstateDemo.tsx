@@ -26,84 +26,144 @@ const AGENT_BRIEFING =
 
 function BriefingPlayer({ script, audioSrc }: { script: string; audioSrc?: string }) {
   const [supported, setSupported] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [status, setStatus] = useState<"idle" | "playing" | "nosound">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    setSupported((typeof window !== "undefined" && "speechSynthesis" in window) || !!audioSrc);
+    const hasTTS = typeof window !== "undefined" && "speechSynthesis" in window;
+    setSupported(hasTTS || !!audioSrc);
+    // Prime the voice list — some browsers populate it asynchronously.
+    if (hasTTS) {
+      try {
+        window.speechSynthesis.getVoices();
+      } catch {
+        /* ignore */
+      }
+    }
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
       audioRef.current?.pause();
+      if (startTimer.current) clearTimeout(startTimer.current);
     };
   }, [audioSrc]);
+
   const stop = () => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    setPlaying(false);
+    if (startTimer.current) {
+      clearTimeout(startTimer.current);
+      startTimer.current = null;
+    }
+    setStatus("idle");
   };
+
+  const pickVoice = (): SpeechSynthesisVoice | null => {
+    const vs = window.speechSynthesis.getVoices();
+    if (!vs.length) return null;
+    return vs.find((v) => /^en[-_]us$/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || vs[0];
+  };
+
   const start = () => {
-    // Prefer a pre-recorded premium clip when provided; otherwise the on-device voice.
+    setStatus("playing"); // optimistic; onstart confirms, the timeout corrects if it stays silent
+    // Pre-recorded premium clip path — drop in `audioSrc` at go-live and this wins.
     if (audioSrc) {
       const a = audioRef.current ?? new Audio(audioSrc);
       audioRef.current = a;
-      a.onended = () => setPlaying(false);
+      a.onplaying = () => setStatus("playing");
+      a.onended = () => setStatus("idle");
+      a.onerror = () => setStatus("nosound");
       a.currentTime = 0;
-      a.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+      a.play().catch(() => setStatus("nosound"));
       return;
     }
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setStatus("nosound");
+      return;
+    }
     const synth = window.speechSynthesis;
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(script);
-    u.rate = 1;
-    u.pitch = 1;
-    u.onend = () => setPlaying(false);
-    u.onerror = () => setPlaying(false);
-    setPlaying(true);
-    synth.speak(u);
+    if (synth.speaking) synth.cancel();
+    const voice = pickVoice();
+    // Split into sentences so no single utterance trips Chrome's ~15-second cutoff.
+    const parts = (script.match(/[^.!?]+[.!?]*/g) ?? [script]).map((p) => p.trim()).filter(Boolean);
+    let started = false;
+    parts.forEach((p, i) => {
+      const u = new SpeechSynthesisUtterance(p);
+      if (voice) u.voice = voice;
+      u.lang = voice?.lang || "en-US";
+      u.rate = 1;
+      u.pitch = 1;
+      u.onstart = () => {
+        started = true;
+        setStatus("playing");
+        if (startTimer.current) {
+          clearTimeout(startTimer.current);
+          startTimer.current = null;
+        }
+      };
+      if (i === parts.length - 1) u.onend = () => setStatus("idle");
+      u.onerror = () => {
+        if (!started) setStatus("nosound");
+      };
+      synth.speak(u);
+    });
+    // If nothing has begun ~1.6s after the tap, audio is almost certainly muted / no voice.
+    if (startTimer.current) clearTimeout(startTimer.current);
+    startTimer.current = setTimeout(() => {
+      if (!started) setStatus("nosound");
+    }, 1600);
   };
+
   if (!supported) return null;
+  const playing = status === "playing";
   return (
-    <button
-      type="button"
-      onClick={playing ? stop : start}
-      aria-label={playing ? "Stop the morning briefing" : "Play your morning briefing"}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 7,
-        marginTop: 10,
-        padding: "7px 13px",
-        borderRadius: 999,
-        border: "1px solid var(--copper-dim)",
-        background: "var(--copper-wash)",
-        color: "var(--copper-soft)",
-        font: "inherit",
-        fontSize: 12.5,
-        fontWeight: 600,
-        cursor: "pointer",
-      }}
-    >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        {playing ? (
-          <>
-            <rect x="6" y="5" width="4" height="14" />
-            <rect x="14" y="5" width="4" height="14" />
-          </>
-        ) : (
-          <>
-            <path d="M11 5 6 9H2v6h4l5 4z" />
-            <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
-          </>
+    <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+      <button
+        type="button"
+        onClick={playing ? stop : start}
+        aria-label={playing ? "Stop the morning briefing" : "Play your morning briefing"}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 7,
+          padding: "7px 13px",
+          borderRadius: 999,
+          border: "1px solid var(--copper-dim)",
+          background: "var(--copper-wash)",
+          color: "var(--copper-soft)",
+          font: "inherit",
+          fontSize: 12.5,
+          fontWeight: 600,
+          cursor: "pointer",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          {playing ? (
+            <>
+              <rect x="6" y="5" width="4" height="14" />
+              <rect x="14" y="5" width="4" height="14" />
+            </>
+          ) : (
+            <>
+              <path d="M11 5 6 9H2v6h4l5 4z" />
+              <path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14" />
+            </>
+          )}
+        </svg>
+        {playing ? "Stop briefing" : "Play your morning briefing"}
+        {!audioSrc && (
+          <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", opacity: 0.7 }}>demo voice</span>
         )}
-      </svg>
-      {playing ? "Stop briefing" : "Play your morning briefing"}
-      {!audioSrc && (
-        <span style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", opacity: 0.7 }}>demo voice</span>
+      </button>
+      {status === "nosound" && (
+        <span style={{ fontSize: 11, color: "var(--muted)", maxWidth: 340, lineHeight: 1.4 }}>
+          No sound? Turn the volume up — and on iPhone flip the silent switch off. This plays through your device&apos;s built-in voice; a premium voice can be dropped in for go-live.
+        </span>
       )}
-    </button>
+    </div>
   );
 }
 

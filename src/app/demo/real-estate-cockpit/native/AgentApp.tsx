@@ -605,13 +605,14 @@ function QueueCardView({ c, say }: { c: QueueCard; say: (m: string) => void }) {
           </span>
         </span>
       </button>
-      {open && (
-        <div className="qbody">
-          {c.tasks.map((t, i) => (
-            <QueueTask t={t} say={say} key={i} />
-          ))}
-        </div>
-      )}
+      {/* Keep the panel mounted (hidden, not unmounted) so each QueueTask's
+          uploaded/sent/replied state survives collapsing and reopening the card —
+          otherwise the demo can't actually work through the queue. */}
+      <div className="qbody" hidden={!open}>
+        {c.tasks.map((t, i) => (
+          <QueueTask t={t} say={say} key={i} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -1760,6 +1761,9 @@ export default function AgentApp() {
           flex-direction: column;
           gap: 8px;
           border-top: 1px solid var(--line-soft);
+        }
+        .agent :global(.qbody[hidden]) {
+          display: none;
         }
         .agent :global(.task) {
           display: flex;

@@ -1,8 +1,63 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (v2.1 — stable-ID architecture + Flight Builder requirement)
+**Last revision:** 2026-07-26 (v2.2 — data foundation refactor)
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
+
+## Active work lane — Codex foundation pass (2026-07-26)
+
+**Lane:** Engineering refactor only. Preserve the current five-spirit mobile
+prototype while making the data foundation maintainable for the 5 → ~164
+spirit build-out.
+
+**Implementation summary:**
+
+- Separated editable spirit data from renderer-facing `BOTTLES` output inside
+  `spirit-vault-prototype.html`.
+- Replaced the old direct V2 mutation with `SPIRIT_DATA`, `DOSSIER_DETAILS`,
+  `normalizeSpiritRecords()`, and `validateSpiritRecords()`.
+- Added normalized optional `commerce` fields for future Toast/external
+  commerce linkage; they are data-only and not rendered.
+- Added development-time validation for missing required fields, duplicate
+  IDs, invalid comparison `ref` values, malformed press entries, and invalid
+  flavor-axis values.
+- Preserved the existing drawer behavior, current dossier summary,
+  stable-ID navigation, five sample spirits, mobile-first layout, and visual
+  language.
+- Added `ADD-A-SPIRIT.md` so scaling the Vault is documented as data entry,
+  not renderer work.
+
+**Files changed:**
+
+- `docs/spirit-vault/spirit-vault-prototype.html`
+- `docs/spirit-vault/ADD-A-SPIRIT.md`
+- `docs/spirit-vault/HANDOFF.md`
+
+**Known limitations:**
+
+- `docs/spirit-vault/FUTURE-RAVEN-ADDON.md` was listed as required reading
+  but is not present on this branch; Raven remains explicitly out of scope.
+- The prototype is still single-file and static; no CMS/database, QR backend,
+  Toast live integration, accounts, community features, Flight Builder UI,
+  wine, or beer modules were added.
+- Existing content placeholders still apply: pour prices, press verification,
+  staged availability, Sean voice review, cosmetic session timer, and SVG
+  bottle silhouettes.
+
+**Tests completed:**
+
+- Headless Microsoft Edge via Chrome DevTools Protocol against the static
+  HTML file.
+- Widths tested: 320, 375, 390, 430, and 1200 px.
+- At every width: 0 px horizontal overflow with drawers closed and with the
+  first drawer open.
+- Confirmed drawers are collapsed on load and open with
+  `aria-expanded="true"`.
+- Confirmed five-spirit navigation state remains `01 / 05` with five dots.
+- Confirmed `gotoBottleId('chicken-cock-5-year')` navigates to Chicken Cock
+  5 Year and an invalid ID does not move the current dossier.
+
+**Implementation commit SHA:** `c89e39753119092c817e8a1bfa69edcd4d7ba026`
 
 ## What this is
 

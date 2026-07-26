@@ -46,9 +46,10 @@ audit documents without changing the prototype implementation.
 
 **Unresolved decisions (Sean):**
 
-1. **Fabricated press dates** — current award/score entries carry invented
-   dates marked `verified:true` so the prototype renders. Recommended: flip
-   to `verified:false` until sourced (`DATA-AUDIT.md` section 3.1, Options A/B).
+1. **Recognition sourcing** — fabricated prototype dates have been removed
+   from the current data and unsupported claims are now `verified:false`.
+   Source URLs are still needed before any award/score/press claim can be
+   published as verified.
 2. Single canonical record vs. keeping the two-map split. `SPIRIT-SCHEMA-SPEC.md`
    recommends single; `ADD-A-SPIRIT.md` currently documents the implemented split.
 3. Data packaging at 164 records: inline vs external JSON. Acceptance criterion
@@ -59,6 +60,100 @@ audit documents without changing the prototype implementation.
    and 86 state in the initial production pass.
 
 ---
+
+## Bourbon / American Whiskey Batch 1 — Codex lane (2026-07-26)
+
+**Status:** Implemented on `feat/spirit-vault-bourbon-batch-1`; commit SHA to
+be filled after commit.
+
+**Implementation summary:**
+
+- Added 15 Bourbon / American whiskey / rye records via `BOURBON_BATCH_1` and
+  `makeBatchSpirit({...})`, giving each new spirit one logical data entry.
+- Preserved the existing mobile visual language, drawers, stable-ID
+  navigation, and renderer shape by normalizing records into `BOTTLES`.
+- Added canonical support fields for brand, expression, subcategory, country,
+  region, distillery, numeric age data, record/publication/verification
+  states, source provenance, and temporary commerce values.
+- Moved Sean-confirmed prices into `commerce.pourPriceUsd` with explicit
+  temporary price provenance pending Toast; display prices are generated from
+  that venue commerce value for Batch 1.
+- Removed fabricated dates from the original five press entries and changed
+  unsupported recognition to `verified:false`.
+- Updated recognition rendering so only verified awards/press appear in the
+  guest-facing Recognition drawer.
+- Expanded validation for draft records, body/finish ranges,
+  record/publication/verification states, verified-claim source provenance,
+  temporary price format/provenance, and null optional handling.
+- Batch 1 remains inline for now; `CONTENT-WORKFLOW.md` records the migration
+  path to external structured data before larger batches.
+
+**Records added:**
+
+1. Sagamore Spirit Small Batch Rye — `$14.00`
+2. Sagamore Spirit Double Oak Rye — `$14.00`
+3. Sagamore Spirit Manhattan Finish Rye — `$11.00`
+4. Knob Creek Single Barrel 9 Year — `$16.50`
+5. Bulleit 10 Year Bourbon — `$10.00`
+6. Old Forester 1870 Original Batch — `$10.75`
+7. Old Forester 1897 Bottled in Bond — `$11.75`
+8. Old Forester 1910 Old Fine Whisky — `$13.00`
+9. Old Forester 1920 Prohibition Style — `$14.25`
+10. Old Forester Single Barrel Barrel Strength Rye — `$16.00`
+11. Old Forester Rye 100 Proof — `$7.00`
+12. WhistlePig Snout-to-Tail 10 Year Bourbon — `$22.00`
+13. Jeptha Creed Bottled-in-Bond Bourbon — `$10.75`
+14. Jeptha Creed Straight Four Grain Bourbon — `$10.75`
+15. Jeptha Creed 6 Year Wheated Bourbon — `$10.75`
+
+WhistlePig 15 Year Estate Oak Single Barrel Rye remains deferred to Batch 2.
+
+**Sourcing limitations / unverified claims:**
+
+- The original five dossiers retain draft award/score/press claims in data,
+  but all unsupported entries are `verified:false` and no longer display as
+  verified Recognition content.
+- Chicken Cock February dinner remains a first-party venue-event draft claim
+  until an internal event artifact/source is attached.
+- Bulleit 10 Year official source did not publish a mash bill in this pass.
+- WhistlePig Snout-to-Tail official source did not publish a mash bill in this
+  pass.
+- Old Forester Single Barrel Barrel Strength Rye uses Old Forester’s official
+  rye mash-bill source plus a North Carolina ABC listing for proof/product
+  identity; Echo’s exact bottle proof should be checked before publish.
+- Jeptha Creed Four Grain source provides grain list/proof but not full mash
+  percentages.
+- All new Batch 1 records are draft: Sean-owned `whyWeCarry`, curator cue,
+  Sean’s Notes, paths, pairings, and final flavor-axis approval remain pending.
+
+**Files changed:**
+
+- `docs/spirit-vault/spirit-vault-prototype.html`
+- `docs/spirit-vault/ADD-A-SPIRIT.md`
+- `docs/spirit-vault/CONTENT-WORKFLOW.md`
+- `docs/spirit-vault/HANDOFF.md`
+
+**Tests completed:**
+
+- Inline script syntax check.
+- Headless Microsoft Edge via Chrome DevTools Protocol using a temporary
+  local copy with the external Google Fonts link removed to avoid file-mode
+  stylesheet blocking.
+- Widths tested: 320, 375, 390, 430, and 1200 px.
+- At every width: 0 px horizontal overflow with drawers closed and with the
+  first drawer open.
+- Confirmed drawers are collapsed on load and open with
+  `aria-expanded="true"`.
+- Confirmed navigation state is `01 / 20` with 20 dots.
+- Confirmed stable-ID navigation works across all 20 records and invalid IDs
+  fail safely.
+
+**Recommended Batch 2 scope:**
+
+- WhistlePig 15 Year Estate Oak Single Barrel Rye.
+- Next 10–15 American whiskey/rye records from the master list, preferably
+  only after testing an external static data payload/loader so Batch 2 does
+  not continue growing the inline HTML indefinitely.
 
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
@@ -380,8 +475,8 @@ arrow-key navigation, session countdown.
 1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers until the
    Toast integration becomes the production source of truth.
 2. **Awards & press entries** are directionally right but unverified —
-   marked `verified:true` only so the prototype renders. Real verification
-   pass required before launch.
+   retained as draft data with `verified:false`. Real source URLs and dates
+   are required before any recognition claim renders as verified.
 3. **Availability statuses** are staged for demo variety; production values
    should come from Toast when the integration supports them.
 4. **Sean's Notes / seanShort / whyWeCarry** drafted in his voice; he reviews.

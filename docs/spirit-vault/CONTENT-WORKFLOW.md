@@ -81,6 +81,28 @@ admin/browse tooling, and carry their gaps as nulls — never placeholder prose.
 A record stuck >2 batches in `draft` gets triaged: fill it, or park it with a
 `parked:true` flag and a reason (discontinued, seasonal, awaiting producer info).
 
+## Batch 1 packaging correction (2026-07-26)
+
+Batch 1 remains inline in `spirit-vault-prototype.html` through
+`BOURBON_BATCH_1` and `makeBatchSpirit({...})`.
+
+Reason: this preserves the no-build, static prototype and avoids breaking
+file:// / simple Bluehost deployment semantics before there is a tested loader
+contract. The helper gives one logical authoring entry per spirit while the
+legacy renderer still consumes normalized `BOTTLES`.
+
+Tradeoff: inline data will not scale cleanly to all ~164 records. Move the
+next broad batch to an external structured data file only after a loader is
+tested against local file preview and hosted static deployment. Preferred
+migration path: generate the current helper-backed records into a JSON module
+or static `.js` data payload, load it before normalization, and keep
+`makeBatchSpirit`/validation as the import boundary.
+
+Process correction from Batch 1: Sean-confirmed menu prices may be recorded
+as temporary venue commerce values (`commerce.pourPriceUsd` +
+`priceProvenance`) but remain non-authoritative until Toast supplies the
+production commerce source of truth.
+
 ## Sean's per-batch inputs (kept small on purpose)
 
 For each spirit: approve/rewrite curatorNote + curatorCue + whyWeCarry (or

@@ -463,7 +463,7 @@ const FLAVOR_AXES = ['Sweet','Oak','Spice','Fruit','Smoke','Earth','Herbal'];
 
 const BOTTLES = [
 {
-  id:'penelope-bs', cat:'Bourbon', silo:'bourbon',
+  id:'penelope-barrel-strength', cat:'Bourbon', silo:'bourbon',
   name:'Penelope Barrel Strength',
   distillery:'Penelope Bourbon · Lawrenceburg, Indiana',
   style:'Four-Grain Straight Bourbon · Barrel Strength',
@@ -519,7 +519,7 @@ const BOTTLES = [
   notes:`This is the bottle I hand to bourbon drinkers who think they've tried everything under fifty dollars. Barrel proof without the burn-for-burn's-sake. We keep it on the flight list on purpose — taste it against the Booker's and tell me the price difference makes sense.`,
 },
 {
-  id:'chicken-cock-5', cat:'Bourbon', silo:'bourbon',
+  id:'chicken-cock-5-year', cat:'Bourbon', silo:'bourbon',
   name:'Chicken Cock 5 Year',
   distillery:'Grain & Barrel Spirits · Bardstown, Kentucky',
   style:'Kentucky Straight Bourbon · The Famous Old Brand',
@@ -575,7 +575,7 @@ const BOTTLES = [
   notes:`We built a whole evening around this label in February — six whiskeys, six courses — and this 5 Year was the pour that surprised the room. History gets a bottle on my shelf once. Liquid keeps it there. This one stayed. Low inventory right now, so if the bartender offers it, say yes.`,
 },
 {
-  id:'macallan-12-dc', cat:'Scotch', silo:'scotch',
+  id:'macallan-12-double-cask', cat:'Scotch', silo:'scotch',
   name:'Macallan 12 Double Cask',
   distillery:'The Macallan Estate · Craigellachie, Speyside',
   style:'Speyside Single Malt · Sherry-Seasoned Oak',
@@ -631,7 +631,7 @@ const BOTTLES = [
   notes:`The sherry seasoning here is a wine-cellar play, and as a winemaker that's exactly why I respect it — Macallan spends more on oak than anyone in the business because they know the barrel IS the recipe. If you're a bourbon drinker who's never crossed the Atlantic, this is the bridge. Start here, then let us walk you toward the Tomatin.`,
 },
 {
-  id:'don-fulano-fuerte', cat:'Agave', silo:'tequila',
+  id:'don-fulano-blanco-fuerte', cat:'Agave', silo:'tequila',
   name:'Don Fulano Blanco Fuerte',
   distillery:'La Tequileña · Tequila, Jalisco',
   style:'Tequila Blanco · 100 Proof · Additive-Free',
@@ -686,7 +686,7 @@ const BOTTLES = [
   notes:`This pours in the Reserve room only, and that's deliberate — I want a conversation happening when it's opened. If you think you know blanco tequila from the 80-proof shelf, this will reset your reference point. It's the winemaking rule all over again: great farming, minimal handling, nothing added. Ask for it neat, no lime, no salt.`,
 },
 {
-  id:'diplomatico-re', cat:'Rum', silo:'rum',
+  id:'diplomatico-reserva-exclusiva', cat:'Rum', silo:'rum',
   name:'Diplomático Reserva Exclusiva',
   distillery:'Destilerías Unidas (DUSA) · La Miel, Venezuela',
   style:'Venezuelan Dark Rum · Pot Still Blend',
@@ -750,7 +750,7 @@ const BOTTLES = [
 ═══════════════════════════════════════════════ */
 
 const V2 = {
-'penelope-bs': {
+'penelope-barrel-strength': {
   reviewedAt:'2026-07-26',
   topNotes:['Caramel depth','Baking spice','Toasted oak'],
   whyShort:'Three mash bills blended into one barrel-proof bourbon — architecture over heat.',
@@ -762,7 +762,7 @@ const V2 = {
   ],
   paths:{
     lighter:[
-      {name:'Chicken Cock 5 Year',d:'90 Proof · Age-Stated Kentucky',why:'Same honesty at a gentler 90 proof'},
+      {ref:'chicken-cock-5-year',name:'Chicken Cock 5 Year',d:'90 Proof · Age-Stated Kentucky',why:'Same honesty at a gentler 90 proof'},
       {name:'Old Grand-Dad 7 Year',d:'100 Proof · High-Rye',why:'Rye-forward, honest, half the price'},
     ],
     similar:[
@@ -775,7 +775,7 @@ const V2 = {
     ],
   },
 },
-'chicken-cock-5': {
+'chicken-cock-5-year': {
   reviewedAt:'2026-07-26',
   topNotes:['Vanilla','Orchard fruit','Soft oak'],
   whyShort:'A pre–Civil War Kentucky label that survived Prohibition in tin cans at the Cotton Club.',
@@ -794,11 +794,11 @@ const V2 = {
     ],
     adventurous:[
       {name:'Chicken Cock Ryeteous Rye',d:'90 Proof · Straight Rye',why:'The sibling — spice over sweet'},
-      {name:'Penelope Barrel Strength',d:'Four-Grain · Barrel Strength',why:'When you want the dial turned up'},
+      {ref:'penelope-barrel-strength',name:'Penelope Barrel Strength',d:'Four-Grain · Barrel Strength',why:'When you want the dial turned up'},
     ],
   },
 },
-'macallan-12-dc': {
+'macallan-12-double-cask': {
   reviewedAt:'2026-07-26',
   topNotes:['Dried fruit','Honeyed malt','Sherry spice'],
   whyShort:'The benchmark sherried Speyside — two oaks, some of the smallest stills in Scotland, no shortcuts.',
@@ -821,7 +821,7 @@ const V2 = {
     ],
   },
 },
-'don-fulano-fuerte': {
+'don-fulano-blanco-fuerte': {
   reviewedAt:'2026-07-26',
   topNotes:['Cooked agave','White pepper','Fresh herbs'],
   whyShort:'Estate-grown highland agave bottled at a full 100 proof — tequila before the export waterline.',
@@ -844,7 +844,7 @@ const V2 = {
     ],
   },
 },
-'diplomatico-re': {
+'diplomatico-reserva-exclusiva': {
   reviewedAt:'2026-07-26',
   topNotes:['Toffee','Vanilla bean','Baked banana'],
   whyShort:'The dessert-rum benchmark — pot-still weight and cane honeys aged up to twelve years.',
@@ -863,12 +863,51 @@ const V2 = {
     ],
     adventurous:[
       {name:"Papa's Pilar Dark Rye Barrel",d:'Rye Whiskey Cask Finish',why:'A whiskey drinker’s rum'},
-      {name:'Macallan 12 Double Cask',d:'Sherried Speyside Malt',why:'Cross categories entirely'},
+      {ref:'macallan-12-double-cask',name:'Macallan 12 Double Cask',d:'Sherried Speyside Malt',why:'Cross categories entirely'},
     ],
   },
 },
 };
 BOTTLES.forEach(b => Object.assign(b, V2[b.id]));
+
+/* ═══════════════════════════════════════════════
+   FLIGHT LAYER — FOUNDATIONAL ARCHITECTURE (not yet built)
+
+   The Spirit Vault database is the source of truth for the entire
+   spirits program: guest dossiers, the Flight Builder, flight history,
+   guest flight pages, printable placemats, staff training, and event
+   development. Spirit records are referenced — never copied — using
+   the stable `id` slug on each bottle (e.g. "penelope-barrel-strength").
+   Array position is NEVER a permanent identifier.
+
+   Conceptual schema (see HANDOFF.md for the full requirement):
+
+   SPIRITS (this file's BOTTLES — the master records)
+     ↓ referenced by
+   FLIGHTS {
+     id, name, publicTitle, internalName, description, theme,
+     status: 'draft'|'published'|'archived',
+     startDate, endDate, price, pourSize, channel,
+     createdBy, createdAt, updatedAt, publishedAt
+   }
+     ↓ contains
+   FLIGHT_ITEMS {
+     spiritId,            // stable spirit id — the only link to the dossier
+     flightId,
+     displayOrder,
+     pourSizeOverride,
+     flightTastingNote,   // "What to Notice"
+     flightPairingNote,
+     comparisonPrompt,    // "Transition to Next Pour"
+     inclusionRationale,  // "Why It Is Here"
+     priceAllocation,
+     availabilityRequirement
+   }
+
+   Flight-specific narrative lives on the FLIGHT_ITEM, never on the
+   spirit record. Guest flight pages reuse this file's visual-first,
+   drawer-based design and link back to permanent dossiers by spiritId.
+═══════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════
    BOTTLE SILHOUETTES (SVG)
@@ -996,9 +1035,14 @@ function drawer(id,label,inner,cls){
   </section>`;
 }
 
+/* Stable-ID lookups — recommendation links and all future flight
+   references resolve by spirit id, never by array position or name. */
+function spiritIndexById(id){ return BOTTLES.findIndex(x=>x.id===id); }
+function gotoBottleId(id){ const i = spiritIndexById(id); if(i>=0) gotoBottle(i); }
+
 function cmpRow(c){
-  const idx = BOTTLES.findIndex(x=>x.name===c.name);
-  const go = idx>=0 ? `onclick="gotoBottle(${idx})" role="button" tabindex="0"` : '';
+  const idx = c.ref ? spiritIndexById(c.ref) : -1;
+  const go = idx>=0 ? `onclick="gotoBottleId('${c.ref}')" role="button" tabindex="0"` : '';
   const tag = idx>=0 ? 'Open dossier →' : 'On the shelf · dossier at launch';
   return `<div class="cmp-row${idx>=0?' invault':''}" ${go}>
     <span class="cn">${c.name}</span>

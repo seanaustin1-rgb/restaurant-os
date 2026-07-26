@@ -1,52 +1,65 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (audit lane — preparation docs for the Codex refactor)
+**Last revision:** 2026-07-26 (merged foundation refactor + Toast/Raven command-center + audit docs)
 
-## LANE STATUS (2026-07-26)
+## Active work lane — merged status (2026-07-26)
 
-**Claude's active lane: product/data/implementation audit + refactor
-preparation. COMPLETE as of this commit.** The structural implementation lane
-(data/render separation, schema normalization, validation, 5→164 scalability)
-**remains reserved for Codex** — Claude produced specification and audit
-documents only and did not modify the prototype in this pass. Codex's
-in-progress `foundation-v1` working-tree changes (SPIRIT_DATA/DOSSIER_DETAILS
-split, commerce stub, validation layer, ADD-A-SPIRIT.md) were left uncommitted
-and untouched in its lane.
+**Codex foundation pass: COMPLETE.** The prototype now has the
+`SPIRIT_DATA` / `DOSSIER_DETAILS` data boundary, normalized `BOTTLES` output,
+optional commerce linkage fields, development-time validation, and
+`ADD-A-SPIRIT.md` data-entry workflow.
 
-**Work completed (this commit — documentation only):**
-- `DATA-AUDIT.md` — field-by-field inventory with ownership classification;
-  27-item technical debt register rated Blocker / Refactor / Defer /
-  Intentional; editorial review of the five dossiers.
-- `SPIRIT-SCHEMA-SPEC.md` — proposed canonical spirit record (5 ownership
-  classes: knowledge / commerce / venue / provenance / computed), controlled
-  vocabularies, consumer matrix, migration map from current fields.
-- `REFACTOR-ACCEPTANCE-CRITERIA.md` — pass/fail checklist for the Codex
-  refactor; marks what foundation-v1 already satisfies.
-- `CONTENT-WORKFLOW.md` — 5→164 production pipeline: roles, sourcing rules,
-  draft/reviewed/published states, batch-by-category via structured JSON
-  import (10–15 per batch, Bourbon first).
-- This HANDOFF update.
+**Claude audit lane: COMPLETE.** Claude produced supporting specification and
+audit documents without changing the prototype implementation.
+
+**Remote Toast/Raven direction: MERGED.** The Toast ownership protocol and
+`FUTURE-RAVEN-ADDON.md` future-direction document are preserved from
+`origin/docs/spirit-vault-handoff`.
+
+**Files changed across the merged lane:**
+
+- `docs/spirit-vault/spirit-vault-prototype.html`
+- `docs/spirit-vault/ADD-A-SPIRIT.md`
+- `docs/spirit-vault/DATA-AUDIT.md`
+- `docs/spirit-vault/SPIRIT-SCHEMA-SPEC.md`
+- `docs/spirit-vault/REFACTOR-ACCEPTANCE-CRITERIA.md`
+- `docs/spirit-vault/CONTENT-WORKFLOW.md`
+- `docs/spirit-vault/FUTURE-RAVEN-ADDON.md`
+- `docs/spirit-vault/HANDOFF.md`
+
+**Relevant commits:**
+
+- `5f0ffb2` — Toast ownership and shared command-center protocol.
+- `ec8462c` — Future Raven hospitality add-on direction.
+- `c89e39753119092c817e8a1bfa69edcd4d7ba026` — Codex data foundation refactor.
+- `867006aa0650fe0f8585b3733b7bc4a69cd83d09` — Codex foundation handoff update.
+- `b16f78b` — Claude audit lane docs and 5-to-164 workflow.
+
+**Tests completed for the Codex foundation pass:**
+
+- Headless Microsoft Edge via Chrome DevTools Protocol against the static HTML file.
+- Widths tested: 320, 375, 390, 430, and 1200 px.
+- At every width: 0 px horizontal overflow with drawers closed and with the first drawer open.
+- Confirmed drawers are collapsed on load and open with `aria-expanded="true"`.
+- Confirmed five-spirit navigation state remains `01 / 05` with five dots.
+- Confirmed `gotoBottleId('chicken-cock-5-year')` navigates to Chicken Cock 5 Year and an invalid ID does not move the current dossier.
 
 **Unresolved decisions (Sean):**
-1. **Fabricated press dates** — current award/score entries carry invented
-   dates marked verified:true so the prototype renders. Recommended: flip to
-   verified:false until sourced (DATA-AUDIT.md §3.1, Options A/B).
-2. Single canonical record vs. keeping the two-map split (schema spec
-   recommends single; ADD-A-SPIRIT.md currently documents the split).
-3. Data packaging at 164 records: inline vs external JSON (acceptance D4
-   requires Codex to measure and document).
-4. Batch order/size for content production (CONTENT-WORKFLOW.md recommends
-   Bourbon-first, 10–15 per batch) and when Sean's voice-review sittings fit
-   his schedule.
-5. `FUTURE-RAVEN-ADDON.md` is referenced as the future-direction doc but does
-   not exist in the local working tree — confirm it lives on a branch/GitHub
-   or needs creating. (Not created here; out of this lane's scope.)
 
-**Ready for the Codex refactor:** yes — spec, acceptance criteria, debt
-register, and content workflow are in place; blockers T1–T5 in DATA-AUDIT.md
-define the refactor's required scope.
+1. **Fabricated press dates** — current award/score entries carry invented
+   dates marked `verified:true` so the prototype renders. Recommended: flip
+   to `verified:false` until sourced (`DATA-AUDIT.md` section 3.1, Options A/B).
+2. Single canonical record vs. keeping the two-map split. `SPIRIT-SCHEMA-SPEC.md`
+   recommends single; `ADD-A-SPIRIT.md` currently documents the implemented split.
+3. Data packaging at 164 records: inline vs external JSON. Acceptance criterion
+   D4 requires measurement and documentation.
+4. Batch order/size for content production. `CONTENT-WORKFLOW.md` recommends
+   Bourbon-first, 10-15 per batch.
+5. Toast integration scope: pricing only first, or pricing plus availability
+   and 86 state in the initial production pass.
 
 ---
+
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
 
@@ -86,6 +99,88 @@ MASTER SPIRIT DATABASE
 Every downstream experience REFERENCES spirit records by stable ID — nothing
 duplicates dossier content. This is a foundational architectural decision,
 not an optional enhancement.
+
+## System Ownership — Toast + Spirit Vault (binding)
+
+The two systems have separate and explicit ownership boundaries.
+
+### Toast is the source of truth for commerce
+
+Toast owns operational commerce data, including:
+
+- Current menu price
+- Toast menu-item identity / GUID
+- Sale availability
+- 86 or inactive status when exposed by the integration
+- POS-controlled menu configuration
+
+Do not make manually entered Spirit Vault pricing the permanent source of
+truth. Each spirit record should carry the stable Toast identifier needed to
+join the knowledge record to the corresponding POS item. Price and
+availability should be read from Toast when the production integration is
+implemented.
+
+If Toast values are cached for performance or resilience, the cache must
+retain source provenance and a synchronization timestamp. Cached values are a
+fallback representation of Toast data, not an independent editable price
+record.
+
+### Spirit Vault is the source of truth for knowledge
+
+The Spirit Vault master record owns:
+
+- Flavor profile and sensory metadata
+- Production details
+- Distillery and brand history
+- Awards, recognition, and verified press
+- Pairings
+- Sean's notes and curator commentary
+- Comparison and recommendation metadata
+- Flight-building metadata
+- Review, update, and verification history
+
+### Application responsibility
+
+Guest and staff applications combine the two sources at runtime:
+
+```text
+TOAST COMMERCE DATA
+(price, availability, menu identity)
+            +
+SPIRIT VAULT KNOWLEDGE DATA
+(flavor, history, press, pairings, recommendations)
+            =
+GUEST + STAFF EXPERIENCES
+```
+
+Do not duplicate data across systems when a stable reference can be used.
+The same joined data should power dossiers, flight builders, placemats,
+training, Brag Book, events, and future AI-assisted recommendations.
+
+## Shared Command-Center Protocol — Claude + Codex
+
+This file is the Spirit Vault command center and must be monitored and updated
+by both Claude and Codex whenever either agent begins or completes meaningful
+Spirit Vault work.
+
+Required workflow:
+
+1. Read this handoff before changing Spirit Vault code, data, schema, or UX.
+2. Record durable product and architecture decisions here before implementing
+   work that depends on them.
+3. Preserve established product truth unless Sean explicitly changes it.
+4. Document the active work lane, files changed, current status, unresolved
+   questions, and next recommended action.
+5. Add the relevant commit SHA after each completed increment.
+6. Keep Claude and Codex ownership lanes explicit to avoid duplicate or
+   conflicting implementation.
+7. Do not create a competing master handoff. Supporting specifications may be
+   added, but this remains the project-level source of truth.
+8. Before merging, reconcile the implementation against this file and update
+   any stale status, placeholder, or scope statements.
+
+This is the same operating discipline used for Raven: code and product truth
+must move together.
 
 ### Data requirements (binding on all future work)
 
@@ -259,8 +354,9 @@ Added / Updated / Reviewed; the prototype carries `reviewedAt` only. The v1
 
 `renderDetail()` builds summary + `drawer()` sections. Helpers: `radarMini()`,
 `fmtDate()` (UTC-safe), `toggleDrawer()`, `cmpRow()`, `spiritIndexById()`,
-`gotoBottleId()`. V2 fields live in a `V2` map merged onto `BOTTLES` at load,
-so v1 data blocks stayed untouched. CSS additions under `/* ═══ V2 ═══ */`
+`gotoBottleId()`. Editable fields live in `SPIRIT_DATA` and
+`DOSSIER_DETAILS`; `normalizeSpiritRecords()` produces the renderer-facing
+`BOTTLES` array after validation. CSS additions under `/* ═══ V2 ═══ */`
 banners; production grid drops to one column ≤430px.
 
 ### Mobile testing
@@ -281,14 +377,18 @@ arrow-key navigation, session countdown.
 
 ## Known placeholders — DO NOT ship without fixing
 
-1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers.
+1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers until the
+   Toast integration becomes the production source of truth.
 2. **Awards & press entries** are directionally right but unverified —
    marked `verified:true` only so the prototype renders. Real verification
    pass required before launch.
-3. **Availability statuses** are staged for demo variety.
+3. **Availability statuses** are staged for demo variety; production values
+   should come from Toast when the integration supports them.
 4. **Sean's Notes / seanShort / whyWeCarry** drafted in his voice; he reviews.
 5. Session countdown is cosmetic — no real token check yet.
 6. Bottle images are SVG silhouettes; real photography planned.
+7. Toast menu-item GUID mapping and synchronization timestamps are not yet
+   implemented.
 
 ## Decisions needing Sean's review
 
@@ -296,6 +396,8 @@ arrow-key navigation, session countdown.
 - Top-3 tasting note wording per bottle; compare path assignments.
 - Flight Builder priority relative to the QR token backend and 5→164 data
   entry.
+- Toast integration scope: pricing only first, or pricing plus availability
+  and 86 state in the initial production pass.
 
 ## Out of scope this pass
 
@@ -303,7 +405,8 @@ Flight Builder UI (architecture prepared only), QR token backend (Cloudflare
 Worker, 4-hour signed tokens — matches Sean's existing `toast-proxy` /
 `mailchimp-proxy` worker stack), scaling 5 → 164 dossiers (full list in
 `echo-reserve.html`'s `DEFAULT_SPIRITS`), CMS/database, multi-file
-architecture, real photos, favorites / build-a-flight guest features.
+architecture, real photos, favorites / build-a-flight guest features, and
+production Toast menu synchronization.
 
 ## Site context
 

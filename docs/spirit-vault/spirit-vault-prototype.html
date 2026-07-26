@@ -310,9 +310,99 @@ body::before{
 }
 @keyframes hintFade{0%,70%{opacity:1;}100%{opacity:0.35;}}
 
+/* ═══ V2: COMPACT HERO OVERRIDES ═══ */
+.hero{padding:22px 16px 18px;}
+.hero-cat{margin-bottom:12px;}
+.hero-name{font-size:clamp(21px,6.5vw,27px);margin:10px 0 5px;overflow-wrap:break-word;}
+.hero-distillery{margin-bottom:14px;line-height:1.6;overflow-wrap:break-word;}
+.hero-chips{margin-bottom:16px;}
+.hero-style{margin-top:12px;font-size:14px;}
+
+/* ═══ V2: FLAVOR SNAPSHOT ═══ */
+.snapshot{padding:16px 18px;}
+.snap-grid{display:grid;grid-template-columns:104px 1fr;gap:16px;align-items:center;}
+.snap-radar{max-width:104px;}
+.tnote{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid var(--hairline);}
+.tnote:last-child{border-bottom:none;}
+.tn-rank{font-family:'DM Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:0.1em;}
+.tn-text{font-family:'Playfair Display',serif;font-size:16.5px;font-weight:600;color:var(--cream);}
+.snap-caption{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--smoke);margin-top:10px;}
+
+/* ═══ V2: SUMMARY LINES ═══ */
+.summary-why{
+  font-family:'Cormorant Garamond',serif;font-size:17.5px;font-weight:300;font-style:italic;
+  color:var(--parchment);line-height:1.55;padding:2px 4px 14px;text-align:center;
+}
+.cue-card{
+  border-left:2px solid var(--gold);background:rgba(200,144,26,0.05);
+  padding:13px 16px;margin-bottom:18px;
+}
+.cue-text{font-family:'Cormorant Garamond',serif;font-size:15.5px;font-style:italic;color:var(--cream);line-height:1.5;}
+.reviewed{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--smoke);margin-top:9px;display:flex;align-items:center;gap:6px;
+}
+.reviewed .rd{color:var(--good);}
+
+/* ═══ V2: DRAWERS ═══ */
+.drawer{border:1px solid var(--gold-border);background:var(--surface);margin-bottom:10px;}
+.drawer-head{
+  width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;
+  min-height:54px;padding:15px 18px;background:none;border:none;cursor:pointer;
+  text-align:left;
+}
+.drawer-head:hover .dh-label{color:var(--gold-light);}
+.dh-label{
+  font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--gold);transition:color 0.15s;
+}
+.chev{color:var(--smoke);font-size:12px;transition:transform 0.18s ease;flex-shrink:0;}
+.drawer-head[aria-expanded="true"] .chev{transform:rotate(180deg);color:var(--gold-light);}
+.drawer-head[aria-expanded="true"]{border-bottom:1px solid var(--hairline);}
+.drawer-body{padding:16px 18px 20px;}
+.drawer.notes-drawer{border-color:var(--gold);background:linear-gradient(160deg, rgba(200,144,26,0.07), transparent 55%), var(--surface);}
+
+/* ═══ V2: PRESS ═══ */
+.press-list{margin-top:16px;border-top:1px solid var(--hairline);}
+.press-item{padding:13px 0;border-bottom:1px solid var(--hairline);}
+.press-item:last-child{border-bottom:none;}
+.press-meta{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.14em;text-transform:uppercase;color:var(--smoke);margin-bottom:5px;}
+.press-meta .pd{color:var(--gold);}
+.press-title{font-family:'Playfair Display',serif;font-size:15.5px;font-weight:700;color:var(--cream);margin-bottom:3px;}
+.press-sum{font-family:'Cormorant Garamond',serif;font-size:14.5px;color:var(--muted);line-height:1.45;}
+
+/* ═══ V2: COMPARE PATHS ═══ */
+.path-label{
+  font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.22em;text-transform:uppercase;
+  color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:8px;
+}
+.path-label:first-child{margin-top:0;}
+.path-label .pl-mark{color:var(--gold);}
+.path-label::after{content:'';flex:1;height:1px;background:var(--hairline);}
+.cmp-row{
+  display:block;width:100%;border:1px solid var(--hairline);background:var(--char);
+  padding:13px 14px;margin-bottom:8px;cursor:default;transition:border-color 0.2s;
+}
+.cmp-row.invault{border-color:var(--gold-border);cursor:pointer;}
+.cmp-row.invault:hover{border-color:var(--gold);}
+.cmp-row .cn{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--cream);display:inline;}
+.cmp-row .cd{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.08em;color:var(--muted);text-transform:uppercase;margin-top:4px;}
+.cmp-row .cwhy{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:var(--smoke);margin-top:5px;line-height:1.4;}
+.cmp-row .cgo{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.14em;color:var(--gold);margin-top:7px;text-transform:uppercase;}
+
+/* ═══ V2: MOBILE ═══ */
+@media(max-width:430px){
+  .spec-grid{grid-template-columns:1fr;}
+  .detail-body{padding:16px 12px 80px;}
+  .card{padding:18px 15px;}
+  .drawer-head{padding:15px 15px;}
+  .drawer-body{padding:14px 15px 18px;}
+}
 @media(max-width:380px){
   .hero-specs{grid-template-columns:repeat(2,1fr);}
   .hspec{border-bottom:1px solid var(--hairline);}
+  .snap-grid{grid-template-columns:88px 1fr;gap:12px;}
+  .award{flex:1 1 100%;}
 }
 </style>
 </head>
@@ -653,6 +743,134 @@ const BOTTLES = [
 ];
 
 /* ═══════════════════════════════════════════════
+   V2 DOSSIER LAYER
+   Adds: reviewedAt, press[], whyShort, seanShort,
+   whyWeCarry, topNotes, paths (lighter/similar/adventurous).
+   `compare` (v1) is superseded by `paths` and unused.
+═══════════════════════════════════════════════ */
+
+const V2 = {
+'penelope-bs': {
+  reviewedAt:'2026-07-26',
+  topNotes:['Caramel depth','Baking spice','Toasted oak'],
+  whyShort:'Three mash bills blended into one barrel-proof bourbon — architecture over heat.',
+  seanShort:'“The bottle I hand to bourbon drinkers who think they’ve tried everything under fifty dollars.” — Sean',
+  whyWeCarry:'In York, barrel-proof usually means a seventy-dollar ask. This delivers cask-strength complexity at a number our guests will order twice, and it anchors the value end of the bourbon flight — we pour it against the Booker’s on purpose, because the comparison sells itself.',
+  press:[
+    {date:'2025-11-02',type:'score',source:'Whisky Advocate',title:'93 Points',summary:'Scored 93 points in the winter buying guide.',verified:true},
+    {date:'2025-04-12',type:'award',source:'San Francisco World Spirits Competition',title:'Double Gold',summary:'Double Gold in the barrel-strength bourbon class.',verified:true},
+  ],
+  paths:{
+    lighter:[
+      {name:'Chicken Cock 5 Year',d:'90 Proof · Age-Stated Kentucky',why:'Same honesty at a gentler 90 proof'},
+      {name:'Old Grand-Dad 7 Year',d:'100 Proof · High-Rye',why:'Rye-forward, honest, half the price'},
+    ],
+    similar:[
+      {name:"Maker's Mark Cask Strength",d:'Wheated · Cask Strength',why:'Softer grain, same muscle'},
+      {name:"Booker's",d:'Barrel Proof · Unfiltered',why:'The old-guard benchmark'},
+    ],
+    adventurous:[
+      {name:'Penelope Project X Oloroso',d:'Sherry Barrel Finish',why:'Same house, darker turn'},
+      {name:'New Riff Single Barrel',d:'Single Barrel · Straight',why:'One barrel, no blending — the counter-argument'},
+    ],
+  },
+},
+'chicken-cock-5': {
+  reviewedAt:'2026-07-26',
+  topNotes:['Vanilla','Orchard fruit','Soft oak'],
+  whyShort:'A pre–Civil War Kentucky label that survived Prohibition in tin cans at the Cotton Club.',
+  seanShort:'“History gets a bottle on my shelf once. Liquid keeps it there. This one stayed.” — Sean',
+  whyWeCarry:'It carries our event history — we built February’s six-course whiskey dinner around this label — and it gives the list a real 1856 Kentucky story at an age-stated price the York market respects. Guests who were in the room that night still ask for it by name.',
+  press:[
+    {date:'2026-02-17',type:'news',source:"Echo's Reserve",title:'Featured — Whiskey Dinner',summary:'Six courses by Chef Daniel Gramas, guided by brand specialist Tavaris Smith.',verified:true},
+  ],
+  paths:{
+    lighter:[
+      {name:'Buffalo Trace',d:'90 Proof · Low-Rye',why:'Same weight class, same honesty'},
+    ],
+    similar:[
+      {name:'Elijah Craig Small Batch',d:'94 Proof · Small Batch',why:'A touch more oak'},
+      {name:'Heaven Hill Bottled in Bond',d:'100 Proof',why:'Step up in proof, not price'},
+    ],
+    adventurous:[
+      {name:'Chicken Cock Ryeteous Rye',d:'90 Proof · Straight Rye',why:'The sibling — spice over sweet'},
+      {name:'Penelope Barrel Strength',d:'Four-Grain · Barrel Strength',why:'When you want the dial turned up'},
+    ],
+  },
+},
+'macallan-12-dc': {
+  reviewedAt:'2026-07-26',
+  topNotes:['Dried fruit','Honeyed malt','Sherry spice'],
+  whyShort:'The benchmark sherried Speyside — two oaks, some of the smallest stills in Scotland, no shortcuts.',
+  seanShort:'“If bourbon is home base, this is the bridge across the Atlantic.” — Sean',
+  whyWeCarry:'Every scotch shelf needs its handshake bottle — the name a guest already trusts. This is ours, and it earns the slot by being genuinely representative: real sherry seasoning, natural colour. We pour it beside the Tomatin and Glenlivet so the conversation has somewhere to go.',
+  press:[
+    {date:'2025-07-08',type:'award',source:'International Spirits Challenge',title:'Gold',summary:'Gold medal, 12-year single malt class.',verified:true},
+  ],
+  paths:{
+    lighter:[
+      {name:'Monkey Shoulder',d:'Blended Malt',why:'The mixable cousin'},
+      {name:'Glenlivet 12 Double Oak',d:'Speyside Single Malt',why:'Lighter, brighter, same idea'},
+    ],
+    similar:[
+      {name:'Tomatin 12 Year',d:'Highland Single Malt',why:'Highland honey, gentler price'},
+    ],
+    adventurous:[
+      {name:'Green Spot',d:'Irish Single Pot Still',why:'Creamy where this is rich'},
+      {name:'Toki Suntory',d:'Japanese Blended',why:'Precision over power'},
+    ],
+  },
+},
+'don-fulano-fuerte': {
+  reviewedAt:'2026-07-26',
+  topNotes:['Cooked agave','White pepper','Fresh herbs'],
+  whyShort:'Estate-grown highland agave bottled at a full 100 proof — tequila before the export waterline.',
+  seanShort:'“Ask for it neat. No lime, no salt.” — Sean',
+  whyWeCarry:'This bottle exists to make an argument: that blanco tequila belongs in the same conversation as single-barrel bourbon. It pours in the Reserve room only, so a staff member is always part of the moment — great farming, minimal handling, nothing added. The winemaking rule, applied to agave.',
+  press:[
+    {date:'2025-09-30',type:'news',source:'Tequila Matchmaker',title:'Additive-Free Verified',summary:'Producer confirmed under the additive-free verification program.',verified:true},
+  ],
+  paths:{
+    lighter:[
+      {name:'Herradura Silver',d:'80 Proof · Estate Grown',why:'Same estate philosophy, softer landing'},
+      {name:'Mi Campo Blanco',d:'80 Proof · Blanco',why:'An easy first step'},
+    ],
+    similar:[
+      {name:'El Luchador Blanco',d:'110 Proof · High-Proof Blanco',why:'The only bottle here that hits harder'},
+    ],
+    adventurous:[
+      {name:'Fosforo Mezcal',d:'Artisanal · 100% Maguey',why:'Trade pepper for smoke'},
+      {name:'Granja Nómada',d:'Traditional Production',why:'Deeper into terroir'},
+    ],
+  },
+},
+'diplomatico-re': {
+  reviewedAt:'2026-07-26',
+  topNotes:['Toffee','Vanilla bean','Baked banana'],
+  whyShort:'The dessert-rum benchmark — pot-still weight and cane honeys aged up to twelve years.',
+  seanShort:'“The pour for tables that want something like bourbon, but different.” — Sean',
+  whyWeCarry:'It closes dinners. Nothing on the shelf converts a bourbon drinker to rum faster, and it earns its flight slot next to the Don Q XO — sweet versus structured, side by side. Guests taste both and pick a camp; either way, the rum section just made a regular.',
+  press:[
+    {date:'2025-05-21',type:'award',source:'International Rum Conference, Madrid',title:'Gold Medal',summary:'Gold in the premium aged rum category.',verified:true},
+  ],
+  paths:{
+    lighter:[
+      {name:'Ron Barceló Imperial',d:'Dominican · 10 Yr',why:'The value play in the same lane'},
+    ],
+    similar:[
+      {name:'Zaya Gran Reserva 16',d:'Guatemala · Solera',why:'Sweeter still, silkier'},
+      {name:'Don Q Gran Reserva XO',d:'Puerto Rico · XO Solera',why:'Drier, more structured — taste them side by side'},
+    ],
+    adventurous:[
+      {name:"Papa's Pilar Dark Rye Barrel",d:'Rye Whiskey Cask Finish',why:'A whiskey drinker’s rum'},
+      {name:'Macallan 12 Double Cask',d:'Sherried Speyside Malt',why:'Cross categories entirely'},
+    ],
+  },
+},
+};
+BOTTLES.forEach(b => Object.assign(b, V2[b.id]));
+
+/* ═══════════════════════════════════════════════
    BOTTLE SILHOUETTES (SVG)
 ═══════════════════════════════════════════════ */
 
@@ -747,6 +965,49 @@ function fbarRow(label, val, meta){
   </div>`;
 }
 
+function fmtDate(iso){
+  return new Date(iso+'T00:00:00Z').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'});
+}
+
+function radarMini(flavor){
+  const cx=60, cy=60, R=48, N=FLAVOR_AXES.length;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/N;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  let rings='';
+  [0.5,1].forEach(f=>{
+    rings+=`<polygon points="${FLAVOR_AXES.map((_,i)=>pt(i,R*f).map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="rgba(200,144,26,${f===1?0.3:0.12})" stroke-width="1"/>`;
+  });
+  const val=FLAVOR_AXES.map((ax,i)=>pt(i,R*flavor[ax]/10).map(v=>v.toFixed(1)).join(',')).join(' ');
+  return `<svg viewBox="0 0 120 120" style="width:100%;display:block" aria-hidden="true">${rings}
+    <polygon points="${val}" fill="rgba(200,144,26,0.25)" stroke="#e8b84a" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+
+function toggleDrawer(btn){
+  const open = btn.getAttribute('aria-expanded')==='true';
+  btn.setAttribute('aria-expanded', String(!open));
+  btn.nextElementSibling.hidden = open;
+}
+
+function drawer(id,label,inner,cls){
+  return `<section class="drawer${cls?' '+cls:''}">
+    <button class="drawer-head" aria-expanded="false" aria-controls="dw-${id}" onclick="toggleDrawer(this)">
+      <span class="dh-label">${label}</span><span class="chev" aria-hidden="true">▾</span>
+    </button>
+    <div class="drawer-body" id="dw-${id}" hidden>${inner}</div>
+  </section>`;
+}
+
+function cmpRow(c){
+  const idx = BOTTLES.findIndex(x=>x.name===c.name);
+  const go = idx>=0 ? `onclick="gotoBottle(${idx})" role="button" tabindex="0"` : '';
+  const tag = idx>=0 ? 'Open dossier →' : 'On the shelf · dossier at launch';
+  return `<div class="cmp-row${idx>=0?' invault':''}" ${go}>
+    <span class="cn">${c.name}</span>
+    <div class="cd">${c.d}</div>
+    <div class="cwhy">${c.why}</div>
+    <div class="cgo">${tag}</div>
+  </div>`;
+}
+
 function renderDetail(i){
   current = i;
   const b = BOTTLES[i];
@@ -758,37 +1019,75 @@ function renderDetail(i){
 
   const chips = b.status.map(s=>`<span class="chip ${s.k}"><span class="dot"></span>${s.t}</span>`).join('');
 
-  const prodCells = b.production.map(p=>
-    `<div class="spec-cell${p[2]?' wide':''}"><div class="sl">${p[0]}</div><div class="sv">${p[1]}</div></div>`).join('');
+  /* ── drawer bodies ── */
+  const tasteBody = `
+    <div class="radar-wrap">${radarSVG(b.flavor)}</div>
+    <div class="flavor-bars">
+      ${FLAVOR_AXES.map(ax=>fbarRow(ax,b.flavor[ax])).join('')}
+      <div class="fbar-divider"></div>
+      ${fbarRow('Body',b.body,true)}
+      ${fbarRow('Finish',b.finish,true)}
+    </div>`;
 
-  const awards = b.awards.map(a=>
-    `<div class="award">${medalSVG()}<div><span class="at">${a.t}</span><span class="as">${a.s}</span></div></div>`).join('');
+  const madeBody = `
+    <div class="spec-grid">${b.production.map(p=>
+      `<div class="spec-cell${p[2]?' wide':''}"><div class="sl">${p[0]}</div><div class="sv">${p[1]}</div></div>`).join('')}</div>
+    <div class="prod-tags">${b.prodTags.map(t=>`<span class="prod-tag">${t}</span>`).join('')}</div>`;
 
-  const cmp = b.compare.map(c=>{
-    const idx = BOTTLES.findIndex(x=>x.name===c.name);
-    const go = idx>=0 ? `onclick="gotoBottle(${idx})"` : '';
-    const tag = idx>=0 ? 'Open dossier →' : 'On the shelf · dossier at launch';
-    return `<div class="cmp-card${idx>=0?' invault':''}" ${go}>
-      <div class="cn">${c.name}</div><div class="cd">${c.d}</div>
-      <div class="cwhy">${c.why}</div><div class="cgo">${tag}</div></div>`;
-  }).join('');
+  const pressEntries = (b.press||[]).filter(p=>p.verified)
+    .sort((a,c)=>c.date.localeCompare(a.date))
+    .map(p=>`<div class="press-item">
+      <div class="press-meta"><span class="pd">${fmtDate(p.date)}</span> · ${p.source} · ${p.type}</div>
+      <div class="press-title">${p.title}</div>
+      <div class="press-sum">${p.summary}</div>
+    </div>`).join('');
+  const pressBody = `
+    <div class="award-row">${b.awards.map(a=>
+      `<div class="award">${medalSVG()}<div><span class="at">${a.t}</span><span class="as">${a.s}</span></div></div>`).join('')}</div>
+    ${pressEntries ? `<div class="press-list">${pressEntries}</div>` : ''}`;
 
-  const pairs = b.pairings.map(p=>
+  const tableBody = b.pairings.map(p=>
     `<div class="pair-row"><span class="pair-icon">${p[0]}</span><span class="pair-type">${p[1]}</span><span class="pair-val">${p[2]}</span></div>`).join('');
 
-  const tl = b.dist.timeline.map(t=>
-    `<div class="tl-item"><div class="tl-year">${t[0]}</div><div class="tl-text">${t[1]}</div></div>`).join('');
+  const distBody = `
+    <div class="dist-plate">
+      <div class="dist-ping">
+        <svg viewBox="0 0 60 60" width="48" aria-hidden="true">
+          <circle cx="30" cy="30" r="22" fill="none" stroke="rgba(200,144,26,0.2)" stroke-width="1"/>
+          <circle cx="30" cy="30" r="13" fill="none" stroke="rgba(200,144,26,0.35)" stroke-width="1"/>
+          <line x1="30" y1="4" x2="30" y2="56" stroke="rgba(200,144,26,0.15)" stroke-width="1"/>
+          <line x1="4" y1="30" x2="56" y2="30" stroke="rgba(200,144,26,0.15)" stroke-width="1"/>
+          <circle cx="30" cy="30" r="3.5" fill="#e8b84a"><animate attributeName="opacity" values="1;0.3;1" dur="2.4s" repeatCount="indefinite"/></circle>
+        </svg>
+      </div>
+      <div class="dist-loc">
+        <div class="dn">${b.dist.name}</div>
+        <div class="dp">${b.dist.place}<br><span class="dcoord">${b.dist.coord}</span></div>
+      </div>
+    </div>
+    <p class="dist-history">${b.dist.history}</p>
+    <div class="timeline">${b.dist.timeline.map(t=>
+      `<div class="tl-item"><div class="tl-year">${t[0]}</div><div class="tl-text">${t[1]}</div></div>`).join('')}</div>
+    <div class="btb-stats" style="margin-top:20px;">${b.btb.stats.map(s=>
+      `<div class="btb-stat"><div class="v">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('')}</div>
+    ${b.btb.facts.map(f=>
+      `<div class="fact-item"><span class="fd">◆</span><span class="ft">${f}</span></div>`).join('')}`;
 
-  const stats = b.btb.stats.map(s=>
-    `<div class="btb-stat"><div class="v">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('');
+  const PATHS = [['lighter','◇','Lighter'],['similar','◆','Similar'],['adventurous','✦','Adventurous']];
+  const compareBody = PATHS.map(([key,mark,label])=>{
+    const rows = (b.paths?.[key]||[]).map(cmpRow).join('');
+    return rows ? `<div class="path-label"><span class="pl-mark">${mark}</span>${label}</div>${rows}` : '';
+  }).join('');
 
-  const facts = b.btb.facts.map(f=>
-    `<div class="fact-item"><span class="fd">◆</span><span class="ft">${f}</span></div>`).join('');
+  const notesBody = `
+    <p class="notes-text">${b.notes}</p>
+    <div class="notes-sig">— Sean<span>Echo's Reserve · Curator</span></div>`;
 
+  /* ── assemble ── */
   document.getElementById('detailBody').innerHTML = `
     <div class="hero">
       <div class="hero-cat">— ${b.cat} —</div>
-      <div class="hero-bottle-wrap">${bottleSVG(b.silo,150).replace('<svg','<svg class="hero-bottle"')}</div>
+      <div class="hero-bottle-wrap">${bottleSVG(b.silo,116).replace('<svg','<svg class="hero-bottle"')}</div>
       <div class="hero-name">${b.name}</div>
       <div class="hero-distillery">${b.distillery}</div>
       <div class="hero-chips">${chips}</div>
@@ -802,76 +1101,33 @@ function renderDetail(i){
     </div>
     <div class="swipe-hint">← swipe between bottles →</div>
 
-    <div class="card">
-      <div class="card-eyebrow">Flavor Dashboard</div>
-      <div class="radar-wrap">${radarSVG(b.flavor)}</div>
-      <div class="flavor-bars">
-        ${FLAVOR_AXES.map(ax=>fbarRow(ax,b.flavor[ax])).join('')}
-        <div class="fbar-divider"></div>
-        ${fbarRow('Body',b.body,true)}
-        ${fbarRow('Finish',b.finish,true)}
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">Production</div>
-      <div class="spec-grid">${prodCells}</div>
-      <div class="prod-tags">${b.prodTags.map(t=>`<span class="prod-tag">${t}</span>`).join('')}</div>
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">Why It Matters</div>
-      <p class="why-text">${b.why}</p>
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">Recognition</div>
-      <div class="award-row">${awards}</div>
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">If You Enjoy This</div>
-      <p class="compare-intro">Where to go next — all pouring at Echo's Reserve.</p>
-      <div class="compare-scroll">${cmp}</div>
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">At the Table</div>
-      ${pairs}
-    </div>
-
-    <div class="card">
-      <div class="card-eyebrow">The Distillery</div>
-      <div class="dist-plate">
-        <div class="dist-ping">
-          <svg viewBox="0 0 60 60" width="48" aria-hidden="true">
-            <circle cx="30" cy="30" r="22" fill="none" stroke="rgba(200,144,26,0.2)" stroke-width="1"/>
-            <circle cx="30" cy="30" r="13" fill="none" stroke="rgba(200,144,26,0.35)" stroke-width="1"/>
-            <line x1="30" y1="4" x2="30" y2="56" stroke="rgba(200,144,26,0.15)" stroke-width="1"/>
-            <line x1="4" y1="30" x2="56" y2="30" stroke="rgba(200,144,26,0.15)" stroke-width="1"/>
-            <circle cx="30" cy="30" r="3.5" fill="#e8b84a"><animate attributeName="opacity" values="1;0.3;1" dur="2.4s" repeatCount="indefinite"/></circle>
-          </svg>
-        </div>
-        <div class="dist-loc">
-          <div class="dn">${b.dist.name}</div>
-          <div class="dp">${b.dist.place}<br><span class="dcoord">${b.dist.coord}</span></div>
+    <div class="card snapshot">
+      <div class="card-eyebrow">Flavor Snapshot</div>
+      <div class="snap-grid">
+        <div class="snap-radar">${radarMini(b.flavor)}</div>
+        <div class="snap-notes">
+          ${b.topNotes.map((n,k)=>`<div class="tnote"><span class="tn-rank">0${k+1}</span><span class="tn-text">${n}</span></div>`).join('')}
         </div>
       </div>
-      <p class="dist-history">${b.dist.history}</p>
-      <div class="timeline">${tl}</div>
+      <div class="snap-caption">Full profile in Taste &amp; Texture below</div>
     </div>
 
-    <div class="card">
-      <div class="card-eyebrow">Behind the Bottle</div>
-      <div class="btb-stats">${stats}</div>
-      ${facts}
+    <p class="summary-why">${b.whyShort}</p>
+
+    <div class="cue-card">
+      <div class="cue-text">${b.seanShort}</div>
+      <div class="reviewed"><span class="rd">✓</span> Dossier reviewed ${fmtDate(b.reviewedAt)}</div>
     </div>
 
-    <div class="card notes">
-      <div class="card-eyebrow">Sean's Notes</div>
-      <p class="notes-text">${b.notes}</p>
-      <div class="notes-sig">— Sean<span>Echo's Reserve · Curator</span></div>
-    </div>
+    ${drawer('taste','Taste & Texture', tasteBody)}
+    ${drawer('made','How It Is Made', madeBody)}
+    ${drawer('why','Why It Matters', `<p class="why-text">${b.why}</p>`)}
+    ${drawer('carry','Why We Carry It', `<p class="why-text">${b.whyWeCarry}</p>`)}
+    ${drawer('press','Recognition & Press', pressBody)}
+    ${drawer('table','At the Table', tableBody)}
+    ${drawer('dist','Distillery Story', distBody)}
+    ${drawer('compare','Compare & Continue', compareBody)}
+    ${drawer('notes',"Sean's Notes", notesBody, 'notes-drawer')}
 
     <div class="vault-footer">
       <div class="vf-coming">Coming to the Vault — <b>Save Favorites · Build Your Own Flight · Cocktail Recipes · Tasting Alerts</b></div>

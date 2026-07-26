@@ -1,63 +1,54 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (v2.2 — data foundation refactor)
+**Last revision:** 2026-07-26 (audit lane — preparation docs for the Codex refactor)
+
+## LANE STATUS (2026-07-26)
+
+**Claude's active lane: product/data/implementation audit + refactor
+preparation. COMPLETE as of this commit.** The structural implementation lane
+(data/render separation, schema normalization, validation, 5→164 scalability)
+**remains reserved for Codex** — Claude produced specification and audit
+documents only and did not modify the prototype in this pass. Codex's
+in-progress `foundation-v1` working-tree changes (SPIRIT_DATA/DOSSIER_DETAILS
+split, commerce stub, validation layer, ADD-A-SPIRIT.md) were left uncommitted
+and untouched in its lane.
+
+**Work completed (this commit — documentation only):**
+- `DATA-AUDIT.md` — field-by-field inventory with ownership classification;
+  27-item technical debt register rated Blocker / Refactor / Defer /
+  Intentional; editorial review of the five dossiers.
+- `SPIRIT-SCHEMA-SPEC.md` — proposed canonical spirit record (5 ownership
+  classes: knowledge / commerce / venue / provenance / computed), controlled
+  vocabularies, consumer matrix, migration map from current fields.
+- `REFACTOR-ACCEPTANCE-CRITERIA.md` — pass/fail checklist for the Codex
+  refactor; marks what foundation-v1 already satisfies.
+- `CONTENT-WORKFLOW.md` — 5→164 production pipeline: roles, sourcing rules,
+  draft/reviewed/published states, batch-by-category via structured JSON
+  import (10–15 per batch, Bourbon first).
+- This HANDOFF update.
+
+**Unresolved decisions (Sean):**
+1. **Fabricated press dates** — current award/score entries carry invented
+   dates marked verified:true so the prototype renders. Recommended: flip to
+   verified:false until sourced (DATA-AUDIT.md §3.1, Options A/B).
+2. Single canonical record vs. keeping the two-map split (schema spec
+   recommends single; ADD-A-SPIRIT.md currently documents the split).
+3. Data packaging at 164 records: inline vs external JSON (acceptance D4
+   requires Codex to measure and document).
+4. Batch order/size for content production (CONTENT-WORKFLOW.md recommends
+   Bourbon-first, 10–15 per batch) and when Sean's voice-review sittings fit
+   his schedule.
+5. `FUTURE-RAVEN-ADDON.md` is referenced as the future-direction doc but does
+   not exist in the local working tree — confirm it lives on a branch/GitHub
+   or needs creating. (Not created here; out of this lane's scope.)
+
+**Ready for the Codex refactor:** yes — spec, acceptance criteria, debt
+register, and content workflow are in place; blockers T1–T5 in DATA-AUDIT.md
+define the refactor's required scope.
+
+---
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
-
-## Active work lane — Codex foundation pass (2026-07-26)
-
-**Lane:** Engineering refactor only. Preserve the current five-spirit mobile
-prototype while making the data foundation maintainable for the 5 → ~164
-spirit build-out.
-
-**Implementation summary:**
-
-- Separated editable spirit data from renderer-facing `BOTTLES` output inside
-  `spirit-vault-prototype.html`.
-- Replaced the old direct V2 mutation with `SPIRIT_DATA`, `DOSSIER_DETAILS`,
-  `normalizeSpiritRecords()`, and `validateSpiritRecords()`.
-- Added normalized optional `commerce` fields for future Toast/external
-  commerce linkage; they are data-only and not rendered.
-- Added development-time validation for missing required fields, duplicate
-  IDs, invalid comparison `ref` values, malformed press entries, and invalid
-  flavor-axis values.
-- Preserved the existing drawer behavior, current dossier summary,
-  stable-ID navigation, five sample spirits, mobile-first layout, and visual
-  language.
-- Added `ADD-A-SPIRIT.md` so scaling the Vault is documented as data entry,
-  not renderer work.
-
-**Files changed:**
-
-- `docs/spirit-vault/spirit-vault-prototype.html`
-- `docs/spirit-vault/ADD-A-SPIRIT.md`
-- `docs/spirit-vault/HANDOFF.md`
-
-**Known limitations:**
-
-- `docs/spirit-vault/FUTURE-RAVEN-ADDON.md` was listed as required reading
-  but is not present on this branch; Raven remains explicitly out of scope.
-- The prototype is still single-file and static; no CMS/database, QR backend,
-  Toast live integration, accounts, community features, Flight Builder UI,
-  wine, or beer modules were added.
-- Existing content placeholders still apply: pour prices, press verification,
-  staged availability, Sean voice review, cosmetic session timer, and SVG
-  bottle silhouettes.
-
-**Tests completed:**
-
-- Headless Microsoft Edge via Chrome DevTools Protocol against the static
-  HTML file.
-- Widths tested: 320, 375, 390, 430, and 1200 px.
-- At every width: 0 px horizontal overflow with drawers closed and with the
-  first drawer open.
-- Confirmed drawers are collapsed on load and open with
-  `aria-expanded="true"`.
-- Confirmed five-spirit navigation state remains `01 / 05` with five dots.
-- Confirmed `gotoBottleId('chicken-cock-5-year')` navigates to Chicken Cock
-  5 Year and an invalid ID does not move the current dossier.
-
-**Implementation commit SHA:** `c89e39753119092c817e8a1bfa69edcd4d7ba026`
 
 ## What this is
 

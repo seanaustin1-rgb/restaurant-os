@@ -459,9 +459,26 @@ body::before{
    pending Sean's numbers & a verification pass.
 ═══════════════════════════════════════════════ */
 
+const SPIRIT_DATA_VERSION = 'foundation-v1';
+const SPIRIT_COLLECTION_TARGET = 164;
 const FLAVOR_AXES = ['Sweet','Oak','Spice','Fruit','Smoke','Earth','Herbal'];
+const PATH_TYPES = ['lighter','similar','adventurous'];
+const REQUIRED_SPIRIT_FIELDS = [
+  'id','cat','silo','name','distillery','style','proof','proofN','age','price','priceL',
+  'status','flavor','body','finish','production','prodTags','why','awards','pairings',
+  'dist','btb','notes','reviewedAt','topNotes','whyShort','seanShort','whyWeCarry',
+  'press','paths','commerce',
+];
+const DEFAULT_COMMERCE_FIELDS = {
+  toastItemGuid:null,
+  toastMenuItemGuid:null,
+  toastLocationGuid:null,
+  externalSku:null,
+  externalProductUrl:null,
+  lastSyncedAt:null,
+};
 
-const BOTTLES = [
+const SPIRIT_DATA = [
 {
   id:'penelope-barrel-strength', cat:'Bourbon', silo:'bourbon',
   name:'Penelope Barrel Strength',
@@ -743,13 +760,15 @@ const BOTTLES = [
 ];
 
 /* ═══════════════════════════════════════════════
-   V2 DOSSIER LAYER
+   DOSSIER DATA LAYER
+   Add/edit spirits in SPIRIT_DATA + DOSSIER_DETAILS only. The renderer
+   consumes normalized BOTTLES records after validation.
    Adds: reviewedAt, press[], whyShort, seanShort,
    whyWeCarry, topNotes, paths (lighter/similar/adventurous).
    `compare` (v1) is superseded by `paths` and unused.
 ═══════════════════════════════════════════════ */
 
-const V2 = {
+const DOSSIER_DETAILS = {
 'penelope-barrel-strength': {
   reviewedAt:'2026-07-26',
   topNotes:['Caramel depth','Baking spice','Toasted oak'],
@@ -868,7 +887,111 @@ const V2 = {
   },
 },
 };
-BOTTLES.forEach(b => Object.assign(b, V2[b.id]));
+
+function normalizeSpiritRecord(base, details){
+  return {
+    ...base,
+    ...(details || {}),
+    commerce:{
+      ...DEFAULT_COMMERCE_FIELDS,
+      ...(base.commerce || {}),
+      ...((details && details.commerce) || {}),
+    },
+    dataVersion:SPIRIT_DATA_VERSION,
+  };
+}
+
+function normalizeSpiritRecords(spiritData, dossierDetails){
+  return spiritData.map(base => normalizeSpiritRecord(base, dossierDetails[base.id]));
+}
+
+function isBlank(value){
+  return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+}
+
+function isValidIsoDate(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+  const parsed = new Date(value + 'T00:00:00Z');
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0,10) === value;
+}
+
+function pushMissing(errors, spirit, field){
+  errors.push(`${spirit.id || '(missing id)'}: missing required field "${field}"`);
+}
+
+function validateSpiritRecords(records){
+  const errors = [];
+  const seen = new Set();
+  const ids = new Set(records.map(spirit => spirit.id).filter(Boolean));
+
+  records.forEach((spirit, index)=>{
+    REQUIRED_SPIRIT_FIELDS.forEach(field=>{
+      const value = spirit[field];
+      if(isBlank(value) || (Array.isArray(value) && value.length === 0)) pushMissing(errors, spirit, field);
+    });
+
+    if(spirit.id){
+      if(seen.has(spirit.id)) errors.push(`${spirit.id}: duplicate id`);
+      seen.add(spirit.id);
+    }
+
+    if(spirit.topNotes && spirit.topNotes.length !== 3){
+      errors.push(`${spirit.id}: topNotes must contain exactly 3 entries`);
+    }
+
+    FLAVOR_AXES.forEach(axis=>{
+      const value = spirit.flavor?.[axis];
+      if(typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 10){
+        errors.push(`${spirit.id}: invalid flavor axis "${axis}" value "${value}"`);
+      }
+    });
+    Object.keys(spirit.flavor || {}).forEach(axis=>{
+      if(!FLAVOR_AXES.includes(axis)) errors.push(`${spirit.id}: unknown flavor axis "${axis}"`);
+    });
+
+    (spirit.press || []).forEach((entry, pressIndex)=>{
+      const prefix = `${spirit.id}: press[${pressIndex}]`;
+      if(!entry || typeof entry !== 'object'){
+        errors.push(`${prefix} must be an object`);
+        return;
+      }
+      if(!isValidIsoDate(entry.date)) errors.push(`${prefix} has invalid date "${entry.date}"`);
+      ['type','source','title','summary'].forEach(field=>{
+        if(isBlank(entry[field])) errors.push(`${prefix} missing "${field}"`);
+      });
+      if(typeof entry.verified !== 'boolean') errors.push(`${prefix} verified must be boolean`);
+    });
+
+    PATH_TYPES.forEach(pathType=>{
+      const entries = spirit.paths?.[pathType];
+      if(!Array.isArray(entries)){
+        errors.push(`${spirit.id}: paths.${pathType} must be an array`);
+        return;
+      }
+      entries.forEach((entry, pathIndex)=>{
+        if(entry.ref && !ids.has(entry.ref)){
+          errors.push(`${spirit.id}: paths.${pathType}[${pathIndex}] references unknown spirit "${entry.ref}"`);
+        }
+        ['name','d','why'].forEach(field=>{
+          if(isBlank(entry[field])) errors.push(`${spirit.id}: paths.${pathType}[${pathIndex}] missing "${field}"`);
+        });
+      });
+    });
+
+    if(typeof spirit.proofN !== 'number' || !Number.isFinite(spirit.proofN)){
+      errors.push(`${spirit.id || `record ${index}`}: proofN must be numeric`);
+    }
+  });
+
+  if(errors.length){
+    console.error('Spirit Vault data validation failed:', errors);
+    const isDev = location.protocol === 'file:' || ['','localhost','127.0.0.1'].includes(location.hostname);
+    if(isDev) throw new Error(`Spirit Vault data validation failed (${errors.length} issue${errors.length===1?'':'s'}). See console.`);
+  }
+}
+
+const BOTTLES = normalizeSpiritRecords(SPIRIT_DATA, DOSSIER_DETAILS);
+validateSpiritRecords(BOTTLES);
 
 /* ═══════════════════════════════════════════════
    FLIGHT LAYER — FOUNDATIONAL ARCHITECTURE (not yet built)

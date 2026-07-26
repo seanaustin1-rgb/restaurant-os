@@ -1,6 +1,6 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (v2.1 — stable-ID architecture + Flight Builder requirement)
+**Last revision:** 2026-07-26 (v2.2 — Toast ownership + shared command-center protocol)
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
 
@@ -40,6 +40,88 @@ MASTER SPIRIT DATABASE
 Every downstream experience REFERENCES spirit records by stable ID — nothing
 duplicates dossier content. This is a foundational architectural decision,
 not an optional enhancement.
+
+## System Ownership — Toast + Spirit Vault (binding)
+
+The two systems have separate and explicit ownership boundaries.
+
+### Toast is the source of truth for commerce
+
+Toast owns operational commerce data, including:
+
+- Current menu price
+- Toast menu-item identity / GUID
+- Sale availability
+- 86 or inactive status when exposed by the integration
+- POS-controlled menu configuration
+
+Do not make manually entered Spirit Vault pricing the permanent source of
+truth. Each spirit record should carry the stable Toast identifier needed to
+join the knowledge record to the corresponding POS item. Price and
+availability should be read from Toast when the production integration is
+implemented.
+
+If Toast values are cached for performance or resilience, the cache must
+retain source provenance and a synchronization timestamp. Cached values are a
+fallback representation of Toast data, not an independent editable price
+record.
+
+### Spirit Vault is the source of truth for knowledge
+
+The Spirit Vault master record owns:
+
+- Flavor profile and sensory metadata
+- Production details
+- Distillery and brand history
+- Awards, recognition, and verified press
+- Pairings
+- Sean's notes and curator commentary
+- Comparison and recommendation metadata
+- Flight-building metadata
+- Review, update, and verification history
+
+### Application responsibility
+
+Guest and staff applications combine the two sources at runtime:
+
+```text
+TOAST COMMERCE DATA
+(price, availability, menu identity)
+            +
+SPIRIT VAULT KNOWLEDGE DATA
+(flavor, history, press, pairings, recommendations)
+            =
+GUEST + STAFF EXPERIENCES
+```
+
+Do not duplicate data across systems when a stable reference can be used.
+The same joined data should power dossiers, flight builders, placemats,
+training, Brag Book, events, and future AI-assisted recommendations.
+
+## Shared Command-Center Protocol — Claude + Codex
+
+This file is the Spirit Vault command center and must be monitored and updated
+by both Claude and Codex whenever either agent begins or completes meaningful
+Spirit Vault work.
+
+Required workflow:
+
+1. Read this handoff before changing Spirit Vault code, data, schema, or UX.
+2. Record durable product and architecture decisions here before implementing
+   work that depends on them.
+3. Preserve established product truth unless Sean explicitly changes it.
+4. Document the active work lane, files changed, current status, unresolved
+   questions, and next recommended action.
+5. Add the relevant commit SHA after each completed increment.
+6. Keep Claude and Codex ownership lanes explicit to avoid duplicate or
+   conflicting implementation.
+7. Do not create a competing master handoff. Supporting specifications may be
+   added, but this remains the project-level source of truth.
+8. Before merging, reconcile the implementation against this file and update
+   any stale status, placeholder, or scope statements.
+
+This is the same operating discipline used for Raven: code and product truth
+must move together.
 
 ### Data requirements (binding on all future work)
 
@@ -235,14 +317,18 @@ arrow-key navigation, session countdown.
 
 ## Known placeholders — DO NOT ship without fixing
 
-1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers.
+1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers until the
+   Toast integration becomes the production source of truth.
 2. **Awards & press entries** are directionally right but unverified —
    marked `verified:true` only so the prototype renders. Real verification
    pass required before launch.
-3. **Availability statuses** are staged for demo variety.
+3. **Availability statuses** are staged for demo variety; production values
+   should come from Toast when the integration supports them.
 4. **Sean's Notes / seanShort / whyWeCarry** drafted in his voice; he reviews.
 5. Session countdown is cosmetic — no real token check yet.
 6. Bottle images are SVG silhouettes; real photography planned.
+7. Toast menu-item GUID mapping and synchronization timestamps are not yet
+   implemented.
 
 ## Decisions needing Sean's review
 
@@ -250,6 +336,8 @@ arrow-key navigation, session countdown.
 - Top-3 tasting note wording per bottle; compare path assignments.
 - Flight Builder priority relative to the QR token backend and 5→164 data
   entry.
+- Toast integration scope: pricing only first, or pricing plus availability
+  and 86 state in the initial production pass.
 
 ## Out of scope this pass
 
@@ -257,7 +345,8 @@ Flight Builder UI (architecture prepared only), QR token backend (Cloudflare
 Worker, 4-hour signed tokens — matches Sean's existing `toast-proxy` /
 `mailchimp-proxy` worker stack), scaling 5 → 164 dossiers (full list in
 `echo-reserve.html`'s `DEFAULT_SPIRITS`), CMS/database, multi-file
-architecture, real photos, favorites / build-a-flight guest features.
+architecture, real photos, favorites / build-a-flight guest features, and
+production Toast menu synchronization.
 
 ## Site context
 

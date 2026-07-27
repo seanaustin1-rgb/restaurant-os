@@ -495,10 +495,10 @@ const VERIFICATION_STATUSES = ['unverified','partially-sourced','source-reviewed
 const STATUS_RANK = {draft:0, reviewed:1, published:2};
 const PRESS_TYPES = ['award','score','news','heritage','venue-event','coverage'];
 const REQUIRED_SPIRIT_FIELDS = [
-  'id','cat','silo','name','distillery','style','proof','proofN','age','price','priceL',
-  'status','flavor','body','finish','production','prodTags','why','awards','pairings',
+  'id','cat','silo','name','distillery','style','proof','age','price','priceL',
+  'status','flavor','body','finish','production','prodTags','why','pairings',
   'dist','btb','notes','reviewedAt','topNotes','whyShort','seanShort','whyWeCarry',
-  'press','paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
+  'paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
 ];
 const DEFAULT_COMMERCE_FIELDS = {
   pourPriceUsd:null,
@@ -527,7 +527,7 @@ function makeBatchSpirit(config){
     coversFields:source.coversFields || ['identity','production','strength'],
   }));
   const ageText = config.ageText || 'NAS';
-  const proofText = config.proofN == null ? 'Pending' : String(config.proofN);
+  const proofText = config.proofDisplay || (config.proofN == null ? 'Pending' : String(config.proofN));
   const flavor = config.flavor || {Sweet:5,Oak:5,Spice:5,Fruit:4,Smoke:1,Earth:3,Herbal:2};
 
   return {
@@ -563,7 +563,7 @@ function makeBatchSpirit(config){
     why:config.why || 'Production facts have been sourced for Batch 1. Echo-specific framing is pending Sean review.',
     awards:[],
     compare:[],
-    pairings:[],
+    pairings:config.pairings || [],
     dist:{
       name:config.distilleryName || config.producer || config.brand,
       place:[config.city, config.region, config.country || 'USA'].filter(Boolean).join(' · '),
@@ -577,16 +577,19 @@ function makeBatchSpirit(config){
     topNotes:config.topNotes || ['Pending Sean review','Pending Sean review','Pending Sean review'],
     whyShort:config.whyShort || 'Draft Batch 1 record; production facts sourced, venue interpretation pending Sean review.',
     seanShort:'Pending Sean review.',
-    whyWeCarry:'Pending Sean review.',
+    whyWeCarry:config.whyWeCarry || 'Pending Sean review.',
     press:[],
     paths:{lighter:[],similar:[],adventurous:[]},
     commerce:{
       pourPriceUsd:config.priceUsd,
       pourSizeOz:2,
-      priceProvenance:'Sean confirmed current Echo menu price on 2026-07-26; temporary venue commerce value pending Toast integration.',
-      priceIsTemporary:true,
+      toastItemGuid:config.toastItemGuid || null,
+      priceProvenance:config.toastItemGuid
+        ? 'Price and item identity from the Toast POS menu (toastItemGuid); Toast is the commerce source of truth.'
+        : 'Sean confirmed current Echo menu price on 2026-07-26; temporary venue commerce value pending Toast integration.',
+      priceIsTemporary:!config.toastItemGuid,
       availability:null,
-      source:'Sean',
+      source:config.toastItemGuid ? 'Toast' : 'Sean',
       sourceRecordedAt:'2026-07-26',
     },
     provenance:{addedAt:'2026-07-26',updatedAt:'2026-07-26',reviewedAt:null,reviewedBy:null,sources:sourceObjects,sourcingLimitations:config.sourcingLimitations || []},
@@ -754,8 +757,8 @@ function validateSpiritRecords(records){
       });
     });
 
-    if(typeof spirit.proofN !== 'number' || !Number.isFinite(spirit.proofN)){
-      errors.push(`${spirit.id || `record ${index}`}: proofN must be numeric`);
+    if(spirit.proofN !== null && (typeof spirit.proofN !== 'number' || !Number.isFinite(spirit.proofN))){
+      errors.push(`${spirit.id || `record ${index}`}: proofN must be numeric or null (barrel/varying proof)`);
     }
     if(!/^\$\d+(\.\d{2})?$|^Pending$/.test(spirit.price || '')){
       errors.push(`${spirit.id}: invalid price display "${spirit.price}"`);
@@ -1108,7 +1111,7 @@ function renderDetail(i){
     ${pressBody ? drawer('press','Recognition & Press', pressBody) : ''}
     ${drawer('table','At the Table', tableBody)}
     ${drawer('dist','Distillery Story', distBody)}
-    ${drawer('compare','Compare & Continue', compareBody)}
+    ${compareBody ? drawer('compare','Compare & Continue', compareBody) : ''}
     ${hasSeanNotes ? drawer('notes',"Sean's Notes", notesBody, 'notes-drawer') : ''}
 
     <div class="vault-footer">
@@ -1144,9 +1147,9 @@ const filters = {cat:'All', proof:'All', flavor:'All'};
 
 const PROOF_BUCKETS = {
   'All': ()=>true,
-  'Under 90': b=>b.proofN<90,
-  '90–100': b=>b.proofN>=90 && b.proofN<=100,
-  '100+': b=>b.proofN>100,
+  'Under 90': b=>b.proofN!=null && b.proofN<90,
+  '90–100': b=>b.proofN!=null && b.proofN>=90 && b.proofN<=100,
+  '100+': b=>b.proofN!=null && b.proofN>100,
 };
 const FLAVOR_LEANS = {
   'All': ()=>true,

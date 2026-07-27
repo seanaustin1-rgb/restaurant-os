@@ -102,6 +102,20 @@ body::before{
   transition:color 0.2s;display:block;margin:0 auto;
 }
 .bn-vault-link:hover{color:var(--gold-light);}
+/* Contextual back control — appears only when arriving via a Compare & Continue link */
+.bn-back{
+  display:none;width:100%;min-height:44px;box-sizing:border-box;
+  align-items:center;gap:8px;
+  background:var(--gold-dim);border:none;border-bottom:1px solid var(--hairline);
+  color:var(--gold-light);cursor:pointer;text-align:left;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  padding:0 18px;transition:background 0.2s;
+  position:sticky;top:106px;z-index:89;backdrop-filter:blur(10px);
+}
+.bn-back.show{display:flex;}
+.bn-back:hover{background:var(--gold-border);}
+.bn-back .bb-arrow{font-size:13px;line-height:1;}
+.bn-back .bb-name{color:var(--muted);text-transform:none;letter-spacing:0.04em;font-size:8.5px;}
 
 /* ═══ DETAIL BODY ═══ */
 .detail-body{padding:22px 18px 90px;}
@@ -451,6 +465,9 @@ body::before{
       </div>
       <button class="bn-btn" onclick="stepBottle(1)">›</button>
     </div>
+    <button class="bn-back" id="bnBack" onclick="goBack()" aria-label="Back to previous spirit">
+      <span class="bb-arrow" aria-hidden="true">‹</span>Back<span class="bb-name" id="bnBackName"></span>
+    </button>
     <div class="detail-body" id="detailBody"></div>
   </div>
 
@@ -1327,6 +1344,7 @@ function medalSVG(){
 ═══════════════════════════════════════════════ */
 
 let current = 0;
+let navStack = [];   // trail of dossiers visited via Compare & Continue links
 
 function fbarRow(label, val, meta){
   return `<div class="fbar${meta?' meta':''}">
@@ -1370,7 +1388,7 @@ function drawer(id,label,inner,cls){
 /* Stable-ID lookups — recommendation links and all future flight
    references resolve by spirit id, never by array position or name. */
 function spiritIndexById(id){ return BOTTLES.findIndex(x=>x.id===id); }
-function gotoBottleId(id){ const i = spiritIndexById(id); if(i>=0) gotoBottle(i); }
+function gotoBottleId(id){ const i = spiritIndexById(id); if(i>=0 && i!==current){ navStack.push(current); gotoBottle(i); } }
 
 function cmpRow(c){
   const idx = c.ref ? spiritIndexById(c.ref) : -1;
@@ -1391,7 +1409,8 @@ function renderDetail(i){
   document.getElementById('bnIndex').textContent =
     String(i+1).padStart(2,'0') + ' / ' + String(BOTTLES.length).padStart(2,'0');
   document.getElementById('bnDots').innerHTML =
-    BOTTLES.map((_,j)=>`<span class="bn-dot${j===i?' on':''}" onclick="gotoBottle(${j})"></span>`).join('');
+    BOTTLES.map((_,j)=>`<span class="bn-dot${j===i?' on':''}" onclick="navTo(${j})"></span>`).join('');
+  updateBackBtn();
 
   const chips = b.status.map(s=>`<span class="chip ${s.k}"><span class="dot"></span>${s.t}</span>`).join('');
 
@@ -1520,8 +1539,23 @@ function renderDetail(i){
   window.scrollTo({top:0});
 }
 
-function stepBottle(d){ gotoBottle((current + d + BOTTLES.length) % BOTTLES.length); }
-function gotoBottle(i){ showDetail(); renderDetail(i); }
+function stepBottle(d){ navTo((current + d + BOTTLES.length) % BOTTLES.length); }
+function gotoBottle(i){ showDetail(); renderDetail(i); window.scrollTo({top:0}); }
+// Fresh navigation (pager, dots, vault card) resets the Compare & Continue trail.
+function navTo(i){ navStack = []; gotoBottle(i); }
+// Following a Compare & Continue link remembers where you came from.
+function goBack(){ if(navStack.length){ gotoBottle(navStack.pop()); } }
+function updateBackBtn(){
+  const el = document.getElementById('bnBack');
+  if(!el) return;
+  if(navStack.length){
+    const prev = BOTTLES[navStack[navStack.length-1]];
+    document.getElementById('bnBackName').textContent = prev ? ' · ' + prev.name : '';
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
 
 /* ═══════════════════════════════════════════════
    VAULT (BROWSE) VIEW + FILTERS
@@ -1566,7 +1600,7 @@ function renderVault(){
     list.length + ' OF ' + BOTTLES.length + ' DOSSIERS · ' + SPIRIT_COLLECTION_TARGET + ' AT LAUNCH';
 
   document.getElementById('vaultGrid').innerHTML = list.map(({b,i})=>`
-    <div class="vcard" onclick="gotoBottle(${i})">
+    <div class="vcard" onclick="navTo(${i})">
       <span class="vstatus ${b.status[0].k}"></span>
       ${bottleSVG(b.silo,74).replace('<svg','<svg class="vcard-bottle"')}
       <div class="vn">${b.name}</div>
@@ -1605,6 +1639,7 @@ document.addEventListener('keydown',e=>{
   if(document.getElementById('view-detail').classList.contains('active')){
     if(e.key==='ArrowRight') stepBottle(1);
     if(e.key==='ArrowLeft') stepBottle(-1);
+    if(e.key==='Escape' && navStack.length){ e.preventDefault(); goBack(); }
   }
 });
 

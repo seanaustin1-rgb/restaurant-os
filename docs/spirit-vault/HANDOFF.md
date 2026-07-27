@@ -76,6 +76,31 @@ admin tool**, not by editing the prototype. Backlog for the admin lane:
 - This deferral note is the current branch tip of
   `feat/spirit-vault-bourbon-batch-1`; see `git log` for its SHA.
 
+## Compare & Continue back-nav (2026-07-27, `feat/spirit-vault-compare-backnav`)
+
+Adds a visit-history back control for the recommendation journey. Compare &
+Continue rows already deep-linked (`cmpRow` → `gotoBottleId`); this adds the
+"step back" half Sean asked for.
+
+- **Model:** `navStack[]` records the dossier you came from **only when you
+  follow a Compare & Continue link** (`gotoBottleId` pushes `current`). A
+  contextual **"‹ BACK · <previous spirit>"** bar (`#bnBack`) appears below the
+  pager and pops one step per press; multi-step back supported. `Escape` also
+  goes back.
+- **Trail reset:** the sequential pager (`‹ ›` / arrow keys / swipe → `stepBottle`),
+  the dots, and vault-card entry all call `navTo(i)`, which clears the trail —
+  so Back strictly undoes compare-link drill-downs, never the browse pager.
+- **Also:** `gotoBottle` now scrolls to top on every dossier change (a
+  pre-existing quirk: following a deep link used to keep the old scroll pos).
+- **Verified:** deep-nav push + label, multi-step back, pager/dot/vault reset,
+  scroll-to-top, `Escape`. Width matrix re-run with the back bar visible — 0
+  horizontal overflow at 320 (closed + all-drawers-open) and desktop; the bar
+  is full-width on mobile and stays inside the centered 560px column on
+  desktop. No console errors. Boundaries respected (no redesign, no Raven, no
+  Flight Builder, no QR backend, no pricing).
+- **Scope note:** does not record vault→bottle as history (entering from the
+  Vault, the "◈ Open the Vault" link is the way back); intentional.
+
 ## Active work lane — merged status (2026-07-26)
 
 **Codex foundation pass: COMPLETE.** The prototype now has the

@@ -990,8 +990,12 @@ function renderDetail(i){
 
   document.getElementById('bnIndex').textContent =
     String(i+1).padStart(2,'0') + ' / ' + String(BOTTLES.length).padStart(2,'0');
+  // Dots are a per-bottle affordance; past ~12 they neither fit a phone width
+  // nor stay tappable, so hide them and let the counter + swipe/arrows + Vault drive nav.
   document.getElementById('bnDots').innerHTML =
-    BOTTLES.map((_,j)=>`<span class="bn-dot${j===i?' on':''}" onclick="navTo(${j})"></span>`).join('');
+    BOTTLES.length <= 12
+      ? BOTTLES.map((_,j)=>`<span class="bn-dot${j===i?' on':''}" onclick="navTo(${j})"></span>`).join('')
+      : '';
   updateBackBtn();
 
   const chips = b.status.map(s=>`<span class="chip ${s.k}"><span class="dot"></span>${s.t}</span>`).join('');

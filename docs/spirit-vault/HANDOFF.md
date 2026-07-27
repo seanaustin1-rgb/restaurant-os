@@ -16,6 +16,17 @@ full dossier (all drawers incl. Distillery Story, pairings, and an agent-drafted
 Workflow: `spirit-vault-batch2-premiums` (14 agents, 0 errors). Curator cue
 (`seanShort`) + Sean's Notes (`notes`) still stay blank for Sean.
 
+**Batch 4 (2026-07-27, `feat/spirit-vault-batch4`):** 12 more researched → **10
+PUBLISHED**: Bulleit BiB, WhistlePig PiggyBack, Widow Jane Applewood, Michter's
+US*1, Middle West Wheated, Basil Hayden Dark Rye, Legent, Boondocks, Suntory Toki
+(Japanese), Tomatin Dualchas (Scotch). **2 HELD draft**: Chicken Cock Ryeteous
+(standard rye vs 100-proof "Ryeteous Blonde") and Willett (generic Toast label →
+which expression). Guest **27 → 37**. Toki + Tomatin resolve two of the Macallan
+dossier's compare-path refs. **Scaling fix:** pager dots now hide when
+`BOTTLES.length > 12` — 37 dots overflowed a 320px phone (~401px row); counter +
+swipe/arrows + Vault drive nav at scale. Verified guest=37, 0 content overflow at
+320px, drafts hidden.
+
 **Batch 3 (2026-07-27, `feat/spirit-vault-batch3`):** 12 more premiums researched
 (workflow `spirit-vault-batch3-premiums`, 0 errors) → **10 PUBLISHED**: Green Spot
 (Irish), Chicken Cock Double Oak + Small Batch, Jefferson's, Rebel BiB, Elijah

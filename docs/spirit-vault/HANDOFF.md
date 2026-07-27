@@ -66,6 +66,25 @@ audit documents without changing the prototype implementation.
 **Status:** Implemented on `feat/spirit-vault-bourbon-batch-1`.
 **Implementation commit SHA:** `988bfb3a15a28451e08fa99ea4cba4e050d5716b`
 
+**Claude review fix pass (2026-07-27):**
+
+- Replaced corrupted Batch 1 middot separators so guest text renders as `·`,
+  not `Â·`.
+- Restored guest gating: normal mode renders only
+  `publicationStatus:'published'`; `?review=1` exposes draft/review records for
+  QA.
+- Removed the internal Recognition fallback copy by hiding the drawer when no
+  verified recognition exists.
+- Aligned Sagamore Manhattan Finish age display to `4 yr + 30 mo finish`.
+
+**Review fix verification:**
+
+- Inline script syntax check passed.
+- Static checks confirm zero corrupted middot sequences and no internal
+  Recognition fallback copy.
+- DOM harness confirms guest mode renders `01 / 05` and `5 OF 5`; review mode
+  renders `01 / 20` and `20 OF 20`.
+
 **Implementation summary:**
 
 - Added 15 Bourbon / American whiskey / rye records via `BOURBON_BATCH_1` and

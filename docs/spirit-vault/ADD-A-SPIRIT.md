@@ -1,7 +1,9 @@
 # Spirit Vault Add-a-Spirit Workflow
 
 The current prototype is still a single self-contained HTML file. Adding a
-spirit should be a data-entry task only.
+spirit should be a data-entry task only. New Batch 1 records use one helper
+entry, `makeBatchSpirit({...})`, which generates the renderer-compatible
+fields from one logical spirit record.
 
 ## Source File
 
@@ -10,24 +12,32 @@ Edit `docs/spirit-vault/spirit-vault-prototype.html`.
 Use the data sections only:
 
 - `SPIRIT_DATA`: core bottle, production, flavor, story, pairing, and shelf
-  data.
-- `DOSSIER_DETAILS`: dossier summary, review date, top notes, press, carry
-  rationale, and compare paths.
+  data for legacy records.
+- `BOURBON_BATCH_1`: helper-backed one-entry records for the first production
+  batch.
+- `DOSSIER_DETAILS`: legacy overlay for the original five only. Do not add
+  new production-batch records here unless a later migration explicitly
+  requires it.
 
 Do not edit render functions for a normal new spirit.
 
 ## Required Steps
 
-1. Add one object to `SPIRIT_DATA` with a permanent slug `id`.
-2. Add a matching object to `DOSSIER_DETAILS` with the same `id`.
+1. Add one `makeBatchSpirit({...})` object with a permanent slug `id`.
+2. Record `brand`, `expression`, `category`, `subcategory`, country, region,
+   distillery/producer, proof, age data, production rows, and source URLs.
 3. Fill every flavor axis in `FLAVOR_AXES` with a numeric value from `0` to
    `10`.
 4. Add exactly three `topNotes`, in display order.
-5. Add `paths.lighter`, `paths.similar`, and `paths.adventurous` arrays.
-6. Use `ref` only when the compared bottle already exists in the Vault data.
-7. Add press entries as `{ date, type, source, title, summary, verified }`.
-8. Add optional Toast/external commerce values under `commerce` only when
-   known; null values are valid placeholders.
+5. Leave Sean-owned fields as `Pending Sean review` unless Sean supplied the
+   language.
+6. Add `paths.lighter`, `paths.similar`, and `paths.adventurous` only when the
+   recommendation is ready; empty arrays are valid for draft records.
+7. Use `ref` only when the compared bottle already exists in the Vault data.
+8. Add press entries only as `{ date, type, source, sourceUrl, title, summary,
+   verified }`. `verified:true` requires a real `sourceUrl` and source date.
+9. Store Sean-confirmed menu price under `commerce.pourPriceUsd` with
+   `priceProvenance`; this is a temporary venue value pending Toast.
 
 ## Optional Commerce Fields
 
@@ -41,6 +51,9 @@ commerce:{
   externalSku:null,
   externalProductUrl:null,
   lastSyncedAt:null,
+  pourPriceUsd:null,
+  priceProvenance:null,
+  priceIsTemporary:true,
 }
 ```
 
@@ -56,6 +69,10 @@ contexts, validation blocks rendering and writes console errors for:
 - invalid comparison `ref` values
 - malformed press entries
 - flavor-axis values outside `0` to `10`
+- body/finish values outside `0` to `10`
+- invalid record/publication/verification states
+- verified recognition without source provenance
+- malformed temporary price values
 
 If validation passes, the existing renderer, filters, stable-ID navigation,
 drawers, and mobile layout should work without code changes.

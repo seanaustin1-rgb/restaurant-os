@@ -1,6 +1,80 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (merged foundation refactor + Toast/Raven command-center + audit docs)
+**Last revision:** 2026-07-27 (Claude took over implementation lane; verified Batch 1 review fixes; re-ran width matrix; opened PR to main)
+
+## Implementation lane ownership (2026-07-27)
+
+**Lane owner: Claude (implementation).** Claude has taken over the
+implementation lane previously held by Codex for `feat/spirit-vault-bourbon-batch-1`.
+Codex's data-foundation and Batch 1 authoring work is preserved unchanged.
+
+**Review verdict on the incoming branch:** PASS WITH CHANGES. The four
+required review-fix items were already implemented in commit `a808f65`
+("Fix Spirit Vault review gating"). Claude independently verified each fix
+against the actual `spirit-vault-prototype.html` source (not just the prose)
+before opening the PR:
+
+1. **UTF-8 middot** — 0 `Â·` sequences remain; DOM renders clean `·`
+   (`ECHO'S RESERVE · YORK PA`, `PENELOPE BOURBON · LAWRENCEBURG, INDIANA`,
+   `Four-Grain Straight Bourbon · Barrel Strength`); no mojibake in rendered
+   body text.
+2. **Publication gating** — `REVIEW_MODE` is read from `?review=1`
+   (`spirit-vault-prototype.html:1198`); guest `BOTTLES` is filtered to
+   `publicationStatus === 'published'` otherwise (`:1201`). Verified live:
+   guest mode renders 5 of 5 published records; `?review=1` renders 20 of 20.
+3. **Recognition empty-state** — the Recognition & Press drawer is omitted
+   entirely when no verified press/awards exist
+   (`${pressBody ? drawer('press', …) : ''}` at `:1504`); no internal
+   pipeline jargon reaches guests.
+4. **Sagamore Manhattan Finish age** — displayed `ageText` is
+   `4 yr + 30 mo finish` (the producer's 4-year base rye plus 30-month
+   cocktail-barrel finish), not `4–6 yr`. `minYears/maxYears` remain
+   non-displayed structured filter data and follow the same base+finish
+   convention already used for the Double Oak record.
+
+**Width matrix re-run (2026-07-27, Claude):** local static server + in-app
+Chromium, measuring `documentElement.scrollWidth > clientWidth` plus a
+per-element bounding-box scan for any element crossing the viewport edge.
+
+| Width | Guest mode | Review mode (20 records) |
+|-------|-----------|--------------------------|
+| 320px | 0 overflow, 0 offenders (closed / first-open / all-open) | 0 overflow across all 20 records with every drawer open |
+| 375px | 0 overflow (closed / all-open) | 0 overflow across all 20 records, all drawers open |
+| 390px | 0 overflow (closed / all-open) | — |
+| 430px | 0 overflow (closed / all-open) | 0 overflow across all 20 records, all drawers open |
+| 1265px (desktop) | 0 overflow (closed / all-open) | — |
+
+Also verified: 8 drawers per dossier, no console errors, invalid
+`gotoBottleId('___nope___')` leaves the current dossier unchanged.
+
+**Sean-owned voice fields — render gating (2026-07-27, `360f165`):** per
+Sean's direction, guest-visible Sean-voice fields now render only when he has
+supplied real copy. **Sean's Notes** drawer and the **curator-cue quote**
+(`seanShort`) are omitted entirely when empty or still `'Pending Sean review.'`
+(same hide-when-empty pattern as Recognition). **Why We Carry It** still
+renders. The original five published records are unchanged; the 15 draft batch
+records no longer leak the placeholder in review mode.
+
+**DEFERRED (Sean's call, 2026-07-27): content-fill of the Sean-owned fields.**
+Do not hand-author `whyWeCarry` suggestions / Sean's Notes / curator cues into
+the HTML now. Sean wants to fill these **after the build is done, through an
+admin tool**, not by editing the prototype. Backlog for the admin lane:
+- Target the JSON-data migration (Batch 2 gate) first — it is step one toward
+  an admin surface.
+- Then a minimal admin form **inside the existing OutFront Data / Restaurant OS
+  dashboard** (reuses its Clerk auth + Supabase; the guest Spirit Vault is
+  generated/published from that master data). First fields = Sean's voice:
+  `whyWeCarry`, Sean's Notes, curator cue, flavor-axis nudges (matches Sean's
+  stated "tasting notes" priority). Photos/pricing later.
+- Until then, batch records stay `draft` (invisible to guests); `whyWeCarry`
+  keeps its `'Pending Sean review.'` placeholder, visible only via `?review=1`.
+
+**Commit SHAs:**
+- `a808f65` — review-gating fixes (pre-existing on branch, verified).
+- HANDOFF lane-ownership + width matrix — see `git log` (earlier tip).
+- `360f165` — hide Sean-owned voice fields until real copy exists.
+- This deferral note is the current branch tip of
+  `feat/spirit-vault-bourbon-batch-1`; see `git log` for its SHA.
 
 ## Active work lane — merged status (2026-07-26)
 
@@ -46,9 +120,10 @@ audit documents without changing the prototype implementation.
 
 **Unresolved decisions (Sean):**
 
-1. **Fabricated press dates** — current award/score entries carry invented
-   dates marked `verified:true` so the prototype renders. Recommended: flip
-   to `verified:false` until sourced (`DATA-AUDIT.md` section 3.1, Options A/B).
+1. **Recognition sourcing** — fabricated prototype dates have been removed
+   from the current data and unsupported claims are now `verified:false`.
+   Source URLs are still needed before any award/score/press claim can be
+   published as verified.
 2. Single canonical record vs. keeping the two-map split. `SPIRIT-SCHEMA-SPEC.md`
    recommends single; `ADD-A-SPIRIT.md` currently documents the implemented split.
 3. Data packaging at 164 records: inline vs external JSON. Acceptance criterion
@@ -59,6 +134,119 @@ audit documents without changing the prototype implementation.
    and 86 state in the initial production pass.
 
 ---
+
+## Bourbon / American Whiskey Batch 1 — Codex lane (2026-07-26)
+
+**Status:** Implemented on `feat/spirit-vault-bourbon-batch-1`.
+**Implementation commit SHA:** `988bfb3a15a28451e08fa99ea4cba4e050d5716b`
+
+**Claude review fix pass (2026-07-27):**
+
+- Replaced corrupted Batch 1 middot separators so guest text renders as `·`,
+  not `Â·`.
+- Restored guest gating: normal mode renders only
+  `publicationStatus:'published'`; `?review=1` exposes draft/review records for
+  QA.
+- Removed the internal Recognition fallback copy by hiding the drawer when no
+  verified recognition exists.
+- Aligned Sagamore Manhattan Finish age display to `4 yr + 30 mo finish`.
+
+**Review fix verification:**
+
+- Inline script syntax check passed.
+- Static checks confirm zero corrupted middot sequences and no internal
+  Recognition fallback copy.
+- DOM harness confirms guest mode renders `01 / 05` and `5 OF 5`; review mode
+  renders `01 / 20` and `20 OF 20`.
+
+**Implementation summary:**
+
+- Added 15 Bourbon / American whiskey / rye records via `BOURBON_BATCH_1` and
+  `makeBatchSpirit({...})`, giving each new spirit one logical data entry.
+- Preserved the existing mobile visual language, drawers, stable-ID
+  navigation, and renderer shape by normalizing records into `BOTTLES`.
+- Added canonical support fields for brand, expression, subcategory, country,
+  region, distillery, numeric age data, record/publication/verification
+  states, source provenance, and temporary commerce values.
+- Moved Sean-confirmed prices into `commerce.pourPriceUsd` with explicit
+  temporary price provenance pending Toast; display prices are generated from
+  that venue commerce value for Batch 1.
+- Removed fabricated dates from the original five press entries and changed
+  unsupported recognition to `verified:false`.
+- Updated recognition rendering so only verified awards/press appear in the
+  guest-facing Recognition drawer.
+- Expanded validation for draft records, body/finish ranges,
+  record/publication/verification states, verified-claim source provenance,
+  temporary price format/provenance, and null optional handling.
+- Batch 1 remains inline for now; `CONTENT-WORKFLOW.md` records the migration
+  path to external structured data before larger batches.
+
+**Records added:**
+
+1. Sagamore Spirit Small Batch Rye — `$14.00`
+2. Sagamore Spirit Double Oak Rye — `$14.00`
+3. Sagamore Spirit Manhattan Finish Rye — `$11.00`
+4. Knob Creek Single Barrel 9 Year — `$16.50`
+5. Bulleit 10 Year Bourbon — `$10.00`
+6. Old Forester 1870 Original Batch — `$10.75`
+7. Old Forester 1897 Bottled in Bond — `$11.75`
+8. Old Forester 1910 Old Fine Whisky — `$13.00`
+9. Old Forester 1920 Prohibition Style — `$14.25`
+10. Old Forester Single Barrel Barrel Strength Rye — `$16.00`
+11. Old Forester Rye 100 Proof — `$7.00`
+12. WhistlePig Snout-to-Tail 10 Year Bourbon — `$22.00`
+13. Jeptha Creed Bottled-in-Bond Bourbon — `$10.75`
+14. Jeptha Creed Straight Four Grain Bourbon — `$10.75`
+15. Jeptha Creed 6 Year Wheated Bourbon — `$10.75`
+
+WhistlePig 15 Year Estate Oak Single Barrel Rye remains deferred to Batch 2.
+
+**Sourcing limitations / unverified claims:**
+
+- The original five dossiers retain draft award/score/press claims in data,
+  but all unsupported entries are `verified:false` and no longer display as
+  verified Recognition content.
+- Chicken Cock February dinner remains a first-party venue-event draft claim
+  until an internal event artifact/source is attached.
+- Bulleit 10 Year official source did not publish a mash bill in this pass.
+- WhistlePig Snout-to-Tail official source did not publish a mash bill in this
+  pass.
+- Old Forester Single Barrel Barrel Strength Rye uses Old Forester’s official
+  rye mash-bill source plus a North Carolina ABC listing for proof/product
+  identity; Echo’s exact bottle proof should be checked before publish.
+- Jeptha Creed Four Grain source provides grain list/proof but not full mash
+  percentages.
+- All new Batch 1 records are draft: Sean-owned `whyWeCarry`, curator cue,
+  Sean’s Notes, paths, pairings, and final flavor-axis approval remain pending.
+
+**Files changed:**
+
+- `docs/spirit-vault/spirit-vault-prototype.html`
+- `docs/spirit-vault/ADD-A-SPIRIT.md`
+- `docs/spirit-vault/CONTENT-WORKFLOW.md`
+- `docs/spirit-vault/HANDOFF.md`
+
+**Tests completed:**
+
+- Inline script syntax check.
+- Headless Microsoft Edge via Chrome DevTools Protocol using a temporary
+  local copy with the external Google Fonts link removed to avoid file-mode
+  stylesheet blocking.
+- Widths tested: 320, 375, 390, 430, and 1200 px.
+- At every width: 0 px horizontal overflow with drawers closed and with the
+  first drawer open.
+- Confirmed drawers are collapsed on load and open with
+  `aria-expanded="true"`.
+- Confirmed navigation state is `01 / 20` with 20 dots.
+- Confirmed stable-ID navigation works across all 20 records and invalid IDs
+  fail safely.
+
+**Recommended Batch 2 scope:**
+
+- WhistlePig 15 Year Estate Oak Single Barrel Rye.
+- Next 10–15 American whiskey/rye records from the master list, preferably
+  only after testing an external static data payload/loader so Batch 2 does
+  not continue growing the inline HTML indefinitely.
 
 **Owner:** Sean Austin — Echo's Reserve / Stone Grille & Taphouse (rebranding to Barrel & Bond), York PA
 **Deliverable:** `spirit-vault-prototype.html` (same folder) — single-file, self-contained, no build step.
@@ -380,8 +568,8 @@ arrow-key navigation, session countdown.
 1. **Pour prices** ($11–$16) are guesses. Sean supplies real numbers until the
    Toast integration becomes the production source of truth.
 2. **Awards & press entries** are directionally right but unverified —
-   marked `verified:true` only so the prototype renders. Real verification
-   pass required before launch.
+   retained as draft data with `verified:false`. Real source URLs and dates
+   are required before any recognition claim renders as verified.
 3. **Availability statuses** are staged for demo variety; production values
    should come from Toast when the integration supports them.
 4. **Sean's Notes / seanShort / whyWeCarry** drafted in his voice; he reviews.

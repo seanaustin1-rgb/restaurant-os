@@ -138,6 +138,8 @@ body::before{
 .chip.flight .dot{background:var(--event);}
 .chip.eventb{border-color:rgba(106,167,196,0.45);color:#b4d5e6;}
 .chip.eventb .dot{background:var(--event);}
+.chip.draft{border-color:rgba(163,150,125,0.45);color:var(--muted);}
+.chip.draft .dot{background:var(--smoke);}
 .hero-specs{
   display:grid;grid-template-columns:repeat(4,1fr);
   border-top:1px solid var(--hairline);
@@ -296,6 +298,7 @@ body::before{
 .vcard .vstatus.low{background:var(--warn);}
 .vcard .vstatus.reserve{background:var(--rare);}
 .vcard .vstatus.eventb{background:var(--event);}
+.vcard .vstatus.draft{background:var(--smoke);}
 .vault-note{
   margin:0 18px 30px;padding:16px 18px;border:1px dashed var(--gold-border);
   font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14.5px;color:var(--smoke);line-height:1.55;text-align:center;
@@ -434,7 +437,7 @@ body::before{
     </div>
     <div class="vault-count" id="vaultCount"></div>
     <div class="vault-grid" id="vaultGrid"></div>
-    <div class="vault-note"><b>Prototype — 5 of 164 dossiers built.</b><br>At launch, every expression in Echo's Reserve lives here.</div>
+    <div class="vault-note"><b>Prototype batch in progress.</b><br>At launch, every expression in Echo's Reserve lives here.</div>
   </div>
 
   <!-- ═══ DETAIL VIEW ═══ -->
@@ -459,17 +462,26 @@ body::before{
    pending Sean's numbers & a verification pass.
 ═══════════════════════════════════════════════ */
 
-const SPIRIT_DATA_VERSION = 'foundation-v1';
+const SPIRIT_DATA_VERSION = 'foundation-v1-bourbon-batch-1';
 const SPIRIT_COLLECTION_TARGET = 164;
 const FLAVOR_AXES = ['Sweet','Oak','Spice','Fruit','Smoke','Earth','Herbal'];
 const PATH_TYPES = ['lighter','similar','adventurous'];
+const RECORD_STATUSES = ['draft','reviewed','published'];
+const PUBLICATION_STATUSES = ['draft','reviewed','published'];
+const VERIFICATION_STATUSES = ['unverified','partially-sourced','source-reviewed','sean-reviewed'];
+const PRESS_TYPES = ['award','score','news','heritage','venue-event','coverage'];
 const REQUIRED_SPIRIT_FIELDS = [
   'id','cat','silo','name','distillery','style','proof','proofN','age','price','priceL',
   'status','flavor','body','finish','production','prodTags','why','awards','pairings',
   'dist','btb','notes','reviewedAt','topNotes','whyShort','seanShort','whyWeCarry',
-  'press','paths','commerce',
+  'press','paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
 ];
 const DEFAULT_COMMERCE_FIELDS = {
+  pourPriceUsd:null,
+  pourSizeOz:2,
+  priceProvenance:null,
+  priceIsTemporary:true,
+  availability:null,
   toastItemGuid:null,
   toastMenuItemGuid:null,
   toastLocationGuid:null,
@@ -768,6 +780,124 @@ const SPIRIT_DATA = [
    `compare` (v1) is superseded by `paths` and unused.
 ═══════════════════════════════════════════════ */
 
+const SOURCE_URLS = {
+  sagamoreSmallBatch:'https://sagamorespirit.com/spirits/sagamore-small-batch-rye-whiskey/',
+  sagamoreDoubleOak:'https://sagamorespirit.com/spirits/double-oak-rye-whiskey/',
+  sagamoreManhattan:'https://sagamorespirit.com/spirits/manhattan-finish/',
+  knobCreekSingleBarrel:'https://www.knobcreek.com/single-barrel-experience',
+  bulleit10:'https://www.bulleit.com/whiskeys/bulleit-10-year-aged-whiskeys',
+  oldForester1870:'https://www.oldforester.com/products/old-forester-1870-original-batch-whisky/',
+  oldForester1897:'https://www.oldforester.com/products/old-forester-1897-bottled-in-bond-whisky/',
+  oldForester1910:'https://www.oldforester.com/products/old-forester-1910-old-fine-whisky/',
+  oldForester1920:'https://www.oldforester.com/products/old-forester-1920-style-prohibition-whisky/',
+  oldForesterRye:'https://www.oldforester.com/products/old-forester-100-proof-rye-whisky/',
+  oldForesterSingleBarrelRye:'https://abc2.nc.gov/Pricing/ViewItemDetails/149785',
+  whistlepigSnoutToTail:'https://www.whistlepigwhiskey.com/whiskeys/snout-to-tail-bourbon-aged-10-years',
+  jepthaBib:'https://jepthacreed.com/product/bottled-in-bond-bourbon/',
+  jepthaFourGrain:'https://shop.jepthacreed.com/products/jeptha-creed-straight-four-grain-bourbon',
+  jepthaWheated:'https://jepthacreed.com/product/six-year-old-wheated-bourbon/',
+};
+
+function formatMoney(value){
+  return value == null ? 'Pending' : '$' + Number(value).toFixed(2);
+}
+
+function makeBatchSpirit(config){
+  const displayName = config.displayName || `${config.brand} ${config.expression}`;
+  const cityLine = [config.city, config.region].filter(Boolean).join(', ');
+  const sourceObjects = (config.sources || []).map(source=>({
+    url:source.url,
+    sourceType:source.sourceType || 'producer',
+    coversFields:source.coversFields || ['identity','production','strength'],
+  }));
+  const ageText = config.ageText || 'NAS';
+  const proofText = config.proofN == null ? 'Pending' : String(config.proofN);
+  const flavor = config.flavor || {Sweet:5,Oak:5,Spice:5,Fruit:4,Smoke:1,Earth:3,Herbal:2};
+
+  return {
+    id:config.id,
+    schemaVersion:'spirit-v1',
+    recordStatus:config.recordStatus || 'draft',
+    publicationStatus:config.publicationStatus || 'draft',
+    verificationStatus:config.verificationStatus || 'partially-sourced',
+    brand:config.brand,
+    expression:config.expression,
+    subcategory:config.subcategory || null,
+    country:config.country || 'USA',
+    region:config.region || null,
+    distilleryName:config.distilleryName || config.producer || config.brand,
+    cat:config.cat || 'Bourbon',
+    silo:'bourbon',
+    name:displayName,
+    distillery:`${config.producer || config.brand} · ${cityLine || config.country || 'USA'}`,
+    style:config.style,
+    proof:proofText,
+    proofN:config.proofN,
+    age:ageText,
+    ageData:{text:ageText,minYears:config.minYears ?? null,maxYears:config.maxYears ?? null,unaged:false,sourceUrl:config.ageSourceUrl || null,pending:config.agePending || false},
+    price:formatMoney(config.priceUsd),
+    priceL:'2 oz pour',
+    status:[{k:'draft',t:'Draft · Toast Pending'}],
+    flavor,
+    body:config.body ?? 5,
+    finish:config.finish ?? 5,
+    production:config.productionRows || [],
+    productionStructured:config.productionStructured || {},
+    prodTags:config.prodTags || [],
+    why:config.why || 'Production facts have been sourced for Batch 1. Echo-specific framing is pending Sean review.',
+    awards:[],
+    compare:[],
+    pairings:[],
+    dist:{
+      name:config.distilleryName || config.producer || config.brand,
+      place:[config.city, config.region, config.country || 'USA'].filter(Boolean).join(' · '),
+      coord:config.coordinatesText || 'Pending',
+      history:config.history || `${config.brand} production background is sourced for this draft; venue-ready story copy is pending Sean review.`,
+      timeline:config.timeline || [['Draft','Timeline pending source review']],
+    },
+    btb:{stats:config.statTiles || [], facts:config.facts || []},
+    notes:'Pending Sean review.',
+    reviewedAt:'2026-07-26',
+    topNotes:config.topNotes || ['Pending Sean review','Pending Sean review','Pending Sean review'],
+    whyShort:config.whyShort || 'Draft Batch 1 record; production facts sourced, venue interpretation pending Sean review.',
+    seanShort:'Pending Sean review.',
+    whyWeCarry:'Pending Sean review.',
+    press:[],
+    paths:{lighter:[],similar:[],adventurous:[]},
+    commerce:{
+      pourPriceUsd:config.priceUsd,
+      pourSizeOz:2,
+      priceProvenance:'Sean confirmed current Echo menu price on 2026-07-26; temporary venue commerce value pending Toast integration.',
+      priceIsTemporary:true,
+      availability:null,
+      source:'Sean',
+      sourceRecordedAt:'2026-07-26',
+    },
+    provenance:{addedAt:'2026-07-26',updatedAt:'2026-07-26',reviewedAt:null,reviewedBy:null,sources:sourceObjects,sourcingLimitations:config.sourcingLimitations || []},
+    sourceUrls:sourceObjects.map(source=>source.url),
+  };
+}
+
+const BOURBON_BATCH_1 = [
+  makeBatchSpirit({id:'sagamore-rye',brand:'Sagamore Spirit',expression:'Small Batch Rye',cat:'Rye',subcategory:'maryland-style-rye',producer:'Sagamore Spirit',distilleryName:'Sagamore Spirit',city:'Baltimore',region:'Maryland',style:'Maryland-Style Straight Rye Whiskey',proofN:93,ageText:'4-6 yr',minYears:4,maxYears:6,priceUsd:14,flavor:{Sweet:6,Oak:4,Spice:7,Fruit:5,Smoke:1,Earth:3,Herbal:2},body:5,finish:5,topNotes:['Baking spice','Caramel honey','Orchard fruit'],productionRows:[['Mash Bills','Blend of high-rye and low-rye straight whiskeys',true],['Distillation','Triple distilled'],['Age','4-6 years'],['Bottling Proof','93'],['Filtration','Non-chill filtered']],productionStructured:{mashBill:{summary:'Two rye mash bills: high-rye and low-rye'},maturation:{vessel:'new-charred-american-oak'},methodTags:['small-batch','maryland-style-rye','non-chill-filtered']},prodTags:['Maryland-Style Rye','Small Batch','Non-Chill Filtered'],why:'Sagamore frames this as a modern Maryland-style rye built from two rye mash bills, balancing baking spice with sweeter fruit and caramel notes.',whyShort:'Two rye mash bills blended into a balanced Maryland-style rye.',sources:[{url:SOURCE_URLS.sagamoreSmallBatch}]}),
+  makeBatchSpirit({id:'sagamore-double-oak',brand:'Sagamore Spirit',expression:'Double Oak Rye',cat:'Rye',subcategory:'double-oaked-rye',producer:'Sagamore Spirit',distilleryName:'Sagamore Spirit',city:'Baltimore',region:'Maryland',style:'Maryland-Style Straight Rye · Double Oak Finish',proofN:96.6,ageText:'4-5 yr + 18 mo finish',minYears:4,maxYears:6.5,priceUsd:14,flavor:{Sweet:7,Oak:7,Spice:6,Fruit:4,Smoke:1,Earth:3,Herbal:2},body:6,finish:6,topNotes:['Caramel','Toasted coconut','Hazelnut'],productionRows:[['Base','Straight rye whiskey aged 4-5 years',true],['Finish','Toasted wave stave barrels for an additional 18 months'],['Water','Proofed with limestone-filtered spring house water'],['Bottling Proof','96.6']],productionStructured:{maturation:{vessel:'new-charred-american-oak',finishCasks:['toasted-wave-stave-barrel']},finishType:'double-oak',methodTags:['double-oak','maryland-style-rye']},prodTags:['Double Oak','Maryland-Style Rye','Toasted Finish'],why:'Sagamore uses a toasted second barrel to push its rye toward caramel, coconut, hazelnut, and richer oak without leaving the Maryland-style rye lane.',whyShort:'Maryland-style rye moved into a toasted second barrel for extra oak and caramel.',sources:[{url:SOURCE_URLS.sagamoreDoubleOak}]}),
+  makeBatchSpirit({id:'sagamore-manhattan-finish',brand:'Sagamore Spirit',expression:'Manhattan Finish Rye',cat:'Rye',subcategory:'finished-rye',producer:'Sagamore Spirit',distilleryName:'Sagamore Spirit',city:'Baltimore',region:'Maryland',style:'Blend of Straight Rye Whiskeys · Cocktail Barrel Finish',proofN:103,ageText:'4 yr + 30 mo finish',minYears:4,maxYears:6.5,priceUsd:11,flavor:{Sweet:6,Oak:5,Spice:7,Fruit:7,Smoke:1,Earth:3,Herbal:5},body:6,finish:6,topNotes:['Dark cherry','Rye spice','Herbal bitters'],productionRows:[['Base','4-year-old straight rye whiskey',true],['Finish','Vermouth, bitters, and cherry brandy barrels for 30 months'],['Release','2025 limited release'],['Bottling Proof','103']],productionStructured:{maturation:{finishCasks:['vermouth','bitters','cherry-brandy']},finishType:'cocktail-barrel',methodTags:['limited-release','finished-rye']},prodTags:['Limited Release','Cocktail Finish','Maryland-Style Rye'],why:'This is a rye whiskey built around the Manhattan template: vermouth, bitters, and cherry brandy barrel influence layered onto Sagamore rye.',whyShort:'A rye finished through the flavor architecture of a Manhattan.',sources:[{url:SOURCE_URLS.sagamoreManhattan}]}),
+  makeBatchSpirit({id:'knob-creek-single-barrel-9-year',brand:'Knob Creek',expression:'Single Barrel 9 Year',cat:'Bourbon',subcategory:'single-barrel-bourbon',producer:'James B. Beam Distilling Co.',distilleryName:'Knob Creek / Jim Beam Clermont',city:'Clermont',region:'Kentucky',style:'Kentucky Straight Bourbon · Single Barrel · 120 Proof',proofN:120,ageText:'9 yr',minYears:9,maxYears:9,priceUsd:16.5,flavor:{Sweet:6,Oak:8,Spice:6,Fruit:4,Smoke:2,Earth:4,Herbal:1},body:8,finish:8,topNotes:['Vanilla oak','Roasted nuts','Barrel spice'],productionRows:[['Barrel','Single barrel selected through the Knob Creek program',true],['Age','Minimum 9 years'],['Char','Level 4 char white oak'],['Bottling Proof','120']],productionStructured:{maturation:{vessel:'new-charred-american-oak',charLevel:4},methodTags:['single-barrel','high-proof']},prodTags:['Single Barrel','9 Year','120 Proof'],why:'Knob Creek positions its single barrel program around 120 proof, level-four char, and a minimum nine-year age statement from Clermont-aged barrels.',whyShort:'A 120-proof, nine-year single barrel built around deep Beam oak.',sources:[{url:SOURCE_URLS.knobCreekSingleBarrel}]}),
+  makeBatchSpirit({id:'bulleit-10-year',brand:'Bulleit',expression:'10 Year Bourbon',cat:'Bourbon',subcategory:'kentucky-straight-bourbon',producer:'The Bulleit Distilling Co.',distilleryName:'The Bulleit Distilling Co.',city:'Lawrenceburg',region:'Kentucky',style:'Kentucky Straight Bourbon Whiskey · 10 Year',proofN:91.2,ageText:'10 yr',minYears:10,maxYears:10,priceUsd:10,flavor:{Sweet:6,Oak:6,Spice:5,Fruit:4,Smoke:2,Earth:3,Herbal:1},body:5,finish:5,topNotes:['Toasty oak','Soft vanilla','Dried fruit'],productionRows:[['Age','Minimum 10 years',true],['Barrel','#4 charred American white oak'],['Bottling Proof','91.2'],['Mash Bill','Pending source confirmation']],productionStructured:{maturation:{vessel:'new-charred-american-oak',charLevel:4},methodTags:['10-year']},prodTags:['10 Year','Kentucky Straight Bourbon'],why:'Bulleit describes this as a ten-year bourbon aged in #4 charred American white oak, carrying oak, vanilla, fruit, and gentle smoke.',whyShort:'Bulleit’s ten-year bourbon: oak-forward, mature, and accessible.',sources:[{url:SOURCE_URLS.bulleit10}],sourcingLimitations:['Official page does not publish mash bill for the 10 Year Bourbon.']}),
+  makeBatchSpirit({id:'old-forester-1870',brand:'Old Forester',expression:'1870 Original Batch',cat:'Bourbon',subcategory:'whiskey-row-bourbon',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Bourbon · Whiskey Row Series',proofN:90,ageText:'NAS',priceUsd:10.75,flavor:{Sweet:6,Oak:4,Spice:4,Fruit:6,Smoke:1,Earth:2,Herbal:2},body:5,finish:4,topNotes:['Apple citrus','Soft vanilla','Light baking spice'],productionRows:[['Batching','Barrels from three warehouses, different production days and age profiles',true],['Filtration','Minimally filtered'],['Bottling Proof','90'],['Age','No age statement']],productionStructured:{methodTags:['small-batch','whiskey-row'],maturation:{vessel:'new-charred-american-oak'}},prodTags:['Whiskey Row','Original Batch','90 Proof'],why:'Old Forester 1870 is built to echo George Garvin Brown’s original batching model by combining barrels from three warehouses.',whyShort:'A Whiskey Row bottle built around Old Forester’s original batching idea.',sources:[{url:SOURCE_URLS.oldForester1870},{url:'https://www.oldforester.com/our-legacy/',coversFields:['history','proof']}]}),
+  makeBatchSpirit({id:'old-forester-1897-bottled-in-bond',brand:'Old Forester',expression:'1897 Bottled in Bond',cat:'Bourbon',subcategory:'bottled-in-bond-bourbon',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Bourbon · Bottled in Bond',proofN:100,ageText:'At least 4 yr',minYears:4,priceUsd:11.75,flavor:{Sweet:7,Oak:6,Spice:6,Fruit:5,Smoke:1,Earth:3,Herbal:1},body:6,finish:6,topNotes:['Caramel vanilla','Dried fruit','Black pepper'],productionRows:[['Standard','Bottled in Bond',true],['Age','At least 4 years under Bottled-in-Bond rules'],['Bottling Proof','100'],['Series','Whiskey Row Series']],productionStructured:{methodTags:['bottled-in-bond','whiskey-row'],maturation:{vessel:'new-charred-american-oak'}},prodTags:['Bottled in Bond','Whiskey Row','100 Proof'],why:'This Whiskey Row expression uses Bottled-in-Bond rules as the product story: one distillation season, one distiller, bonded aging, and 100 proof.',whyShort:'Old Forester’s Bottled-in-Bond Whiskey Row expression.',sources:[{url:SOURCE_URLS.oldForester1897}]}),
+  makeBatchSpirit({id:'old-forester-1910',brand:'Old Forester',expression:'1910 Old Fine Whisky',cat:'Bourbon',subcategory:'double-barreled-bourbon',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Bourbon · Double Barreled',proofN:93,ageText:'NAS',priceUsd:13,flavor:{Sweet:8,Oak:6,Spice:5,Fruit:6,Smoke:2,Earth:3,Herbal:1},body:7,finish:6,topNotes:['Toffee','Baked apple','Mocha spice'],productionRows:[['Finish','Second barreling inspired by the 1910 bottling-line fire story',true],['Second Barrel','Enters second barrel at 100 proof'],['Bottling Proof','93'],['Series','Whiskey Row Series']],productionStructured:{finishType:'double-barrel',maturation:{finishCasks:['second-new-barrel']},methodTags:['double-barreled','whiskey-row']},prodTags:['Double Barreled','Whiskey Row','93 Proof'],why:'Old Forester 1910 mimics the historic second-barrel accident story with a modern double-barreled bourbon profile.',whyShort:'The sweeter, double-barreled Old Forester Whiskey Row pour.',sources:[{url:SOURCE_URLS.oldForester1910}]}),
+  makeBatchSpirit({id:'old-forester-1920',brand:'Old Forester',expression:'1920 Prohibition Style',cat:'Bourbon',subcategory:'high-proof-bourbon',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Bourbon · Prohibition Style',proofN:115,ageText:'NAS',priceUsd:14.25,flavor:{Sweet:8,Oak:7,Spice:7,Fruit:6,Smoke:2,Earth:4,Herbal:1},body:8,finish:8,topNotes:['Dark caramel','Chocolate oak','Rye spice'],productionRows:[['Historic Frame','Inspired by Old Forester medicinal whiskey during Prohibition',true],['Barrel Entry Story','100 entry proof would mature toward 115 proof'],['Bottling Proof','115'],['Series','Whiskey Row Series']],productionStructured:{methodTags:['high-proof','whiskey-row','prohibition-style'],maturation:{vessel:'new-charred-american-oak'}},prodTags:['Prohibition Style','Whiskey Row','115 Proof'],why:'Old Forester presents 1920 at 115 proof to represent the richer style tied to its medicinal whiskey permit era.',whyShort:'High-proof Whiskey Row bourbon built around Old Forester’s Prohibition-era story.',sources:[{url:SOURCE_URLS.oldForester1920}]}),
+  makeBatchSpirit({id:'old-forester-single-barrel-barrel-strength-rye',brand:'Old Forester',expression:'Single Barrel Barrel Strength Rye',cat:'Rye',subcategory:'single-barrel-rye',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Rye Whiskey · Single Barrel · Barrel Strength',proofN:124,ageText:'NAS',priceUsd:16,flavor:{Sweet:6,Oak:6,Spice:8,Fruit:5,Smoke:1,Earth:4,Herbal:4},body:8,finish:8,topNotes:['Rye spice','Vanilla caramel','Dried dill'],productionRows:[['Mash Bill','65% rye, 20% malted barley, 15% corn',true],['Barrel','Single barrel, barrel strength'],['Bottling Proof','124 shown in control-state listing; single barrels may vary'],['Filtration','Pending producer confirmation']],productionStructured:{mashBill:{components:['rye','malted-barley','corn'],summary:'65% rye, 20% malted barley, 15% corn'},methodTags:['single-barrel','barrel-strength','rye']},prodTags:['Single Barrel','Barrel Strength','Rye'],why:'This draft joins Old Forester’s historic rye mash bill to the single-barrel, barrel-strength format; exact proof should be confirmed against Echo’s bottle.',whyShort:'Old Forester rye in a single-barrel, barrel-strength format.',sources:[{url:SOURCE_URLS.oldForesterRye,coversFields:['mashBill','producer','base rye']},{url:SOURCE_URLS.oldForesterSingleBarrelRye,sourceType:'control-state',coversFields:['proof','product identity']}],sourcingLimitations:['Manufacturer page for the exact barrel-strength rye was not available in this pass; proof should be checked against Echo bottle.']}),
+  makeBatchSpirit({id:'old-forester-rye-100-proof',brand:'Old Forester',expression:'Rye 100 Proof',cat:'Rye',subcategory:'kentucky-straight-rye',producer:'Old Forester',distilleryName:'Old Forester Distilling Co.',city:'Louisville',region:'Kentucky',style:'Kentucky Straight Rye Whisky · 100 Proof',proofN:100,ageText:'NAS',priceUsd:7,flavor:{Sweet:5,Oak:4,Spice:8,Fruit:4,Smoke:1,Earth:3,Herbal:5},body:5,finish:6,topNotes:['Black pepper','Molasses','Citrus oil'],productionRows:[['Mash Bill','65% rye, 20% malted barley, 15% corn',true],['Fermentation','Proprietary yeast strain'],['Bottling Proof','100'],['Recipe Origin','Inspired by historic Normandy Rye']],productionStructured:{mashBill:{components:['rye','malted-barley','corn'],summary:'65% rye, 20% malted barley, 15% corn'},methodTags:['100-proof','kentucky-straight-rye']},prodTags:['100 Proof','Kentucky Straight Rye'],why:'Old Forester Rye is built on a high-malted-barley rye mash bill that keeps the spice sharp but adds a floral, rounded edge.',whyShort:'A 100-proof Kentucky rye with a high-malted-barley mash bill.',sources:[{url:SOURCE_URLS.oldForesterRye}]}),
+  makeBatchSpirit({id:'whistlepig-snout-to-tail-10-year-bourbon',brand:'WhistlePig',expression:'Snout-to-Tail 10 Year Bourbon',cat:'Bourbon',subcategory:'toasted-finish-bourbon',producer:'WhistlePig Whiskey',distilleryName:'WhistlePig Whiskey',city:'Shoreham',region:'Vermont',style:'Straight Bourbon Whiskey · Vermont Oak Toasted Barrel Finish',proofN:88,ageText:'10 yr',minYears:10,maxYears:10,priceUsd:22,flavor:{Sweet:7,Oak:7,Spice:4,Fruit:3,Smoke:2,Earth:4,Herbal:1},body:6,finish:6,topNotes:['Brown sugar','Roasted almond','Cedar'],productionRows:[['Age','10 years',true],['Finish','Vermont oak toasted barrels'],['Bottling Proof','88'],['Mash Bill','Pending producer detail']],productionStructured:{finishType:'vermont-oak-toasted',maturation:{finishCasks:['vermont-oak-toasted']},methodTags:['10-year','toasted-finish']},prodTags:['10 Year','Vermont Oak','Toasted Finish'],why:'WhistlePig frames Snout-to-Tail around a ten-year bourbon finished with two toasted Vermont oak barrel heads.',whyShort:'Ten-year bourbon with a WhistlePig toasted Vermont oak finish.',sources:[{url:SOURCE_URLS.whistlepigSnoutToTail}],sourcingLimitations:['Official page does not publish mash bill.']}),
+  makeBatchSpirit({id:'jeptha-creed-bottled-in-bond',brand:'Jeptha Creed',expression:'Bottled-in-Bond Bourbon',cat:'Bourbon',subcategory:'bottled-in-bond-bourbon',producer:'Jeptha Creed Distillery',distilleryName:'Jeptha Creed Distillery',city:'Shelbyville',region:'Kentucky',style:'Kentucky Straight Bourbon · Bottled in Bond',proofN:100,ageText:'At least 4 yr',minYears:4,priceUsd:10.75,flavor:{Sweet:6,Oak:5,Spice:6,Fruit:5,Smoke:1,Earth:5,Herbal:2},body:6,finish:6,topNotes:['Orange creme brulee','Baking spice','Sweet oak'],productionRows:[['Mash Bill','75% Bloody Butcher corn, 20% malted rye, 5% malted barley',true],['Standard','Bottled in Bond'],['Bottling Proof','100'],['Corn','Bloody Butcher corn']],productionStructured:{mashBill:{components:['bloody-butcher-corn','malted-rye','malted-barley'],summary:'75/20/5'},methodTags:['bottled-in-bond','ground-to-glass']},prodTags:['Bottled in Bond','Bloody Butcher Corn','Ground-to-Glass'],why:'Jeptha Creed’s bonded bourbon centers its estate/farm identity around Bloody Butcher corn and a rye-heavy bonded mash bill.',whyShort:'A bonded Jeptha Creed bourbon built on Bloody Butcher corn.',sources:[{url:SOURCE_URLS.jepthaBib}]}),
+  makeBatchSpirit({id:'jeptha-creed-four-grain',brand:'Jeptha Creed',expression:'Straight Four Grain Bourbon',cat:'Bourbon',subcategory:'four-grain-bourbon',producer:'Jeptha Creed Distillery',distilleryName:'Jeptha Creed Distillery',city:'Shelbyville',region:'Kentucky',style:'Kentucky Straight Bourbon · Four Grain',proofN:98,ageText:'NAS',priceUsd:10.75,flavor:{Sweet:6,Oak:5,Spice:5,Fruit:4,Smoke:1,Earth:5,Herbal:2},body:6,finish:5,topNotes:['Vanilla','Nutmeg clove','Toasted pecan'],productionRows:[['Grains','Bloody Butcher corn, malted rye, malted wheat, malted barley',true],['Bottling Proof','98'],['Bottle Size','750 mL'],['Age','Pending source confirmation']],productionStructured:{mashBill:{components:['bloody-butcher-corn','malted-rye','malted-wheat','malted-barley'],summary:'Four grain; percentages pending source confirmation'},methodTags:['four-grain','ground-to-glass']},prodTags:['Four Grain','Bloody Butcher Corn','98 Proof'],why:'Jeptha Creed’s four-grain bourbon uses its signature Bloody Butcher corn alongside malted rye, wheat, and barley.',whyShort:'A four-grain Jeptha Creed bourbon built around Bloody Butcher corn.',sources:[{url:SOURCE_URLS.jepthaFourGrain},{url:'https://jepthacreed.com/',coversFields:['producer background','proof']}],sourcingLimitations:['Official shop source gives grain list and proof but not full mash percentages.']}),
+  makeBatchSpirit({id:'jeptha-creed-6-year-wheated',brand:'Jeptha Creed',expression:'6 Year Wheated Bourbon',cat:'Bourbon',subcategory:'wheated-bourbon',producer:'Jeptha Creed Distillery',distilleryName:'Jeptha Creed Distillery',city:'Shelbyville',region:'Kentucky',style:'Kentucky Straight Bourbon · Wheated · 6 Year',proofN:93,ageText:'6 yr',minYears:6,maxYears:6,priceUsd:10.75,flavor:{Sweet:7,Oak:5,Spice:4,Fruit:5,Smoke:1,Earth:5,Herbal:1},body:6,finish:6,topNotes:['Toasted almond','Cinnamon bread','Dark cherry'],productionRows:[['Mash Bill','75% Bloody Butcher corn, 20% malted wheat, 5% malted barley',true],['Age','6 years'],['Bottling Proof','93'],['Corn','Bloody Butcher corn']],productionStructured:{mashBill:{components:['bloody-butcher-corn','malted-wheat','malted-barley'],summary:'75/20/5'},methodTags:['wheated','6-year','ground-to-glass']},prodTags:['6 Year','Wheated','Bloody Butcher Corn'],why:'This is Jeptha Creed’s older wheated expression, using Bloody Butcher corn with malted wheat for a softer bourbon profile.',whyShort:'A six-year wheated Jeptha Creed bourbon with Bloody Butcher corn.',sources:[{url:SOURCE_URLS.jepthaWheated}]}),
+];
+
+SPIRIT_DATA.push(...BOURBON_BATCH_1);
+
 const DOSSIER_DETAILS = {
 'penelope-barrel-strength': {
   reviewedAt:'2026-07-26',
@@ -776,8 +906,8 @@ const DOSSIER_DETAILS = {
   seanShort:'“The bottle I hand to bourbon drinkers who think they’ve tried everything under fifty dollars.” — Sean',
   whyWeCarry:'In York, barrel-proof usually means a seventy-dollar ask. This delivers cask-strength complexity at a number our guests will order twice, and it anchors the value end of the bourbon flight — we pour it against the Booker’s on purpose, because the comparison sells itself.',
   press:[
-    {date:'2025-11-02',type:'score',source:'Whisky Advocate',title:'93 Points',summary:'Scored 93 points in the winter buying guide.',verified:true},
-    {date:'2025-04-12',type:'award',source:'San Francisco World Spirits Competition',title:'Double Gold',summary:'Double Gold in the barrel-strength bourbon class.',verified:true},
+    {date:null,type:'score',source:'Whisky Advocate',sourceUrl:null,title:'93 Points',summary:'Draft recognition claim pending source verification; prior prototype date removed.',verified:false},
+    {date:null,type:'award',source:'San Francisco World Spirits Competition',sourceUrl:null,title:'Double Gold',summary:'Draft recognition claim pending source verification; prior prototype date removed.',verified:false},
   ],
   paths:{
     lighter:[
@@ -801,7 +931,7 @@ const DOSSIER_DETAILS = {
   seanShort:'“History gets a bottle on my shelf once. Liquid keeps it there. This one stayed.” — Sean',
   whyWeCarry:'It carries our event history — we built February’s six-course whiskey dinner around this label — and it gives the list a real 1856 Kentucky story at an age-stated price the York market respects. Guests who were in the room that night still ask for it by name.',
   press:[
-    {date:'2026-02-17',type:'news',source:"Echo's Reserve",title:'Featured — Whiskey Dinner',summary:'Six courses by Chef Daniel Gramas, guided by brand specialist Tavaris Smith.',verified:true},
+    {date:'2026-02-17',type:'venue-event',source:"Echo's Reserve",sourceUrl:null,title:'Featured — Whiskey Dinner',summary:'First-party venue-event claim pending internal event artifact/source attachment.',verified:false},
   ],
   paths:{
     lighter:[
@@ -824,7 +954,7 @@ const DOSSIER_DETAILS = {
   seanShort:'“If bourbon is home base, this is the bridge across the Atlantic.” — Sean',
   whyWeCarry:'Every scotch shelf needs its handshake bottle — the name a guest already trusts. This is ours, and it earns the slot by being genuinely representative: real sherry seasoning, natural colour. We pour it beside the Tomatin and Glenlivet so the conversation has somewhere to go.',
   press:[
-    {date:'2025-07-08',type:'award',source:'International Spirits Challenge',title:'Gold',summary:'Gold medal, 12-year single malt class.',verified:true},
+    {date:null,type:'award',source:'International Spirits Challenge',sourceUrl:null,title:'Gold',summary:'Draft recognition claim pending source verification; prior prototype date removed.',verified:false},
   ],
   paths:{
     lighter:[
@@ -847,7 +977,7 @@ const DOSSIER_DETAILS = {
   seanShort:'“Ask for it neat. No lime, no salt.” — Sean',
   whyWeCarry:'This bottle exists to make an argument: that blanco tequila belongs in the same conversation as single-barrel bourbon. It pours in the Reserve room only, so a staff member is always part of the moment — great farming, minimal handling, nothing added. The winemaking rule, applied to agave.',
   press:[
-    {date:'2025-09-30',type:'news',source:'Tequila Matchmaker',title:'Additive-Free Verified',summary:'Producer confirmed under the additive-free verification program.',verified:true},
+    {date:null,type:'news',source:'Tequila Matchmaker',sourceUrl:null,title:'Additive-Free Verified',summary:'Draft additive-free claim pending source verification; prior prototype date removed.',verified:false},
   ],
   paths:{
     lighter:[
@@ -870,7 +1000,7 @@ const DOSSIER_DETAILS = {
   seanShort:'“The pour for tables that want something like bourbon, but different.” — Sean',
   whyWeCarry:'It closes dinners. Nothing on the shelf converts a bourbon drinker to rum faster, and it earns its flight slot next to the Don Q XO — sweet versus structured, side by side. Guests taste both and pick a camp; either way, the rum section just made a regular.',
   press:[
-    {date:'2025-05-21',type:'award',source:'International Rum Conference, Madrid',title:'Gold Medal',summary:'Gold in the premium aged rum category.',verified:true},
+    {date:null,type:'award',source:'International Rum Conference, Madrid',sourceUrl:null,title:'Gold Medal',summary:'Draft recognition claim pending source verification; prior prototype date removed.',verified:false},
   ],
   paths:{
     lighter:[
@@ -889,14 +1019,51 @@ const DOSSIER_DETAILS = {
 };
 
 function normalizeSpiritRecord(base, details){
+  const merged = {...base, ...(details || {})};
+  const recordStatus = merged.recordStatus || 'published';
+  const publicationStatus = merged.publicationStatus || recordStatus;
+  const verificationStatus = merged.verificationStatus || 'unverified';
+  const displayNameParts = (merged.name || '').split(' ');
+  const derivedBrand = merged.brand || displayNameParts.slice(0, Math.min(2, displayNameParts.length)).join(' ');
   return {
-    ...base,
-    ...(details || {}),
+    ...merged,
+    schemaVersion:merged.schemaVersion || 'spirit-v1',
+    recordStatus,
+    publicationStatus,
+    verificationStatus,
+    brand:merged.brand || derivedBrand,
+    expression:merged.expression || (merged.name || '').replace(derivedBrand, '').trim() || null,
+    subcategory:merged.subcategory || null,
+    country:merged.country || null,
+    region:merged.region || null,
+    distilleryName:merged.distilleryName || merged.dist?.name || merged.distillery || null,
+    identity:merged.identity || {
+      brand:merged.brand || derivedBrand,
+      expression:merged.expression || null,
+      displayName:merged.name,
+      category:merged.cat,
+      subcategory:merged.subcategory || null,
+      imageKey:merged.silo,
+      styleLine:merged.style,
+    },
+    strength:merged.strength || {
+      proof:merged.proofN,
+      age:merged.ageData || {text:merged.age,minYears:null,maxYears:null,unaged:merged.age === 'Unaged'},
+    },
     commerce:{
       ...DEFAULT_COMMERCE_FIELDS,
-      ...(base.commerce || {}),
-      ...((details && details.commerce) || {}),
+      ...(merged.commerce || {}),
     },
+    provenance:{
+      addedAt:'2026-07-26',
+      updatedAt:'2026-07-26',
+      reviewedAt:merged.reviewedAt || null,
+      reviewedBy:null,
+      sources:[],
+      ...(merged.provenance || {}),
+    },
+    awards:(merged.awards || []).map(entry=>({verified:false, sourceUrl:null, ...entry})),
+    press:(merged.press || []).map(entry=>({sourceUrl:null, ...entry})),
     dataVersion:SPIRIT_DATA_VERSION,
   };
 }
@@ -925,14 +1092,25 @@ function validateSpiritRecords(records){
   const ids = new Set(records.map(spirit => spirit.id).filter(Boolean));
 
   records.forEach((spirit, index)=>{
+    const isDraft = spirit.recordStatus === 'draft';
     REQUIRED_SPIRIT_FIELDS.forEach(field=>{
       const value = spirit[field];
-      if(isBlank(value) || (Array.isArray(value) && value.length === 0)) pushMissing(errors, spirit, field);
+      if(isBlank(value) || (Array.isArray(value) && value.length === 0 && !isDraft)) pushMissing(errors, spirit, field);
     });
 
     if(spirit.id){
       if(seen.has(spirit.id)) errors.push(`${spirit.id}: duplicate id`);
       seen.add(spirit.id);
+    }
+
+    if(!RECORD_STATUSES.includes(spirit.recordStatus)){
+      errors.push(`${spirit.id}: invalid recordStatus "${spirit.recordStatus}"`);
+    }
+    if(!PUBLICATION_STATUSES.includes(spirit.publicationStatus)){
+      errors.push(`${spirit.id}: invalid publicationStatus "${spirit.publicationStatus}"`);
+    }
+    if(!VERIFICATION_STATUSES.includes(spirit.verificationStatus)){
+      errors.push(`${spirit.id}: invalid verificationStatus "${spirit.verificationStatus}"`);
     }
 
     if(spirit.topNotes && spirit.topNotes.length !== 3){
@@ -948,6 +1126,11 @@ function validateSpiritRecords(records){
     Object.keys(spirit.flavor || {}).forEach(axis=>{
       if(!FLAVOR_AXES.includes(axis)) errors.push(`${spirit.id}: unknown flavor axis "${axis}"`);
     });
+    [['body',spirit.body],['finish',spirit.finish]].forEach(([field,value])=>{
+      if(typeof value !== 'number' || !Number.isFinite(value) || value < 0 || value > 10){
+        errors.push(`${spirit.id}: invalid ${field} value "${value}"`);
+      }
+    });
 
     (spirit.press || []).forEach((entry, pressIndex)=>{
       const prefix = `${spirit.id}: press[${pressIndex}]`;
@@ -955,11 +1138,21 @@ function validateSpiritRecords(records){
         errors.push(`${prefix} must be an object`);
         return;
       }
-      if(!isValidIsoDate(entry.date)) errors.push(`${prefix} has invalid date "${entry.date}"`);
+      if(entry.date !== null && entry.date !== undefined && !isValidIsoDate(entry.date)) errors.push(`${prefix} has invalid date "${entry.date}"`);
       ['type','source','title','summary'].forEach(field=>{
         if(isBlank(entry[field])) errors.push(`${prefix} missing "${field}"`);
       });
       if(typeof entry.verified !== 'boolean') errors.push(`${prefix} verified must be boolean`);
+      if(!PRESS_TYPES.includes(entry.type)) errors.push(`${prefix} has invalid type "${entry.type}"`);
+      if(entry.verified && isBlank(entry.sourceUrl)) errors.push(`${prefix} verified=true requires sourceUrl`);
+      if(entry.verified && !isValidIsoDate(entry.date)) errors.push(`${prefix} verified=true requires source date`);
+    });
+
+    (spirit.awards || []).forEach((entry, awardIndex)=>{
+      const prefix = `${spirit.id}: awards[${awardIndex}]`;
+      if(isBlank(entry.t) || isBlank(entry.s)) errors.push(`${prefix} missing title/source`);
+      if(typeof entry.verified !== 'boolean') errors.push(`${prefix} verified must be boolean`);
+      if(entry.verified && isBlank(entry.sourceUrl)) errors.push(`${prefix} verified=true requires sourceUrl`);
     });
 
     PATH_TYPES.forEach(pathType=>{
@@ -981,6 +1174,18 @@ function validateSpiritRecords(records){
     if(typeof spirit.proofN !== 'number' || !Number.isFinite(spirit.proofN)){
       errors.push(`${spirit.id || `record ${index}`}: proofN must be numeric`);
     }
+    if(!/^\$\d+(\.\d{2})?$|^Pending$/.test(spirit.price || '')){
+      errors.push(`${spirit.id}: invalid price display "${spirit.price}"`);
+    }
+    if(spirit.commerce.pourPriceUsd !== null && (typeof spirit.commerce.pourPriceUsd !== 'number' || !Number.isFinite(spirit.commerce.pourPriceUsd))){
+      errors.push(`${spirit.id}: commerce.pourPriceUsd must be numeric or null`);
+    }
+    if(spirit.commerce.pourPriceUsd !== null && isBlank(spirit.commerce.priceProvenance)){
+      errors.push(`${spirit.id}: temporary price requires priceProvenance`);
+    }
+    if(spirit.provenance?.sources?.some(source=>isBlank(source.url))){
+      errors.push(`${spirit.id}: provenance source missing url`);
+    }
   });
 
   if(errors.length){
@@ -990,8 +1195,12 @@ function validateSpiritRecords(records){
   }
 }
 
-const BOTTLES = normalizeSpiritRecords(SPIRIT_DATA, DOSSIER_DETAILS);
-validateSpiritRecords(BOTTLES);
+const REVIEW_MODE = new URLSearchParams(window.location.search).get('review') === '1';
+const ALL_BOTTLES = normalizeSpiritRecords(SPIRIT_DATA, DOSSIER_DETAILS);
+validateSpiritRecords(ALL_BOTTLES);
+const BOTTLES = REVIEW_MODE
+  ? ALL_BOTTLES
+  : ALL_BOTTLES.filter(spirit=>spirit.publicationStatus === 'published');
 
 /* ═══════════════════════════════════════════════
    FLIGHT LAYER — FOUNDATIONAL ARCHITECTURE (not yet built)
@@ -1208,10 +1417,12 @@ function renderDetail(i){
       <div class="press-title">${p.title}</div>
       <div class="press-sum">${p.summary}</div>
     </div>`).join('');
-  const pressBody = `
-    <div class="award-row">${b.awards.map(a=>
-      `<div class="award">${medalSVG()}<div><span class="at">${a.t}</span><span class="as">${a.s}</span></div></div>`).join('')}</div>
-    ${pressEntries ? `<div class="press-list">${pressEntries}</div>` : ''}`;
+  const awardEntries = (b.awards||[]).filter(a=>a.verified)
+    .map(a=>`<div class="award">${medalSVG()}<div><span class="at">${a.t}</span><span class="as">${a.s}</span></div></div>`).join('');
+  const pressBody = [
+    awardEntries ? `<div class="award-row">${awardEntries}</div>` : '',
+    pressEntries ? `<div class="press-list">${pressEntries}</div>` : '',
+  ].filter(Boolean).join('');
 
   const tableBody = b.pairings.map(p=>
     `<div class="pair-row"><span class="pair-icon">${p[0]}</span><span class="pair-type">${p[1]}</span><span class="pair-val">${p[2]}</span></div>`).join('');
@@ -1246,6 +1457,12 @@ function renderDetail(i){
     return rows ? `<div class="path-label"><span class="pl-mark">${mark}</span>${label}</div>${rows}` : '';
   }).join('');
 
+  // Sean-owned voice fields render only once Sean has supplied real copy.
+  // Until then they stay absent (never the internal "Pending Sean review." placeholder).
+  const SEAN_PENDING = 'Pending Sean review.';
+  const hasSeanText = (v) => !!(v && String(v).trim() && String(v).trim() !== SEAN_PENDING);
+  const hasSeanNotes = hasSeanText(b.notes);
+  const hasSeanCue = hasSeanText(b.seanShort);
   const notesBody = `
     <p class="notes-text">${b.notes}</p>
     <div class="notes-sig">— Sean<span>Echo's Reserve · Curator</span></div>`;
@@ -1282,7 +1499,7 @@ function renderDetail(i){
     <p class="summary-why">${b.whyShort}</p>
 
     <div class="cue-card">
-      <div class="cue-text">${b.seanShort}</div>
+      ${hasSeanCue ? `<div class="cue-text">${b.seanShort}</div>` : ''}
       <div class="reviewed"><span class="rd">✓</span> Dossier reviewed ${fmtDate(b.reviewedAt)}</div>
     </div>
 
@@ -1290,11 +1507,11 @@ function renderDetail(i){
     ${drawer('made','How It Is Made', madeBody)}
     ${drawer('why','Why It Matters', `<p class="why-text">${b.why}</p>`)}
     ${drawer('carry','Why We Carry It', `<p class="why-text">${b.whyWeCarry}</p>`)}
-    ${drawer('press','Recognition & Press', pressBody)}
+    ${pressBody ? drawer('press','Recognition & Press', pressBody) : ''}
     ${drawer('table','At the Table', tableBody)}
     ${drawer('dist','Distillery Story', distBody)}
     ${drawer('compare','Compare & Continue', compareBody)}
-    ${drawer('notes',"Sean's Notes", notesBody, 'notes-drawer')}
+    ${hasSeanNotes ? drawer('notes',"Sean's Notes", notesBody, 'notes-drawer') : ''}
 
     <div class="vault-footer">
       <div class="vf-coming">Coming to the Vault — <b>Save Favorites · Build Your Own Flight · Cocktail Recipes · Tasting Alerts</b></div>
@@ -1335,7 +1552,7 @@ function chipRow(el, options, key){
 function setFilter(key,val){ filters[key]=val; renderVault(); }
 
 function renderVault(){
-  chipRow('fCat', ['All','Bourbon','Scotch','Agave','Rum'], 'cat');
+  chipRow('fCat', ['All','Bourbon','Rye','American','Scotch','Agave','Rum'], 'cat');
   chipRow('fProof', Object.keys(PROOF_BUCKETS), 'proof');
   chipRow('fFlavor', Object.keys(FLAVOR_LEANS), 'flavor');
 
@@ -1346,7 +1563,7 @@ function renderVault(){
   );
 
   document.getElementById('vaultCount').textContent =
-    list.length + ' OF ' + BOTTLES.length + ' DOSSIERS · 164 AT LAUNCH';
+    list.length + ' OF ' + BOTTLES.length + ' DOSSIERS · ' + SPIRIT_COLLECTION_TARGET + ' AT LAUNCH';
 
   document.getElementById('vaultGrid').innerHTML = list.map(({b,i})=>`
     <div class="vcard" onclick="gotoBottle(${i})">

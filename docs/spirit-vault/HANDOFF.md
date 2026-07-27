@@ -16,7 +16,18 @@ full dossier (all drawers incl. Distillery Story, pairings, and an agent-drafted
 Workflow: `spirit-vault-batch2-premiums` (14 agents, 0 errors). Curator cue
 (`seanShort`) + Sean's Notes (`notes`) still stay blank for Sean.
 
-**This batch:** 14 researched → **12 PUBLISHED** to the guest/Coal link (Booker's +
+**Batch 3 (2026-07-27, `feat/spirit-vault-batch3`):** 12 more premiums researched
+(workflow `spirit-vault-batch3-premiums`, 0 errors) → **10 PUBLISHED**: Green Spot
+(Irish), Chicken Cock Double Oak + Small Batch, Jefferson's, Rebel BiB, Elijah
+Craig Straight Rye + Small Batch, Glenlivet 12, New Riff Single Barrel (barrel
+proof), Heaven Hill BiB. **2 HELD draft** (shelf-expression check): Horse Soldier
+(Signature-vs-Straight) and StoneStreet (which expression). Guest dossiers **17 →
+27**. Same audit gate; whyWeCarry clean (no venue claims); no id dups. Several
+published bottles (Green Spot, Glenlivet, New Riff, Heaven Hill, Elijah Craig)
+are the very ones referenced in the original five's `paths` — so Compare &
+Continue deep-links will start resolving as more of the vault fills.
+
+**This batch (Batch 2):** 14 researched → **12 PUBLISHED** to the guest/Coal link (Booker's +
 Blanton's, both Middle West 2XBBL, Hemingway Rye, Widow Jane 10 & 12, Woodford
 Double Oaked, Ironclad, Eagle Rare, Charles Goodnight, Angel's Envy Port). **2 HELD
 as draft** pending Sean's expression confirmation: Calumet Farm (15-vs-8-yr label

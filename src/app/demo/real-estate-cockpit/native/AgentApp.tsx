@@ -2300,21 +2300,21 @@ export default function AgentApp() {
         }
 
         /* voice front door */
-        .vbar {
+        .agent :global(.vbar) {
           border: 1px solid var(--copper-soft);
           border-radius: 12px;
           background: var(--copper-wash);
           padding: 14px;
           margin-bottom: 14px;
         }
-        .vbar-head {
+        .agent :global(.vbar-head) {
           display: flex;
           align-items: baseline;
           gap: 9px;
           margin-bottom: 11px;
           flex-wrap: wrap;
         }
-        .vbadge {
+        .agent :global(.vbadge) {
           font-size: 10px;
           font-weight: 700;
           text-transform: uppercase;
@@ -2324,11 +2324,11 @@ export default function AgentApp() {
           border-radius: 999px;
           padding: 3px 9px;
         }
-        .vsub {
+        .agent :global(.vsub) {
           font-size: 12px;
           color: var(--text-soft);
         }
-        .vgo {
+        .agent :global(.vgo) {
           width: 100%;
           display: grid;
           grid-template-columns: 42px 1fr auto;
@@ -2344,10 +2344,10 @@ export default function AgentApp() {
           cursor: pointer;
           transition: border-color 0.15s, background 0.15s;
         }
-        .vgo:hover {
+        .agent :global(.vgo:hover) {
           border-color: var(--copper-soft);
         }
-        .vmic {
+        .agent :global(.vmic) {
           width: 42px;
           height: 42px;
           border-radius: 999px;
@@ -2356,25 +2356,25 @@ export default function AgentApp() {
           display: grid;
           place-items: center;
         }
-        .vmic :global(svg) {
+        .agent :global(.vmic svg) {
           width: 20px;
           height: 20px;
         }
-        .vgo-txt {
+        .agent :global(.vgo-txt) {
           display: flex;
           flex-direction: column;
           gap: 2px;
           min-width: 0;
         }
-        .vgo-txt :global(b) {
+        .agent :global(.vgo-txt b) {
           font-size: 15px;
           color: var(--text);
         }
-        .vgo-txt :global(small) {
+        .agent :global(.vgo-txt small) {
           font-size: 11.5px;
           color: var(--muted);
         }
-        .vgo-cue {
+        .agent :global(.vgo-cue) {
           font-size: 11px;
           font-weight: 700;
           text-transform: uppercase;
@@ -2382,7 +2382,7 @@ export default function AgentApp() {
           color: var(--copper-soft);
           white-space: nowrap;
         }
-        .vlisten {
+        .agent :global(.vlisten) {
           width: 100%;
           display: flex;
           align-items: center;
@@ -2395,64 +2395,64 @@ export default function AgentApp() {
           font: inherit;
           cursor: pointer;
         }
-        .vwave {
+        .agent :global(.vwave) {
           display: flex;
           align-items: center;
           gap: 3px;
           height: 30px;
         }
-        .vwave :global(span) {
+        .agent :global(.vwave span) {
           width: 3px;
           border-radius: 999px;
           background: var(--copper-soft);
           display: block;
         }
-        .vlisten-txt {
+        .agent :global(.vlisten-txt) {
           font-size: 14px;
           font-weight: 600;
           color: var(--text);
         }
-        .vlisten-h {
+        .agent :global(.vlisten-h) {
           margin-left: auto;
           font-size: 11px;
           color: var(--muted);
         }
-        .vparsed {
+        .agent :global(.vparsed) {
           display: flex;
           flex-direction: column;
           gap: 10px;
         }
-        .vtrans {
+        .agent :global(.vtrans) {
           border-left: 2px solid var(--copper-soft);
           padding: 2px 0 2px 11px;
         }
-        .vtrans-l {
+        .agent :global(.vtrans-l) {
           font-size: 10px;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           font-weight: 700;
           color: var(--copper-soft);
         }
-        .vtrans p {
+        .agent :global(.vtrans p) {
           margin: 3px 0 0;
           font-size: 13px;
           line-height: 1.5;
           color: var(--text-soft);
           font-style: italic;
         }
-        .vresult-l {
+        .agent :global(.vresult-l) {
           font-size: 10px;
           text-transform: uppercase;
           letter-spacing: 0.06em;
           font-weight: 700;
           color: var(--muted);
         }
-        .vitems {
+        .agent :global(.vitems) {
           display: flex;
           flex-direction: column;
           gap: 7px;
         }
-        .vitem {
+        .agent :global(.vitem) {
           display: grid;
           grid-template-columns: 30px 1fr;
           gap: 10px;
@@ -2463,13 +2463,13 @@ export default function AgentApp() {
           border-radius: 9px;
           background: var(--surface);
         }
-        .vitem.sync {
+        .agent :global(.vitem.sync) {
           border-left-color: var(--green);
         }
-        .vitem.reminder {
+        .agent :global(.vitem.reminder) {
           border-left-color: var(--yellow);
         }
-        .vi-ic {
+        .agent :global(.vi-ic) {
           width: 30px;
           height: 30px;
           border-radius: 8px;
@@ -2479,23 +2479,23 @@ export default function AgentApp() {
           place-items: center;
           color: var(--copper-soft);
         }
-        .vitem.sync .vi-ic {
+        .agent :global(.vitem.sync .vi-ic) {
           color: var(--green);
         }
-        .vitem.reminder .vi-ic {
+        .agent :global(.vitem.reminder .vi-ic) {
           color: var(--yellow);
         }
-        .vi-ic :global(svg) {
+        .agent :global(.vi-ic svg) {
           width: 16px;
           height: 16px;
         }
-        .vi-body {
+        .agent :global(.vi-body) {
           display: flex;
           flex-direction: column;
           gap: 2px;
           min-width: 0;
         }
-        .vi-l {
+        .agent :global(.vi-l) {
           font-size: 13px;
           font-weight: 600;
           color: var(--text);
@@ -2504,7 +2504,7 @@ export default function AgentApp() {
           gap: 8px;
           flex-wrap: wrap;
         }
-        .vi-badge {
+        .agent :global(.vi-badge) {
           font-size: 9.5px;
           font-weight: 700;
           text-transform: uppercase;
@@ -2515,24 +2515,24 @@ export default function AgentApp() {
           border: 1px solid var(--line);
           color: var(--muted);
         }
-        .vi-badge.sync {
+        .agent :global(.vi-badge.sync) {
           color: var(--green);
           border-color: color-mix(in srgb, var(--green) 40%, transparent);
         }
-        .vi-badge.email {
+        .agent :global(.vi-badge.email) {
           color: var(--copper-soft);
           border-color: var(--copper-dim);
         }
-        .vi-d {
+        .agent :global(.vi-d) {
           font-size: 11.5px;
           color: var(--muted);
           line-height: 1.4;
         }
-        .vact {
+        .agent :global(.vact) {
           display: flex;
           gap: 8px;
         }
-        .vdisc {
+        .agent :global(.vdisc) {
           margin: 2px 0 0;
           font-size: 10.5px;
           color: var(--muted);
@@ -2540,18 +2540,18 @@ export default function AgentApp() {
         }
 
         /* evening roundup */
-        .round {
+        .agent :global(.round) {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 9px;
         }
-        .rcol {
+        .agent :global(.rcol) {
           border: 1px solid var(--line);
           border-radius: 10px;
           background: var(--surface);
           padding: 11px 12px;
         }
-        .rcol-h {
+        .agent :global(.rcol-h) {
           display: flex;
           align-items: center;
           gap: 7px;
@@ -2560,20 +2560,20 @@ export default function AgentApp() {
           color: var(--text);
           margin-bottom: 8px;
         }
-        .rcol-h :global(svg) {
+        .agent :global(.rcol-h svg) {
           width: 14px;
           height: 14px;
         }
-        .rcol.won .rcol-h :global(svg) {
+        .agent :global(.rcol.won .rcol-h svg) {
           color: var(--green);
         }
-        .rcol.open .rcol-h :global(svg) {
+        .agent :global(.rcol.open .rcol-h svg) {
           color: var(--yellow);
         }
-        .rcol.tmrw .rcol-h :global(svg) {
+        .agent :global(.rcol.tmrw .rcol-h svg) {
           color: var(--copper-soft);
         }
-        .rcol ul {
+        .agent :global(.rcol ul) {
           list-style: none;
           margin: 0;
           padding: 0;
@@ -2581,7 +2581,7 @@ export default function AgentApp() {
           flex-direction: column;
           gap: 7px;
         }
-        .rcol li {
+        .agent :global(.rcol li) {
           font-size: 12px;
           color: var(--text-soft);
           line-height: 1.4;
@@ -2589,29 +2589,29 @@ export default function AgentApp() {
           flex-direction: column;
           gap: 1px;
         }
-        .rcol li :global(b) {
+        .agent :global(.rcol li b) {
           color: var(--text);
           font-weight: 600;
         }
-        .rcol li :global(small) {
+        .agent :global(.rcol li small) {
           font-size: 11px;
           color: var(--muted);
         }
-        .rtmrw {
+        .agent :global(.rtmrw) {
           display: flex;
           flex-direction: column;
           gap: 3px;
         }
-        .rtmrw :global(b) {
+        .agent :global(.rtmrw b) {
           font-size: 13px;
           color: var(--text);
         }
-        .rtmrw :global(small) {
+        .agent :global(.rtmrw small) {
           font-size: 11.5px;
           color: var(--muted);
           line-height: 1.4;
         }
-        .rdictate {
+        .agent :global(.rdictate) {
           margin-top: 10px;
           display: inline-flex;
           align-items: center;
@@ -2626,28 +2626,27 @@ export default function AgentApp() {
           font-weight: 600;
           cursor: pointer;
         }
-        .rdictate:hover {
+        .agent :global(.rdictate:hover) {
           border-color: var(--copper-soft);
         }
-        .rdictate.on {
+        .agent :global(.rdictate.on) {
           color: var(--text);
         }
-        .rdictate :global(svg) {
+        .agent :global(.rdictate svg) {
           width: 15px;
           height: 15px;
         }
         @media (max-width: 560px) {
-          .round {
+          .agent :global(.round) {
             grid-template-columns: 1fr;
           }
-          .vgo {
+          .agent :global(.vgo) {
             grid-template-columns: 38px 1fr;
           }
-          .vgo-cue {
+          .agent :global(.vgo-cue) {
             display: none;
           }
         }
-
         .queue {
           display: flex;
           flex-direction: column;

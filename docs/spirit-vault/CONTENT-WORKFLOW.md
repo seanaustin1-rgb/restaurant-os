@@ -81,22 +81,31 @@ admin/browse tooling, and carry their gaps as nulls — never placeholder prose.
 A record stuck >2 batches in `draft` gets triaged: fill it, or park it with a
 `parked:true` flag and a reason (discontinued, seasonal, awaiting producer info).
 
-## Batch 1 packaging correction (2026-07-26)
+## Data packaging — external payload (DONE 2026-07-27)
 
-Batch 1 remains inline in `spirit-vault-prototype.html` through
-`BOURBON_BATCH_1` and `makeBatchSpirit({...})`.
+The Batch-2 gate is cleared. All 20 records were moved out of the inline HTML
+to **`spirit-vault-data.js`**, an external static payload exposing
+`window.SPIRIT_VAULT_DATA({ makeBatchSpirit })`. The engine loads it via a
+relative `<script src>` before normalization and consumes it through
+`normalizeSpiritRecords()` → `BOTTLES` — no `fetch`, so it works under
+`file://`, local static preview, and Bluehost static hosting. The two-map
+`SPIRIT_DATA` + `DOSSIER_DETAILS` split is retired; the five legacy records are
+now single canonical objects, and `makeBatchSpirit`/validation remain the
+import boundary.
 
-Reason: this preserves the no-build, static prototype and avoids breaking
-file:// / simple Bluehost deployment semantics before there is a tested loader
-contract. The helper gives one logical authoring entry per spirit while the
-legacy renderer still consumes normalized `BOTTLES`.
+Parity was proven byte-for-byte: per-record and whole-array fingerprints of the
+normalized `ALL_BOTTLES` are identical to the pre-migration build (guest 5 /
+review 20). **D4 load numbers:** `spirit-vault-data.js` is ~50 KB / 508 lines
+for 20 records (~2.5 KB each); the HTML dropped 442 lines. As a single parsed
+static file with no network round-trips, load stays instant on a mid-range
+phone; projected ~164 records remain well within static-payload limits.
 
-Tradeoff: inline data will not scale cleanly to all ~164 records. Move the
-next broad batch to an external structured data file only after a loader is
-tested against local file preview and hosted static deployment. Preferred
-migration path: generate the current helper-backed records into a JSON module
-or static `.js` data payload, load it before normalization, and keep
-`makeBatchSpirit`/validation as the import boundary.
+**Deploy contract:** ship `spirit-vault-prototype.html` **and**
+`spirit-vault-data.js` together in the same directory.
+
+Batch 2 authoring: add one `makeBatchSpirit({...})` record per spirit to the
+`BATCH` array in `spirit-vault-data.js` (see `ADD-A-SPIRIT.md`). Per-batch data
+files can be split out later if the single payload grows large.
 
 Process correction from Batch 1: Sean-confirmed menu prices may be recorded
 as temporary venue commerce values (`commerce.pourPriceUsd` +

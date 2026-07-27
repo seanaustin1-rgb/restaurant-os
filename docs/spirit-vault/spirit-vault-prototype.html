@@ -496,9 +496,9 @@ const STATUS_RANK = {draft:0, reviewed:1, published:2};
 const PRESS_TYPES = ['award','score','news','heritage','venue-event','coverage'];
 const REQUIRED_SPIRIT_FIELDS = [
   'id','cat','silo','name','distillery','style','proof','age','price','priceL',
-  'status','flavor','body','finish','production','prodTags','why','awards','pairings',
+  'status','flavor','body','finish','production','prodTags','why','pairings',
   'dist','btb','notes','reviewedAt','topNotes','whyShort','seanShort','whyWeCarry',
-  'press','paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
+  'paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
 ];
 const DEFAULT_COMMERCE_FIELDS = {
   pourPriceUsd:null,
@@ -577,7 +577,7 @@ function makeBatchSpirit(config){
     topNotes:config.topNotes || ['Pending Sean review','Pending Sean review','Pending Sean review'],
     whyShort:config.whyShort || 'Draft Batch 1 record; production facts sourced, venue interpretation pending Sean review.',
     seanShort:'Pending Sean review.',
-    whyWeCarry:'Pending Sean review.',
+    whyWeCarry:config.whyWeCarry || 'Pending Sean review.',
     press:[],
     paths:{lighter:[],similar:[],adventurous:[]},
     commerce:{
@@ -1111,7 +1111,7 @@ function renderDetail(i){
     ${pressBody ? drawer('press','Recognition & Press', pressBody) : ''}
     ${drawer('table','At the Table', tableBody)}
     ${drawer('dist','Distillery Story', distBody)}
-    ${drawer('compare','Compare & Continue', compareBody)}
+    ${compareBody ? drawer('compare','Compare & Continue', compareBody) : ''}
     ${hasSeanNotes ? drawer('notes',"Sean's Notes", notesBody, 'notes-drawer') : ''}
 
     <div class="vault-footer">

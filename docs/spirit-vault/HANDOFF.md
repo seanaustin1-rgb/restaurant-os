@@ -1,6 +1,41 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-27 (implementation lane: Batch 1 review fixes; compare back-nav; status invariant; **canonical data migration to external payload — Batch 2 gate cleared**)
+**Last revision:** 2026-07-27 (**Batch 2 live**: Toast-sourced list+prices, 14 agent-researched premium dossiers, 12 published to the guest link)
+
+## Batch 2 — premium bourbon/whiskey (2026-07-27, `feat/spirit-vault-batch2-proof`)
+
+**Source of truth for the list + prices is now Toast.** `scripts/pull-toast-spirits.ts`
+reads `/menus/v2/menus` → 386 unique bottles by category from the "* Spirits**"
+groups, with real prices. Each new dossier stores `commerce.toastItemGuid` + the
+real Toast price (`priceIsTemporary:false`), retiring the placeholder guesses.
+
+**Production model (proven):** Toast list → agent fan-out (one general-purpose
+agent per bottle, WebSearch/WebFetch, strict no-fabrication) → schema-validated
+full dossier (all drawers incl. Distillery Story, pairings, and an agent-drafted
+`whyWeCarry`) → audit → integrate as draft → publish audited passes. Batch size 12.
+Workflow: `spirit-vault-batch2-premiums` (14 agents, 0 errors). Curator cue
+(`seanShort`) + Sean's Notes (`notes`) still stay blank for Sean.
+
+**This batch:** 14 researched → **12 PUBLISHED** to the guest/Coal link (Booker's +
+Blanton's, both Middle West 2XBBL, Hemingway Rye, Widow Jane 10 & 12, Woodford
+Double Oaked, Ironclad, Eagle Rare, Charles Goodnight, Angel's Envy Port). **2 HELD
+as draft** pending Sean's expression confirmation: Calumet Farm (15-vs-8-yr label
+ambiguity) and Loch Lomond (which single malt). **1 SKIPPED:** WhistlePig 10yr
+Bourbon (dup of Batch 1's Snout-to-Tail). Guest dossiers 5 → **17**.
+
+**Engine changes (all backward-compatible):** `makeBatchSpirit` now accepts
+`whyWeCarry`, `pairings`, `proofDisplay` (label for barrel/varying proof), and
+stores `commerce.toastItemGuid` (Toast-sourced → non-temporary price). Validator:
+`proofN` may be null (barrel/varying); `awards`/`press` no longer required (many
+bottles have none — Recognition drawer already hides when empty); proof-range
+browse filters guard null. Render: Compare & Continue drawer hides when a bottle
+has no comparison paths yet (paths stay curatorial/deferred).
+
+**Audit gate (binding for publishing to the live link):** before publish, verify
+real sources on every production/history claim, no fabricated awards/dates, and
+`whyWeCarry` invents NO venue specifics (no events, no "we pour against X", no Echo
+claims — generic bar-merit only). Hold any identity-ambiguous bottle as draft.
+Verified this batch: guest=17, all clean at 320px, no console errors, drafts hidden.
 
 ## Canonical data migration — DONE (2026-07-27, `feat/spirit-vault-canonical-migration`)
 

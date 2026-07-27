@@ -486,6 +486,9 @@ const PATH_TYPES = ['lighter','similar','adventurous'];
 const RECORD_STATUSES = ['draft','reviewed','published'];
 const PUBLICATION_STATUSES = ['draft','reviewed','published'];
 const VERIFICATION_STATUSES = ['unverified','partially-sourced','source-reviewed','sean-reviewed'];
+// Lifecycle ordering: guest visibility (publicationStatus) may never run ahead
+// of the record lifecycle (recordStatus). A draft cannot be published to guests.
+const STATUS_RANK = {draft:0, reviewed:1, published:2};
 const PRESS_TYPES = ['award','score','news','heritage','venue-event','coverage'];
 const REQUIRED_SPIRIT_FIELDS = [
   'id','cat','silo','name','distillery','style','proof','proofN','age','price','priceL',
@@ -1129,6 +1132,13 @@ function validateSpiritRecords(records){
     if(!VERIFICATION_STATUSES.includes(spirit.verificationStatus)){
       errors.push(`${spirit.id}: invalid verificationStatus "${spirit.verificationStatus}"`);
     }
+    // Invariant: publicationStatus must never exceed recordStatus in the
+    // lifecycle. Blocks the inconsistent draft+published pair that would leak
+    // an unfinished dossier to guests.
+    if(RECORD_STATUSES.includes(spirit.recordStatus) && PUBLICATION_STATUSES.includes(spirit.publicationStatus)
+       && STATUS_RANK[spirit.publicationStatus] > STATUS_RANK[spirit.recordStatus]){
+      errors.push(`${spirit.id}: publicationStatus "${spirit.publicationStatus}" cannot exceed recordStatus "${spirit.recordStatus}" (a ${spirit.recordStatus} record cannot be published to guests)`);
+    }
 
     if(spirit.topNotes && spirit.topNotes.length !== 3){
       errors.push(`${spirit.id}: topNotes must contain exactly 3 entries`);
@@ -1215,9 +1225,16 @@ function validateSpiritRecords(records){
 const REVIEW_MODE = new URLSearchParams(window.location.search).get('review') === '1';
 const ALL_BOTTLES = normalizeSpiritRecords(SPIRIT_DATA, DOSSIER_DETAILS);
 validateSpiritRecords(ALL_BOTTLES);
+// A record reaches guests only when BOTH the lifecycle (recordStatus) and the
+// publication flag agree it is published. This is the runtime guard behind the
+// validation invariant, since validation only throws in dev — in production it
+// logs, so this gate is what actually keeps a draft out of the guest vault.
+function isGuestVisible(spirit){
+  return spirit.publicationStatus === 'published' && spirit.recordStatus === 'published';
+}
 const BOTTLES = REVIEW_MODE
   ? ALL_BOTTLES
-  : ALL_BOTTLES.filter(spirit=>spirit.publicationStatus === 'published');
+  : ALL_BOTTLES.filter(isGuestVisible);
 
 /* ═══════════════════════════════════════════════
    FLIGHT LAYER — FOUNDATIONAL ARCHITECTURE (not yet built)

@@ -1,6 +1,59 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-27 (Claude took over implementation lane; verified Batch 1 review fixes; re-ran width matrix; opened PR to main)
+**Last revision:** 2026-07-27 (Claude took over implementation lane; verified Batch 1 review fixes; re-ran width matrix; shipped compare back-nav; added record/publication status invariant)
+
+## Architecture direction (2026-07-27, binding)
+
+**The two-map structure (`SPIRIT_DATA` + `DOSSIER_DETAILS`) is a temporary
+bridge, not the long-term authoring model.** It was kept only to preserve the
+working mobile dossier UI while adding validation, stable IDs, commerce fields,
+draft status, and normalized `BOTTLES`. Batch 1 already moved toward one logical
+entry via `BOURBON_BATCH_1` / `makeBatchSpirit({...})`.
+
+**Target:** one canonical spirit record per bottle (or generate the split from a
+single canonical source). The renderer keeps consuming normalized `BOTTLES` (or
+equivalent). This is the core of the next build — the JSON-data migration (Batch
+2 gate) is where the collapse to single-canonical should happen.
+
+**Do not duplicate knowledge** across flights, placemats, staff training, or
+future tools — every downstream experience references spirit records by stable
+`spiritId`. (Reaffirms the "POS of knowledge / master spirit database" decision
+below.)
+
+**Commerce / Toast boundary (reaffirmed):** Spirit Vault owns knowledge; Toast/POS
+owns commerce (price, availability, 86 state, menu-item identity). Records may
+keep `commerce.*` join/snapshot fields, but those are not the permanent source
+of truth once Toast exists. Keep `commerce.*` isolated so price/availability
+updates never touch knowledge fields. (See "System Ownership — Toast" below.)
+
+**Flight Builder (reaffirmed):** on-the-fly flights are separate flight
+records/items that reference spirits by `spiritId`; flight-specific notes
+(pourSizeOz, flightNote, "what to notice") live on the flight **item**, never on
+the spirit record. (See "Flight Builder" sections below.)
+
+**Acceptance criteria to protect (all future work):** a normal new spirit is
+authored in one place; draft records stay out of guest vault/swipe order;
+published records need no fake recognition or filler pairings; stable IDs remain
+the only durable reference for flights/recommendations; commerce fields stay
+isolated from knowledge fields; the mobile dossier + drawer design is not
+redesigned during cleanup.
+
+### Status invariant — recordStatus vs publicationStatus (`feat/spirit-vault-status-invariant`)
+
+Codex reviewer note, now implemented: a draft must not be able to become
+guest-visible through an inconsistent status pair. Two guards added:
+
+1. **Validation invariant** (`STATUS_RANK` = draft 0 / reviewed 1 / published 2):
+   `publicationStatus` may never exceed `recordStatus` in the lifecycle — e.g. a
+   `recordStatus:'draft'` record with `publicationStatus:'published'` is rejected
+   with a clear per-record error. (Validation throws in dev; logs in prod.)
+2. **Runtime gate** (`isGuestVisible()`): a record reaches guests only when
+   **both** `recordStatus === 'published'` **and** `publicationStatus ===
+   'published'`. This is the production safety net behind the invariant, since
+   validation does not throw in prod.
+
+Verified: guest count still 5, review 20; valid data unchanged; the danger pair
+(draft + published) is blocked at both layers; no console errors on real load.
 
 ## Implementation lane ownership (2026-07-27)
 

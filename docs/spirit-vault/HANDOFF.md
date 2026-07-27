@@ -1,6 +1,56 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-26 (merged foundation refactor + Toast/Raven command-center + audit docs)
+**Last revision:** 2026-07-27 (Claude took over implementation lane; verified Batch 1 review fixes; re-ran width matrix; opened PR to main)
+
+## Implementation lane ownership (2026-07-27)
+
+**Lane owner: Claude (implementation).** Claude has taken over the
+implementation lane previously held by Codex for `feat/spirit-vault-bourbon-batch-1`.
+Codex's data-foundation and Batch 1 authoring work is preserved unchanged.
+
+**Review verdict on the incoming branch:** PASS WITH CHANGES. The four
+required review-fix items were already implemented in commit `a808f65`
+("Fix Spirit Vault review gating"). Claude independently verified each fix
+against the actual `spirit-vault-prototype.html` source (not just the prose)
+before opening the PR:
+
+1. **UTF-8 middot** — 0 `Â·` sequences remain; DOM renders clean `·`
+   (`ECHO'S RESERVE · YORK PA`, `PENELOPE BOURBON · LAWRENCEBURG, INDIANA`,
+   `Four-Grain Straight Bourbon · Barrel Strength`); no mojibake in rendered
+   body text.
+2. **Publication gating** — `REVIEW_MODE` is read from `?review=1`
+   (`spirit-vault-prototype.html:1198`); guest `BOTTLES` is filtered to
+   `publicationStatus === 'published'` otherwise (`:1201`). Verified live:
+   guest mode renders 5 of 5 published records; `?review=1` renders 20 of 20.
+3. **Recognition empty-state** — the Recognition & Press drawer is omitted
+   entirely when no verified press/awards exist
+   (`${pressBody ? drawer('press', …) : ''}` at `:1504`); no internal
+   pipeline jargon reaches guests.
+4. **Sagamore Manhattan Finish age** — displayed `ageText` is
+   `4 yr + 30 mo finish` (the producer's 4-year base rye plus 30-month
+   cocktail-barrel finish), not `4–6 yr`. `minYears/maxYears` remain
+   non-displayed structured filter data and follow the same base+finish
+   convention already used for the Double Oak record.
+
+**Width matrix re-run (2026-07-27, Claude):** local static server + in-app
+Chromium, measuring `documentElement.scrollWidth > clientWidth` plus a
+per-element bounding-box scan for any element crossing the viewport edge.
+
+| Width | Guest mode | Review mode (20 records) |
+|-------|-----------|--------------------------|
+| 320px | 0 overflow, 0 offenders (closed / first-open / all-open) | 0 overflow across all 20 records with every drawer open |
+| 375px | 0 overflow (closed / all-open) | 0 overflow across all 20 records, all drawers open |
+| 390px | 0 overflow (closed / all-open) | — |
+| 430px | 0 overflow (closed / all-open) | 0 overflow across all 20 records, all drawers open |
+| 1265px (desktop) | 0 overflow (closed / all-open) | — |
+
+Also verified: 8 drawers per dossier, no console errors, invalid
+`gotoBottleId('___nope___')` leaves the current dossier unchanged.
+
+**Commit SHAs:**
+- `a808f65` — review-gating fixes (pre-existing on branch, verified).
+- This HANDOFF update (lane ownership + width matrix) is the branch tip of
+  `feat/spirit-vault-bourbon-batch-1`; see `git log` for its SHA.
 
 ## Active work lane — merged status (2026-07-26)
 

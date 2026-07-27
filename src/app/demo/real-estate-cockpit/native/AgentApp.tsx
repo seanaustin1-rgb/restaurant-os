@@ -629,6 +629,7 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const [report, setReport] = useState("");
   const [sent, setSent] = useState(false);
   const [phone, setPhone] = useState<string | null>(null);
+  const [remind, setRemind] = useState(true);
   const f = FLAG[l.flag];
   const activeTpl = EMAIL_TEMPLATES.find((t) => t.id === templateId) ?? EMAIL_TEMPLATES[0];
 
@@ -678,7 +679,8 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const send = () => {
     setSent(true);
     setDone(true);
-    onFire(compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.");
+    const base = compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.";
+    onFire(remind ? `${base} Reminder set: follow up Fri 10 AM if no reply.` : base);
   };
 
   return (
@@ -785,6 +787,12 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
             rows={compose.kind === "email" ? 9 : 3}
             disabled={sent}
           />
+          <label className="lremind">
+            <input type="checkbox" checked={remind} disabled={sent} onChange={(e) => setRemind(e.target.checked)} />
+            <span>
+              Remind me to follow up <b>Friday 10 AM</b> if there&apos;s no reply
+            </span>
+          </label>
           <div className="cmp-act">
             <button type="button" className="btn primary" disabled={sent} onClick={send}>
               {sent ? "✓ Sent" : compose.kind === "text" ? "Send text" : "Send email"}
@@ -1053,6 +1061,110 @@ function GamePlanItem({ it, checked, onToggle, say }: { it: PlanItem; checked: b
   );
 }
 
+// Voice front door — the assistant as workflow, not a chatbox. A simulated
+// voice memo is parsed into structured actions (task, email draft, reminder,
+// CRM sync) so the demo shows the AI *doing the work*, not just chatting.
+// Generated-data-only; sync states are simulated with an honest disclosure.
+type VParsed = { kind: "contact" | "task" | "email" | "reminder" | "sync"; label: string; detail: string; badge?: string };
+const VOICE_TRANSCRIPT =
+  "Just met the Hendersons at 1420 Maple. They loved the backyard but got cold feet on the kitchen. They want to walk it again Thursday. Send them the comps, and remind me to follow up Friday if they go quiet.";
+const VOICE_PARSED: VParsed[] = [
+  { kind: "contact", label: "Client history updated", detail: "Hendersons · 1420 Maple — showing notes + kitchen concern logged", badge: "CRM" },
+  { kind: "task", label: "Task created", detail: "Book the second showing — 1420 Maple, Thursday" },
+  { kind: "email", label: "Email drafted", detail: "“Comps for 1420 Maple” — ready for your approval", badge: "Needs approval" },
+  { kind: "reminder", label: "Reminder set", detail: "Follow up Friday 10 AM if the Hendersons go quiet" },
+  { kind: "sync", label: "Synced to BoldTrail Smart CRM", detail: "contact, timeline note, and follow-up task staged", badge: "Simulated" },
+];
+function VIcon({ kind }: { kind: VParsed["kind"] }) {
+  const c = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (kind === "contact") return (<svg {...c}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>);
+  if (kind === "task") return (<svg {...c}><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>);
+  if (kind === "email") return (<svg {...c}><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="m22 6-10 7L2 6" /></svg>);
+  if (kind === "reminder") return (<svg {...c}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>);
+  return (<svg {...c}><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>);
+}
+function VoiceMemo({ say }: { say: (m: string) => void }) {
+  const [stage, setStage] = useState<"idle" | "listening" | "parsed">("idle");
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (t.current) clearTimeout(t.current); }, []);
+  const start = () => {
+    setStage("listening");
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => setStage("parsed"), 1400);
+  };
+  const reset = () => { if (t.current) clearTimeout(t.current); setStage("idle"); };
+
+  return (
+    <div className="vbar">
+      <div className="vbar-head">
+        <span className="vbadge">AI assistant</span>
+        <span className="vsub">turn a messy voice note into done work — no typing</span>
+      </div>
+
+      {stage === "idle" && (
+        <button type="button" className="vgo" onClick={start}>
+          <span className="vmic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" />
+            </svg>
+          </span>
+          <span className="vgo-txt">
+            <b>Talk to AI assistant</b>
+            <small>tap and speak · or play the sample voice memo</small>
+          </span>
+          <span className="vgo-cue">Simulate voice memo</span>
+        </button>
+      )}
+
+      {stage === "listening" && (
+        <button type="button" className="vlisten" onClick={reset}>
+          <span className="vwave">
+            {[10, 18, 26, 16, 22, 12, 20, 28, 14, 19, 24, 11].map((h, i) => (
+              <span key={i} style={{ height: h }} />
+            ))}
+          </span>
+          <span className="vlisten-txt">Listening…</span>
+          <span className="vlisten-h">tap to stop</span>
+        </button>
+      )}
+
+      {stage === "parsed" && (
+        <div className="vparsed">
+          <div className="vtrans">
+            <span className="vtrans-l">Heard</span>
+            <p>&ldquo;{VOICE_TRANSCRIPT}&rdquo;</p>
+          </div>
+          <div className="vresult-l">Turned into action</div>
+          <div className="vitems">
+            {VOICE_PARSED.map((p) => (
+              <div className={`vitem ${p.kind}`} key={p.label}>
+                <span className="vi-ic"><VIcon kind={p.kind} /></span>
+                <span className="vi-body">
+                  <span className="vi-l">
+                    {p.label}
+                    {p.badge && <span className={`vi-badge ${p.kind}`}>{p.badge}</span>}
+                  </span>
+                  <span className="vi-d">{p.detail}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="vact">
+            <button type="button" className="btn primary" onClick={() => { say("Approved — email sent, task + reminder staged, BoldTrail synced (demo only)."); reset(); }}>
+              Approve &amp; sync all
+            </button>
+            <button type="button" className="btn ghost" onClick={reset}>Discard</button>
+          </div>
+          <p className="vdisc">
+            Demo mode: simulated BoldTrail sync shown for workflow clarity. Live MLS/RESO, BoldTrail, calendar, email, and
+            voice wiring is design-partner roadmap.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Agent Business Coach — a fractional-COO voice modeled on real-estate growth
 // coaches: gamify leading indicators (reps, not GCI), protect the agent's own
 // Profit First margins, and turn every insight into an action taken right now.
@@ -1063,10 +1175,10 @@ const COACH_KPIS: { l: string; v: string; goal: string; frac: number; note: stri
   { l: "Database touches", v: "9", goal: "15", frac: 0.6, note: "6 more keeps your sphere warm" },
 ];
 const COACH_PF: { l: string; v: string; note: string; ok?: boolean }[] = [
-  { l: "Pipeline net", v: "$48,200", note: "your side after the split · 3 files closing this week" },
-  { l: "Tax reserve", v: "$14,460", note: "30% held · on track", ok: true },
-  { l: "Safe owner pay", v: "$6,800", note: "you can pay yourself this now" },
-  { l: "Cash runway", v: "5.2 mo", note: "fixed costs covered if the pipeline paused" },
+  { l: "Safe Take Home Pay", v: "$6,800", note: "pay yourself this now — don't raise lead spend until Cedar Bluff clears" },
+  { l: "Tax Reserve", v: "$14,460", note: "30% held & protected · on track", ok: true },
+  { l: "Cash Runway", v: "5.2 mo", note: "fixed costs covered if the pipeline paused" },
+  { l: "Pipeline cash expected", v: "$48,200", note: "your side after the split · 3 files closing this week" },
 ];
 const COACH_ASKS: { q: string; a: string }[] = [
   { q: "What's my one number today?", a: "Conversations — you're at 6 of 12. Nothing else on this screen outranks getting to twelve real conversations. Appointments follow reps, not wishes." },
@@ -1104,8 +1216,9 @@ function AgentCoach({ say }: { say: (m: string) => void }) {
             </svg>
           </span>
           <p className="coach-line">
-            Morning, Priya. Your money&apos;s in good shape — today&apos;s gap is <b>reps, not results</b>. Two conversations
-            before noon and the week takes care of itself.
+            Morning, Priya. You can safely take home <b>$6,800</b> this month — just don&apos;t raise lead spend until the
+            Cedar Bluff commission clears. Today&apos;s gap is <b>reps, not results</b>: two conversations before noon and
+            the week takes care of itself.
           </p>
         </div>
 
@@ -1158,7 +1271,7 @@ function AgentCoach({ say }: { say: (m: string) => void }) {
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
           <div>
-            <b>Lead-spend guardrail.</b> You&apos;re at <b>$1,240/mo</b> on portal leads at a <b>2.1%</b> appointment rate.
+            <b>Lead Spend Guardrail.</b> You&apos;re at <b>$1,240/mo</b> on portal leads at a <b>2.1%</b> appointment rate.
             Rule: don&apos;t scale spend under <b>3%</b> — the leak is speed-to-lead, not volume. Fix the Sam-Ortega gap
             first, then we open the tap.
           </div>
@@ -1238,6 +1351,86 @@ function AgentCoach({ say }: { say: (m: string) => void }) {
   );
 }
 
+// Evening roundup — closes the day-in-life and gives a reason to come back
+// tomorrow: what was won, what's still open, the single first move tomorrow,
+// and a voice "dictate daily review." Generated-data-only.
+const ROUNDUP_WON = [
+  "214 Highland Park cleared to fund — compliance docs in before the noon cutoff",
+  "Sam Ortega re-engaged — referral saved before it went cold",
+  "6 conversations logged · 9 database touches",
+];
+const ROUNDUP_OPEN: { t: string; n: string }[] = [
+  { t: "88 Cedar Bluff — 1 admin task open", n: "checklist at 80%; clear it before the 9 AM walk-through" },
+  { t: "Ridgeline convert-to-listing note", n: "drafted, not yet sent — the market window is open now" },
+];
+const ROUNDUP_TOMORROW = { t: "9:00 AM · 88 Cedar Bluff listing appointment", n: "comps + CMA staged — walk in with a price" };
+
+function EveningRoundup({ say }: { say: (m: string) => void }) {
+  const [dictating, setDictating] = useState(false);
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (t.current) clearTimeout(t.current); }, []);
+  const dictate = () => {
+    setDictating(true);
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => { setDictating(false); say("Daily review captured — tomorrow's plan updated (demo only)."); }, 1600);
+  };
+  return (
+    <div className="section">
+      <div className="sh">
+        <span className="eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+          </svg>
+          Evening roundup · next-day preview
+        </span>
+        <span className="desc">close the day · set up tomorrow</span>
+      </div>
+
+      <div className="round">
+        <div className="rcol won">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+            Won today
+          </div>
+          <ul>
+            {ROUNDUP_WON.map((w) => (<li key={w}>{w}</li>))}
+          </ul>
+        </div>
+
+        <div className="rcol open">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg>
+            Still open
+          </div>
+          <ul>
+            {ROUNDUP_OPEN.map((o) => (
+              <li key={o.t}><b>{o.t}</b><small>{o.n}</small></li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rcol tmrw">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            Tomorrow first
+          </div>
+          <div className="rtmrw">
+            <b>{ROUNDUP_TOMORROW.t}</b>
+            <small>{ROUNDUP_TOMORROW.n}</small>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" className={`rdictate ${dictating ? "on" : ""}`} onClick={dictate} disabled={dictating}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" />
+        </svg>
+        {dictating ? "Listening… speak your recap" : "Dictate daily review"}
+      </button>
+    </div>
+  );
+}
+
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
   const [handled, setHandled] = useState(false);
@@ -1253,6 +1446,9 @@ export default function AgentApp() {
 
   return (
     <div className="agent">
+      {/* voice front door — the assistant as the first thing you reach for */}
+      <VoiceMemo say={say} />
+
       {/* executive brief — the 20-second read before the first task */}
       <div className="brief">
         <span className="eyebrow">Your morning</span>
@@ -1544,6 +1740,9 @@ export default function AgentApp() {
           </div>
         </div>
       </div>
+
+      {/* evening roundup — the day-in-life closer */}
+      <EveningRoundup say={say} />
 
       <div className="footnote">
         <b>Generated demo data.</b> Closings/inspections pull from transaction file checklists, market from the MLS (SkySlope),
@@ -2097,6 +2296,355 @@ export default function AgentApp() {
         @media (max-width: 560px) {
           .agent :global(.coach-kpis) {
             grid-template-columns: 1fr;
+          }
+        }
+
+        /* voice front door */
+        .vbar {
+          border: 1px solid var(--copper-soft);
+          border-radius: 12px;
+          background: var(--copper-wash);
+          padding: 14px;
+          margin-bottom: 14px;
+        }
+        .vbar-head {
+          display: flex;
+          align-items: baseline;
+          gap: 9px;
+          margin-bottom: 11px;
+          flex-wrap: wrap;
+        }
+        .vbadge {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border-radius: 999px;
+          padding: 3px 9px;
+        }
+        .vsub {
+          font-size: 12px;
+          color: var(--text-soft);
+        }
+        .vgo {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 42px 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 11px 13px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 10px;
+          background: var(--surface);
+          color: inherit;
+          font: inherit;
+          text-align: left;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .vgo:hover {
+          border-color: var(--copper-soft);
+        }
+        .vmic {
+          width: 42px;
+          height: 42px;
+          border-radius: 999px;
+          background: var(--copper-soft);
+          color: var(--ink);
+          display: grid;
+          place-items: center;
+        }
+        .vmic :global(svg) {
+          width: 20px;
+          height: 20px;
+        }
+        .vgo-txt {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .vgo-txt :global(b) {
+          font-size: 15px;
+          color: var(--text);
+        }
+        .vgo-txt :global(small) {
+          font-size: 11.5px;
+          color: var(--muted);
+        }
+        .vgo-cue {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--copper-soft);
+          white-space: nowrap;
+        }
+        .vlisten {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 14px;
+          border: 1px solid var(--copper-soft);
+          border-radius: 10px;
+          background: var(--surface);
+          color: inherit;
+          font: inherit;
+          cursor: pointer;
+        }
+        .vwave {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          height: 30px;
+        }
+        .vwave :global(span) {
+          width: 3px;
+          border-radius: 999px;
+          background: var(--copper-soft);
+          display: block;
+        }
+        .vlisten-txt {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .vlisten-h {
+          margin-left: auto;
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .vparsed {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .vtrans {
+          border-left: 2px solid var(--copper-soft);
+          padding: 2px 0 2px 11px;
+        }
+        .vtrans-l {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 700;
+          color: var(--copper-soft);
+        }
+        .vtrans p {
+          margin: 3px 0 0;
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--text-soft);
+          font-style: italic;
+        }
+        .vresult-l {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 700;
+          color: var(--muted);
+        }
+        .vitems {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .vitem {
+          display: grid;
+          grid-template-columns: 30px 1fr;
+          gap: 10px;
+          align-items: start;
+          padding: 9px 11px;
+          border: 1px solid var(--line);
+          border-left: 3px solid var(--copper-dim);
+          border-radius: 9px;
+          background: var(--surface);
+        }
+        .vitem.sync {
+          border-left-color: var(--green);
+        }
+        .vitem.reminder {
+          border-left-color: var(--yellow);
+        }
+        .vi-ic {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          display: grid;
+          place-items: center;
+          color: var(--copper-soft);
+        }
+        .vitem.sync .vi-ic {
+          color: var(--green);
+        }
+        .vitem.reminder .vi-ic {
+          color: var(--yellow);
+        }
+        .vi-ic :global(svg) {
+          width: 16px;
+          height: 16px;
+        }
+        .vi-body {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .vi-l {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .vi-badge {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          color: var(--muted);
+        }
+        .vi-badge.sync {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+        }
+        .vi-badge.email {
+          color: var(--copper-soft);
+          border-color: var(--copper-dim);
+        }
+        .vi-d {
+          font-size: 11.5px;
+          color: var(--muted);
+          line-height: 1.4;
+        }
+        .vact {
+          display: flex;
+          gap: 8px;
+        }
+        .vdisc {
+          margin: 2px 0 0;
+          font-size: 10.5px;
+          color: var(--muted);
+          line-height: 1.45;
+        }
+
+        /* evening roundup */
+        .round {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+        .rcol {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--surface);
+          padding: 11px 12px;
+        }
+        .rcol-h {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 8px;
+        }
+        .rcol-h :global(svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .rcol.won .rcol-h :global(svg) {
+          color: var(--green);
+        }
+        .rcol.open .rcol-h :global(svg) {
+          color: var(--yellow);
+        }
+        .rcol.tmrw .rcol-h :global(svg) {
+          color: var(--copper-soft);
+        }
+        .rcol ul {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .rcol li {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.4;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+        }
+        .rcol li :global(b) {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .rcol li :global(small) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .rtmrw {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .rtmrw :global(b) {
+          font-size: 13px;
+          color: var(--text);
+        }
+        .rtmrw :global(small) {
+          font-size: 11.5px;
+          color: var(--muted);
+          line-height: 1.4;
+        }
+        .rdictate {
+          margin-top: 10px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 15px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .rdictate:hover {
+          border-color: var(--copper-soft);
+        }
+        .rdictate.on {
+          color: var(--text);
+        }
+        .rdictate :global(svg) {
+          width: 15px;
+          height: 15px;
+        }
+        @media (max-width: 560px) {
+          .round {
+            grid-template-columns: 1fr;
+          }
+          .vgo {
+            grid-template-columns: 38px 1fr;
+          }
+          .vgo-cue {
+            display: none;
           }
         }
 
@@ -2766,6 +3314,25 @@ export default function AgentApp() {
         .agent :global(.cmp-subj:disabled),
         .agent :global(.cmp-body:disabled) {
           opacity: 0.7;
+        }
+        .agent :global(.lremind) {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-top: 10px;
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.4;
+          cursor: pointer;
+        }
+        .agent :global(.lremind input) {
+          margin-top: 1px;
+          accent-color: var(--copper-soft);
+          flex: none;
+        }
+        .agent :global(.lremind b) {
+          color: var(--text);
+          font-weight: 600;
         }
         .agent :global(.cmp-act) {
           display: flex;

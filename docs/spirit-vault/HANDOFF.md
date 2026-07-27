@@ -47,9 +47,33 @@ per-element bounding-box scan for any element crossing the viewport edge.
 Also verified: 8 drawers per dossier, no console errors, invalid
 `gotoBottleId('___nope___')` leaves the current dossier unchanged.
 
+**Sean-owned voice fields — render gating (2026-07-27, `360f165`):** per
+Sean's direction, guest-visible Sean-voice fields now render only when he has
+supplied real copy. **Sean's Notes** drawer and the **curator-cue quote**
+(`seanShort`) are omitted entirely when empty or still `'Pending Sean review.'`
+(same hide-when-empty pattern as Recognition). **Why We Carry It** still
+renders. The original five published records are unchanged; the 15 draft batch
+records no longer leak the placeholder in review mode.
+
+**DEFERRED (Sean's call, 2026-07-27): content-fill of the Sean-owned fields.**
+Do not hand-author `whyWeCarry` suggestions / Sean's Notes / curator cues into
+the HTML now. Sean wants to fill these **after the build is done, through an
+admin tool**, not by editing the prototype. Backlog for the admin lane:
+- Target the JSON-data migration (Batch 2 gate) first — it is step one toward
+  an admin surface.
+- Then a minimal admin form **inside the existing OutFront Data / Restaurant OS
+  dashboard** (reuses its Clerk auth + Supabase; the guest Spirit Vault is
+  generated/published from that master data). First fields = Sean's voice:
+  `whyWeCarry`, Sean's Notes, curator cue, flavor-axis nudges (matches Sean's
+  stated "tasting notes" priority). Photos/pricing later.
+- Until then, batch records stay `draft` (invisible to guests); `whyWeCarry`
+  keeps its `'Pending Sean review.'` placeholder, visible only via `?review=1`.
+
 **Commit SHAs:**
 - `a808f65` — review-gating fixes (pre-existing on branch, verified).
-- This HANDOFF update (lane ownership + width matrix) is the branch tip of
+- HANDOFF lane-ownership + width matrix — see `git log` (earlier tip).
+- `360f165` — hide Sean-owned voice fields until real copy exists.
+- This deferral note is the current branch tip of
   `feat/spirit-vault-bourbon-batch-1`; see `git log` for its SHA.
 
 ## Active work lane — merged status (2026-07-26)

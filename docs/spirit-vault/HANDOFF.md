@@ -1,6 +1,42 @@
 # Spirit Vault — Handoff
 
-**Last revision:** 2026-07-27 (Claude took over implementation lane; verified Batch 1 review fixes; re-ran width matrix; shipped compare back-nav; added record/publication status invariant)
+**Last revision:** 2026-07-27 (implementation lane: Batch 1 review fixes; compare back-nav; status invariant; **canonical data migration to external payload — Batch 2 gate cleared**)
+
+## Canonical data migration — DONE (2026-07-27, `feat/spirit-vault-canonical-migration`)
+
+The two-map authoring model is retired. All spirit records moved out of the
+inline HTML into an external payload, and the five legacy records are now
+single canonical objects.
+
+- **New file `spirit-vault-data.js`** exposes a factory
+  `window.SPIRIT_VAULT_DATA({ makeBatchSpirit })` returning one array: five
+  `LEGACY` records as full single objects (their `DOSSIER_DETAILS` overlay
+  folded in) + fifteen `BATCH` records via `makeBatchSpirit`. `SOURCE_URLS`
+  moved here too.
+- **Engine (`spirit-vault-prototype.html`)** loads it via a relative
+  `<script src>` before the inline engine, then
+  `normalizeSpiritRecords(window.SPIRIT_VAULT_DATA({makeBatchSpirit}))` →
+  `BOTTLES`. No `fetch` → works under `file://`, local static preview, and
+  Bluehost static hosting. Removed: inline `SPIRIT_DATA`, `DOSSIER_DETAILS`,
+  `BOURBON_BATCH_1`, `SOURCE_URLS`, the `.push`. `normalizeSpiritRecords` is now
+  single-arg; a hard guard throws if the payload fails to load.
+- **Parity proven byte-for-byte:** per-record + whole-array fingerprints of
+  normalized `ALL_BOTTLES` are identical to the pre-migration build
+  (`__ALL__` unchanged; guest 5 / review 20). 320px re-confirmed 0 overflow;
+  no console errors. Rendered output is provably unchanged.
+- **D4 load:** `spirit-vault-data.js` ≈ 50 KB / 508 lines for 20 records
+  (~2.5 KB each); HTML dropped 442 lines. Single parsed static file, no network
+  round-trips — instant on a mid-range phone; ~164 records stays within limits.
+- **Deploy contract:** ship the HTML **and** `spirit-vault-data.js` together
+  (same directory). Docs updated: `ADD-A-SPIRIT.md`, `CONTENT-WORKFLOW.md`.
+- **Deferred to a follow-up (kept out of this parity-exact PR):** D2 dead-data
+  removal (`compare[]`, duplicate `proof`/`priceL`, `status[].t`) — it changes
+  fingerprints, so it gets its own verified pass.
+
+**Batch 2 is now unblocked:** author new spirits as one `makeBatchSpirit({...})`
+record in the `BATCH` array of `spirit-vault-data.js`.
+
+## Architecture direction (2026-07-27, binding)
 
 ## Architecture direction (2026-07-27, binding)
 

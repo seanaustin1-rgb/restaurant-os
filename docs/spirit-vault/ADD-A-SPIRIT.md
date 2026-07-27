@@ -1,29 +1,35 @@
 # Spirit Vault Add-a-Spirit Workflow
 
-The current prototype is still a single self-contained HTML file. Adding a
-spirit should be a data-entry task only. New Batch 1 records use one helper
-entry, `makeBatchSpirit({...})`, which generates the renderer-compatible
-fields from one logical spirit record.
+Spirit records now live in an **external data file**, separate from the render
+engine. Adding a spirit is a data-entry task in **one place, one record** — the
+two-map `SPIRIT_DATA` + `DOSSIER_DETAILS` split has been retired.
 
 ## Source File
 
-Edit `docs/spirit-vault/spirit-vault-prototype.html`.
+Edit **`docs/spirit-vault/spirit-vault-data.js`** — never the HTML — for a
+normal new spirit. The file exports a factory
+`window.SPIRIT_VAULT_DATA({ makeBatchSpirit })` that returns one array of
+canonical records; the engine (`spirit-vault-prototype.html`) consumes it
+through `normalizeSpiritRecords()` → `BOTTLES`.
 
-Use the data sections only:
+Two authoring forms live in that file, both producing one canonical record:
 
-- `SPIRIT_DATA`: core bottle, production, flavor, story, pairing, and shelf
-  data for legacy records.
-- `BOURBON_BATCH_1`: helper-backed one-entry records for the first production
-  batch.
-- `DOSSIER_DETAILS`: legacy overlay for the original five only. Do not add
-  new production-batch records here unless a later migration explicitly
-  requires it.
+- `BATCH`: helper-backed one-entry records via `makeBatchSpirit({...})` — the
+  preferred form for new spirits.
+- `LEGACY`: the original five as full single objects (their retired
+  `DOSSIER_DETAILS` overlay is now folded in). New spirits do **not** go here.
+
+Deployment note: the guest page now loads **two files** — ship
+`spirit-vault-prototype.html` **and** `spirit-vault-data.js` together in the
+same directory (the loader uses a relative `<script src>`, so it works under
+`file://`, local static preview, and Bluehost static hosting; no `fetch`).
 
 Do not edit render functions for a normal new spirit.
 
 ## Required Steps
 
-1. Add one `makeBatchSpirit({...})` object with a permanent slug `id`.
+1. Add one `makeBatchSpirit({...})` object to the `BATCH` array in
+   `spirit-vault-data.js`, with a permanent slug `id`.
 2. Record `brand`, `expression`, `category`, `subcategory`, country, region,
    distillery/producer, proof, age data, production rows, and source URLs.
 3. Fill every flavor axis in `FLAVOR_AXES` with a numeric value from `0` to
@@ -71,6 +77,7 @@ contexts, validation blocks rendering and writes console errors for:
 - flavor-axis values outside `0` to `10`
 - body/finish values outside `0` to `10`
 - invalid record/publication/verification states
+- `publicationStatus` exceeding `recordStatus` (a draft cannot be published)
 - verified recognition without source provenance
 - malformed temporary price values
 

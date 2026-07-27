@@ -1457,6 +1457,12 @@ function renderDetail(i){
     return rows ? `<div class="path-label"><span class="pl-mark">${mark}</span>${label}</div>${rows}` : '';
   }).join('');
 
+  // Sean-owned voice fields render only once Sean has supplied real copy.
+  // Until then they stay absent (never the internal "Pending Sean review." placeholder).
+  const SEAN_PENDING = 'Pending Sean review.';
+  const hasSeanText = (v) => !!(v && String(v).trim() && String(v).trim() !== SEAN_PENDING);
+  const hasSeanNotes = hasSeanText(b.notes);
+  const hasSeanCue = hasSeanText(b.seanShort);
   const notesBody = `
     <p class="notes-text">${b.notes}</p>
     <div class="notes-sig">— Sean<span>Echo's Reserve · Curator</span></div>`;
@@ -1493,7 +1499,7 @@ function renderDetail(i){
     <p class="summary-why">${b.whyShort}</p>
 
     <div class="cue-card">
-      <div class="cue-text">${b.seanShort}</div>
+      ${hasSeanCue ? `<div class="cue-text">${b.seanShort}</div>` : ''}
       <div class="reviewed"><span class="rd">✓</span> Dossier reviewed ${fmtDate(b.reviewedAt)}</div>
     </div>
 
@@ -1505,7 +1511,7 @@ function renderDetail(i){
     ${drawer('table','At the Table', tableBody)}
     ${drawer('dist','Distillery Story', distBody)}
     ${drawer('compare','Compare & Continue', compareBody)}
-    ${drawer('notes',"Sean's Notes", notesBody, 'notes-drawer')}
+    ${hasSeanNotes ? drawer('notes',"Sean's Notes", notesBody, 'notes-drawer') : ''}
 
     <div class="vault-footer">
       <div class="vf-coming">Coming to the Vault — <b>Save Favorites · Build Your Own Flight · Cocktail Recipes · Tasting Alerts</b></div>

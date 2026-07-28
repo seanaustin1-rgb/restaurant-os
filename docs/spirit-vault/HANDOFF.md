@@ -8,7 +8,7 @@ flight creator + price generator, (d) tasting placemat generator.
 
 **Live state:** Coal (local bourbon-club president) is reviewing the guest preview
 at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
-— currently **85 guest dossiers** (5 legacy + 80 published batch records; batches 6-8 + held confirmations).
+— currently **104 guest dossiers** (5 legacy + 99 published batch records). **The whiskey shelf is COMPLETE** — every non-novelty whiskey on the Toast menu is now a dossier (published) or held for a Sean identity call (6 left).
 GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
 main updates Coal's link**. `?review=1` on that URL shows drafts too.
 
@@ -46,7 +46,28 @@ Data is external: `spirit-vault-data.js` exposes `window.SPIRIT_VAULT_DATA({make
 
 ---
 
-**Last revision:** 2026-07-28 (**Batches 6 + 7 + 8 shipped**: 36 researched, 31 published + 5 Sean-confirmed holds unheld/corrected; guest 49 → 85. Only Batch 9 = 4 well/Canadian bottles left to finish the whiskey shelf.)
+**Last revision:** 2026-07-28 (**WHISKEY SHELF COMPLETE** — batches 6-9 shipped: 40 researched, 35 published + 5 Sean-confirmed holds unheld/corrected; the 15 legacy Batch-1 drafts were finished (pairings added) and published. Guest 49 → 104. 6 bottles held for a Sean identity call.)
+
+## Batch 9 — final well/Canadian + Batch-1 completion (2026-07-28, `feat/spirit-vault-batch9`)
+
+**4 published (finishes the new-research shelf):** Canadian Club Original 1858
+(cat Canadian), Seagram's 7 Crown (cat Blended), Seagram's VO (cat Canadian),
+Mr. Boston Blended Scotch — all well-tier, `whyWeCarry` null. (Seagram's 7 needed a
+brand/expression fix so its name didn't render "…Crown null".)
+
+**Batch-1 backlog PUBLISHED:** the 15 original Codex Batch-1 records (Sagamore ×3,
+Old Forester Whisky Row 1870/1897/1910/1920 + Rye 100 + Single Barrel Barrel-Strength
+Rye, Knob Creek Single Barrel 9yr, Bulleit 10, Jeptha Creed ×3, WhistlePig
+Snout-to-Tail) had sat as draft since before the publish workflow. Now safe to publish:
+the carry-drawer hides their placeholder `whyWeCarry`. Added serving-suggestion
+`pairings` to each (empty pairings fail validation once published) and removed one
+internal QA note that had leaked into Old Forester Single Barrel Rye's `why` ("confirm
+proof against Echo's bottle"). Guest 89 → 104.
+
+**6 HELD, awaiting a Sean identity call:** Calumet (15 vs 8 yr), Old Grand-Dad (7yr BiB
+vs Bonded), St. George Breaking & Entering (Bourbon vs American Whiskey), Middle West
+Straight Rye (overlaps Pumpernickel), Four Walls (which expression), McConnell's
+(flagship vs Sherry Cask Finish).
 
 ## Batch 8 — world whiskey + scotch + irish + Canadian (2026-07-28, `feat/spirit-vault-batch8`)
 

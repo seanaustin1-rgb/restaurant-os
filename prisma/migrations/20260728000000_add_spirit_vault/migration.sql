@@ -52,6 +52,8 @@ CREATE TABLE "SpiritDefinition" (
     "paths" JSONB,
     "sources" JSONB,
     "sourcingLimitations" TEXT[],
+    "knowledgeReviewedAt" DATE,
+    "knowledgeReviewedBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

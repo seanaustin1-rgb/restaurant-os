@@ -1395,6 +1395,12 @@ model SpiritDefinition {
   sources             Json?
   sourcingLimitations String[]
 
+  // When the shared knowledge (ratings, sources, production facts) was last
+  // reviewed — distinct from a venue's publication review (VenueSpirit.reviewedAt).
+  // Supports the quarterly human content review of the canonical dossier.
+  knowledgeReviewedAt DateTime? @db.Date
+  knowledgeReviewedBy String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

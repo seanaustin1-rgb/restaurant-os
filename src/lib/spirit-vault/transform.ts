@@ -40,12 +40,16 @@ export const ECHO_TOAST_POUR_OZ = 1.5;
 const ECHO_TOAST_POUR_LABEL = "1.5 oz pour";
 
 /**
- * Provenance stamped on every primary offer: the price is Echo's Toast
- * selling price, and the pour size was corrected from the legacy 2 oz display.
+ * Every primary offer records the 1.5 oz correction, but the rest of the
+ * provenance must match the offer's actual source — a manual/legacy price must
+ * not claim to be a Toast basis. `commerceSource` and `priceProvenance` never
+ * contradict each other.
  */
-const ECHO_TOAST_PRICE_PROVENANCE =
-  "Price is Echo's Toast selling-price basis for this pour. " +
+const POUR_SIZE_NOTE =
   "Pour size corrected to 1.5 oz from the legacy '2 oz pour' guest-data display, per Sean 2026-07-28.";
+const ECHO_TOAST_PRICE_PROVENANCE = `Price is Echo's Toast selling-price basis for this pour. ${POUR_SIZE_NOTE}`;
+const ECHO_MANUAL_PRICE_PROVENANCE = `Price is Sean's confirmed current Echo menu price; temporary venue commerce value pending Toast integration. ${POUR_SIZE_NOTE}`;
+const ECHO_LEGACY_PRICE_PROVENANCE = `Price parsed from the legacy guest-data display; venue commerce value pending Toast integration. ${POUR_SIZE_NOTE}`;
 
 /** Shared canonical knowledge — one row per distinct spirit (no restaurantId). */
 export interface SpiritDefinitionRow {
@@ -91,6 +95,8 @@ export interface SpiritDefinitionRow {
   paths: unknown | null;
   sources: unknown | null;
   sourcingLimitations: string[];
+  knowledgeReviewedAt: string | null; // ISO date; importer coerces to Date
+  knowledgeReviewedBy: string | null;
 }
 
 /** A tenant's listing of a definition — venue-authored voice + state. */
@@ -135,6 +141,7 @@ const LIFECYCLE: Record<string, SpiritLifecycleStatus> = {
 const VERIFICATION: Record<string, SpiritVerificationStatus> = {
   unsourced: "UNSOURCED",
   "partially-sourced": "PARTIALLY_SOURCED",
+  "source-reviewed": "SOURCED", // the source data's label for fully-sourced dossiers
   sourced: "SOURCED",
 };
 
@@ -166,9 +173,12 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
   // Legacy objects have no publication/record status and are guest-visible.
   const publicationStatus = lifecycle(r.publicationStatus, "PUBLISHED");
   const recordStatus = lifecycle(r.recordStatus, "PUBLISHED");
+  // Missing/unknown → UNSOURCED (the 5 legacy dossiers carry no status and are
+  // genuinely unsourced). Never default to PARTIALLY_SOURCED — that overstated
+  // the sourcing of unverified rows.
   const verificationStatus =
     (typeof r.verificationStatus === "string" && VERIFICATION[r.verificationStatus]) ||
-    "PARTIALLY_SOURCED";
+    "UNSOURCED";
 
   const definition: SpiritDefinitionRow = {
     slug: String(r.id),
@@ -179,7 +189,10 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     displayName: nz(r.name),
     subcategory: nz(r.subcategory),
     category: nz(r.cat) ?? "Unknown",
-    silo: nz(r.silo),
+    // Do NOT trust r.silo: makeBatchSpirit hardcodes 'bourbon' on every record,
+    // which would mislabel the 48 non-bourbons. Stays null until the canonical
+    // category→silhouette mapper lands (Phase 1.5).
+    silo: null,
     country: nz(r.country),
     region: nz(r.region),
     city: nz(r.city),
@@ -215,6 +228,10 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     sourcingLimitations: Array.isArray(r.provenance?.sourcingLimitations)
       ? r.provenance.sourcingLimitations.filter((x: unknown) => typeof x === "string")
       : [],
+    // The dossier review date describes the shared KNOWLEDGE (ratings, sources,
+    // production), so it lives on the definition, not the venue listing.
+    knowledgeReviewedAt: nz(r.reviewedAt),
+    knowledgeReviewedBy: null,
   };
 
   const venueSpirit: VenueSpiritRow = {
@@ -225,7 +242,9 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     seanShort: nz(r.seanShort),
     notes: nz(r.notes),
     overrides: null,
-    reviewedAt: nz(r.reviewedAt),
+    // Venue-level publication review is distinct from the dossier's knowledge
+    // review; none has happened at import time.
+    reviewedAt: null,
     reviewedBy: null,
   };
 
@@ -241,8 +260,8 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
 function pourFromRecord(r: GuestRecord): SpiritPourRow {
   const c = r.commerce;
   if (c) {
-    const source: SpiritCommerceSource =
-      typeof c.source === "string" && c.source.toLowerCase() === "toast" ? "TOAST" : "MANUAL";
+    const isToast = typeof c.source === "string" && c.source.toLowerCase() === "toast";
+    const source: SpiritCommerceSource = isToast ? "TOAST" : "MANUAL";
     return {
       toastItemGuid: nz(c.toastItemGuid),
       pourSizeOz: ECHO_TOAST_POUR_OZ,
@@ -251,7 +270,8 @@ function pourFromRecord(r: GuestRecord): SpiritPourRow {
       availability: nz(c.availability),
       isPrimary: true,
       priceIsTemporary: c.priceIsTemporary !== false,
-      priceProvenance: ECHO_TOAST_PRICE_PROVENANCE,
+      // Provenance matches the source — never claim a Toast basis for a manual price.
+      priceProvenance: isToast ? ECHO_TOAST_PRICE_PROVENANCE : ECHO_MANUAL_PRICE_PROVENANCE,
       commerceSource: source,
       syncedAt: nz(c.sourceRecordedAt),
     };
@@ -265,7 +285,7 @@ function pourFromRecord(r: GuestRecord): SpiritPourRow {
     availability: nz(r.status?.[0]?.t),
     isPrimary: true,
     priceIsTemporary: true,
-    priceProvenance: ECHO_TOAST_PRICE_PROVENANCE,
+    priceProvenance: ECHO_LEGACY_PRICE_PROVENANCE,
     commerceSource: "MANUAL",
     syncedAt: null,
   };

@@ -92,3 +92,53 @@ describe("guestRecordToRows — legacy vs batch shapes both resolve", () => {
     }
   });
 });
+
+describe("guestRecordToRows — review data-boundary fixes", () => {
+  it("never imports the bourbon silhouette (silo stays null until the mapper exists)", () => {
+    for (const { definition } of ROWS) {
+      expect(definition.silo).toBeNull();
+    }
+    // In particular, non-bourbon categories are not bourbon-siloed.
+    const nonBourbon = ROWS.filter((r) => r.definition.category !== "Bourbon");
+    expect(nonBourbon.length).toBeGreaterThan(0);
+    for (const { definition } of nonBourbon) {
+      expect(definition.silo).not.toBe("bourbon");
+    }
+  });
+
+  it("maps verification labels to the real distribution (56 SOURCED / 49 PARTIALLY / 5 UNSOURCED)", () => {
+    const counts = { SOURCED: 0, PARTIALLY_SOURCED: 0, UNSOURCED: 0 } as Record<string, number>;
+    for (const { definition } of ROWS) counts[definition.verificationStatus]++;
+    expect(counts).toEqual({ SOURCED: 56, PARTIALLY_SOURCED: 49, UNSOURCED: 5 });
+  });
+
+  it("keeps commerceSource and priceProvenance consistent, and records the 1.5oz correction on every offer", () => {
+    let toast = 0;
+    let manual = 0;
+    for (const { offers } of ROWS) {
+      for (const o of offers) {
+        expect(o.pourSizeOz).toBe(ECHO_TOAST_POUR_OZ);
+        expect(o.priceProvenance).toContain("1.5 oz");
+        if (o.commerceSource === "TOAST") {
+          toast++;
+          expect(o.priceProvenance).toContain("Toast selling-price basis");
+        } else {
+          manual++;
+          // A manual/legacy price must never claim a Toast basis.
+          expect(o.priceProvenance).not.toContain("Toast selling-price basis");
+        }
+      }
+    }
+    expect(toast).toBe(90); // real vault: 90 Toast offers
+    expect(manual).toBe(20); // 15 Sean + 5 legacy
+  });
+
+  it("puts the dossier review date on shared knowledge, not the venue listing", () => {
+    for (const { definition, venueSpirit } of ROWS) {
+      expect(venueSpirit.reviewedAt).toBeNull();
+    }
+    // Every source record carries reviewedAt, so every definition gets it.
+    const withKnowledgeReview = ROWS.filter((r) => r.definition.knowledgeReviewedAt != null);
+    expect(withKnowledgeReview.length).toBe(110);
+  });
+});

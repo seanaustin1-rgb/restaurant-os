@@ -8,7 +8,7 @@ flight creator + price generator, (d) tasting placemat generator.
 
 **Live state:** Coal (local bourbon-club president) is reviewing the guest preview
 at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
-— currently **104 guest dossiers** (5 legacy + 99 published batch records). **The whiskey shelf is COMPLETE** — every non-novelty whiskey on the Toast menu is now a dossier (published) or held for a Sean identity call (6 left).
+— currently **108 guest dossiers** (5 legacy + 103 published batch records). **The whiskey shelf is COMPLETE.** Sean resolved the held bottles (2026-07-28): published St. George Breaking & Entering *American Whiskey* (86pf), Four Walls *Bartender's Blend* (90pf), Old Grand-Dad *Bottled-in-Bond* (100pf, NAS — the standard, not the 7yr), McConnell's *5 Year Old* (84pf). **Calumet = off** (stays draft). **Middle West Straight Rye = still held, needs Sean:** research finds Middle West makes only ONE rye recipe (~80% dark pumpernickel), so the Toast "Straight Rye" and "Pumpernickel Rye" pours may be the same recipe (standard 96pf vs cask strength) — awaiting Sean's word on what distinguishes his two pours (proof? cask strength?).
 GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
 main updates Coal's link**. `?review=1` on that URL shows drafts too.
 

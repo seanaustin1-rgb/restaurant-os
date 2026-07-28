@@ -580,8 +580,8 @@ function makeBatchSpirit(config){
     whyShort:config.whyShort || 'Draft Batch 1 record; production facts sourced, venue interpretation pending Sean review.',
     seanShort:'Pending Sean review.',
     whyWeCarry:config.whyWeCarry || 'Pending Sean review.',
-    press:[],
-    paths:{lighter:[],similar:[],adventurous:[]},
+    press:config.press || [],
+    paths:config.paths || {lighter:[],similar:[],adventurous:[]},
     commerce:{
       pourPriceUsd:config.priceUsd,
       pourSizeOz:2,

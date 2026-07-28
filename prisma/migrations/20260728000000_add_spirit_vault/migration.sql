@@ -12,7 +12,7 @@ CREATE TABLE "SpiritDefinition" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "schemaVersion" TEXT NOT NULL DEFAULT 'spirit-v1',
-    "verificationStatus" "SpiritVerificationStatus" NOT NULL DEFAULT 'PARTIALLY_SOURCED',
+    "verificationStatus" "SpiritVerificationStatus" NOT NULL DEFAULT 'UNSOURCED',
     "brand" TEXT NOT NULL,
     "expression" TEXT,
     "displayName" TEXT,

@@ -1341,8 +1341,10 @@ model SpiritDefinition {
   id                 String                   @id @default(cuid())
   slug               String                   @unique // global canonical id (e.g. "penelope-barrel-strength")
   schemaVersion      String                   @default("spirit-v1")
-  // Verification is about the objective knowledge's sourcing → shared.
-  verificationStatus SpiritVerificationStatus @default(PARTIALLY_SOURCED)
+  // Verification is about the objective knowledge's sourcing → shared. Defaults
+  // to UNSOURCED so a definition created without an explicit status fails SAFE
+  // (never silently promoted to partially-sourced) — matches the importer rule.
+  verificationStatus SpiritVerificationStatus @default(UNSOURCED)
 
   // ── Identity (columnar — Flight Builder filters/sorts on these) ──
   brand          String

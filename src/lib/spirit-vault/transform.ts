@@ -175,6 +175,28 @@ function parsePourOz(v: unknown): number | null {
   return m ? Number(m[1]) : null;
 }
 
+// The five legacy records carry only a display `name` (no brand/expression). An
+// explicit, accurate split beats a heuristic — corrupted identity would break
+// brand filtering once the DB regenerates the vault.
+const LEGACY_IDENTITY: Record<string, { brand: string; expression: string }> = {
+  "penelope-barrel-strength": { brand: "Penelope", expression: "Barrel Strength" },
+  "chicken-cock-5-year": { brand: "Chicken Cock", expression: "5 Year" },
+  "macallan-12-double-cask": { brand: "Macallan", expression: "12 Double Cask" },
+  "don-fulano-blanco-fuerte": { brand: "Don Fulano", expression: "Blanco Fuerte" },
+  "diplomatico-reserva-exclusiva": { brand: "Diplomático", expression: "Reserva Exclusiva" },
+};
+
+/** Parse a "City · Region · Country" dist.place string into structured columns.
+ *  Legacy records store location only here; batch records use `_config`. */
+function parsePlace(place: unknown): { city: string | null; region: string | null; country: string | null } {
+  if (typeof place !== "string") return { city: null, region: null, country: null };
+  const parts = place.split("·").map((s) => s.trim()).filter(Boolean);
+  if (parts.length >= 3) return { city: parts[0], region: parts[1], country: parts[parts.length - 1] };
+  if (parts.length === 2) return { city: null, region: parts[0], country: parts[1] };
+  if (parts.length === 1) return { city: null, region: null, country: parts[0] };
+  return { city: null, region: null, country: null };
+}
+
 /** Map a single guest record to its definition / venueSpirit / offer rows. */
 export function guestRecordToRows(r: GuestRecord): TransformResult {
   // Legacy objects have no publication/record status and are guest-visible.
@@ -187,12 +209,16 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     (typeof r.verificationStatus === "string" && VERIFICATION[r.verificationStatus]) ||
     "UNSOURCED";
 
+  const legacyId = LEGACY_IDENTITY[String(r.id)]; // explicit brand/expression for the 5 legacy
+  const cfg = r._config; // raw authoring config for batch records (structured originals)
+  const place = parsePlace(r.dist?.place); // legacy location fallback
+
   const definition: SpiritDefinitionRow = {
     slug: String(r.id),
     schemaVersion: nz(r.schemaVersion) ?? "spirit-v1",
     verificationStatus,
-    brand: nz(r.brand) ?? nz(r.name) ?? String(r.id),
-    expression: nz(r.expression),
+    brand: nz(r.brand) ?? legacyId?.brand ?? nz(r.name) ?? String(r.id),
+    expression: nz(r.expression) ?? legacyId?.expression ?? null,
     displayName: nz(r.name),
     subcategory: nz(r.subcategory),
     category: nz(r.cat) ?? "Unknown",
@@ -200,11 +226,15 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     // which would mislabel the 48 non-bourbons. Stays null until the canonical
     // category→silhouette mapper lands (Phase 1.5).
     silo: null,
-    country: nz(r.country),
-    region: nz(r.region),
-    city: nz(r.city),
+    // Structured location: top-level field → raw config → parsed dist.place.
+    // Legacy records only carry location in dist.place; batch omits top-level city.
+    country: nz(r.country) ?? nz(cfg?.country) ?? place.country,
+    region: nz(r.region) ?? nz(cfg?.region) ?? place.region,
+    city: nz(r.city) ?? nz(cfg?.city) ?? place.city,
     distilleryName: nz(r.distilleryName) ?? nz(r.dist?.name),
-    producerName: nz(r.producerName),
+    // makeBatchSpirit folds `producer` into distilleryName; recover the distinct
+    // producer/owner from the raw config where it exists.
+    producerName: nz(r.producerName) ?? nz(cfg?.producer),
     style: nz(r.style),
     proofN: typeof r.proofN === "number" ? r.proofN : null,
     proofDisplay: typeof r.proofN === "number" ? null : nz(r.proof),
@@ -213,7 +243,9 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     maxYears: typeof r.ageData?.maxYears === "number" ? r.ageData.maxYears : null,
     ageSourceUrl: nz(r.ageData?.sourceUrl),
     agePending: r.ageData?.pending === true,
-    unaged: r.ageData?.unaged === true,
+    // Legacy records (e.g. Don Fulano Blanco) say age:"Unaged" with no ageData;
+    // honor that so the structured flag matches ageText.
+    unaged: r.ageData?.unaged === true || /^\s*unaged\s*$/i.test(String(r.age ?? "")),
     body: typeof r.body === "number" ? r.body : null,
     finish: typeof r.finish === "number" ? r.finish : null,
     flavor: r.flavor ?? null,

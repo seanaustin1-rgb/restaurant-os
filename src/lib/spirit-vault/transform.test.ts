@@ -143,3 +143,33 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     expect(withKnowledgeReview.length).toBe(110);
   });
 });
+
+describe("guestRecordToRows — legacy/batch data-loss fixes (Codex review)", () => {
+  const bySlug = (s: string) => ROWS.find((r) => r.definition.slug === s)!;
+
+  it("splits legacy identity into brand + expression (not the whole name as brand)", () => {
+    const p = bySlug("penelope-barrel-strength").definition;
+    expect(p.brand).toBe("Penelope");
+    expect(p.expression).toBe("Barrel Strength");
+    expect(bySlug("don-fulano-blanco-fuerte").definition.brand).toBe("Don Fulano");
+    expect(bySlug("macallan-12-double-cask").definition.expression).toBe("12 Double Cask");
+  });
+
+  it("recovers structured location for legacy records from dist.place", () => {
+    const p = bySlug("penelope-barrel-strength").definition;
+    expect(p.city).toBe("Lawrenceburg");
+    expect(p.region).toBe("Indiana");
+    expect(p.country).toBe("USA");
+  });
+
+  it("retains producer/owner for batch records, and leaves legacy producer null", () => {
+    // makeBatchSpirit folds producer into distilleryName; recovered from _config.
+    const withProducer = ROWS.filter((r) => r.definition.producerName != null);
+    expect(withProducer.length).toBeGreaterThan(0);
+    expect(bySlug("penelope-barrel-strength").definition.producerName).toBeNull();
+  });
+
+  it("derives the unaged flag from legacy age text", () => {
+    expect(bySlug("don-fulano-blanco-fuerte").definition.unaged).toBe(true);
+  });
+});

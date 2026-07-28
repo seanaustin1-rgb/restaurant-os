@@ -51,12 +51,23 @@ export function loadGuestRecords(vaultDir: string = VAULT_DIR): GuestRecord[] {
   // eslint-disable-next-line no-new-func -- controlled eval of first-party repo
   // source in a script/test context; input is our own committed files, never
   // user input, and this module is never bundled into a client/page.
+  //
+  // makeBatchSpirit is wrapped so each batch record also carries its raw authoring
+  // `_config` — makeBatchSpirit folds some source fields (e.g. `producer`, `city`)
+  // into display strings, and the importer needs the structured originals. Legacy
+  // records aren't built by makeBatchSpirit, so they have no `_config`.
   const runner = new Function(`
     ${formatMoneySrc}
     ${makeBatchSrc}
+    var __makeBatchSpirit = makeBatchSpirit;
+    function makeBatchSpiritWithConfig(config){
+      var record = __makeBatchSpirit(config);
+      record._config = config;
+      return record;
+    }
     var window = {};
     ${dataJs}
-    return window.SPIRIT_VAULT_DATA({ makeBatchSpirit: makeBatchSpirit });
+    return window.SPIRIT_VAULT_DATA({ makeBatchSpirit: makeBatchSpiritWithConfig });
   `);
 
   const records = runner() as GuestRecord[];

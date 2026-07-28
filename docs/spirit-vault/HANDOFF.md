@@ -8,7 +8,7 @@ flight creator + price generator, (d) tasting placemat generator.
 
 **Live state:** Coal (local bourbon-club president) is reviewing the guest preview
 at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
-— currently **60 guest dossiers** (5 legacy + 55 published batch records; Batch 6 added 11).
+— currently **85 guest dossiers** (5 legacy + 80 published batch records; batches 6-8 + held confirmations).
 GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
 main updates Coal's link**. `?review=1` on that URL shows drafts too.
 
@@ -28,7 +28,7 @@ For each batch (~12 bottles):
 7. **Verify** in the local preview (Node server via `.claude/launch.json` name `spirit-vault-preview`; Browser pane blocks bare localhost + can't screenshot when pane hidden — use `javascript_tool` DOM checks): guest count right, drafts hidden, no id dups, **0 content overflow at 320px** (simulate by setting `.app` width=320; ignore `.bn-btn` false positives), no console errors.
 8. **Ship:** commit (only spirit-vault files) → PR → CI green → merge → poll Pages build to the merge commit → byte-verify live with `curl … | grep`.
 
-**Sean's held-expression confirmations (2026-07-28):** Loch Lomond = Original Single Malt ✓, Horse Soldier = Signature Small Batch 95 proof ✓, Stonestreet = Founder's Edition 5 Year ✓, Willett = Pot Still Reserve ✓ → **all 4 records matched and are now PUBLISHED**. Chicken Cock Ryeteous = **100 proof** (records had it at 90 = the standard Straight Rye; the 100pf is the "Ryeteous Blonde" — being corrected + published). **Still held:** Calumet (Sean has not yet confirmed 15-yr vs 8-yr — current record is 8 Year), Old Grand-Dad (7-yr BiB 2025 vs non-age-stated Bonded), plus Batch-7 holds St. George Breaking & Entering (Bourbon vs American Whiskey) and Middle West Straight Rye (identity overlaps the Pumpernickel rye).
+**Sean's held-expression confirmations (2026-07-28):** Loch Lomond = Original Single Malt ✓, Horse Soldier = Signature Small Batch 95 proof ✓, Stonestreet = Founder's Edition 5 Year ✓, Willett = Pot Still Reserve ✓ → **all 4 records matched and are now PUBLISHED**. Chicken Cock Ryeteous = **100 proof** (records had it at 90 = the standard Straight Rye; the 100pf is the "Ryeteous Blonde" — being corrected + published). **Still held:** Calumet (Sean has not yet confirmed 15-yr vs 8-yr — current record is 8 Year), Old Grand-Dad (7-yr BiB 2025 vs non-age-stated Bonded), plus holds St. George Breaking & Entering (Bourbon vs American Whiskey), Middle West Straight Rye (overlaps the Pumpernickel rye), Four Walls (which expression), McConnell's Irish (flagship vs Sherry Cask Finish). **8 held total** awaiting a Sean identity call.
 
 **Sean's scope decisions (2026-07-28):** ① SKIP the ~7 flavored novelties (Fireball, Screwball, Southern Comfort, Yukon Jack, American Honey, flavored Crown, Dubliner Honeycomb) — flavored/liqueur, off the vault. ② DO the full shelf incl. well/call-tier — but for well-tier bottles emphasize the **"what to try next"** Compare paths and it's fine to skip `whyWeCarry` + Sean's Notes (guide the guest UP off the well pour). Remaining new whiskeys after Batch 6: ~28 (batches 7-9 below).
 
@@ -46,7 +46,26 @@ Data is external: `spirit-vault-data.js` exposes `window.SPIRIT_VAULT_DATA({make
 
 ---
 
-**Last revision:** 2026-07-28 (**Batches 6 + 7 shipped**: 24 researched, 21 published + 4 Sean-confirmed holds unheld; guest 49 → 74, Chicken Cock 100pf correction pending)
+**Last revision:** 2026-07-28 (**Batches 6 + 7 + 8 shipped**: 36 researched, 31 published + 5 Sean-confirmed holds unheld/corrected; guest 49 → 85. Only Batch 9 = 4 well/Canadian bottles left to finish the whiskey shelf.)
+
+## Batch 8 — world whiskey + scotch + irish + Canadian (2026-07-28, `feat/spirit-vault-batch8`)
+
+12 researched → **10 PUBLISHED**: Compass Box Crimson Casks (obscure "Crimson Cask"
+label resolved), Crown Royal Deluxe (cat **"Canadian"** — new free-string category,
+renders on bourbon silo), The Dead Rabbit Irish, Dewar's White Label (well), Jameson
+Original (call), Johnnie Walker Red (well), Kinsey Chardonnay Cask (cat **"American
+Whiskey"** — labeled American whiskey, not bourbon), Melvale Straight Rye (New Liberty
+Distillery's revived Baltimore brand), Tomatin 12 Year, WhistlePig PiggyBack 6yr
+Bourbon. **2 HELD:** Four Walls (cat Blended; which-expression doubt — flagship vs
+Bartender's Blend vs 15yr), McConnell's Irish (flagship 5yr ex-bourbon vs Sherry Cask
+Finish doubt). Confirmed new cats validate (cat is a free string — no allow-list).
+
+## Batch 9 — final 4 (queued): Canadian Club, Seagram's 7 (Blended), Seagram's VO
+(Canadian), Mr Boston Scotch (well). All well-tier → whyWeCarry null. After Batch 9 the
+whiskey shelf is COMPLETE; remaining vault work = agave/gin/rum/vodka (Phase 1.5, needs
+the `silo` cat→silhouette fix) + the deferred Compare-paths curation pass + admin tools.
+
+## Batch 7 — ryes + call/well whiskey (2026-07-28, `feat/spirit-vault-batch7`)
 
 ## Batch 6 — premium/call American whiskey (2026-07-28, `feat/spirit-vault-batch6`)
 
@@ -93,14 +112,6 @@ been showing "Pending Sean review." to guests. Also flipped 4 Sean-confirmed hol
 published (Loch Lomond, Horse Soldier, Stonestreet, Willett). Guest 60 → 74 (+ Chicken
 Cock Ryeteous correction pending). Verified: 0 overflow at 320px, no console errors,
 well-tier carry-drawer hidden with no placeholder, clean proof tiles.
-
-## Batches 8-9 — remaining new whiskeys (queued)
-**~16 left after Batch 7.** Rye: Melvale (verify identity), WhistlePig PiggyBack 6yr
-Bourbon. World: Dead Rabbit, McConnell's, Four Walls, Jameson (std) [Irish]; Dewar's,
-Johnnie Walker Red, Tomatin 12, Crimson Cask (verify) [Scotch]; Kinsey Chardonnay
-Cask. Canadian/blended (`cat` is a free string — no allow-list — so 'Canadian' /
-'Blended' just work; render on bourbon silo): Crown Royal, Canadian Club, Seagram's 7,
-Seagram's VO, Mr Boston (well). Well-tier: `whyWeCarry` null (drawer now auto-hides).
 
 **Deferred whole-shelf pass:** curated Compare & Continue **paths** ("what to try
 next"), especially well → premium trade-ups per Sean. `makeBatchSpirit` now accepts

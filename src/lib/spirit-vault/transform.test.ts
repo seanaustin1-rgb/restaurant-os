@@ -112,20 +112,21 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     expect(counts).toEqual({ SOURCED: 56, PARTIALLY_SOURCED: 49, UNSOURCED: 5 });
   });
 
-  it("keeps commerceSource and priceProvenance consistent, and records the 1.5oz correction on every offer", () => {
+  it("retains the source's own provenance, appends the 1.5oz correction, and never mislabels a manual price as Toast", () => {
     let toast = 0;
     let manual = 0;
     for (const { offers } of ROWS) {
       for (const o of offers) {
         expect(o.pourSizeOz).toBe(ECHO_TOAST_POUR_OZ);
-        expect(o.priceProvenance).toContain("1.5 oz");
+        expect(o.priceProvenance).toContain("1.5 oz"); // the appended correction
         if (o.commerceSource === "TOAST") {
           toast++;
-          expect(o.priceProvenance).toContain("Toast selling-price basis");
+          // original Toast provenance is retained
+          expect(o.priceProvenance).toContain("Toast POS menu");
         } else {
           manual++;
-          // A manual/legacy price must never claim a Toast basis.
-          expect(o.priceProvenance).not.toContain("Toast selling-price basis");
+          // a manual/legacy price must never claim a Toast source
+          expect(o.priceProvenance).not.toContain("Toast POS menu");
         }
       }
     }

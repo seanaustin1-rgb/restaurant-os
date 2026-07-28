@@ -40,16 +40,23 @@ export const ECHO_TOAST_POUR_OZ = 1.5;
 const ECHO_TOAST_POUR_LABEL = "1.5 oz pour";
 
 /**
- * Every primary offer records the 1.5 oz correction, but the rest of the
- * provenance must match the offer's actual source — a manual/legacy price must
- * not claim to be a Toast basis. `commerceSource` and `priceProvenance` never
- * contradict each other.
+ * The 1.5 oz correction is appended to whatever provenance the record already
+ * carries — the record's ORIGINAL provenance is retained, never replaced. A
+ * Toast record keeps its Toast-sourced text; a Sean/manual record keeps its
+ * "Sean confirmed…" text; neither is relabeled as the other. `commerceSource`
+ * and `priceProvenance` therefore never contradict each other.
  */
 const POUR_SIZE_NOTE =
   "Pour size corrected to 1.5 oz from the legacy '2 oz pour' guest-data display, per Sean 2026-07-28.";
-const ECHO_TOAST_PRICE_PROVENANCE = `Price is Echo's Toast selling-price basis for this pour. ${POUR_SIZE_NOTE}`;
-const ECHO_MANUAL_PRICE_PROVENANCE = `Price is Sean's confirmed current Echo menu price; temporary venue commerce value pending Toast integration. ${POUR_SIZE_NOTE}`;
-const ECHO_LEGACY_PRICE_PROVENANCE = `Price parsed from the legacy guest-data display; venue commerce value pending Toast integration. ${POUR_SIZE_NOTE}`;
+// Legacy records have no commerce block, so there is no original provenance to
+// retain — this is the only fabricated base, and it makes no Toast claim.
+const LEGACY_PRICE_PROVENANCE_BASE =
+  "Price parsed from the legacy guest-data display; venue commerce value pending Toast integration.";
+
+/** Retain the source's own provenance (if any) and append the 1.5 oz correction. */
+function withPourSizeNote(base: string | null): string {
+  return base ? `${base} ${POUR_SIZE_NOTE}` : POUR_SIZE_NOTE;
+}
 
 /** Shared canonical knowledge — one row per distinct spirit (no restaurantId). */
 export interface SpiritDefinitionRow {
@@ -270,8 +277,9 @@ function pourFromRecord(r: GuestRecord): SpiritPourRow {
       availability: nz(c.availability),
       isPrimary: true,
       priceIsTemporary: c.priceIsTemporary !== false,
-      // Provenance matches the source — never claim a Toast basis for a manual price.
-      priceProvenance: isToast ? ECHO_TOAST_PRICE_PROVENANCE : ECHO_MANUAL_PRICE_PROVENANCE,
+      // Retain the record's own provenance and append the 1.5 oz correction —
+      // never relabel a manual price as Toast-sourced.
+      priceProvenance: withPourSizeNote(nz(c.priceProvenance)),
       commerceSource: source,
       syncedAt: nz(c.sourceRecordedAt),
     };
@@ -285,7 +293,7 @@ function pourFromRecord(r: GuestRecord): SpiritPourRow {
     availability: nz(r.status?.[0]?.t),
     isPrimary: true,
     priceIsTemporary: true,
-    priceProvenance: ECHO_LEGACY_PRICE_PROVENANCE,
+    priceProvenance: withPourSizeNote(LEGACY_PRICE_PROVENANCE_BASE),
     commerceSource: "MANUAL",
     syncedAt: null,
   };

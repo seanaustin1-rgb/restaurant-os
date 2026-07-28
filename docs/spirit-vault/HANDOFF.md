@@ -8,7 +8,7 @@ flight creator + price generator, (d) tasting placemat generator.
 
 **Live state:** Coal (local bourbon-club president) is reviewing the guest preview
 at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
-— currently **49 guest dossiers** (5 legacy + Booker's + 43 published batch records).
+— currently **60 guest dossiers** (5 legacy + 55 published batch records; Batch 6 added 11).
 GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
 main updates Coal's link**. `?review=1` on that URL shows drafts too.
 
@@ -28,7 +28,9 @@ For each batch (~12 bottles):
 7. **Verify** in the local preview (Node server via `.claude/launch.json` name `spirit-vault-preview`; Browser pane blocks bare localhost + can't screenshot when pane hidden — use `javascript_tool` DOM checks): guest count right, drafts hidden, no id dups, **0 content overflow at 320px** (simulate by setting `.app` width=320; ignore `.bn-btn` false positives), no console errors.
 8. **Ship:** commit (only spirit-vault files) → PR → CI green → merge → poll Pages build to the merge commit → byte-verify live with `curl … | grep`.
 
-**6 bottles HELD as draft, awaiting Sean's shelf-expression check** (publish once confirmed): Calumet (15 vs 8 yr), Loch Lomond (which malt), Horse Soldier (Signature Small Batch vs Straight), StoneStreet (Founder's Edition?), Chicken Cock Ryeteous (standard 90 rye vs 100-proof Blonde), Willett (Pot Still Reserve?).
+**7 bottles HELD as draft, awaiting Sean's shelf-expression check** (publish once confirmed): Calumet (15 vs 8 yr), Loch Lomond (which malt), Horse Soldier (Signature Small Batch vs Straight), StoneStreet (Founder's Edition?), Chicken Cock Ryeteous (standard 90 rye vs 100-proof Blonde), Willett (Pot Still Reserve?), **Old Grand-Dad** (official 7-yr BiB released 2025 matches the "7 yr" Toast label, but Echo may pour the non-age-stated Bonded — same mash/proof/distillery; confirm which).
+
+**Sean's scope decisions (2026-07-28):** ① SKIP the ~7 flavored novelties (Fireball, Screwball, Southern Comfort, Yukon Jack, American Honey, flavored Crown, Dubliner Honeycomb) — flavored/liqueur, off the vault. ② DO the full shelf incl. well/call-tier — but for well-tier bottles emphasize the **"what to try next"** Compare paths and it's fine to skip `whyWeCarry` + Sean's Notes (guide the guest UP off the well pour). Remaining new whiskeys after Batch 6: ~28 (batches 7-9 below).
 
 **Before gin/tequila/rum (Phase-1.5):** fix `makeBatchSpirit` `silo:'bourbon'` hardcode → map `cat`→bottle silhouette, or those show a bourbon shape. Whiskey-family (scotch/irish/japanese/rye/ASM) look fine on the bourbon silo, so whiskey doesn't need it.
 
@@ -44,7 +46,44 @@ Data is external: `spirit-vault-data.js` exposes `window.SPIRIT_VAULT_DATA({make
 
 ---
 
-**Last revision:** 2026-07-27 (**Batch 2 live**: Toast-sourced list+prices, 14 agent-researched premium dossiers, 12 published to the guest link)
+**Last revision:** 2026-07-28 (**Batch 6 live**: 12 researched, 11 published to the guest link, guest 49 → 60)
+
+## Batch 6 — premium/call American whiskey (2026-07-28, `feat/spirit-vault-batch6`)
+
+Reconstructed the full pipeline after prior scratchpad was lost — re-pulled Toast
+(386 bottles), reconciled every whiskey name against the vault (0 unmatched):
+**50 already in vault, 7 held, ~36 genuinely-new + ~9 well/call-tier, 7 novelties
+(skipped per Sean), 4 well dups (skipped).** 12 researched via one general-purpose
+Agent per bottle (strict no-fabrication brief), audited through the engine's REAL
+`validateSpiritRecords` (copied verbatim into a node harness for parity — 0 errors),
+integrated, verified in the local preview.
+
+**11 PUBLISHED:** Maker's Mark 46, Penelope Project X Oloroso (single-barrel, proof
+108–115 label), Penelope Valencia (Vino de Naranja finish), Penelope Wheated, Wild
+Turkey 101, Wild Turkey 81 (well-tier, `whyWeCarry` null), Old Forester Signature
+100, New Riff Bottled-in-Bond, Rebel Small Batch Reserve, Ironclad Honey Cask,
+Ironclad Monitor Blend. **1 HELD:** Old Grand-Dad (7-yr-vs-Bonded, see above).
+
+**Engine change (backward-compatible):** `makeBatchSpirit` now passes through
+`config.paths` and `config.press` (was hardcoded empty). Existing records don't pass
+them → byte-identical output. This unlocks curated **Compare & Continue paths**
+("what to try next") — author them centrally (curator has the full vault; research
+agents don't), especially for well-tier bottles per Sean.
+
+**Verified:** guest=60, review=82, 0 content overflow at 320px, no console errors,
+no id dups, clean hero proof tiles.
+
+## Batches 7-9 — remaining ~28 new whiskeys (queued)
+Ryes: Bulleit Rye, Old Overholt, Middle West Pumpernickel + Straight Rye, WhistlePig
+10yr Rye 100pf, Sagamore Cask Strength, Chicken Cock Rye (verify vs held Ryeteous),
+Melvale (verify identity). Bourbon/Tenn: Knob Creek Small Batch (std), Maker's Mark
+(std), Jim Beam, Jack Daniel's No.7, St. George Breaking & Entering, WhistlePig
+PiggyBack 6yr Bourbon. World: Dead Rabbit, McConnell's, Four Walls, Jameson (std)
+[Irish]; Dewar's, Johnnie Walker Red, Tomatin 12, Crimson Cask (verify) [Scotch];
+Kinsey Chardonnay Cask. Canadian/blended (need a `cat` value — free string, no
+allow-list, so 'Canadian'/'Blended' just work; render on bourbon silo): Crown Royal,
+Canadian Club, Seagram's 7, Seagram's VO, Mr Boston. Well-tier: emphasize paths,
+skip whyWeCarry/notes.
 
 ## Batch 2 — premium bourbon/whiskey (2026-07-27, `feat/spirit-vault-batch2-proof`)
 

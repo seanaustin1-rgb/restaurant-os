@@ -16,6 +16,19 @@ full dossier (all drawers incl. Distillery Story, pairings, and an agent-drafted
 Workflow: `spirit-vault-batch2-premiums` (14 agents, 0 errors). Curator cue
 (`seanShort`) + Sean's Notes (`notes`) still stay blank for Sean.
 
+**Batch 5 (2026-07-27, `feat/spirit-vault-batch5`):** 12 standard-tier researched →
+**ALL 12 PUBLISHED** (none held — identities all confirmed): Maker's Mark Cask
+Strength, FEW Straight Bourbon, Old Elk, Jameson Black Barrel, Buffalo Trace,
+Bulleit Bourbon, Woodford Reserve Rye + Distiller's Select, Monkey Shoulder,
+Jack Daniel's Triple Mash, Elvis "The King" Rye, St. George Baller (agent fixed
+my Sonoma→St.George mis-hint). Guest **37 → 49**. Maker's/Buffalo Trace/Monkey
+Shoulder resolve more Penelope/Chicken Cock/Macallan compare-path refs.
+**Proof-display fix:** `makeBatchSpirit` now shows the numeric `proofN` in the
+hero tile (clean "90") and only uses `proofDisplay` as the label when `proofN`
+is null (barrel/cask/varying) — agents had written verbose "90 proof (45% ABV)"
+strings; this retroactively cleans every dossier. Verified guest=49, 0 overflow
+at 320px.
+
 **Batch 4 (2026-07-27, `feat/spirit-vault-batch4`):** 12 more researched → **10
 PUBLISHED**: Bulleit BiB, WhistlePig PiggyBack, Widow Jane Applewood, Michter's
 US*1, Middle West Wheated, Basil Hayden Dark Rye, Legent, Boondocks, Suntory Toki

@@ -8,6 +8,12 @@
 //   • the publish/export step (before a row is written into the static guest
 //     vault, spirit-vault-data.js).
 //
+// The schema was split into shared knowledge (SpiritDefinition, objective) vs.
+// tenant listing (VenueSpirit) vs. offers (SpiritPour). This gate now validates
+// the COMPOSED publishable unit — a definition + a venue listing + its pours —
+// because guest-visibility is a property of that whole composition, not of any
+// one row.
+//
 // It mirrors the guest engine's runtime gate (isGuestVisible needs BOTH
 // recordStatus AND publicationStatus === published) and the DB CHECK constraints
 // (publicationStatus <= recordStatus, body/finish in 0–10), and adds the richer
@@ -41,27 +47,40 @@ export function lifecycleRank(status: SpiritLifecycleStatus): number {
   return LIFECYCLE_RANK[status];
 }
 
-/** A pour offer, as validated pre-insert or on a persisted row. */
-export interface PourValidationInput {
-  pourSizeOz?: number | null;
-  priceUsd?: number | null;
-  isPrimary?: boolean | null;
-}
-
-/** The spirit fields the gate inspects. A subset of the Prisma Spirit row so it
- *  can validate an in-memory draft before it is ever written. */
-export interface SpiritValidationInput {
+/** The shared, objective knowledge fields the gate inspects. A subset of the
+ *  Prisma SpiritDefinition row so it can validate an in-memory draft. */
+export interface SpiritDefinitionInput {
   slug?: string | null;
   brand?: string | null;
   category?: string | null;
-  recordStatus: SpiritLifecycleStatus;
-  publicationStatus: SpiritLifecycleStatus;
   body?: number | null;
   finish?: number | null;
   topNotes?: string[] | null;
   whyShort?: string | null;
   flavor?: Record<string, unknown> | null;
-  pours?: PourValidationInput[] | null;
+}
+
+/** The tenant listing fields the gate inspects. A subset of the Prisma
+ *  VenueSpirit row. Both lifecycle statuses are required (they default in the
+ *  DB, so any persisted or draft row always has them). */
+export interface VenueSpiritInput {
+  slug?: string | null;
+  recordStatus: SpiritLifecycleStatus;
+  publicationStatus: SpiritLifecycleStatus;
+}
+
+/** A pour offer, as validated pre-insert or on a persisted row. */
+export interface SpiritPourInput {
+  pourSizeOz?: number | null;
+  priceUsd?: number | null;
+  isPrimary?: boolean | null;
+}
+
+/** The composed publishable unit: shared definition + tenant listing + offers. */
+export interface PublishableSpiritInput {
+  definition: SpiritDefinitionInput;
+  venueSpirit: VenueSpiritInput;
+  offers: SpiritPourInput[];
 }
 
 export interface SpiritValidationError {
@@ -80,72 +99,79 @@ function isIntInRange(v: number | null | undefined, lo: number, hi: number): boo
 }
 
 /**
- * Validate a spirit (and its pours). Returns every problem found — an empty
- * array means it passes. Invariants that always hold (status ordering, body/
- * finish range, slug shape) are checked for any record; the richer content
- * rules apply only when the record is being made guest-visible
- * (publicationStatus === PUBLISHED).
+ * Validate a composed publishable spirit (definition + venue listing + offers).
+ * Returns every problem found — an empty array means it passes. Invariants that
+ * always hold (status ordering, body/finish range, slug shape, per-offer sanity)
+ * are checked for any record; the richer content rules apply only when the
+ * record is being made guest-visible (publicationStatus === PUBLISHED).
  */
-export function validateSpirit(
-  spirit: SpiritValidationInput,
-  pours: PourValidationInput[] = spirit.pours ?? [],
+export function validatePublishableSpirit(
+  input: PublishableSpiritInput,
 ): SpiritValidationError[] {
+  const { definition, venueSpirit, offers } = input;
   const errors: SpiritValidationError[] = [];
   const push = (field: string, message: string) => errors.push({ field, message });
 
   // ── Always-on invariants (mirror the DB CHECK constraints) ──
-  if (lifecycleRank(spirit.publicationStatus) > lifecycleRank(spirit.recordStatus)) {
+  if (lifecycleRank(venueSpirit.publicationStatus) > lifecycleRank(venueSpirit.recordStatus)) {
     push(
       "publicationStatus",
-      `publicationStatus (${spirit.publicationStatus}) may not exceed recordStatus (${spirit.recordStatus})`,
+      `publicationStatus (${venueSpirit.publicationStatus}) may not exceed recordStatus (${venueSpirit.recordStatus})`,
     );
   }
-  if (spirit.body != null && !isIntInRange(spirit.body, 0, 10)) {
+  if (definition.body != null && !isIntInRange(definition.body, 0, 10)) {
     push("body", "body must be an integer 0–10");
   }
-  if (spirit.finish != null && !isIntInRange(spirit.finish, 0, 10)) {
+  if (definition.finish != null && !isIntInRange(definition.finish, 0, 10)) {
     push("finish", "finish must be an integer 0–10");
   }
-  if (isBlank(spirit.slug)) {
-    push("slug", "slug is required");
-  } else if (!SLUG_RE.test(spirit.slug!.trim())) {
-    push("slug", "slug must be lowercase, hyphen-separated (e.g. penelope-barrel-strength)");
-  }
-  if (isBlank(spirit.brand)) push("brand", "brand is required");
-  if (isBlank(spirit.category)) push("category", "category is required");
 
-  // A pour may claim primary at most once, regardless of publication state.
-  const primaryCount = pours.filter((p) => p.isPrimary === true).length;
-  for (const [i, p] of pours.entries()) {
+  if (isBlank(venueSpirit.slug)) {
+    push("venueSpirit.slug", "venueSpirit slug is required");
+  } else if (!SLUG_RE.test(venueSpirit.slug!.trim())) {
+    push("venueSpirit.slug", "venueSpirit slug must be lowercase, hyphen-separated (e.g. penelope-barrel-strength)");
+  }
+  if (isBlank(definition.slug)) {
+    push("definition.slug", "definition slug is required");
+  } else if (!SLUG_RE.test(definition.slug!.trim())) {
+    push("definition.slug", "definition slug must be lowercase, hyphen-separated (e.g. penelope-barrel-strength)");
+  }
+
+  if (isBlank(definition.brand)) push("brand", "brand is required");
+  if (isBlank(definition.category)) push("category", "category is required");
+
+  // An offer may claim primary at most once, regardless of publication state.
+  const primaryCount = offers.filter((p) => p.isPrimary === true).length;
+  for (const [i, p] of offers.entries()) {
     if (p.pourSizeOz != null && !(p.pourSizeOz > 0)) {
-      push(`pours[${i}].pourSizeOz`, "pourSizeOz must be greater than 0");
+      push(`offers[${i}].pourSizeOz`, "pourSizeOz must be greater than 0");
     }
     if (p.priceUsd != null && p.priceUsd < 0) {
-      push(`pours[${i}].priceUsd`, "priceUsd may not be negative");
+      push(`offers[${i}].priceUsd`, "priceUsd may not be negative");
     }
   }
   if (primaryCount > 1) {
-    push("pours", `exactly one pour may be primary; found ${primaryCount}`);
+    push("offers", `exactly one offer may be primary; found ${primaryCount}`);
   }
 
   // ── Guest-visibility rules (only when publishing) ──
-  if (spirit.publicationStatus === "PUBLISHED") {
-    if (spirit.recordStatus !== "PUBLISHED") {
+  if (venueSpirit.publicationStatus === "PUBLISHED") {
+    if (venueSpirit.recordStatus !== "PUBLISHED") {
       // Redundant with the ordering check above, but stated explicitly because
       // the guest gate needs BOTH to be PUBLISHED, not merely well-ordered.
       push("recordStatus", "a guest-visible spirit must also have recordStatus PUBLISHED");
     }
 
-    const notes = spirit.topNotes ?? [];
+    const notes = definition.topNotes ?? [];
     if (notes.length !== 3 || notes.some(isBlank)) {
       push("topNotes", "a published spirit needs exactly 3 non-empty topNotes");
     }
 
-    if (isBlank(spirit.whyShort)) {
+    if (isBlank(definition.whyShort)) {
       push("whyShort", "a published spirit needs a whyShort (above-the-fold sentence)");
     }
 
-    const flavor = spirit.flavor ?? {};
+    const flavor = definition.flavor ?? {};
     for (const axis of FLAVOR_AXES) {
       const v = flavor[axis];
       if (typeof v !== "number" || !isIntInRange(v, 0, 10)) {
@@ -153,14 +179,14 @@ export function validateSpirit(
       }
     }
 
-    if (pours.length === 0) {
-      push("pours", "a published spirit needs at least one pour");
+    if (offers.length === 0) {
+      push("offers", "a published spirit needs at least one offer");
     } else if (primaryCount !== 1) {
-      push("pours", `a published spirit needs exactly one primary pour; found ${primaryCount}`);
+      push("offers", `a published spirit needs exactly one primary offer; found ${primaryCount}`);
     } else {
-      const primary = pours.find((p) => p.isPrimary === true)!;
+      const primary = offers.find((p) => p.isPrimary === true)!;
       if (primary.priceUsd == null) {
-        push("pours", "the primary pour of a published spirit needs a price");
+        push("offers", "the primary offer of a published spirit needs a price");
       }
     }
   }
@@ -169,9 +195,6 @@ export function validateSpirit(
 }
 
 /** Convenience boolean form. */
-export function isSpiritPublishable(
-  spirit: SpiritValidationInput,
-  pours: PourValidationInput[] = spirit.pours ?? [],
-): boolean {
-  return validateSpirit(spirit, pours).length === 0;
+export function isSpiritPublishable(input: PublishableSpiritInput): boolean {
+  return validatePublishableSpirit(input).length === 0;
 }

@@ -1,9 +1,19 @@
-// Spirit Vault — transform: one rendered guest record → DB rows (Spirit + pours).
+// Spirit Vault — transform: one rendered guest record → split DB rows.
 //
 // Pure and deterministic. Consumes a record exactly as the guest engine renders
 // it (the output of makeBatchSpirit, or a legacy canonical object) and returns
 // the column-shaped inputs the importer writes. Kept separate from any I/O so it
 // unit-tests against the real 110 records with no DB.
+//
+// The old single `Spirit` model was split into four:
+//   • SpiritDefinition — shared, canonical knowledge (no restaurantId);
+//   • VenueSpirit      — a tenant's listing of a definition (Echo's, here);
+//   • SpiritPour       — a priced offer under a VenueSpirit;
+//   • SpiritPriceObservation — append-only price history (seeded by the
+//     importer at write time; NOT emitted here).
+// This module re-slices the SAME field mappings into the three writable rows
+// (definition / venueSpirit / offers); the importer wires the FKs
+// (spiritDefinitionId, restaurantId, venueSpiritId) at write time.
 //
 // The two source shapes diverge and both must map losslessly:
 //   • batch records (makeBatchSpirit output) carry status enums, `commerce`, and
@@ -21,10 +31,26 @@ import type {
 /** Loosely-typed guest record — the renderer produces plain objects. */
 export type GuestRecord = Record<string, any>;
 
-export interface SpiritRow {
+/**
+ * Echo's Toast prices are for a 1.5-ounce pour. The static guest data mislabels
+ * this as a "2 oz pour" (`record.priceL` / `record.commerce.pourSizeOz`); that 2
+ * is ignored and every primary offer is recorded at 1.5 oz. — Sean, 2026-07-28.
+ */
+export const ECHO_TOAST_POUR_OZ = 1.5;
+const ECHO_TOAST_POUR_LABEL = "1.5 oz pour";
+
+/**
+ * Provenance stamped on every primary offer: the price is Echo's Toast
+ * selling price, and the pour size was corrected from the legacy 2 oz display.
+ */
+const ECHO_TOAST_PRICE_PROVENANCE =
+  "Price is Echo's Toast selling-price basis for this pour. " +
+  "Pour size corrected to 1.5 oz from the legacy '2 oz pour' guest-data display, per Sean 2026-07-28.";
+
+/** Shared canonical knowledge — one row per distinct spirit (no restaurantId). */
+export interface SpiritDefinitionRow {
   slug: string;
-  recordStatus: SpiritLifecycleStatus;
-  publicationStatus: SpiritLifecycleStatus;
+  schemaVersion: string;
   verificationStatus: SpiritVerificationStatus;
   brand: string;
   expression: string | null;
@@ -34,6 +60,7 @@ export interface SpiritRow {
   silo: string | null;
   country: string | null;
   region: string | null;
+  city: string | null;
   distilleryName: string | null;
   producerName: string | null;
   style: string | null;
@@ -47,13 +74,10 @@ export interface SpiritRow {
   unaged: boolean;
   body: number | null;
   finish: number | null;
+  flavor: unknown | null;
+  topNotes: string[];
   whyShort: string | null;
   why: string | null;
-  whyWeCarry: string | null;
-  seanShort: string | null;
-  notes: string | null;
-  topNotes: string[];
-  flavor: unknown | null;
   production: unknown | null;
   productionStructured: unknown | null;
   prodTags: string[];
@@ -67,10 +91,23 @@ export interface SpiritRow {
   paths: unknown | null;
   sources: unknown | null;
   sourcingLimitations: string[];
-  reviewedAt: string | null; // ISO date; importer coerces to Date
 }
 
-export interface PourRow {
+/** A tenant's listing of a definition — venue-authored voice + state. */
+export interface VenueSpiritRow {
+  slug: string;
+  recordStatus: SpiritLifecycleStatus;
+  publicationStatus: SpiritLifecycleStatus;
+  whyWeCarry: string | null;
+  seanShort: string | null;
+  notes: string | null;
+  overrides: unknown | null;
+  reviewedAt: string | null; // ISO date; importer coerces to Date
+  reviewedBy: string | null;
+}
+
+/** A priced offer under a VenueSpirit. */
+export interface SpiritPourRow {
   toastItemGuid: string | null;
   pourSizeOz: number | null;
   pourLabel: string | null;
@@ -84,8 +121,9 @@ export interface PourRow {
 }
 
 export interface TransformResult {
-  spirit: SpiritRow;
-  pours: PourRow[];
+  definition: SpiritDefinitionRow; // shared knowledge
+  venueSpirit: VenueSpiritRow; // tenant listing (Echo's, during testing)
+  offers: SpiritPourRow[]; // one primary offer per record
 }
 
 const LIFECYCLE: Record<string, SpiritLifecycleStatus> = {
@@ -123,7 +161,7 @@ function parsePourOz(v: unknown): number | null {
   return m ? Number(m[1]) : null;
 }
 
-/** Map a single guest record to its Spirit row + pour rows. */
+/** Map a single guest record to its definition / venueSpirit / offer rows. */
 export function guestRecordToRows(r: GuestRecord): TransformResult {
   // Legacy objects have no publication/record status and are guest-visible.
   const publicationStatus = lifecycle(r.publicationStatus, "PUBLISHED");
@@ -132,10 +170,9 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     (typeof r.verificationStatus === "string" && VERIFICATION[r.verificationStatus]) ||
     "PARTIALLY_SOURCED";
 
-  const spirit: SpiritRow = {
+  const definition: SpiritDefinitionRow = {
     slug: String(r.id),
-    recordStatus,
-    publicationStatus,
+    schemaVersion: nz(r.schemaVersion) ?? "spirit-v1",
     verificationStatus,
     brand: nz(r.brand) ?? nz(r.name) ?? String(r.id),
     expression: nz(r.expression),
@@ -145,6 +182,7 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     silo: nz(r.silo),
     country: nz(r.country),
     region: nz(r.region),
+    city: nz(r.city),
     distilleryName: nz(r.distilleryName) ?? nz(r.dist?.name),
     producerName: nz(r.producerName),
     style: nz(r.style),
@@ -158,13 +196,10 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     unaged: r.ageData?.unaged === true,
     body: typeof r.body === "number" ? r.body : null,
     finish: typeof r.finish === "number" ? r.finish : null,
+    flavor: r.flavor ?? null,
+    topNotes: Array.isArray(r.topNotes) ? r.topNotes.filter((x: unknown) => typeof x === "string") : [],
     whyShort: nz(r.whyShort),
     why: nz(r.why),
-    whyWeCarry: nz(r.whyWeCarry),
-    seanShort: nz(r.seanShort),
-    notes: nz(r.notes),
-    topNotes: Array.isArray(r.topNotes) ? r.topNotes.filter((x: unknown) => typeof x === "string") : [],
-    flavor: r.flavor ?? null,
     production: r.production ?? null,
     productionStructured: r.productionStructured ?? null,
     prodTags: Array.isArray(r.prodTags) ? r.prodTags.filter((x: unknown) => typeof x === "string") : [],
@@ -180,45 +215,57 @@ export function guestRecordToRows(r: GuestRecord): TransformResult {
     sourcingLimitations: Array.isArray(r.provenance?.sourcingLimitations)
       ? r.provenance.sourcingLimitations.filter((x: unknown) => typeof x === "string")
       : [],
-    reviewedAt: nz(r.reviewedAt),
   };
 
-  const pours: PourRow[] = [pourFromRecord(r)];
+  const venueSpirit: VenueSpiritRow = {
+    slug: String(r.id),
+    recordStatus,
+    publicationStatus,
+    whyWeCarry: nz(r.whyWeCarry),
+    seanShort: nz(r.seanShort),
+    notes: nz(r.notes),
+    overrides: null,
+    reviewedAt: nz(r.reviewedAt),
+    reviewedBy: null,
+  };
 
-  return { spirit, pours };
+  const offers: SpiritPourRow[] = [pourFromRecord(r)];
+
+  return { definition, venueSpirit, offers };
 }
 
-/** The one primary pour a legacy/batch record implies. When Toast provides the
+/** The one primary offer a legacy/batch record implies. When Toast provides the
  *  full 2–3 pour set, the sync layer adds the rest; each existing record has
- *  exactly one, flagged primary. */
-function pourFromRecord(r: GuestRecord): PourRow {
+ *  exactly one, flagged primary. The pour size is always Echo's real 1.5 oz —
+ *  the legacy "2 oz" display is deliberately ignored (see ECHO_TOAST_POUR_OZ). */
+function pourFromRecord(r: GuestRecord): SpiritPourRow {
   const c = r.commerce;
   if (c) {
     const source: SpiritCommerceSource =
       typeof c.source === "string" && c.source.toLowerCase() === "toast" ? "TOAST" : "MANUAL";
     return {
       toastItemGuid: nz(c.toastItemGuid),
-      pourSizeOz: typeof c.pourSizeOz === "number" ? c.pourSizeOz : parsePourOz(r.priceL),
-      pourLabel: nz(r.priceL),
+      pourSizeOz: ECHO_TOAST_POUR_OZ,
+      pourLabel: ECHO_TOAST_POUR_LABEL,
       priceUsd: parseMoney(c.pourPriceUsd),
       availability: nz(c.availability),
       isPrimary: true,
       priceIsTemporary: c.priceIsTemporary !== false,
-      priceProvenance: nz(c.priceProvenance),
+      priceProvenance: ECHO_TOAST_PRICE_PROVENANCE,
       commerceSource: source,
       syncedAt: nz(c.sourceRecordedAt),
     };
   }
-  // Legacy: no commerce block — derive from the display price + label.
+  // Legacy: no commerce block — derive the price from the display string.
   return {
     toastItemGuid: null,
-    pourSizeOz: parsePourOz(r.priceL),
-    pourLabel: nz(r.priceL),
+    pourSizeOz: ECHO_TOAST_POUR_OZ,
+    pourLabel: ECHO_TOAST_POUR_LABEL,
     priceUsd: parseMoney(r.price),
     availability: nz(r.status?.[0]?.t),
     isPrimary: true,
     priceIsTemporary: true,
-    priceProvenance: null,
+    priceProvenance: ECHO_TOAST_PRICE_PROVENANCE,
     commerceSource: "MANUAL",
     syncedAt: null,
   };

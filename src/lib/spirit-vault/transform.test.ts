@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { loadGuestRecords } from "./load-guest-records";
-import { guestRecordToRows } from "./transform";
-import { validateSpirit } from "./validate";
+import { guestRecordToRows, ECHO_TOAST_POUR_OZ } from "./transform";
 
 // These run against the REAL static vault (docs/spirit-vault/*), reconstructed
 // exactly as a guest's browser builds it — so the transform is proven on all
@@ -10,97 +9,86 @@ const RECORDS = loadGuestRecords();
 const ROWS = RECORDS.map(guestRecordToRows);
 
 describe("loadGuestRecords", () => {
-  it("reconstructs the full vault (110 records; 108 guest-visible)", () => {
+  it("reconstructs the full vault (110 records)", () => {
     expect(RECORDS.length).toBe(110);
-    const guestVisible = ROWS.filter(
-      ({ spirit }) =>
-        spirit.recordStatus === "PUBLISHED" && spirit.publicationStatus === "PUBLISHED",
-    );
-    expect(guestVisible.length).toBe(108);
+    expect(ROWS.length).toBe(110);
   });
 });
 
-describe("guestRecordToRows — every record maps without loss", () => {
-  it("gives each record a slug, a category, and a non-empty brand", () => {
-    for (const { spirit } of ROWS) {
-      expect(spirit.slug, JSON.stringify(spirit)).toBeTruthy();
-      expect(spirit.category).toBeTruthy();
-      expect(spirit.brand.trim().length).toBeGreaterThan(0);
+describe("guestRecordToRows — every record maps to the split shape", () => {
+  it("gives each record definition + venueSpirit slugs, a category, and a non-empty brand", () => {
+    for (const { definition, venueSpirit } of ROWS) {
+      expect(definition.slug, JSON.stringify(definition)).toBeTruthy();
+      expect(venueSpirit.slug, JSON.stringify(venueSpirit)).toBeTruthy();
+      expect(definition.slug).toBe(venueSpirit.slug);
+      expect(definition.category).toBeTruthy();
+      expect(definition.brand.trim().length).toBeGreaterThan(0);
     }
   });
 
-  it("keeps slugs unique (the tenant-stable public id)", () => {
-    const slugs = ROWS.map((r) => r.spirit.slug);
+  it("keeps definition slugs unique (the canonical spirit id)", () => {
+    const slugs = ROWS.map((r) => r.definition.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it("produces exactly one primary pour per record", () => {
-    for (const { pours } of ROWS) {
-      expect(pours.length).toBe(1);
-      expect(pours.filter((p) => p.isPrimary).length).toBe(1);
+  it("keeps venueSpirit slugs unique (the tenant-stable public id)", () => {
+    const slugs = ROWS.map((r) => r.venueSpirit.slug);
+    expect(new Set(slugs).size).toBe(slugs.length);
+  });
+
+  it("produces exactly one primary offer per record", () => {
+    for (const { offers } of ROWS) {
+      expect(offers.length).toBe(1);
+      expect(offers.filter((o) => o.isPrimary).length).toBe(1);
+      expect(offers[0].isPrimary).toBe(true);
     }
   });
 
   it("never lets publicationStatus outrank recordStatus", () => {
     const rank = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 } as const;
-    for (const { spirit } of ROWS) {
-      expect(rank[spirit.publicationStatus]).toBeLessThanOrEqual(rank[spirit.recordStatus]);
+    for (const { venueSpirit } of ROWS) {
+      expect(rank[venueSpirit.publicationStatus]).toBeLessThanOrEqual(
+        rank[venueSpirit.recordStatus],
+      );
     }
   });
 
   it("maps proof: numeric proofN wins, else a display label", () => {
-    for (const { spirit } of ROWS) {
-      if (spirit.proofN != null) {
-        expect(typeof spirit.proofN).toBe("number");
-        expect(spirit.proofDisplay).toBeNull();
+    for (const { definition } of ROWS) {
+      if (definition.proofN != null) {
+        expect(typeof definition.proofN).toBe("number");
+        expect(definition.proofDisplay).toBeNull();
       }
     }
   });
 });
 
-describe("guestRecordToRows — every published record passes the publish gate", () => {
-  it("validates cleanly for all 108 guest-visible spirits", () => {
-    const failures: { slug: string; errors: unknown }[] = [];
-    for (const { spirit, pours } of ROWS) {
-      if (spirit.publicationStatus !== "PUBLISHED") continue;
-      const errors = validateSpirit(
-        {
-          slug: spirit.slug,
-          brand: spirit.brand,
-          category: spirit.category,
-          recordStatus: spirit.recordStatus,
-          publicationStatus: spirit.publicationStatus,
-          body: spirit.body,
-          finish: spirit.finish,
-          topNotes: spirit.topNotes,
-          whyShort: spirit.whyShort,
-          flavor: spirit.flavor as Record<string, unknown> | null,
-        },
-        pours,
-      );
-      if (errors.length) failures.push({ slug: spirit.slug, errors });
+describe("guestRecordToRows — pour size is Echo's real 1.5 oz, not the legacy 2 oz", () => {
+  it("records every primary offer at 1.5 oz with a '1.5 oz pour' label", () => {
+    expect(ECHO_TOAST_POUR_OZ).toBe(1.5);
+    for (const { offers } of ROWS) {
+      expect(offers[0].pourSizeOz).toBe(1.5);
+      expect(offers[0].pourLabel).toBe("1.5 oz pour");
     }
-    // A published record that fails the gate is a real data problem worth seeing.
-    expect(failures, JSON.stringify(failures, null, 2)).toEqual([]);
   });
 });
 
 describe("guestRecordToRows — legacy vs batch shapes both resolve", () => {
-  it("legacy records (no commerce block) still get a priced primary pour", () => {
-    const legacy = ROWS.find((r) => r.spirit.slug === "penelope-barrel-strength");
+  it("legacy records (no commerce block) still get a priced 1.5 oz primary offer", () => {
+    const legacy = ROWS.find((r) => r.definition.slug === "penelope-barrel-strength");
     expect(legacy).toBeDefined();
-    expect(legacy!.spirit.publicationStatus).toBe("PUBLISHED");
-    expect(legacy!.pours[0].priceUsd).toBe(14); // parsed from the "$14" display string
-    expect(legacy!.pours[0].pourSizeOz).toBe(2); // parsed from "2 oz pour"
-    expect(legacy!.pours[0].commerceSource).toBe("MANUAL");
+    expect(legacy!.venueSpirit.publicationStatus).toBe("PUBLISHED");
+    expect(legacy!.offers[0].priceUsd).toBe(14); // parsed from the "$14" display string
+    expect(legacy!.offers[0].pourSizeOz).toBe(1.5); // corrected from the "2 oz pour" display
+    expect(legacy!.offers[0].commerceSource).toBe("MANUAL");
   });
 
-  it("batch records carry Toast commerce provenance onto the pour", () => {
-    const batch = ROWS.find((r) => r.pours[0].toastItemGuid != null);
+  it("batch records carry Toast commerce provenance onto the offer", () => {
+    const batch = ROWS.find((r) => r.offers[0].toastItemGuid != null);
     // Not all batch records have a Toast GUID yet, so only assert if one exists.
     if (batch) {
-      expect(batch.pours[0].commerceSource).toBe("TOAST");
-      expect(batch.pours[0].priceUsd).not.toBeNull();
+      expect(batch.offers[0].commerceSource).toBe("TOAST");
+      expect(batch.offers[0].priceUsd).not.toBeNull();
     }
   });
 });

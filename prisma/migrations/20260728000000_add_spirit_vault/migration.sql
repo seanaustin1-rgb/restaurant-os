@@ -8,13 +8,10 @@ CREATE TYPE "SpiritVerificationStatus" AS ENUM ('UNSOURCED', 'PARTIALLY_SOURCED'
 CREATE TYPE "SpiritCommerceSource" AS ENUM ('TOAST', 'MANUAL');
 
 -- CreateTable
-CREATE TABLE "Spirit" (
+CREATE TABLE "SpiritDefinition" (
     "id" TEXT NOT NULL,
-    "restaurantId" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "schemaVersion" TEXT NOT NULL DEFAULT 'spirit-v1',
-    "recordStatus" "SpiritLifecycleStatus" NOT NULL DEFAULT 'DRAFT',
-    "publicationStatus" "SpiritLifecycleStatus" NOT NULL DEFAULT 'DRAFT',
     "verificationStatus" "SpiritVerificationStatus" NOT NULL DEFAULT 'PARTIALLY_SOURCED',
     "brand" TEXT NOT NULL,
     "expression" TEXT,
@@ -38,13 +35,10 @@ CREATE TABLE "Spirit" (
     "unaged" BOOLEAN NOT NULL DEFAULT false,
     "body" INTEGER NOT NULL DEFAULT 5,
     "finish" INTEGER NOT NULL DEFAULT 5,
+    "flavor" JSONB,
+    "topNotes" TEXT[],
     "whyShort" TEXT,
     "why" TEXT,
-    "whyWeCarry" TEXT,
-    "seanShort" TEXT,
-    "notes" TEXT,
-    "topNotes" TEXT[],
-    "flavor" JSONB,
     "production" JSONB,
     "productionStructured" JSONB,
     "prodTags" TEXT[],
@@ -58,19 +52,37 @@ CREATE TABLE "Spirit" (
     "paths" JSONB,
     "sources" JSONB,
     "sourcingLimitations" TEXT[],
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SpiritDefinition_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VenueSpirit" (
+    "id" TEXT NOT NULL,
+    "restaurantId" TEXT NOT NULL,
+    "spiritDefinitionId" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "recordStatus" "SpiritLifecycleStatus" NOT NULL DEFAULT 'DRAFT',
+    "publicationStatus" "SpiritLifecycleStatus" NOT NULL DEFAULT 'DRAFT',
+    "whyWeCarry" TEXT,
+    "seanShort" TEXT,
+    "notes" TEXT,
+    "overrides" JSONB,
     "reviewedAt" DATE,
     "reviewedBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Spirit_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "VenueSpirit_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "SpiritPour" (
     "id" TEXT NOT NULL,
     "restaurantId" TEXT NOT NULL,
-    "spiritId" TEXT NOT NULL,
+    "venueSpiritId" TEXT NOT NULL,
     "toastItemGuid" TEXT,
     "pourSizeOz" DECIMAL(4,1),
     "pourLabel" TEXT,
@@ -87,44 +99,87 @@ CREATE TABLE "SpiritPour" (
     CONSTRAINT "SpiritPour_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE INDEX "Spirit_restaurantId_idx" ON "Spirit"("restaurantId");
+-- CreateTable
+CREATE TABLE "SpiritPriceObservation" (
+    "id" TEXT NOT NULL,
+    "restaurantId" TEXT NOT NULL,
+    "offerId" TEXT NOT NULL,
+    "priceUsd" DECIMAL(10,2) NOT NULL,
+    "pourSizeOz" DECIMAL(4,1),
+    "observedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "effectiveAt" TIMESTAMP(3),
+    "source" "SpiritCommerceSource" NOT NULL DEFAULT 'MANUAL',
+    "provenance" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "SpiritPriceObservation_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
-CREATE INDEX "Spirit_restaurantId_category_idx" ON "Spirit"("restaurantId", "category");
+CREATE UNIQUE INDEX "SpiritDefinition_slug_key" ON "SpiritDefinition"("slug");
 
 -- CreateIndex
-CREATE INDEX "Spirit_restaurantId_recordStatus_publicationStatus_idx" ON "Spirit"("restaurantId", "recordStatus", "publicationStatus");
+CREATE INDEX "SpiritDefinition_category_idx" ON "SpiritDefinition"("category");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Spirit_restaurantId_slug_key" ON "Spirit"("restaurantId", "slug");
+CREATE INDEX "SpiritDefinition_brand_idx" ON "SpiritDefinition"("brand");
+
+-- CreateIndex
+CREATE INDEX "VenueSpirit_restaurantId_idx" ON "VenueSpirit"("restaurantId");
+
+-- CreateIndex
+CREATE INDEX "VenueSpirit_spiritDefinitionId_idx" ON "VenueSpirit"("spiritDefinitionId");
+
+-- CreateIndex
+CREATE INDEX "VenueSpirit_restaurantId_recordStatus_publicationStatus_idx" ON "VenueSpirit"("restaurantId", "recordStatus", "publicationStatus");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VenueSpirit_id_restaurantId_key" ON "VenueSpirit"("id", "restaurantId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VenueSpirit_restaurantId_slug_key" ON "VenueSpirit"("restaurantId", "slug");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VenueSpirit_restaurantId_spiritDefinitionId_key" ON "VenueSpirit"("restaurantId", "spiritDefinitionId");
+
+-- CreateIndex
+CREATE INDEX "SpiritPour_venueSpiritId_idx" ON "SpiritPour"("venueSpiritId");
 
 -- CreateIndex
 CREATE INDEX "SpiritPour_restaurantId_idx" ON "SpiritPour"("restaurantId");
 
 -- CreateIndex
-CREATE INDEX "SpiritPour_spiritId_idx" ON "SpiritPour"("spiritId");
+CREATE UNIQUE INDEX "SpiritPour_id_restaurantId_key" ON "SpiritPour"("id", "restaurantId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "SpiritPour_restaurantId_toastItemGuid_key" ON "SpiritPour"("restaurantId", "toastItemGuid");
 
--- AddForeignKey
-ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "SpiritPriceObservation_offerId_observedAt_idx" ON "SpiritPriceObservation"("offerId", "observedAt");
+
+-- CreateIndex
+CREATE INDEX "SpiritPriceObservation_restaurantId_idx" ON "SpiritPriceObservation"("restaurantId");
 
 -- AddForeignKey
-ALTER TABLE "SpiritPour" ADD CONSTRAINT "SpiritPour_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VenueSpirit" ADD CONSTRAINT "VenueSpirit_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "SpiritPour" ADD CONSTRAINT "SpiritPour_spiritId_fkey" FOREIGN KEY ("spiritId") REFERENCES "Spirit"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VenueSpirit" ADD CONSTRAINT "VenueSpirit_spiritDefinitionId_fkey" FOREIGN KEY ("spiritDefinitionId") REFERENCES "SpiritDefinition"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpiritPour" ADD CONSTRAINT "SpiritPour_venueSpiritId_restaurantId_fkey" FOREIGN KEY ("venueSpiritId", "restaurantId") REFERENCES "VenueSpirit"("id", "restaurantId") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpiritPriceObservation" ADD CONSTRAINT "SpiritPriceObservation_offerId_restaurantId_fkey" FOREIGN KEY ("offerId", "restaurantId") REFERENCES "SpiritPour"("id", "restaurantId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 
--- Integrity guardrails (stronger than comment-only rules; app-layer validation
--- still applies for richer checks like topNotes-exactly-3 at publish time).
--- Postgres enums compare by declaration order (DRAFT < REVIEWED < PUBLISHED),
--- so publication may never outrank the record's own lifecycle state.
-ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_publication_le_record_check"
+-- Integrity guardrails (stronger than comment-only rules; the app-layer publish
+-- validator adds the richer checks like topNotes-exactly-3). Postgres enums
+-- compare by declaration order (DRAFT < REVIEWED < PUBLISHED), so a venue's
+-- publication may never outrank its record lifecycle.
+ALTER TABLE "VenueSpirit" ADD CONSTRAINT "VenueSpirit_publication_le_record_check"
     CHECK ("publicationStatus" <= "recordStatus");
-ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_body_range_check"
+ALTER TABLE "SpiritDefinition" ADD CONSTRAINT "SpiritDefinition_body_range_check"
     CHECK ("body" >= 0 AND "body" <= 10);
-ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_finish_range_check"
+ALTER TABLE "SpiritDefinition" ADD CONSTRAINT "SpiritDefinition_finish_range_check"
     CHECK ("finish" >= 0 AND "finish" <= 10);

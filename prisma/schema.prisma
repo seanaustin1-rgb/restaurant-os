@@ -283,8 +283,7 @@ model Restaurant {
   syncExceptions                  SyncException[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
-  spirits                         Spirit[]
-  spiritPours                     SpiritPour[]
+  venueSpirits                    VenueSpirit[]
 }
 
 model UserRestaurantRole {
@@ -1293,26 +1292,32 @@ enum NoteAudience {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Spirit Vault — master "POS of knowledge" for a venue's spirits program.
+// Spirit Vault — the "POS of knowledge" for a multi-venue spirits network.
 //
-// Phase 2 foundation (schema only). The static guest vault
-// (docs/spirit-vault/spirit-vault-data.js) will be regenerated FROM these rows
-// once the admin editor + publish step land; the DB becomes the single source
-// of truth that also feeds flights, placemats, training, and recommendations.
+// Split into shared knowledge vs. a venue's listing (per the Phase 2 review):
+//   • SpiritDefinition — canonical, objective product knowledge. NO restaurantId;
+//     one row shared across every venue that carries the bottle, so professional
+//     ratings/medals/press + sources, production, flavor foundation, and age/proof
+//     are corrected once and inherited everywhere.
+//   • VenueSpirit — a tenant's listing of a definition: restaurantId +
+//     spiritDefinitionId, the tenant-stable public slug, publication state, and
+//     venue-authored voice ("Why We Carry It", Sean's notes, curator cue) plus
+//     optional presentation overrides.
+//   • SpiritPour — a venue/Toast sellable offer, linked to VenueSpirit. Commerce
+//     only (Toast is source of truth); isolated from knowledge.
+//   • SpiritPriceObservation — append-only price history per offer; the offer
+//     caches the current price for fast reads.
 //
-// Multi-tenant from day one: a Spirit is tenant-scoped (restaurantId) so the
-// vault can become a sellable OutFront add-on. Echo's Reserve is the only tenant
-// during testing.
+// Tenant agreement is enforced in the DB, not just the app: an offer references
+// its VenueSpirit by the composite key [venueSpiritId, restaurantId] →
+// VenueSpirit[id, restaurantId], so a pour can never point at another tenant's
+// listing. Same pattern chains price observations to the offer.
 //
-// Hybrid shape: scalar columns for everything the future Flight Builder filters
-// or sorts on (category, proof, age, price, body/finish, status) and the
-// Sean-voice text fields the admin edits first; Json for the deeply-nested
-// presentation blobs (flavor axes, production rows, tasting paths, press).
-//
-// Status invariant (mirrors the guest engine's isGuestVisible + STATUS_RANK):
-// publicationStatus may never exceed recordStatus, and a record reaches guests
-// only when BOTH recordStatus and publicationStatus are PUBLISHED. Enforced at
-// the server-action/validation layer; the runtime gate is the publish/export.
+// Guest visibility (mirrors the static engine's isGuestVisible + STATUS_RANK):
+// a listing reaches guests only when VenueSpirit.recordStatus AND
+// publicationStatus are both PUBLISHED; publicationStatus may never outrank
+// recordStatus (DB CHECK). body/finish are 0–10 (DB CHECK on the definition).
+// The richer publish rules live in the app-layer validator.
 // ─────────────────────────────────────────────────────────────
 
 enum SpiritLifecycleStatus {
@@ -1332,29 +1337,20 @@ enum SpiritCommerceSource {
   MANUAL // Sean-confirmed venue price; temporary until Toast integration
 }
 
-model Spirit {
-  id           String @id @default(cuid())
-  restaurantId String
-  // Stable public identifier used by the guest vault (e.g. "penelope-barrel-strength").
-  // Array position is never a durable reference; flights/recommendations key off this.
-  slug         String
-
+model SpiritDefinition {
+  id                 String                   @id @default(cuid())
+  slug               String                   @unique // global canonical id (e.g. "penelope-barrel-strength")
   schemaVersion      String                   @default("spirit-v1")
-  recordStatus       SpiritLifecycleStatus    @default(DRAFT)
-  publicationStatus  SpiritLifecycleStatus    @default(DRAFT)
+  // Verification is about the objective knowledge's sourcing → shared.
   verificationStatus SpiritVerificationStatus @default(PARTIALLY_SOURCED)
 
   // ── Identity (columnar — Flight Builder filters/sorts on these) ──
   brand          String
   expression     String?
-  displayName    String? // optional override; else "brand expression"
+  displayName    String?
   subcategory    String?
-  category       String // free-string ("Bourbon" | "Rye" | "Scotch" | "Irish" | "Japanese" | "Canadian" | …); no allow-list
-  // silo + country intentionally have NO default: this table is multi-category,
-  // so a bourbon/USA default would silently mislabel Scotch, Irish, tequila,
-  // rum, etc. The importer sets country from the source record; silo stays null
-  // until the category→silhouette mapping lands (Phase 1.5).
-  silo           String? // bottle silhouette; null until cat→silo mapping
+  category       String // free-string ("Bourbon" | "Rye" | "Scotch" | …); no allow-list
+  silo           String? // bottle silhouette; null until cat→silo mapping (Phase 1.5)
   country        String?
   region         String?
   city           String?
@@ -1363,8 +1359,8 @@ model Spirit {
   style          String?
 
   // ── Strength & age (structured for range filters) ──
-  proofN       Decimal? @db.Decimal(5, 2) // numeric proof; null for barrel/varying (use proofDisplay)
-  proofDisplay String? // label when proofN is null ("Barrel Proof", "Cask Strength")
+  proofN       Decimal? @db.Decimal(5, 2) // numeric proof; null for barrel/varying
+  proofDisplay String? // label when proofN is null ("Barrel Proof")
   ageText      String   @default("NAS")
   minYears     Int?
   maxYears     Int?
@@ -1372,84 +1368,121 @@ model Spirit {
   agePending   Boolean  @default(false)
   unaged       Boolean  @default(false)
 
-  // ── Sensory scalars (radar summary uses `flavor` Json; these two are axes) ──
-  body   Int @default(5) // 0–10
-  finish Int @default(5) // 0–10
+  // ── Sensory foundation (objective; venue may override in presentation) ──
+  body     Int      @default(5) // 0–10 (DB CHECK)
+  finish   Int      @default(5) // 0–10 (DB CHECK)
+  flavor   Json? // { Sweet, Oak, Spice, Fruit, Smoke, Earth, Herbal } 0–10
+  topNotes String[] // exactly 3 for published, ranked
 
-  // ── Commerce (isolated from knowledge; Toast owns it) ──
-  // Toast lists a bottle as 2–3 pour-size menu items with distinct GUIDs and
-  // prices, so commerce is one-to-many — see `SpiritPour`. No price/GUID/pour
-  // lives on the knowledge record; the guest dossier reads the primary pour.
+  // ── General editorial (bottle merit — NOT venue framing) ──
+  whyShort String? // above-the-fold sentence
+  why      String? // "Why It Matters"
 
-  // ── Sean-voice text (the first admin editing target) ──
-  whyShort   String? // one sentence, above the fold
-  why        String? // "Why It Matters"
+  // ── Production / distillery story ──
+  production           Json? // productionRows: [{ k, v }]
+  productionStructured Json?
+  prodTags             String[]
+  pairings             Json?
+  timeline             Json?
+  statTiles            Json?
+  facts                Json?
+  history              String?
+  coordinatesText      String?
+
+  // ── Recognition + recommendation metadata (shared, with sources) ──
+  press               Json? // verified professional ratings/medals/media
+  paths               Json? // compare & continue (refs are canonical spirit ids)
+  sources             Json?
+  sourcingLimitations String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  venueSpirits VenueSpirit[]
+
+  @@index([category])
+  @@index([brand])
+}
+
+model VenueSpirit {
+  id                 String @id @default(cuid())
+  restaurantId       String
+  spiritDefinitionId String
+  slug               String // tenant-stable public id for THIS venue's guest vault
+
+  recordStatus      SpiritLifecycleStatus @default(DRAFT)
+  publicationStatus SpiritLifecycleStatus @default(DRAFT)
+
+  // ── Venue-authored voice (the admin edits these first) ──
   whyWeCarry String? // Echo-specific "Why We Carry It"
   seanShort  String? // curator cue quote
   notes      String? // Sean's Notes (signed drawer)
-  topNotes   String[] // exactly 3, ranked
 
-  // ── Nested presentation blobs (Json) ──
-  flavor               Json? // { Sweet, Oak, Spice, Fruit, Smoke, Earth, Herbal } 0–10
-  production           Json? // productionRows: [{ k, v }]
-  productionStructured Json? // discrete production fields (mash bill, cask, finish type)
-  prodTags             String[]
-  pairings             Json? // serving suggestions
-  timeline             Json? // [[year, text], …]
-  statTiles            Json? // behind-the-bottle stat tiles
-  facts                Json? // behind-the-bottle facts
-  history              String? // distillery story
-  coordinatesText      String?
-  press                Json? // [{ date, type, source, title, summary, verified }]
-  paths                Json? // { lighter: [{ ref?, name, d, why }], similar: […], adventurous: […] }
-  sources              Json? // [{ url, sourceType, coversFields }]
-  sourcingLimitations  String[]
+  // Optional venue presentation overrides of shared definition fields.
+  overrides Json?
 
-  // ── Review provenance ──
   reviewedAt DateTime? @db.Date
   reviewedBy String? // clerkUserId
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  pours      SpiritPour[]
+  restaurant Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  definition SpiritDefinition @relation(fields: [spiritDefinitionId], references: [id], onDelete: Restrict)
+  offers     SpiritPour[]
 
-  @@unique([restaurantId, slug]) // slug is the tenant-stable public id
+  @@unique([id, restaurantId]) // composite target for the tenant-agreement FK on offers
+  @@unique([restaurantId, slug]) // tenant-stable public id
+  @@unique([restaurantId, spiritDefinitionId]) // a venue lists a definition at most once
   @@index([restaurantId])
-  @@index([restaurantId, category])
+  @@index([spiritDefinitionId])
   @@index([restaurantId, recordStatus, publicationStatus]) // guest-visible query
 }
 
-// A single sellable pour offer for a Spirit, mirroring one Toast menu item.
-// One-to-many: a bottle is typically poured at 2–3 sizes, each its own Toast
-// GUID and price. Keeps commerce isolated from the knowledge dossier (Toast is
-// the source of truth) and gives the Flight/price generator per-pour prices.
 model SpiritPour {
   id            String   @id @default(cuid())
-  restaurantId  String // denormalized for tenant isolation + the GUID uniqueness scope
-  spiritId      String
-  toastItemGuid String? // Toast menu-item identity for THIS pour (null = manual entry)
+  restaurantId  String
+  venueSpiritId String
+  toastItemGuid String? // Toast menu-item identity for THIS pour (null = manual)
   pourSizeOz    Decimal? @db.Decimal(4, 1)
-  pourLabel     String? // e.g. "2 oz pour", "Neat", "Flight pour"
-  priceUsd      Decimal? @db.Decimal(10, 2)
-  availability  String? // per Toast menu-item (86 / inactive) when the integration exposes it
+  pourLabel     String?
+  priceUsd      Decimal? @db.Decimal(10, 2) // cached current price (history in SpiritPriceObservation)
+  availability  String?
   isPrimary     Boolean  @default(false) // the pour the guest dossier displays
 
-  // Commerce provenance — a cache of Toast values must retain BOTH its source
-  // and when it was observed (handoff invariant).
   priceIsTemporary Boolean              @default(true)
   priceProvenance  String?
   commerceSource   SpiritCommerceSource @default(MANUAL)
-  syncedAt         DateTime? // when price/availability were last observed from the source (Toast)
+  syncedAt         DateTime? // when the cached price/availability were last observed
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  spirit     Spirit     @relation(fields: [spiritId], references: [id], onDelete: Cascade)
+  // Composite FK enforces tenant agreement: the offer's restaurantId must match
+  // its VenueSpirit's — no cross-tenant pours possible.
+  venueSpirit       VenueSpirit              @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
+  priceObservations SpiritPriceObservation[]
 
-  @@unique([restaurantId, toastItemGuid]) // a Toast menu item maps to one pour offer (multiple NULLs allowed for manual pours)
+  @@unique([id, restaurantId]) // composite target for the price-observation FK
+  @@unique([restaurantId, toastItemGuid]) // a Toast menu item maps to one offer (multiple NULLs ok)
+  @@index([venueSpiritId])
   @@index([restaurantId])
-  @@index([spiritId])
+}
+
+model SpiritPriceObservation {
+  id           String               @id @default(cuid())
+  restaurantId String
+  offerId      String
+  priceUsd     Decimal              @db.Decimal(10, 2)
+  pourSizeOz   Decimal?             @db.Decimal(4, 1)
+  observedAt   DateTime             @default(now()) // when the price was observed
+  effectiveAt  DateTime? // when the price took/takes effect, if known
+  source       SpiritCommerceSource @default(MANUAL)
+  provenance   String?
+  createdAt    DateTime             @default(now()) // append-only: no updatedAt
+
+  offer SpiritPour @relation(fields: [offerId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
+
+  @@index([offerId, observedAt])
+  @@index([restaurantId])
 }

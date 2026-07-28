@@ -28,7 +28,7 @@ For each batch (~12 bottles):
 7. **Verify** in the local preview (Node server via `.claude/launch.json` name `spirit-vault-preview`; Browser pane blocks bare localhost + can't screenshot when pane hidden — use `javascript_tool` DOM checks): guest count right, drafts hidden, no id dups, **0 content overflow at 320px** (simulate by setting `.app` width=320; ignore `.bn-btn` false positives), no console errors.
 8. **Ship:** commit (only spirit-vault files) → PR → CI green → merge → poll Pages build to the merge commit → byte-verify live with `curl … | grep`.
 
-**7 bottles HELD as draft, awaiting Sean's shelf-expression check** (publish once confirmed): Calumet (15 vs 8 yr), Loch Lomond (which malt), Horse Soldier (Signature Small Batch vs Straight), StoneStreet (Founder's Edition?), Chicken Cock Ryeteous (standard 90 rye vs 100-proof Blonde), Willett (Pot Still Reserve?), **Old Grand-Dad** (official 7-yr BiB released 2025 matches the "7 yr" Toast label, but Echo may pour the non-age-stated Bonded — same mash/proof/distillery; confirm which).
+**Sean's held-expression confirmations (2026-07-28):** Loch Lomond = Original Single Malt ✓, Horse Soldier = Signature Small Batch 95 proof ✓, Stonestreet = Founder's Edition 5 Year ✓, Willett = Pot Still Reserve ✓ → **all 4 records matched and are now PUBLISHED**. Chicken Cock Ryeteous = **100 proof** (records had it at 90 = the standard Straight Rye; the 100pf is the "Ryeteous Blonde" — being corrected + published). **Still held:** Calumet (Sean has not yet confirmed 15-yr vs 8-yr — current record is 8 Year), Old Grand-Dad (7-yr BiB 2025 vs non-age-stated Bonded), plus Batch-7 holds St. George Breaking & Entering (Bourbon vs American Whiskey) and Middle West Straight Rye (identity overlaps the Pumpernickel rye).
 
 **Sean's scope decisions (2026-07-28):** ① SKIP the ~7 flavored novelties (Fireball, Screwball, Southern Comfort, Yukon Jack, American Honey, flavored Crown, Dubliner Honeycomb) — flavored/liqueur, off the vault. ② DO the full shelf incl. well/call-tier — but for well-tier bottles emphasize the **"what to try next"** Compare paths and it's fine to skip `whyWeCarry` + Sean's Notes (guide the guest UP off the well pour). Remaining new whiskeys after Batch 6: ~28 (batches 7-9 below).
 
@@ -46,7 +46,7 @@ Data is external: `spirit-vault-data.js` exposes `window.SPIRIT_VAULT_DATA({make
 
 ---
 
-**Last revision:** 2026-07-28 (**Batch 6 live**: 12 researched, 11 published to the guest link, guest 49 → 60)
+**Last revision:** 2026-07-28 (**Batches 6 + 7 shipped**: 24 researched, 21 published + 4 Sean-confirmed holds unheld; guest 49 → 74, Chicken Cock 100pf correction pending)
 
 ## Batch 6 — premium/call American whiskey (2026-07-28, `feat/spirit-vault-batch6`)
 
@@ -73,17 +73,39 @@ agents don't), especially for well-tier bottles per Sean.
 **Verified:** guest=60, review=82, 0 content overflow at 320px, no console errors,
 no id dups, clean hero proof tiles.
 
-## Batches 7-9 — remaining ~28 new whiskeys (queued)
-Ryes: Bulleit Rye, Old Overholt, Middle West Pumpernickel + Straight Rye, WhistlePig
-10yr Rye 100pf, Sagamore Cask Strength, Chicken Cock Rye (verify vs held Ryeteous),
-Melvale (verify identity). Bourbon/Tenn: Knob Creek Small Batch (std), Maker's Mark
-(std), Jim Beam, Jack Daniel's No.7, St. George Breaking & Entering, WhistlePig
-PiggyBack 6yr Bourbon. World: Dead Rabbit, McConnell's, Four Walls, Jameson (std)
-[Irish]; Dewar's, Johnnie Walker Red, Tomatin 12, Crimson Cask (verify) [Scotch];
-Kinsey Chardonnay Cask. Canadian/blended (need a `cat` value — free string, no
-allow-list, so 'Canadian'/'Blended' just work; render on bourbon silo): Crown Royal,
-Canadian Club, Seagram's 7, Seagram's VO, Mr Boston. Well-tier: emphasize paths,
-skip whyWeCarry/notes.
+## Batch 7 — ryes + call/well whiskey (2026-07-28, `feat/spirit-vault-batch7`)
+
+12 researched → **10 PUBLISHED**: Bulleit Rye, Chicken Cock Straight Rye (90pf,
+confirmed DISTINCT from the 100pf Ryeteous), WhistlePig 10 Year Rye, Sagamore Cask
+Strength Rye, Middle West Pumpernickel Rye, Old Overholt Rye (well), Knob Creek Small
+Batch (call), Maker's Mark Original (call), Jim Beam White (well), Jack Daniel's Old
+No. 7 (well, cat="Tennessee"). **2 HELD:** St. George Breaking & Entering (Bourbon vs
+American Whiskey doubt + producer page unreachable), Middle West Straight Rye
+(identity overlaps the Pumpernickel — both 96pf/pumpernickel; needs disambiguation).
+
+**Well/call-tier bottles** (Jim Beam, JD No.7, Old Overholt, Knob std, Maker's std,
++ Batch-6 Wild Turkey 81): `whyWeCarry` is null per Sean.
+
+**Engine change (this branch):** the "Why We Carry It" drawer now hides when
+`whyWeCarry` is blank or still `'Pending Sean review.'` (reuses the existing
+`hasSeanText` gate). Fixes a live leak — Batch-6 Wild Turkey 81 (null whyWeCarry) had
+been showing "Pending Sean review." to guests. Also flipped 4 Sean-confirmed holds to
+published (Loch Lomond, Horse Soldier, Stonestreet, Willett). Guest 60 → 74 (+ Chicken
+Cock Ryeteous correction pending). Verified: 0 overflow at 320px, no console errors,
+well-tier carry-drawer hidden with no placeholder, clean proof tiles.
+
+## Batches 8-9 — remaining new whiskeys (queued)
+**~16 left after Batch 7.** Rye: Melvale (verify identity), WhistlePig PiggyBack 6yr
+Bourbon. World: Dead Rabbit, McConnell's, Four Walls, Jameson (std) [Irish]; Dewar's,
+Johnnie Walker Red, Tomatin 12, Crimson Cask (verify) [Scotch]; Kinsey Chardonnay
+Cask. Canadian/blended (`cat` is a free string — no allow-list — so 'Canadian' /
+'Blended' just work; render on bourbon silo): Crown Royal, Canadian Club, Seagram's 7,
+Seagram's VO, Mr Boston (well). Well-tier: `whyWeCarry` null (drawer now auto-hides).
+
+**Deferred whole-shelf pass:** curated Compare & Continue **paths** ("what to try
+next"), especially well → premium trade-ups per Sean. `makeBatchSpirit` now accepts
+`config.paths`; author them centrally with the full vault id list once the shelf is
+complete (research agents don't know the vault).
 
 ## Batch 2 — premium bourbon/whiskey (2026-07-27, `feat/spirit-vault-batch2-proof`)
 

@@ -1,5 +1,33 @@
 # Spirit Vault — Handoff
 
+## ⚖️ BINDING ARCHITECTURE DECISION (2026-07-28, Sean) — canonical schema
+
+**PR #137's normalized schema is the canonical Spirit Vault data model.** It lands
+as the foundation once reviewed + green (Codex approved it; 387 tests, migration
+additive + unapplied). The model:
+
+- **`SpiritDefinition`** — shared, canonical, objective knowledge (no `restaurantId`).
+- **`VenueSpirit`** — a tenant's listing (`restaurantId` + `spiritDefinitionId`,
+  slug, publication state, venue-authored voice/overrides).
+- **`SpiritPour`** — a venue/Toast sellable offer (composite tenant FK to VenueSpirit).
+- **`SpiritPriceObservation`** — append-only price history per offer.
+
+**`BeverageItem` (from `feat/spirit-vault-admin-phase1`) is NOT canonical.** Codex's
+admin editor / importer / Toast-pull / dynamic `/vault` work on that branch is
+**reusable implementation**, but it was written against a divergent `BeverageItem`
+model with no migration. **Rebase/adapt that code onto the #137 model**, mapping
+`BeverageItem → SpiritDefinition / VenueSpirit / SpiritPour`. Do NOT keep
+`BeverageItem` as a parallel long-term model — only as a temporary adapter/view if
+ever needed.
+
+- **`GuestProfile` / `GuestTasting` / `GuestFavorite`** = later guest-account / rewards
+  scope. **Keep them OUT of the foundation** and out of the first importer/admin PRs.
+- **Migrations apply to a confirmed non-prod DB first** (backup → `prisma migrate
+  deploy` → verify tables/constraints), never straight to prod/demo.
+- **Sequence:** land #137 → apply migration (non-prod) → importer PR (dry-run default,
+  explicit tenant, idempotent, transactional, completion report) → admin editor +
+  publish, all on the #137 model.
+
 ## ▶ NEXT SESSION — START HERE (2026-07-28)
 
 **Mission order (Sean):** ① **FINISH the whiskey shelf first.** ② THEN build the

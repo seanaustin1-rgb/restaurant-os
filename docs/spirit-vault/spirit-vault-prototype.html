@@ -1113,7 +1113,7 @@ function renderDetail(i){
     ${drawer('taste','Taste & Texture', tasteBody)}
     ${drawer('made','How It Is Made', madeBody)}
     ${drawer('why','Why It Matters', `<p class="why-text">${b.why}</p>`)}
-    ${drawer('carry','Why We Carry It', `<p class="why-text">${b.whyWeCarry}</p>`)}
+    ${hasSeanText(b.whyWeCarry) ? drawer('carry','Why We Carry It', `<p class="why-text">${b.whyWeCarry}</p>`) : ''}
     ${pressBody ? drawer('press','Recognition & Press', pressBody) : ''}
     ${drawer('table','At the Table', tableBody)}
     ${drawer('dist','Distillery Story', distBody)}

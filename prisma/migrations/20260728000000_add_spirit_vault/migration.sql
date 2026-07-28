@@ -21,8 +21,8 @@ CREATE TABLE "Spirit" (
     "displayName" TEXT,
     "subcategory" TEXT,
     "category" TEXT NOT NULL,
-    "silo" TEXT NOT NULL DEFAULT 'bourbon',
-    "country" TEXT DEFAULT 'USA',
+    "silo" TEXT,
+    "country" TEXT,
     "region" TEXT,
     "city" TEXT,
     "distilleryName" TEXT,
@@ -38,13 +38,6 @@ CREATE TABLE "Spirit" (
     "unaged" BOOLEAN NOT NULL DEFAULT false,
     "body" INTEGER NOT NULL DEFAULT 5,
     "finish" INTEGER NOT NULL DEFAULT 5,
-    "priceUsd" DECIMAL(10,2),
-    "pourSizeOz" DECIMAL(4,1) DEFAULT 2.0,
-    "toastItemGuid" TEXT,
-    "priceIsTemporary" BOOLEAN NOT NULL DEFAULT true,
-    "priceProvenance" TEXT,
-    "commerceSource" "SpiritCommerceSource" NOT NULL DEFAULT 'MANUAL',
-    "availability" TEXT,
     "whyShort" TEXT,
     "why" TEXT,
     "whyWeCarry" TEXT,
@@ -73,6 +66,27 @@ CREATE TABLE "Spirit" (
     CONSTRAINT "Spirit_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "SpiritPour" (
+    "id" TEXT NOT NULL,
+    "restaurantId" TEXT NOT NULL,
+    "spiritId" TEXT NOT NULL,
+    "toastItemGuid" TEXT,
+    "pourSizeOz" DECIMAL(4,1),
+    "pourLabel" TEXT,
+    "priceUsd" DECIMAL(10,2),
+    "availability" TEXT,
+    "isPrimary" BOOLEAN NOT NULL DEFAULT false,
+    "priceIsTemporary" BOOLEAN NOT NULL DEFAULT true,
+    "priceProvenance" TEXT,
+    "commerceSource" "SpiritCommerceSource" NOT NULL DEFAULT 'MANUAL',
+    "syncedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SpiritPour_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE INDEX "Spirit_restaurantId_idx" ON "Spirit"("restaurantId");
 
@@ -85,6 +99,32 @@ CREATE INDEX "Spirit_restaurantId_recordStatus_publicationStatus_idx" ON "Spirit
 -- CreateIndex
 CREATE UNIQUE INDEX "Spirit_restaurantId_slug_key" ON "Spirit"("restaurantId", "slug");
 
+-- CreateIndex
+CREATE INDEX "SpiritPour_restaurantId_idx" ON "SpiritPour"("restaurantId");
+
+-- CreateIndex
+CREATE INDEX "SpiritPour_spiritId_idx" ON "SpiritPour"("spiritId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SpiritPour_restaurantId_toastItemGuid_key" ON "SpiritPour"("restaurantId", "toastItemGuid");
+
 -- AddForeignKey
 ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- AddForeignKey
+ALTER TABLE "SpiritPour" ADD CONSTRAINT "SpiritPour_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpiritPour" ADD CONSTRAINT "SpiritPour_spiritId_fkey" FOREIGN KEY ("spiritId") REFERENCES "Spirit"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+-- Integrity guardrails (stronger than comment-only rules; app-layer validation
+-- still applies for richer checks like topNotes-exactly-3 at publish time).
+-- Postgres enums compare by declaration order (DRAFT < REVIEWED < PUBLISHED),
+-- so publication may never outrank the record's own lifecycle state.
+ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_publication_le_record_check"
+    CHECK ("publicationStatus" <= "recordStatus");
+ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_body_range_check"
+    CHECK ("body" >= 0 AND "body" <= 10);
+ALTER TABLE "Spirit" ADD CONSTRAINT "Spirit_finish_range_check"
+    CHECK ("finish" >= 0 AND "finish" <= 10);

@@ -284,6 +284,7 @@ model Restaurant {
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
   spirits                         Spirit[]
+  spiritPours                     SpiritPour[]
 }
 
 model UserRestaurantRole {
@@ -1349,8 +1350,12 @@ model Spirit {
   displayName    String? // optional override; else "brand expression"
   subcategory    String?
   category       String // free-string ("Bourbon" | "Rye" | "Scotch" | "Irish" | "Japanese" | "Canadian" | …); no allow-list
-  silo           String  @default("bourbon") // bottle silhouette; cat→silo mapping lands with Phase 1.5
-  country        String? @default("USA")
+  // silo + country intentionally have NO default: this table is multi-category,
+  // so a bourbon/USA default would silently mislabel Scotch, Irish, tequila,
+  // rum, etc. The importer sets country from the source record; silo stays null
+  // until the category→silhouette mapping lands (Phase 1.5).
+  silo           String? // bottle silhouette; null until cat→silo mapping
+  country        String?
   region         String?
   city           String?
   distilleryName String?
@@ -1371,14 +1376,10 @@ model Spirit {
   body   Int @default(5) // 0–10
   finish Int @default(5) // 0–10
 
-  // ── Commerce join (Toast owns commerce; these are isolated from knowledge) ──
-  priceUsd         Decimal?             @db.Decimal(10, 2)
-  pourSizeOz       Decimal?             @default(2.0) @db.Decimal(4, 1)
-  toastItemGuid    String?
-  priceIsTemporary Boolean              @default(true)
-  priceProvenance  String?
-  commerceSource   SpiritCommerceSource @default(MANUAL)
-  availability     String?
+  // ── Commerce (isolated from knowledge; Toast owns it) ──
+  // Toast lists a bottle as 2–3 pour-size menu items with distinct GUIDs and
+  // prices, so commerce is one-to-many — see `SpiritPour`. No price/GUID/pour
+  // lives on the knowledge record; the guest dossier reads the primary pour.
 
   // ── Sean-voice text (the first admin editing target) ──
   whyShort   String? // one sentence, above the fold
@@ -1411,10 +1412,44 @@ model Spirit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  pours      SpiritPour[]
 
   @@unique([restaurantId, slug]) // slug is the tenant-stable public id
   @@index([restaurantId])
   @@index([restaurantId, category])
   @@index([restaurantId, recordStatus, publicationStatus]) // guest-visible query
+}
+
+// A single sellable pour offer for a Spirit, mirroring one Toast menu item.
+// One-to-many: a bottle is typically poured at 2–3 sizes, each its own Toast
+// GUID and price. Keeps commerce isolated from the knowledge dossier (Toast is
+// the source of truth) and gives the Flight/price generator per-pour prices.
+model SpiritPour {
+  id            String   @id @default(cuid())
+  restaurantId  String // denormalized for tenant isolation + the GUID uniqueness scope
+  spiritId      String
+  toastItemGuid String? // Toast menu-item identity for THIS pour (null = manual entry)
+  pourSizeOz    Decimal? @db.Decimal(4, 1)
+  pourLabel     String? // e.g. "2 oz pour", "Neat", "Flight pour"
+  priceUsd      Decimal? @db.Decimal(10, 2)
+  availability  String? // per Toast menu-item (86 / inactive) when the integration exposes it
+  isPrimary     Boolean  @default(false) // the pour the guest dossier displays
+
+  // Commerce provenance — a cache of Toast values must retain BOTH its source
+  // and when it was observed (handoff invariant).
+  priceIsTemporary Boolean              @default(true)
+  priceProvenance  String?
+  commerceSource   SpiritCommerceSource @default(MANUAL)
+  syncedAt         DateTime? // when price/availability were last observed from the source (Toast)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  spirit     Spirit     @relation(fields: [spiritId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, toastItemGuid]) // a Toast menu item maps to one pour offer (multiple NULLs allowed for manual pours)
+  @@index([restaurantId])
+  @@index([spiritId])
 }

@@ -527,7 +527,9 @@ function makeBatchSpirit(config){
     coversFields:source.coversFields || ['identity','production','strength'],
   }));
   const ageText = config.ageText || 'NAS';
-  const proofText = config.proofDisplay || (config.proofN == null ? 'Pending' : String(config.proofN));
+  // Numeric proof always wins (clean "90"); proofDisplay is only the label for
+  // barrel/varying/cask-strength bottles where proofN is intentionally null.
+  const proofText = config.proofN != null ? String(config.proofN) : (config.proofDisplay || 'Pending');
   const flavor = config.flavor || {Sweet:5,Oak:5,Spice:5,Fruit:4,Smoke:1,Earth:3,Herbal:2};
 
   return {

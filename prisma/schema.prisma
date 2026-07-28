@@ -283,6 +283,7 @@ model Restaurant {
   syncExceptions                  SyncException[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
+  spirits                         Spirit[]
 }
 
 model UserRestaurantRole {
@@ -1135,19 +1136,19 @@ model NormalizedFinancialEvent {
 }
 
 model LedgerEntry {
-  id                         String    @id @default(cuid())
+  id                         String        @id @default(cuid())
   restaurantId               String
   normalizedFinancialEventId String?
-  ledgerDate                 DateTime  @db.Date
+  ledgerDate                 DateTime      @db.Date
   ledgerAccount              LedgerAccount
-  debit                      Decimal   @default(0) @db.Decimal(14, 2)
-  credit                     Decimal   @default(0) @db.Decimal(14, 2)
-  cashEffect                 Decimal   @default(0) @db.Decimal(14, 2)
-  taxEffect                  Decimal   @default(0) @db.Decimal(14, 2)
+  debit                      Decimal       @default(0) @db.Decimal(14, 2)
+  credit                     Decimal       @default(0) @db.Decimal(14, 2)
+  cashEffect                 Decimal       @default(0) @db.Decimal(14, 2)
+  taxEffect                  Decimal       @default(0) @db.Decimal(14, 2)
   allocationBucket           TapBucket?
   memo                       String?
-  createdAt                  DateTime  @default(now())
-  updatedAt                  DateTime  @updatedAt
+  createdAt                  DateTime      @default(now())
+  updatedAt                  DateTime      @updatedAt
 
   restaurant               Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   normalizedFinancialEvent NormalizedFinancialEvent? @relation(fields: [normalizedFinancialEventId], references: [id], onDelete: SetNull)
@@ -1288,4 +1289,132 @@ model MetricNote {
 enum NoteAudience {
   INTERNAL
   INVESTOR
+}
+
+// ─────────────────────────────────────────────────────────────
+// Spirit Vault — master "POS of knowledge" for a venue's spirits program.
+//
+// Phase 2 foundation (schema only). The static guest vault
+// (docs/spirit-vault/spirit-vault-data.js) will be regenerated FROM these rows
+// once the admin editor + publish step land; the DB becomes the single source
+// of truth that also feeds flights, placemats, training, and recommendations.
+//
+// Multi-tenant from day one: a Spirit is tenant-scoped (restaurantId) so the
+// vault can become a sellable OutFront add-on. Echo's Reserve is the only tenant
+// during testing.
+//
+// Hybrid shape: scalar columns for everything the future Flight Builder filters
+// or sorts on (category, proof, age, price, body/finish, status) and the
+// Sean-voice text fields the admin edits first; Json for the deeply-nested
+// presentation blobs (flavor axes, production rows, tasting paths, press).
+//
+// Status invariant (mirrors the guest engine's isGuestVisible + STATUS_RANK):
+// publicationStatus may never exceed recordStatus, and a record reaches guests
+// only when BOTH recordStatus and publicationStatus are PUBLISHED. Enforced at
+// the server-action/validation layer; the runtime gate is the publish/export.
+// ─────────────────────────────────────────────────────────────
+
+enum SpiritLifecycleStatus {
+  DRAFT
+  REVIEWED
+  PUBLISHED
+}
+
+enum SpiritVerificationStatus {
+  UNSOURCED
+  PARTIALLY_SOURCED
+  SOURCED
+}
+
+enum SpiritCommerceSource {
+  TOAST // price + item identity from the Toast POS menu (source of truth)
+  MANUAL // Sean-confirmed venue price; temporary until Toast integration
+}
+
+model Spirit {
+  id           String @id @default(cuid())
+  restaurantId String
+  // Stable public identifier used by the guest vault (e.g. "penelope-barrel-strength").
+  // Array position is never a durable reference; flights/recommendations key off this.
+  slug         String
+
+  schemaVersion      String                   @default("spirit-v1")
+  recordStatus       SpiritLifecycleStatus    @default(DRAFT)
+  publicationStatus  SpiritLifecycleStatus    @default(DRAFT)
+  verificationStatus SpiritVerificationStatus @default(PARTIALLY_SOURCED)
+
+  // ── Identity (columnar — Flight Builder filters/sorts on these) ──
+  brand          String
+  expression     String?
+  displayName    String? // optional override; else "brand expression"
+  subcategory    String?
+  category       String // free-string ("Bourbon" | "Rye" | "Scotch" | "Irish" | "Japanese" | "Canadian" | …); no allow-list
+  silo           String  @default("bourbon") // bottle silhouette; cat→silo mapping lands with Phase 1.5
+  country        String? @default("USA")
+  region         String?
+  city           String?
+  distilleryName String?
+  producerName   String?
+  style          String?
+
+  // ── Strength & age (structured for range filters) ──
+  proofN       Decimal? @db.Decimal(5, 2) // numeric proof; null for barrel/varying (use proofDisplay)
+  proofDisplay String? // label when proofN is null ("Barrel Proof", "Cask Strength")
+  ageText      String   @default("NAS")
+  minYears     Int?
+  maxYears     Int?
+  ageSourceUrl String?
+  agePending   Boolean  @default(false)
+  unaged       Boolean  @default(false)
+
+  // ── Sensory scalars (radar summary uses `flavor` Json; these two are axes) ──
+  body   Int @default(5) // 0–10
+  finish Int @default(5) // 0–10
+
+  // ── Commerce join (Toast owns commerce; these are isolated from knowledge) ──
+  priceUsd         Decimal?             @db.Decimal(10, 2)
+  pourSizeOz       Decimal?             @default(2.0) @db.Decimal(4, 1)
+  toastItemGuid    String?
+  priceIsTemporary Boolean              @default(true)
+  priceProvenance  String?
+  commerceSource   SpiritCommerceSource @default(MANUAL)
+  availability     String?
+
+  // ── Sean-voice text (the first admin editing target) ──
+  whyShort   String? // one sentence, above the fold
+  why        String? // "Why It Matters"
+  whyWeCarry String? // Echo-specific "Why We Carry It"
+  seanShort  String? // curator cue quote
+  notes      String? // Sean's Notes (signed drawer)
+  topNotes   String[] // exactly 3, ranked
+
+  // ── Nested presentation blobs (Json) ──
+  flavor               Json? // { Sweet, Oak, Spice, Fruit, Smoke, Earth, Herbal } 0–10
+  production           Json? // productionRows: [{ k, v }]
+  productionStructured Json? // discrete production fields (mash bill, cask, finish type)
+  prodTags             String[]
+  pairings             Json? // serving suggestions
+  timeline             Json? // [[year, text], …]
+  statTiles            Json? // behind-the-bottle stat tiles
+  facts                Json? // behind-the-bottle facts
+  history              String? // distillery story
+  coordinatesText      String?
+  press                Json? // [{ date, type, source, title, summary, verified }]
+  paths                Json? // { lighter: [{ ref?, name, d, why }], similar: […], adventurous: […] }
+  sources              Json? // [{ url, sourceType, coversFields }]
+  sourcingLimitations  String[]
+
+  // ── Review provenance ──
+  reviewedAt DateTime? @db.Date
+  reviewedBy String? // clerkUserId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, slug]) // slug is the tenant-stable public id
+  @@index([restaurantId])
+  @@index([restaurantId, category])
+  @@index([restaurantId, recordStatus, publicationStatus]) // guest-visible query
 }

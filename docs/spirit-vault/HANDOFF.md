@@ -1,5 +1,49 @@
 # Spirit Vault — Handoff
 
+## ▶ NEXT SESSION — START HERE (2026-07-28)
+
+**Mission order (Sean):** ① **FINISH the whiskey shelf first.** ② THEN build the
+**admin interface**: (a) vault content editing, (b) QR-code generator, (c) bartender
+flight creator + price generator, (d) tasting placemat generator.
+
+**Live state:** Coal (local bourbon-club president) is reviewing the guest preview
+at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
+— currently **49 guest dossiers** (5 legacy + Booker's + 43 published batch records).
+GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
+main updates Coal's link**. `?review=1` on that URL shows drafts too.
+
+**Git resume:** everything is merged to `main` (last PR #130 → `97ddcfa`). Start with
+`cd C:\Users\Default_50\restaurant-os && git checkout main && git pull`. Work on a
+branch → PR → main is protected (CI Typecheck/Test/Build must pass) → merge → Pages.
+Re-check `git branch --show-current` before every commit (Codex shares this checkout).
+
+### ① Finishing whiskey — the proven pipeline
+For each batch (~12 bottles): 
+1. **List:** the Toast menu is the source of truth. `npx dotenv -e .env.local -- tsx scripts/pull-toast-spirits.ts` re-pulls all bottles+prices by category (saved to scratchpad `toast-spirits-inventory.json`). Bottles live in Toast groups named `<Category> Spirits**`.
+2. **⚠ DEDUP BY NORMALIZED NAME, NOT GUID.** Toast lists each bottle at 2-3 pour sizes = different GUIDs + prices. GUID-dedup double-counts. Normalize names (lowercase, fix typos: Bookers→Booker's, Bulliet→Bulleit, Jepthra→Jeptha, Whistelpig→Whistlepig, Finsh→Finish, Royle→Royal) and exclude ones already in `spirit-vault-data.js`. ~40-50 genuinely-new whiskeys remain; ~14 flavored novelties (Fireball, flavored Crown, Screwball, American Honey, Southern Comfort) — ask Sean before dossiering those.
+3. **Research:** `Workflow` tool, one general-purpose agent per bottle, the SCHEMA + prompt from the saved batch scripts (`…/workflows/scripts/spirit-vault-batchN-*.js`). Binding rules: real source URLs, NEVER fabricate proof/age/mash/dates/awards (unknown=null), draft `whyWeCarry` that answers "why carry it" with NO invented venue specifics, literal chars not HTML entities, `expression` must not repeat brand, cat ∈ Bourbon/Rye/Scotch/Irish/Japanese/American Single Malt.
+4. **Extract + audit:** clone `scratchpad/extract-batchN.js` (point JDIR at the new workflow dir) → normalizes entities, writes `batchN-records.json`, prints an audit table (sources, limitations, VENUE-CLAIM + IDENTITY-DOUBT flags). Read limitations for flagged ones.
+5. **Audit gate (binding to publish to Coal's link):** real sources on every claim; zero fabricated awards; whyWeCarry invents no venue specifics; **HOLD identity-ambiguous bottles as draft** (Toast generic label + assumed expression, or genuine which-expression doubt).
+6. **Integrate:** clone `scratchpad/integrate-batchN.js` (set HOLD regex + LABEL) → appends `makeBatchSpirit(JSON.stringify(cfg))` into the BATCH array; published get `recordStatus/publicationStatus:'published'`, held stay draft; dup-guard skips ids already present.
+7. **Verify** in the local preview (Node server via `.claude/launch.json` name `spirit-vault-preview`; Browser pane blocks bare localhost + can't screenshot when pane hidden — use `javascript_tool` DOM checks): guest count right, drafts hidden, no id dups, **0 content overflow at 320px** (simulate by setting `.app` width=320; ignore `.bn-btn` false positives), no console errors.
+8. **Ship:** commit (only spirit-vault files) → PR → CI green → merge → poll Pages build to the merge commit → byte-verify live with `curl … | grep`.
+
+**6 bottles HELD as draft, awaiting Sean's shelf-expression check** (publish once confirmed): Calumet (15 vs 8 yr), Loch Lomond (which malt), Horse Soldier (Signature Small Batch vs Straight), StoneStreet (Founder's Edition?), Chicken Cock Ryeteous (standard 90 rye vs 100-proof Blonde), Willett (Pot Still Reserve?).
+
+**Before gin/tequila/rum (Phase-1.5):** fix `makeBatchSpirit` `silo:'bourbon'` hardcode → map `cat`→bottle silhouette, or those show a bourbon shape. Whiskey-family (scotch/irish/japanese/rye/ASM) look fine on the bourbon silo, so whiskey doesn't need it.
+
+### ② Admin interface (Phase 2 — spec)
+Lives in the **authenticated OutFront / Restaurant OS Next.js dashboard** (Clerk auth + Supabase + a real backend), NOT the static guest vault (static file can't auth, save, or reach a printer). One master spirit DB feeds guest vault + admin + print; everything references spirits by stable **`spiritId`**, never duplicates.
+- **(a) Vault editing** — the Toast-checklist front door (list all Toast bottles → Sean checkboxes the vault-worthy) + a form to edit records, especially Sean's voice fields (`whyWeCarry`, curator cue `seanShort`, Sean's Notes `notes`, flavor-axis nudges) and to confirm the held bottles. Writes to the master data.
+- **(b) QR generator** — 4-hour signed tokens (Cloudflare Worker, same stack as Sean's `toast-proxy`/`mailchimp-proxy`); guest scans → dossier session.
+- **(c) Flight creator + price generator** — FLIGHTS reference spirits by `spiritId`; flight-specific notes (pour size, "what to notice") live on the FLIGHT_ITEM, never on the spirit. Price generator sums Toast pour prices + margin. Manager curates (see FLIGHT LAYER spec lower in this file).
+- **(d) Placemat generator** — selected flight spirits self-populate a templated **8.5×11 US-Letter** print layout (`@page{size:letter}` + print CSS; radar + top notes + proof/age + tasting-notes area) that **prints straight to the network printer** (server-side print / IPP-CUPS, feasible because the admin has a backend).
+
+### Engine facts / invariants (don't regress)
+Data is external: `spirit-vault-data.js` exposes `window.SPIRIT_VAULT_DATA({makeBatchSpirit})` (5 legacy single objects + BATCH via `makeBatchSpirit`), loaded before the inline engine, no `fetch` (works file:// + Bluehost). Guest gate: `isGuestVisible` needs BOTH `recordStatus` AND `publicationStatus === 'published'`; validator enforces `publicationStatus ≤ recordStatus`, `proofN` nullable (barrel/cask → `proofDisplay` label, numeric proofN wins the hero tile), `awards`/`press` optional. Renderer hides empty Recognition, Compare, Sean's-Notes, and curator-cue drawers, and hides pager dots when `BOTTLES.length > 12`. **Boundaries:** no Raven, no Flight Builder UI in the guest file, no QR backend in the static file, no visual redesign, no pricing edits to knowledge fields (Toast owns commerce). Deploy = ship the HTML **and** `spirit-vault-data.js` together.
+
+---
+
 **Last revision:** 2026-07-27 (**Batch 2 live**: Toast-sourced list+prices, 14 agent-researched premium dossiers, 12 published to the guest link)
 
 ## Batch 2 — premium bourbon/whiskey (2026-07-27, `feat/spirit-vault-batch2-proof`)

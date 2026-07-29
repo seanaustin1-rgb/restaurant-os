@@ -25,6 +25,11 @@ the two active execution specs (ledger convergence, Toast multi-tenancy).
 - **Demo writes only ever hit `DEMO_DATABASE_URL`** (`demoPrisma` no-ops when
   unset). Production data is untouchable from demo paths.
 - **Investor role is read-only** and hard-redirected to `/investor`.
+- **Spirit Vault has one canonical normalized model:**
+  `SpiritDefinition → VenueSpirit → SpiritPour → SpiritPriceObservation`.
+  `BeverageItem` is not a parallel durable model. Read
+  `docs/spirit-vault/HANDOFF.md` before Spirit Vault work and update its current
+  state instead of appending session transcripts.
 
 ## Conventions
 
@@ -40,3 +45,4 @@ the two active execution specs (ledger convergence, Toast multi-tenancy).
 - Exception triage: `scripts/summarize-sync-exceptions.ts [slug]`
 - Module registry: `src/lib/modules.ts` · Source maps: `src/lib/source-map.ts`
 - Profit First engine: `src/lib/profit-first/` · Inngest: `src/lib/inngest/functions.ts`
+- Spirit Vault command center: `docs/spirit-vault/HANDOFF.md`

@@ -1,6 +1,6 @@
 # Future Direction — OutFrontData Beverage Module
 
-**Status:** Binding long-term direction; Echo's Reserve remains the pilot.  
+**Status:** Binding long-term direction; Echo's Reserve remains the pilot.
 **Updated:** 2026-07-29
 
 ## Product position

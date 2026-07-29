@@ -63,7 +63,10 @@ export interface ImportPlan {
   /** Records safe to write, de-duplicated by canonical key. */
   writable: ComposedSpirit[];
   validationFailures: ValidationFailure[];
+  /** Diagnostics — one dropped record can emit several (slug + guid). */
   duplicateKeys: DuplicateKey[];
+  /** Distinct records dropped for a duplicate key (≤ duplicateKeys.length). */
+  duplicateRecords: number;
   totals: {
     records: number;
     published: number;
@@ -126,12 +129,13 @@ export function planImport(records: GuestRecord[]): ImportPlan {
   // ── Detect duplicate canonical keys within the (validated) batch ──
   // These would trip the DB's unique constraints mid-transaction, so drop the
   // later occurrence and report it rather than let the whole import roll back.
-  const { writable, duplicateKeys } = dedupeByCanonicalKeys(validated);
+  const { writable, duplicateKeys, duplicateRecords } = dedupeByCanonicalKeys(validated);
 
   return {
     writable,
     validationFailures,
     duplicateKeys,
+    duplicateRecords,
     totals: { records: records.length, published, writable: writable.length },
   };
 }
@@ -145,12 +149,14 @@ function coerceFlavor(flavor: unknown): Record<string, unknown> | null {
 function dedupeByCanonicalKeys(units: ComposedSpirit[]): {
   writable: ComposedSpirit[];
   duplicateKeys: DuplicateKey[];
+  duplicateRecords: number;
 } {
   const duplicateKeys: DuplicateKey[] = [];
   const seenDefSlug = new Map<string, string>(); // slug → first owning slug
   const seenVenueSlug = new Map<string, string>();
   const seenGuid = new Map<string, string>();
   const writable: ComposedSpirit[] = [];
+  let duplicateRecords = 0; // distinct dropped records (not diagnostic entries)
 
   for (const u of units) {
     let dup = false;
@@ -176,7 +182,10 @@ function dedupeByCanonicalKeys(units: ComposedSpirit[]): {
       }
     }
 
-    if (dup) continue;
+    if (dup) {
+      duplicateRecords++; // one dropped record, however many keys it collided on
+      continue;
+    }
 
     seenDefSlug.set(defSlug, u.slug);
     seenVenueSlug.set(venueSlug, u.slug);
@@ -184,7 +193,7 @@ function dedupeByCanonicalKeys(units: ComposedSpirit[]): {
     writable.push(u);
   }
 
-  return { writable, duplicateKeys };
+  return { writable, duplicateKeys, duplicateRecords };
 }
 
 // ───────────────────────────── Persistence port ─────────────────────────────
@@ -236,7 +245,14 @@ export interface SpiritImportTxStore {
     venueSpiritId: string,
     row: SpiritPourRow,
   ): Promise<StoredPour>;
-  updatePour(id: string, restaurantId: string, row: SpiritPourRow): Promise<void>;
+  /** Also (re)sets venueSpiritId, so a Toast-GUID match currently parented to a
+   *  different listing is MOVED to `venueSpiritId` rather than left orphaned. */
+  updatePour(
+    id: string,
+    restaurantId: string,
+    venueSpiritId: string,
+    row: SpiritPourRow,
+  ): Promise<void>;
 
   countObservations(offerId: string): Promise<number>;
   createObservation(
@@ -275,94 +291,114 @@ export interface ImportReport {
 
 export interface ExecuteOptions {
   restaurantId: string;
-  /** Default (false) is dry-run: plan + report, ZERO writes. */
+  /** Default (false) is a DRY-RUN projection: reads existing rows to preview
+   *  would-insert / would-update, and writes NOTHING. `true` applies. */
   apply?: boolean;
 }
 
 /**
- * Apply (or dry-run) a plan for one tenant. On apply, a single transaction wraps
- * every write; any thrown error rolls the whole import back and propagates.
- * Idempotent: rerunning updates in place and never seeds a second initial
- * observation, so counts converge to all-updated / all-skipped.
+ * Apply — or project (dry-run) — a plan for one tenant. Both modes share one
+ * traversal so the dry-run preview is exact:
+ *   • dry-run READS existing rows (through the same idempotency keys) to report
+ *     would-insert vs would-update, and performs ZERO writes;
+ *   • apply performs the writes inside one transaction, so any thrown error
+ *     rolls the whole import back and propagates.
+ *
+ * Idempotent: rerunning updates in place, re-parents a moved Toast-GUID pour to
+ * the imported listing, and never seeds a second initial observation — so counts
+ * converge to all-updated / all-skipped.
  */
 export async function executeImport(
   store: SpiritImportStore,
   plan: ImportPlan,
   opts: ExecuteOptions,
 ): Promise<ImportReport> {
+  const apply = opts.apply === true;
+  const skipped = skippedCount(plan); // validation-failed + duplicate records
   const report: ImportReport = {
-    dryRun: opts.apply !== true,
+    dryRun: !apply,
     restaurantId: opts.restaurantId,
     totals: plan.totals,
-    // A validation-failed or duplicate record is a skipped def/listing/offer.
-    definitions: { inserted: 0, updated: 0, skipped: skippedCount(plan) },
-    venueListings: { inserted: 0, updated: 0, skipped: skippedCount(plan) },
-    offers: { inserted: 0, updated: 0, skipped: skippedCount(plan) },
+    definitions: { inserted: 0, updated: 0, skipped },
+    venueListings: { inserted: 0, updated: 0, skipped },
+    offers: { inserted: 0, updated: 0, skipped },
     priceObservations: { inserted: 0, skipped: 0 },
     validationFailures: plan.validationFailures,
     duplicateKeys: plan.duplicateKeys,
   };
 
-  // Dry-run: report the intended shape without touching the database.
-  if (!opts.apply) return report;
-
+  // Both paths run inside runInTransaction. On apply it commits; on dry-run only
+  // reads happen (the read-only projection), so the transaction is a no-op.
   await store.runInTransaction(async (tx) => {
     for (const unit of plan.writable) {
       // ── SpiritDefinition (shared; keyed by global slug) ──
       const existingDef = await tx.findDefinitionBySlug(unit.definition.slug);
-      let definitionId: string;
+      let definitionId: string | null;
       if (existingDef) {
-        await tx.updateDefinition(existingDef.id, unit.definition);
+        if (apply) await tx.updateDefinition(existingDef.id, unit.definition);
         report.definitions.updated++;
         definitionId = existingDef.id;
       } else {
-        const created = await tx.createDefinition(unit.definition);
         report.definitions.inserted++;
-        definitionId = created.id;
+        definitionId = apply ? (await tx.createDefinition(unit.definition)).id : null;
       }
 
       // ── VenueSpirit (tenant listing; keyed by (restaurantId, slug)) ──
       const existingVenue = await tx.findVenueSpirit(opts.restaurantId, unit.venueSpirit.slug);
-      let venueSpiritId: string;
+      let venueSpiritId: string | null;
       if (existingVenue) {
-        await tx.updateVenueSpirit(existingVenue.id, unit.venueSpirit);
+        if (apply) await tx.updateVenueSpirit(existingVenue.id, unit.venueSpirit);
         report.venueListings.updated++;
         venueSpiritId = existingVenue.id;
       } else {
-        const created = await tx.createVenueSpirit(
-          opts.restaurantId,
-          definitionId,
-          unit.venueSpirit,
-        );
         report.venueListings.inserted++;
-        venueSpiritId = created.id;
+        // On dry-run there is no created id; definitionId may also be null.
+        venueSpiritId =
+          apply && definitionId
+            ? (await tx.createVenueSpirit(opts.restaurantId, definitionId, unit.venueSpirit)).id
+            : null;
       }
 
       // ── SpiritPour (the one primary offer) ──
       const primary = unit.offers[0];
+      // A new listing (venueSpiritId null) has no pours; only a Toast-GUID match
+      // can find an existing pour parented elsewhere.
       const existingPour = await tx.findOffer(
         opts.restaurantId,
-        venueSpiritId,
+        venueSpiritId ?? "",
         primary.toastItemGuid,
       );
-      let offerId: string;
+      let offerId: string | null;
+      let offerExisted: boolean;
       if (existingPour) {
-        await tx.updatePour(existingPour.id, opts.restaurantId, primary);
-        report.offers.updated++;
+        offerExisted = true;
         offerId = existingPour.id;
+        report.offers.updated++;
+        // Re-parent to THIS listing (moves a GUID match away from another
+        // VenueSpirit) — never leave the imported listing without its offer.
+        if (apply && venueSpiritId) {
+          await tx.updatePour(existingPour.id, opts.restaurantId, venueSpiritId, primary);
+        }
       } else {
-        const created = await tx.createPour(opts.restaurantId, venueSpiritId, primary);
+        offerExisted = false;
         report.offers.inserted++;
-        offerId = created.id;
+        offerId =
+          apply && venueSpiritId
+            ? (await tx.createPour(opts.restaurantId, venueSpiritId, primary)).id
+            : null;
       }
 
       // ── SpiritPriceObservation (seed the FIRST one only, and only if priced) ──
       if (primary.priceUsd == null) {
         report.priceObservations.skipped++;
+      } else if (!offerExisted) {
+        // A brand-new offer always seeds its first observation.
+        if (apply && offerId) await tx.createObservation(opts.restaurantId, offerId, primary);
+        report.priceObservations.inserted++;
       } else {
-        const existing = await tx.countObservations(offerId);
+        const existing = offerId ? await tx.countObservations(offerId) : 0;
         if (existing === 0) {
-          await tx.createObservation(opts.restaurantId, offerId, primary);
+          if (apply && offerId) await tx.createObservation(opts.restaurantId, offerId, primary);
           report.priceObservations.inserted++;
         } else {
           report.priceObservations.skipped++;
@@ -375,7 +411,9 @@ export async function executeImport(
 }
 
 function skippedCount(plan: ImportPlan): number {
-  return plan.validationFailures.length + plan.duplicateKeys.length;
+  // A dropped duplicate is ONE skipped record even though it can emit several
+  // duplicateKeys diagnostics (definition slug + venue slug + Toast GUID).
+  return plan.validationFailures.length + plan.duplicateRecords;
 }
 
 // ───────────────────────── Prisma store adapter ─────────────────────────
@@ -450,8 +488,9 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
         select: { id: true, restaurantId: true, venueSpiritId: true, isPrimary: true },
       });
     },
-    async updatePour(id, _restaurantId, row) {
-      await db.spiritPour.update({ where: { id }, data: pourData(row) });
+    async updatePour(id, _restaurantId, venueSpiritId, row) {
+      // Include venueSpiritId so a re-parented Toast-GUID match moves listings.
+      await db.spiritPour.update({ where: { id }, data: { venueSpiritId, ...pourData(row) } });
     },
 
     async countObservations(offerId) {

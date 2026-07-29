@@ -2,21 +2,25 @@
  * Import the 110 static Spirit Vault guest records into the #137 split schema
  * (SpiritDefinition / VenueSpirit / SpiritPour / SpiritPriceObservation).
  *
- * Run (DRY RUN — reads the vault, writes nothing):
+ * Run (DRY RUN — projects the DB effect, writes nothing):
  *   npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId>
+ *   (reads existing rows to show would-insert/would-update; falls back to PLANNED
+ *    counts with existence unverified if the DB is unreachable)
  *
  * Run (APPLY — writes to the DB DATABASE_URL points at; NON-PROD only):
+ *   SPIRIT_VAULT_ALLOWED_TARGETS=<outfront-demo-ref> \
  *   npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts \
- *     --restaurant=<restaurantId> --apply --confirm-target=<supabase-project-ref>
+ *     --restaurant=<restaurantId> --apply --confirm-target=<outfront-demo-ref>
  *
  * Guards (all must hold before a single row is written):
  *   • --apply is required to write; default is a dry run with ZERO writes.
  *   • --restaurant=<id> is required and must resolve to an existing Restaurant —
  *     the tenant is NEVER guessed.
- *   • --confirm-target must equal the project ref / host parsed from DATABASE_URL,
- *     so you cannot write to a database without consciously naming it (this is the
- *     non-production confirmation — the migration was applied to `outfront-demo`).
- *   • Refuses when NODE_ENV=production.
+ *   • SPIRIT_VAULT_ALLOWED_TARGETS (env) is the approved non-prod allowlist,
+ *     sourced INDEPENDENTLY of DATABASE_URL. The DATABASE_URL-derived ref must be
+ *     on it, so a production URL cannot authorize itself by echoing its own ref.
+ *   • --confirm-target must ALSO equal that ref (a conscious, typed acknowledgement).
+ *   • Refuses when NODE_ENV=production (belt-and-suspenders; not the primary guard).
  *
  * Idempotent, transactional, seed-first price history — see src/lib/spirit-vault/
  * import-spirits.ts. Reuses the merged transform + validate + loader (#137).
@@ -61,6 +65,7 @@ function printReport(report: ImportReport) {
   const { totals } = report;
   console.log("\n───────────── Spirit Vault import report ─────────────");
   console.log(`mode:        ${report.dryRun ? "DRY RUN (no writes)" : "APPLIED"}`);
+  if (report.dryRun) console.log("             counts below are PROJECTED (would-insert / would-update).");
   console.log(`restaurant:  ${report.restaurantId}`);
   console.log(`records:     ${totals.records}  (published ${totals.published}, writable ${totals.writable})`);
   const line = (label: string, c: { inserted: number; updated: number; skipped: number }) =>
@@ -90,6 +95,20 @@ function printReport(report: ImportReport) {
     console.log("✓ unresolved identities / duplicate keys: none");
   }
   console.log("──────────────────────────────────────────────────────\n");
+}
+
+/** DB-free preview: the most the importer WOULD do, with existence unverified. */
+function printPlannedFallback(plan: ImportPlan, restaurantId: string) {
+  const { totals } = plan;
+  console.log("───────── Spirit Vault import — PLANNED (DB-free) ─────────");
+  console.log(`restaurant:  ${restaurantId}  (existence NOT verified)`);
+  console.log(`records:     ${totals.records}  (published ${totals.published}, writable ${totals.writable})`);
+  console.log(`  would create OR update up to ${totals.writable} definitions / venue listings / offers`);
+  console.log(`  would seed up to ${totals.writable} initial price observations (priced offers only)`);
+  console.log(`  validation failures: ${plan.validationFailures.length}`);
+  console.log(`  duplicate records dropped: ${plan.duplicateRecords} (${plan.duplicateKeys.length} key diagnostics)`);
+  console.log("(insert-vs-update split needs a reachable DB; point at the demo target to project it.)");
+  console.log("──────────────────────────────────────────────────────────\n");
 }
 
 function assertPlanMatchesExpectation(plan: ImportPlan) {
@@ -126,12 +145,24 @@ async function main() {
   const plan = planImport(records);
   const planOk = assertPlanMatchesExpectation(plan);
 
-  // ── DRY RUN (default): report the intended shape, touch nothing ──
+  // ── DRY RUN (default): project the planned DB effect, write nothing ──
   if (!apply) {
-    // Store is constructed but never queried on the dry-run path.
-    const report = await executeImport(createPrismaSpiritStore(prisma), plan, { restaurantId });
-    printReport(report);
-    console.log("DRY RUN complete — no database writes. Re-run with --apply to write.");
+    try {
+      // Read-only projection against the selected tenant: reports would-insert
+      // vs would-update by reading existing rows. Never writes.
+      const report = await executeImport(createPrismaSpiritStore(prisma), plan, { restaurantId });
+      printReport(report);
+      console.log(
+        "DRY RUN complete — no database writes. Counts are the projected effect against this DB.\n" +
+          "Re-run with --apply (and the target guards) to write.",
+      );
+    } catch (dbErr) {
+      // DB-free fallback: the database was unreachable (e.g. tables not migrated
+      // here). Report PLANNED totals and state clearly that nothing was verified.
+      console.warn(`\n⚠ Could not read the database (${(dbErr as Error).message}).`);
+      console.warn("Falling back to PLANNED counts — tenant/target existence NOT verified.\n");
+      printPlannedFallback(plan, restaurantId);
+    }
     await prisma.$disconnect();
     return;
   }
@@ -154,13 +185,42 @@ async function main() {
     await prisma.$disconnect();
     process.exit(1);
   }
+
+  // The non-production allowlist is the authority — sourced INDEPENDENTLY of
+  // DATABASE_URL (env SPIRIT_VAULT_ALLOWED_TARGETS), so a production URL cannot
+  // authorize itself just by echoing its own ref. NODE_ENV describes the process,
+  // never the database, so it is not trusted for this.
+  const allowlist = (process.env.SPIRIT_VAULT_ALLOWED_TARGETS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
   console.log(`\nDATABASE_URL target host: ${target.host}`);
   console.log(`DATABASE_URL target ref:  ${target.token}`);
+
+  if (allowlist.length === 0) {
+    console.error(
+      "\nRefusing to apply: no approved non-production targets configured.\n" +
+        "Set SPIRIT_VAULT_ALLOWED_TARGETS to the approved non-prod project ref(s) — the #137\n" +
+        "migration was applied to `outfront-demo`, so set it to that project's ref (comma-separated\n" +
+        "for multiple). This allowlist is deliberately NOT derived from DATABASE_URL.",
+    );
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+  if (!allowlist.includes(target.token)) {
+    console.error(
+      `\nRefusing to apply: DATABASE_URL target "${target.token}" is NOT in the approved\n` +
+        `non-production allowlist [${allowlist.join(", ")}]. Point at an approved DB or fix the allowlist.`,
+    );
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+  // Second, conscious acknowledgement: the operator must type the ref too.
   if (confirmTarget == null || confirmTarget.toLowerCase() !== target.token) {
     console.error(
-      `\nRefusing to apply: pass --confirm-target=${target.token} to confirm you intend to write to THIS database.`,
+      `\nRefusing to apply: also pass --confirm-target=${target.token} to acknowledge THIS database.`,
     );
-    console.error("(The #137 migration was applied to the non-prod `outfront-demo` project — confirm you are pointed there.)");
     await prisma.$disconnect();
     process.exit(1);
   }

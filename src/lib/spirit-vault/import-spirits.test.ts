@@ -140,11 +140,12 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
         state.pours.push(rec);
         return { id: rec.id, restaurantId, venueSpiritId, isPrimary: rec.isPrimary };
       },
-      async updatePour(pourId, _restaurantId, row) {
+      async updatePour(pourId, _restaurantId, venueSpiritId, row) {
         const p = state.pours.find((x) => x.id === pourId);
         if (!p) throw new Error("updatePour: not found");
         p.row = row;
         p.toastItemGuid = row.toastItemGuid;
+        p.venueSpiritId = venueSpiritId; // re-parent a moved Toast-GUID match
       },
 
       async countObservations(offerId) {
@@ -192,19 +193,48 @@ describe("planImport — real 110 records", () => {
   });
 });
 
-describe("executeImport — dry-run", () => {
-  it("writes nothing and reports the intended totals", async () => {
+describe("executeImport — dry-run projection", () => {
+  it("previews would-insert counts against an empty DB and writes nothing", async () => {
     const db = emptyDb();
     const store = createInMemoryStore(db);
     const report = await executeImport(store, PLAN, { restaurantId: ECHO }); // apply omitted
 
     expect(report.dryRun).toBe(true);
-    expect(report.definitions).toEqual({ inserted: 0, updated: 0, skipped: 0 });
-    expect(report.priceObservations).toEqual({ inserted: 0, skipped: 0 });
+    // Against an empty tenant every record would be inserted — NOT all-zero.
+    expect(report.definitions).toEqual({ inserted: 110, updated: 0, skipped: 0 });
+    expect(report.venueListings).toEqual({ inserted: 110, updated: 0, skipped: 0 });
+    expect(report.offers).toEqual({ inserted: 110, updated: 0, skipped: 0 });
+    expect(report.priceObservations).toEqual({ inserted: 110, skipped: 0 });
+
+    // …but nothing was actually written.
     expect(db.definitions).toHaveLength(0);
     expect(db.venues).toHaveLength(0);
     expect(db.pours).toHaveLength(0);
     expect(db.observations).toHaveLength(0);
+  });
+
+  it("previews would-update after a prior apply, still writing nothing", async () => {
+    const db = emptyDb();
+    const store = createInMemoryStore(db);
+    await executeImport(store, PLAN, { restaurantId: ECHO, apply: true });
+
+    const before = {
+      d: db.definitions.length,
+      v: db.venues.length,
+      p: db.pours.length,
+      o: db.observations.length,
+    };
+    const dry = await executeImport(store, PLAN, { restaurantId: ECHO }); // dry-run
+
+    expect(dry.dryRun).toBe(true);
+    expect(dry.definitions).toMatchObject({ inserted: 0, updated: 110 });
+    expect(dry.offers).toMatchObject({ inserted: 0, updated: 110 });
+    expect(dry.priceObservations).toEqual({ inserted: 0, skipped: 110 });
+    // No row counts changed by the projection.
+    expect(db.definitions).toHaveLength(before.d);
+    expect(db.venues).toHaveLength(before.v);
+    expect(db.pours).toHaveLength(before.p);
+    expect(db.observations).toHaveLength(before.o);
   });
 });
 
@@ -268,6 +298,93 @@ describe("executeImport — tenant isolation", () => {
     for (const p of db.pours) {
       expect(venueTenant.get(p.venueSpiritId)).toBe(p.restaurantId);
     }
+  });
+});
+
+// ── Small hand-built plans for edge cases planImport can't easily produce ──
+
+function composedUnit(
+  slug: string,
+  guid: string | null,
+): { slug: string; definition: SpiritDefinitionRow; venueSpirit: VenueSpiritRow; offers: SpiritPourRow[] } {
+  return {
+    slug,
+    definition: { slug: `${slug}-def`, brand: "X", category: "Bourbon" } as unknown as SpiritDefinitionRow,
+    venueSpirit: { slug, recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" } as unknown as VenueSpiritRow,
+    offers: [{ toastItemGuid: guid, priceUsd: 10, isPrimary: true } as unknown as SpiritPourRow],
+  };
+}
+
+function singleUnitPlan(slug: string, guid: string | null) {
+  return {
+    writable: [composedUnit(slug, guid)],
+    validationFailures: [],
+    duplicateKeys: [],
+    duplicateRecords: 0,
+    totals: { records: 1, published: 1, writable: 1 },
+  };
+}
+
+describe("executeImport — re-parents a moved Toast-GUID pour", () => {
+  it("moves a GUID-matched pour to the imported listing instead of orphaning it", async () => {
+    const db = emptyDb();
+    // Pre-existing state: definition D, listing A, and a pour with guid G under A.
+    db.definitions.push({ id: "def-1", slug: "listing-a-def", row: {} as SpiritDefinitionRow });
+    db.venues.push({
+      id: "venue-A",
+      restaurantId: ECHO,
+      slug: "listing-a",
+      spiritDefinitionId: "def-1",
+      row: {} as VenueSpiritRow,
+    });
+    db.pours.push({
+      id: "pour-G",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-A",
+      isPrimary: true,
+      toastItemGuid: "GUID-G",
+      row: {} as SpiritPourRow,
+    });
+
+    const store = createInMemoryStore(db);
+    // Import a DIFFERENT listing (listing-b) whose primary offer carries guid G.
+    await executeImport(store, singleUnitPlan("listing-b", "GUID-G"), {
+      restaurantId: ECHO,
+      apply: true,
+    });
+
+    const newListing = db.venues.find((v) => v.slug === "listing-b")!;
+    expect(newListing).toBeDefined();
+    // The single pour was re-parented to the imported listing — not left on A,
+    // and no duplicate pour was created.
+    const pour = db.pours.find((p) => p.toastItemGuid === "GUID-G")!;
+    expect(db.pours).toHaveLength(1);
+    expect(pour.venueSpiritId).toBe(newListing.id);
+  });
+});
+
+describe("executeImport — skipped counts distinct records", () => {
+  it("counts one dropped duplicate record once, not per diagnostic", async () => {
+    const db = emptyDb();
+    const store = createInMemoryStore(db);
+    // One dropped record that collided on definition slug AND venue slug AND guid.
+    const plan = {
+      writable: [],
+      validationFailures: [],
+      duplicateKeys: [
+        { kind: "definitionSlug" as const, key: "d", slugs: ["a", "b"] },
+        { kind: "venueSpiritSlug" as const, key: "b", slugs: ["a", "b"] },
+        { kind: "toastItemGuid" as const, key: "g", slugs: ["a", "b"] },
+      ],
+      duplicateRecords: 1,
+      totals: { records: 2, published: 2, writable: 1 },
+    };
+    const report = await executeImport(store, plan, { restaurantId: ECHO, apply: true });
+    // Three diagnostics, but exactly ONE skipped record.
+    expect(report.definitions.skipped).toBe(1);
+    expect(report.venueListings.skipped).toBe(1);
+    expect(report.offers.skipped).toBe(1);
+    expect(report.duplicateKeys).toHaveLength(3);
   });
 });
 

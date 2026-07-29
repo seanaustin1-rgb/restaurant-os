@@ -54,6 +54,8 @@ until all three pass:
   reseed, reputation snapshot).
 - `prisma/schema.prisma` — data model. Migrations live in `prisma/migrations/`.
 - `src/middleware.ts` — Clerk auth + public-route allowlist.
+- `docs/spirit-vault/HANDOFF.md` — current Spirit Vault architecture, product
+  decisions, database state, and active implementation lane.
 
 ## Conventions
 
@@ -63,6 +65,11 @@ until all three pass:
 - The demo path must never read or write production data — it uses a **separate**
   demo database via `DEMO_DATABASE_URL` (`src/lib/demo/demo-prisma.ts`). Keep that
   isolation intact.
+- Spirit Vault's canonical model is
+  `SpiritDefinition → VenueSpirit → SpiritPour → SpiritPriceObservation`.
+  Do not introduce `BeverageItem` as a parallel durable model. Keep shared
+  knowledge global and all venue, publication, Toast, and price data
+  tenant-scoped as defined in `docs/spirit-vault/HANDOFF.md`.
 
 ## Guardrails — do NOT do these without explicit human sign-off
 

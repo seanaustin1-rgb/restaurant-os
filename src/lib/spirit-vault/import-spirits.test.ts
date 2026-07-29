@@ -63,6 +63,8 @@ function cloneDb(db: FakeDb): FakeDb {
 interface FakeOptions {
   /** Throw once this many definitions have been created (to test rollback). */
   failAfterDefinitions?: number;
+  /** Restaurant ids that exist. Omitted → every tenant is treated as existing. */
+  existingRestaurants?: string[];
 }
 
 function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
@@ -72,6 +74,11 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
   function txStore(state: FakeDb): SpiritImportTxStore {
     let createdDefs = 0;
     return {
+      async restaurantExists(restaurantId) {
+        return opts.existingRestaurants
+          ? opts.existingRestaurants.includes(restaurantId)
+          : true;
+      },
       async findDefinitionBySlug(slug) {
         return state.definitions.find((d) => d.slug === slug) ?? null;
       },
@@ -106,10 +113,11 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
         state.venues.push(rec);
         return { id: rec.id, restaurantId, slug: rec.slug };
       },
-      async updateVenueSpirit(venueId, row) {
+      async updateVenueSpirit(venueId, spiritDefinitionId, row) {
         const v = state.venues.find((x) => x.id === venueId);
         if (!v) throw new Error("updateVenueSpirit: not found");
         v.row = row;
+        v.spiritDefinitionId = spiritDefinitionId; // correct the definition FK
       },
 
       async findOffer(restaurantId, venueSpiritId, toastItemGuid) {
@@ -146,6 +154,21 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
         p.row = row;
         p.toastItemGuid = row.toastItemGuid;
         p.venueSpiritId = venueSpiritId; // re-parent a moved Toast-GUID match
+      },
+      async demoteOtherPrimaries(restaurantId, venueSpiritId, keepPourId) {
+        let count = 0;
+        for (const p of state.pours) {
+          if (
+            p.restaurantId === restaurantId &&
+            p.venueSpiritId === venueSpiritId &&
+            p.isPrimary &&
+            p.id !== keepPourId
+          ) {
+            p.isPrimary = false;
+            count++;
+          }
+        }
+        return count;
       },
 
       async countObservations(offerId) {
@@ -385,6 +408,113 @@ describe("executeImport — skipped counts distinct records", () => {
     expect(report.venueListings.skipped).toBe(1);
     expect(report.offers.skipped).toBe(1);
     expect(report.duplicateKeys).toHaveLength(3);
+  });
+});
+
+describe("executeImport — reconciles the destination primary on re-parent", () => {
+  it("demotes the destination's existing primary so exactly one remains", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-1", slug: "recon-def", row: {} as SpiritDefinitionRow });
+    // Destination listing D already carries its own primary P1 (no Toast GUID).
+    db.venues.push({
+      id: "venue-D",
+      restaurantId: ECHO,
+      slug: "recon",
+      spiritDefinitionId: "def-1",
+      row: {} as VenueSpiritRow,
+    });
+    db.pours.push({
+      id: "pour-P1",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-D",
+      isPrimary: true,
+      toastItemGuid: null,
+      row: {} as SpiritPourRow,
+    });
+    // A GUID pour P2 lives under a DIFFERENT listing A.
+    db.venues.push({
+      id: "venue-A",
+      restaurantId: ECHO,
+      slug: "other",
+      spiritDefinitionId: "def-1",
+      row: {} as VenueSpiritRow,
+    });
+    db.pours.push({
+      id: "pour-P2",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-A",
+      isPrimary: true,
+      toastItemGuid: "GUID-G",
+      row: {} as SpiritPourRow,
+    });
+
+    const store = createInMemoryStore(db);
+    // Importing listing "recon" with guid G re-parents P2 into D.
+    await executeImport(store, singleUnitPlan("recon", "GUID-G"), {
+      restaurantId: ECHO,
+      apply: true,
+    });
+
+    const primariesUnderD = db.pours.filter((p) => p.venueSpiritId === "venue-D" && p.isPrimary);
+    expect(primariesUnderD).toHaveLength(1); // exactly one primary
+    expect(primariesUnderD[0].id).toBe("pour-P2"); // the imported GUID offer wins
+    const p1 = db.pours.find((p) => p.id === "pour-P1")!;
+    expect(p1.isPrimary).toBe(false); // the stale primary was demoted, not deleted
+    expect(p1.venueSpiritId).toBe("venue-D");
+  });
+});
+
+describe("executeImport — corrects the listing's definition FK", () => {
+  it("repoints an existing listing to the resolved definition", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-old", slug: "old-slug", row: {} as SpiritDefinitionRow });
+    db.definitions.push({ id: "def-new", slug: "fk-def", row: {} as SpiritDefinitionRow });
+    // Listing exists but points at the WRONG (old) definition.
+    db.venues.push({
+      id: "venue-V",
+      restaurantId: ECHO,
+      slug: "fk",
+      spiritDefinitionId: "def-old",
+      row: {} as VenueSpiritRow,
+    });
+
+    const store = createInMemoryStore(db);
+    // Unit slug "fk" → definition.slug "fk-def" (def-new).
+    await executeImport(store, singleUnitPlan("fk", "GUID-FK"), {
+      restaurantId: ECHO,
+      apply: true,
+    });
+
+    expect(db.venues.find((v) => v.id === "venue-V")!.spiritDefinitionId).toBe("def-new");
+  });
+});
+
+describe("executeImport — tenant existence", () => {
+  it("dry-run flags a missing tenant as not executable but still projects", async () => {
+    const db = emptyDb();
+    const store = createInMemoryStore(db, { existingRestaurants: [] }); // ECHO absent
+    const report = await executeImport(store, singleUnitPlan("x", "g"), { restaurantId: ECHO });
+
+    expect(report.dryRun).toBe(true);
+    expect(report.tenantVerified).toBe(false);
+    expect(report.definitions.inserted).toBe(1); // projection still computed
+    expect(db.definitions).toHaveLength(0); // nothing written
+  });
+
+  it("dry-run marks an existing tenant verified", async () => {
+    const db = emptyDb();
+    const store = createInMemoryStore(db, { existingRestaurants: [ECHO] });
+    const report = await executeImport(store, singleUnitPlan("x", "g"), { restaurantId: ECHO });
+    expect(report.tenantVerified).toBe(true);
+  });
+
+  it("apply aborts (and writes nothing) when the tenant does not exist", async () => {
+    const db = emptyDb();
+    const store = createInMemoryStore(db, { existingRestaurants: [] });
+    await expect(
+      executeImport(store, singleUnitPlan("x", "g"), { restaurantId: ECHO, apply: true }),
+    ).rejects.toThrow(/does not exist/);
+    expect(db.definitions).toHaveLength(0);
   });
 });
 

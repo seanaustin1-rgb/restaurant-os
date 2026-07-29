@@ -221,6 +221,9 @@ export interface StoredPour {
  * the executor can report insert-vs-update, and so the in-memory fake is trivial.
  */
 export interface SpiritImportTxStore {
+  /** Does the target tenant exist? Guards dry-run "executable" claims and apply. */
+  restaurantExists(restaurantId: string): Promise<boolean>;
+
   findDefinitionBySlug(slug: string): Promise<StoredDefinition | null>;
   createDefinition(row: SpiritDefinitionRow): Promise<StoredDefinition>;
   updateDefinition(id: string, row: SpiritDefinitionRow): Promise<void>;
@@ -231,7 +234,13 @@ export interface SpiritImportTxStore {
     spiritDefinitionId: string,
     row: VenueSpiritRow,
   ): Promise<StoredVenueSpirit>;
-  updateVenueSpirit(id: string, row: VenueSpiritRow): Promise<void>;
+  /** Also (re)sets spiritDefinitionId, so a listing pointing at the wrong shared
+   *  definition is corrected to the resolved one — not left rendering stale. */
+  updateVenueSpirit(
+    id: string,
+    spiritDefinitionId: string,
+    row: VenueSpiritRow,
+  ): Promise<void>;
 
   /** Find the offer this record should upsert: by (restaurantId, toastItemGuid)
    *  when a guid is present, else the listing's existing primary pour. */
@@ -253,6 +262,13 @@ export interface SpiritImportTxStore {
     venueSpiritId: string,
     row: SpiritPourRow,
   ): Promise<void>;
+  /** Demote every OTHER primary pour on a listing so exactly one primary remains
+   *  after a create or a cross-listing re-parent. Returns how many were demoted. */
+  demoteOtherPrimaries(
+    restaurantId: string,
+    venueSpiritId: string,
+    keepPourId: string,
+  ): Promise<number>;
 
   countObservations(offerId: string): Promise<number>;
   createObservation(
@@ -278,6 +294,9 @@ export interface UpsertCounts {
 export interface ImportReport {
   dryRun: boolean;
   restaurantId: string;
+  /** Did the tenant exist in the DB? A dry-run projection is only "executable"
+   *  when true; apply refuses when false. */
+  tenantVerified: boolean;
   totals: ImportPlan["totals"];
   definitions: UpsertCounts;
   venueListings: UpsertCounts;
@@ -318,6 +337,7 @@ export async function executeImport(
   const report: ImportReport = {
     dryRun: !apply,
     restaurantId: opts.restaurantId,
+    tenantVerified: false,
     totals: plan.totals,
     definitions: { inserted: 0, updated: 0, skipped },
     venueListings: { inserted: 0, updated: 0, skipped },
@@ -330,6 +350,16 @@ export async function executeImport(
   // Both paths run inside runInTransaction. On apply it commits; on dry-run only
   // reads happen (the read-only projection), so the transaction is a no-op.
   await store.runInTransaction(async (tx) => {
+    // The tenant must exist for either mode to mean anything: apply would abort
+    // on the VenueSpirit FK, and a dry-run projecting inserts against a missing
+    // tenant is not an executable preview.
+    report.tenantVerified = await tx.restaurantExists(opts.restaurantId);
+    if (apply && !report.tenantVerified) {
+      throw new Error(
+        `restaurant ${opts.restaurantId} does not exist in this database — aborting apply`,
+      );
+    }
+
     for (const unit of plan.writable) {
       // ── SpiritDefinition (shared; keyed by global slug) ──
       const existingDef = await tx.findDefinitionBySlug(unit.definition.slug);
@@ -347,7 +377,11 @@ export async function executeImport(
       const existingVenue = await tx.findVenueSpirit(opts.restaurantId, unit.venueSpirit.slug);
       let venueSpiritId: string | null;
       if (existingVenue) {
-        if (apply) await tx.updateVenueSpirit(existingVenue.id, unit.venueSpirit);
+        // Pass definitionId so a listing attached to the wrong definition is
+        // corrected. In apply mode definitionId is always resolved above.
+        if (apply && definitionId) {
+          await tx.updateVenueSpirit(existingVenue.id, definitionId, unit.venueSpirit);
+        }
         report.venueListings.updated++;
         venueSpiritId = existingVenue.id;
       } else {
@@ -386,6 +420,14 @@ export async function executeImport(
           apply && venueSpiritId
             ? (await tx.createPour(opts.restaurantId, venueSpiritId, primary)).id
             : null;
+      }
+
+      // Exactly one primary per listing: after creating or re-parenting THIS
+      // primary offer, demote any other primary the destination still carries
+      // (e.g. a stale primary the moved Toast-GUID pour now displaces). A no-op
+      // on the normal path where the listing has only its own single primary.
+      if (apply && venueSpiritId && offerId && primary.isPrimary) {
+        await tx.demoteOtherPrimaries(opts.restaurantId, venueSpiritId, offerId);
       }
 
       // ── SpiritPriceObservation (seed the FIRST one only, and only if priced) ──
@@ -439,6 +481,13 @@ export function createPrismaSpiritStore(prisma: PrismaClient): SpiritImportStore
 
 function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
   return {
+    async restaurantExists(restaurantId) {
+      const found = await db.restaurant.findUnique({
+        where: { id: restaurantId },
+        select: { id: true },
+      });
+      return found != null;
+    },
     async findDefinitionBySlug(slug) {
       return db.spiritDefinition.findUnique({ where: { slug }, select: { id: true, slug: true } });
     },
@@ -465,8 +514,12 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
         select: { id: true, restaurantId: true, slug: true },
       });
     },
-    async updateVenueSpirit(id, row) {
-      await db.venueSpirit.update({ where: { id }, data: venueSpiritData(row) });
+    async updateVenueSpirit(id, spiritDefinitionId, row) {
+      // Include spiritDefinitionId so a listing on the wrong definition is fixed.
+      await db.venueSpirit.update({
+        where: { id },
+        data: { spiritDefinitionId, ...venueSpiritData(row) },
+      });
     },
 
     async findOffer(restaurantId, venueSpiritId, toastItemGuid) {
@@ -491,6 +544,13 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
     async updatePour(id, _restaurantId, venueSpiritId, row) {
       // Include venueSpiritId so a re-parented Toast-GUID match moves listings.
       await db.spiritPour.update({ where: { id }, data: { venueSpiritId, ...pourData(row) } });
+    },
+    async demoteOtherPrimaries(restaurantId, venueSpiritId, keepPourId) {
+      const { count } = await db.spiritPour.updateMany({
+        where: { restaurantId, venueSpiritId, isPrimary: true, id: { not: keepPourId } },
+        data: { isPrimary: false },
+      });
+      return count;
     },
 
     async countObservations(offerId) {

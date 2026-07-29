@@ -67,6 +67,9 @@ function printReport(report: ImportReport) {
   console.log(`mode:        ${report.dryRun ? "DRY RUN (no writes)" : "APPLIED"}`);
   if (report.dryRun) console.log("             counts below are PROJECTED (would-insert / would-update).");
   console.log(`restaurant:  ${report.restaurantId}`);
+  console.log(
+    `tenant:      ${report.tenantVerified ? "EXISTS ✓" : "NOT FOUND ✗ — projection is NOT executable (--apply would abort)"}`,
+  );
   console.log(`records:     ${totals.records}  (published ${totals.published}, writable ${totals.writable})`);
   const line = (label: string, c: { inserted: number; updated: number; skipped: number }) =>
     console.log(`  ${label.padEnd(16)} inserted ${c.inserted}  updated ${c.updated}  skipped ${c.skipped}`);
@@ -152,10 +155,17 @@ async function main() {
       // vs would-update by reading existing rows. Never writes.
       const report = await executeImport(createPrismaSpiritStore(prisma), plan, { restaurantId });
       printReport(report);
-      console.log(
-        "DRY RUN complete — no database writes. Counts are the projected effect against this DB.\n" +
-          "Re-run with --apply (and the target guards) to write.",
-      );
+      if (!report.tenantVerified) {
+        console.log(
+          "DRY RUN complete — no writes. ⚠ The restaurant does not exist in this DB, so the\n" +
+            "projection above is NOT executable: --apply would abort. Fix --restaurant, then re-run.",
+        );
+      } else {
+        console.log(
+          "DRY RUN complete — no database writes. Counts are the projected effect against this DB.\n" +
+            "Re-run with --apply (and the target guards) to write.",
+        );
+      }
     } catch (dbErr) {
       // DB-free fallback: the database was unreachable (e.g. tables not migrated
       // here). Report PLANNED totals and state clearly that nothing was verified.

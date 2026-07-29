@@ -1,5 +1,10 @@
 # Spirit Vault Add-a-Spirit Workflow
 
+> **Static preview only.** Use this workflow to change the GitHub Pages
+> prototype until database-backed publishing replaces it. It does not define
+> the normalized database schema or the new importer; see `HANDOFF.md` and
+> `prisma/schema.prisma` for those.
+
 Spirit records now live in an **external data file**, separate from the render
 engine. Adding a spirit is a data-entry task in **one place, one record** — the
 two-map `SPIRIT_DATA` + `DOSSIER_DETAILS` split has been retired.

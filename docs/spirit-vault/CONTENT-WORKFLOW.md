@@ -1,9 +1,13 @@
 # Spirit Vault — 5→164 Content Workflow
 
-**Date:** 2026-07-26 · **Scope:** how the remaining ~159 dossiers get produced
-without flooding Sean or shipping unverified claims. Do not begin mass data
-entry until the Codex refactor passes `REFACTOR-ACCEPTANCE-CRITERIA.md` —
-otherwise 159 records inherit the current shape and get touched twice.
+> **Static content-pipeline history and continuing editorial rules.** The
+> 110-record whiskey data build is complete. Keep the sourcing, verification,
+> and Sean-approval rules below, but do not treat old batch counts or the
+> refactor gate as current work. The importer and database state live in
+> `HANDOFF.md`.
+
+**Date:** 2026-07-26 · **Original scope:** scaling the first five dossiers
+without flooding Sean or shipping unverified claims.
 
 ## Roles
 

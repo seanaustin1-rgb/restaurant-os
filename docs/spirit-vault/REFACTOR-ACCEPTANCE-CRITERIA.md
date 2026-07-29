@@ -1,5 +1,10 @@
 # Spirit Vault — Refactor Acceptance Criteria
 
+> **Historical static-prototype checklist.** The refactor it governed is
+> complete. Do not use unchecked boxes here as the active backlog. Current work
+> and acceptance criteria live in `HANDOFF.md`; the database contract lives in
+> `prisma/schema.prisma`.
+
 **Date:** 2026-07-26 · **Applies to:** the Codex structural refactor (data/render
 separation, schema normalization, validation, 5→164 scalability)
 **Baseline:** `spirit-vault-prototype.html` at `foundation-v1` + `SPIRIT-SCHEMA-SPEC.md`
@@ -88,5 +93,6 @@ regress.
 - [ ] HANDOFF.md updated: work completed, files changed, commit SHA, and any
   schema deviations from SPIRIT-SCHEMA-SPEC.md called out explicitly for
   Sean's sign-off.
-- [ ] No scope creep: no Flight Builder UI, no QR backend, no Raven, no visual
+- [ ] No scope creep: no Flight Builder UI, no QR backend, no OutFrontData
+  network layer, no visual
   redesign.

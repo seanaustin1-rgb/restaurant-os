@@ -1,6 +1,11 @@
 # Spirit Vault — Data Audit
 
-**Date:** 2026-07-26 · **Lane:** Claude (preparation/cleanup) · **Audited artifact:** `spirit-vault-prototype.html` (current working tree, incl. Codex's uncommitted `SPIRIT_DATA` / `DOSSIER_DETAILS` / validation layer)
+> **Historical snapshot (2026-07-26).** This audit describes the original
+> five-record static prototype and is retained for provenance. It is not the
+> current implementation plan. The live architecture and work lane are in
+> `HANDOFF.md`; the canonical database schema is in `prisma/schema.prisma`.
+
+**Date:** 2026-07-26 · **Lane:** Claude (preparation/cleanup) · **Audited artifact:** the then-current `spirit-vault-prototype.html`
 
 This audit covers Task 1 (field inventory), Task 3 (technical debt), and Task 6
 (editorial review of the five dossiers). The canonical schema proposal derived

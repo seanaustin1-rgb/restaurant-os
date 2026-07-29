@@ -1,13 +1,20 @@
-# Spirit Vault — Canonical Spirit Schema (Proposed)
+# Spirit Vault — Historical Static-Record Schema Proposal
 
-**Date:** 2026-07-26 · **Status:** Proposal for the Codex refactor — not yet implemented
+> **Superseded by PR #137 on 2026-07-29.** Do not implement this JavaScript
+> object literally or treat it as the database contract. The canonical model is
+> `SpiritDefinition → VenueSpirit → SpiritPour → SpiritPriceObservation` in
+> `prisma/schema.prisma`; current decisions and migration state are in
+> `HANDOFF.md`. This file remains useful as design provenance and a field-level
+> consumer checklist.
+
+**Date:** 2026-07-26 · **Status:** Historical proposal
 **Derived from:** `DATA-AUDIT.md` (field inventory + debt register)
 
 One canonical record per spirit. The current `SPIRIT_DATA` / `DOSSIER_DETAILS`
 split becomes a single object (or is generated from one source); renderers and
 future consumers (Flight Builder, placemats, training, Toast joins, eventual
-Raven) all read this shape. Echo-first: nothing here builds Raven,
-multi-tenancy, or community features — it just avoids shapes that would have
+OutFrontData module) all read this shape. Echo-first: nothing here builds the
+cross-venue network or community features — it just avoids shapes that would have
 to be torn up later.
 
 ## Ownership classes
@@ -170,7 +177,7 @@ call; either way they are display config, not knowledge.
 | Comparisons/recommendations | flavor, strength, identity, venue.paths |
 | Staff training / placemats | narrative, production, venue, flavor.topNotes |
 | Toast join (future) | commerce.* only — **a POS sync must never touch K/V/P sections** |
-| Raven (future, deferred) | K + P sections as-is; V and C stay venue-scoped. No schema change required later — that is the extent of Raven-proofing. |
+| OutFrontData network (future, deferred) | K + P sections as-is; V and C stay venue-scoped. |
 
 ## Controlled vocabularies (define once, validate against)
 

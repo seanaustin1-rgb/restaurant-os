@@ -94,7 +94,7 @@ Do not run until Claude's Phase 2/importer path is explicitly ready.
 Dry-run first, no writes:
 
 ```powershell
-npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmpvtkou90000syl9ziir8nlj
+npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo
 ```
 
 Expected after #140/#139:
@@ -114,7 +114,7 @@ Apply only after dry-run matches and Sean explicitly authorizes the write:
 
 ```powershell
 $env:SPIRIT_VAULT_ALLOWED_TARGETS="<outfront-demo-ref>"
-npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmpvtkou90000syl9ziir8nlj --apply --confirm-target=<outfront-demo-ref>
+npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo --apply --confirm-target=<outfront-demo-ref>
 ```
 
 Post-apply verification:
@@ -137,22 +137,40 @@ Known DB gate:
 
 **▶ NEXT SESSION: read THIS file first, then work from `feat/spirit-vault-admin-phase1` (`git fetch && git checkout feat/spirit-vault-admin-phase1 && git pull`). Stay in the Claude Lane above.**
 
+### ⚠ Import target — verified & decided (2026-07-30)
+Read-only query of `outfront-demo` (project `jzjscsoasfjsxekyfrgi`) found **one** Restaurant:
+`cmqnyvbab0000osvwrxhaovxo` (**Demo Bistro**). The originally-intended import id
+`cmpvtkou90000syl9ziir8nlj` (**Stone Grille**) is **ABSENT from outfront-demo** — it lives in
+the prod/main DB only. Spirit Vault tables in outfront-demo are currently **empty**
+(0 definitions / listings / offers).
+
+**DECISION (Claude, per Sean's delegation): import against the existing Demo Bistro row
+`cmqnyvbab0000osvwrxhaovxo`. Do NOT create a Stone Grille row in outfront-demo.** Why:
+demo envs should use demo tenants (don't replicate a prod tenant into demo); creating a
+`Restaurant` row is a fragile out-of-lane write (owner role / business access / Clerk org);
+and `SpiritDefinition` (objective knowledge) is shared/tenant-agnostic, so the content
+renders fully under Demo Bistro — only voice/overrides are tenant-scoped. All restaurant-ids
+in this doc (incl. the Operator Checklist below) now use `cmqnyvbab0000osvwrxhaovxo`.
+
+**Prod is a separate, later track:** Stone Grille's real vault → apply the migration to the
+**prod** DB and import against `cmpvtkou90000syl9ziir8nlj` **there**. Distinct Sean-gated step.
+
 ### Done — branch `feat/spirit-vault-admin-phase1`, tip `8948170`, PR #142 (draft), CI green
 - **Flag 4** — draft PR #142 opened (review/CI trackable).
 - **Flag 2** — operator sensory edits (body/finish/flavor/topNotes/pairings) now write to `VenueSpirit.overrides`, NOT shared `SpiritDefinition`. `actions.ts` persists overrides + validates EFFECTIVE (override ?? definition) values; `admin/spirit-vault/[id]/page.tsx` pre-fills effective values; `vault-payload.ts` `listingToVaultRecord` merges override → definition → default (new `VaultOverridesInput`; listing field typed `unknown` to accept the Prisma Json column, narrowed at use).
 - **Flag 3** — `vault-payload.test.ts` parity: definition-only mapping (Codex) + overrides-win, partial-override fall-through, null-overrides, and 0-valued override (Claude).
-- **Flag 1** (config) — env `SPIRIT_VAULT_RESTAURANT_ID` = `cmpvtkou90000syl9ziir8nlj` (demo tenant on outfront-demo). No code change (the `/vault` route already reads it).
+- **Flag 1** (config) — env `SPIRIT_VAULT_RESTAURANT_ID` = `cmqnyvbab0000osvwrxhaovxo` (demo tenant on outfront-demo). No code change (the `/vault` route already reads it).
 - **Admin-write test** — `actions.test.ts` asserts `updateSpirit` writes `VenueSpirit.overrides`, never mutates `SpiritDefinition`, persists trimmed voice/status, and rejects publish>record (Clerk/prisma/validate mocked).
 - Verify (tip `d7bcddb`): `tsc --noEmit` clean, full vitest **418/418**, `npm run build` ok. No migrations / importer `--apply` / DB writes.
 
 ### Open / next (in-lane)
-- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmpvtkou90000syl9ziir8nlj` in the deploy env (needs Sean's Vercel access). Runtime `/vault` verification is DEFERRED until the demo DB is populated — that needs an importer `--apply` (Sean-gated, out of lane).
+- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime `/vault` verification is DEFERRED until the demo DB is populated — that needs an importer `--apply` (Sean-gated, out of lane).
 - **When Sean directs:** cat→silo silhouette mapper (Phase 1.5); Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
 - **Merge #142:** Sean-gated + Codex re-review.
 
 ### Decisions locked (Sean, 2026-07-30)
 - Sensory edits → `VenueSpirit.overrides` (venue-local; shared knowledge stays canonical).
-- `/vault` serves demo tenant `cmpvtkou90000syl9ziir8nlj` on `outfront-demo`.
+- `/vault` serves demo tenant `cmqnyvbab0000osvwrxhaovxo` on `outfront-demo`.
 
 ### Coordination note
 Codex handed off `feat/spirit-vault-admin-phase1` after `1caa36d`; Claude owns it now and pushes **fast-forward only** (never force over Codex). Claude worktree: `C:/Users/Default_50/restaurant-os-spirit-migration` on branch `claude/sv-phase2-overrides` (has `node_modules`; untracked `backups/` — leave it).

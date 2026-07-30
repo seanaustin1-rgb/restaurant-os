@@ -21,7 +21,7 @@
 // The importer NEVER guesses a tenant — restaurantId is passed in and its
 // existence is verified by the caller (the CLI) before executeImport runs.
 
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient, type SpiritLifecycleStatus } from "@prisma/client";
 import { guestRecordToRows } from "./transform";
 import type {
   GuestRecord,
@@ -57,6 +57,27 @@ export interface DuplicateKey {
   kind: "definitionSlug" | "venueSpiritSlug" | "toastItemGuid";
   key: string;
   slugs: string[];
+}
+
+/**
+ * A conflict discovered against the LIVE database during execution (not within
+ * the batch) that makes a unit — or one of its moves — unsafe to apply. Recorded
+ * on the report so dry-run surfaces it; the offending write is skipped, never
+ * forced through a constraint or allowed to orphan a published listing.
+ */
+export interface ImportConflict {
+  kind: "venue-identity-conflict" | "orphaned-source-listing";
+  /** The importing unit's slug. */
+  slug: string;
+  message: string;
+  // venue-identity-conflict: the two DIFFERENT existing rows that each claim one
+  // of this unit's unique identities (slug vs spiritDefinitionId).
+  slugMatchId?: string;
+  definitionMatchId?: string;
+  // orphaned-source-listing: the published listing a GUID re-parent would empty.
+  sourceVenueSpiritId?: string;
+  sourceSlug?: string;
+  toastItemGuid?: string | null;
 }
 
 export interface ImportPlan {
@@ -229,6 +250,14 @@ export interface SpiritImportTxStore {
   updateDefinition(id: string, row: SpiritDefinitionRow): Promise<void>;
 
   findVenueSpirit(restaurantId: string, slug: string): Promise<StoredVenueSpirit | null>;
+  /** A tenant listing has TWO unique identities: (restaurantId, slug) and
+   *  (restaurantId, spiritDefinitionId). Look up by the definition identity so a
+   *  slug change on the same definition reconciles the existing row instead of
+   *  tripping @@unique([restaurantId, spiritDefinitionId]) on create. */
+  findVenueSpiritByDefinition(
+    restaurantId: string,
+    spiritDefinitionId: string,
+  ): Promise<StoredVenueSpirit | null>;
   createVenueSpirit(
     restaurantId: string,
     spiritDefinitionId: string,
@@ -270,6 +299,14 @@ export interface SpiritImportTxStore {
     keepPourId: string,
   ): Promise<number>;
 
+  /** For the orphaned-source-listing guard on a GUID re-parent: the source
+   *  listing's slug + publication status + how many offers it currently owns.
+   *  Null if the id is unknown. */
+  describeSourceListing(
+    restaurantId: string,
+    venueSpiritId: string,
+  ): Promise<{ slug: string; publicationStatus: SpiritLifecycleStatus; offerCount: number } | null>;
+
   countObservations(offerId: string): Promise<number>;
   createObservation(
     restaurantId: string,
@@ -304,6 +341,9 @@ export interface ImportReport {
   priceObservations: { inserted: number; skipped: number };
   validationFailures: ValidationFailure[];
   duplicateKeys: DuplicateKey[];
+  /** Conflicts found against the live DB during execution (identity clashes and
+   *  rejected GUID re-parents). Reported in dry-run too; the write was skipped. */
+  conflicts: ImportConflict[];
 }
 
 // ──────────────────────────── Execution stage ────────────────────────────
@@ -345,6 +385,7 @@ export async function executeImport(
     priceObservations: { inserted: 0, skipped: 0 },
     validationFailures: plan.validationFailures,
     duplicateKeys: plan.duplicateKeys,
+    conflicts: [],
   };
 
   // Both paths run inside runInTransaction. On apply it commits; on dry-run only
@@ -373,8 +414,39 @@ export async function executeImport(
         definitionId = apply ? (await tx.createDefinition(unit.definition)).id : null;
       }
 
-      // ── VenueSpirit (tenant listing; keyed by (restaurantId, slug)) ──
-      const existingVenue = await tx.findVenueSpirit(opts.restaurantId, unit.venueSpirit.slug);
+      // ── VenueSpirit (tenant listing) — resolve by BOTH unique identities ──
+      // A listing is unique per tenant on (restaurantId, slug) AND on
+      // (restaurantId, spiritDefinitionId). Match on either so a slug change on
+      // the same definition (or vice-versa) reconciles the existing row instead
+      // of colliding on create.
+      const bySlug = await tx.findVenueSpirit(opts.restaurantId, unit.venueSpirit.slug);
+      const byDefinition =
+        definitionId != null
+          ? await tx.findVenueSpiritByDefinition(opts.restaurantId, definitionId)
+          : null;
+
+      // Both identities resolve, but to DIFFERENT rows — unresolvable. Record it
+      // and skip this unit rather than force a constraint violation.
+      if (bySlug && byDefinition && bySlug.id !== byDefinition.id) {
+        report.conflicts.push({
+          kind: "venue-identity-conflict",
+          slug: unit.slug,
+          message:
+            `slug "${unit.venueSpirit.slug}" and definition ${definitionId} resolve to ` +
+            `different existing listings (${bySlug.id} vs ${byDefinition.id})`,
+          slugMatchId: bySlug.id,
+          definitionMatchId: byDefinition.id,
+        });
+        report.venueListings.skipped++;
+        report.offers.skipped++;
+        report.priceObservations.skipped++;
+        continue;
+      }
+
+      // Either identity (slug preferred) points at the row to reconcile. On
+      // update, updateVenueSpirit writes the incoming slug, so a definition-match
+      // with a stale slug is reconciled to the new slug.
+      const existingVenue = bySlug ?? byDefinition;
       let venueSpiritId: string | null;
       if (existingVenue) {
         // Pass definitionId so a listing attached to the wrong definition is
@@ -402,6 +474,36 @@ export async function executeImport(
         venueSpiritId ?? "",
         primary.toastItemGuid,
       );
+
+      // ── Orphaned-source-listing guard (GUID re-parent) ──
+      // A GUID-matched offer parented to a DIFFERENT listing would be MOVED here.
+      // If that move empties the source listing and the source is PUBLISHED and
+      // the plan does not otherwise restore it, reject the move (don't orphan a
+      // guest-visible listing with no price). Checked for dry-run and apply.
+      if (existingPour && existingPour.venueSpiritId !== venueSpiritId) {
+        const source = await tx.describeSourceListing(
+          opts.restaurantId,
+          existingPour.venueSpiritId,
+        );
+        const wouldEmptySource = source != null && source.offerCount <= 1;
+        const sourcePublished = source?.publicationStatus === "PUBLISHED";
+        const restored = planRestoresSourceListing(plan, source?.slug, primary.toastItemGuid);
+        if (source && wouldEmptySource && sourcePublished && !restored) {
+          report.conflicts.push({
+            kind: "orphaned-source-listing",
+            slug: unit.slug,
+            message:
+              `moving Toast offer ${primary.toastItemGuid} to "${unit.venueSpirit.slug}" ` +
+              `would leave published source listing "${source.slug}" with no offers`,
+            sourceVenueSpiritId: existingPour.venueSpiritId,
+            sourceSlug: source.slug,
+            toastItemGuid: primary.toastItemGuid,
+          });
+          report.offers.skipped++;
+          report.priceObservations.skipped++;
+          continue; // reject the move; the offer stays on its source listing
+        }
+      }
       let offerId: string | null;
       let offerExisted: boolean;
       if (existingPour) {
@@ -452,6 +554,28 @@ export async function executeImport(
   return report;
 }
 
+/**
+ * Does the plan restore a source listing that a GUID re-parent would empty?
+ * True when some other unit targets that listing's slug with its own primary,
+ * priced offer (and it is not the very GUID leaving the source). If so, the move
+ * is safe: the source ends the run with its own guest-visible priced offer.
+ */
+function planRestoresSourceListing(
+  plan: ImportPlan,
+  sourceSlug: string | undefined,
+  movedGuid: string | null,
+): boolean {
+  if (!sourceSlug) return false;
+  return plan.writable.some((u) => {
+    if (u.venueSpirit.slug !== sourceSlug) return false;
+    const primary = u.offers[0];
+    if (!primary || !primary.isPrimary || primary.priceUsd == null) return false;
+    // The restoring offer must be the source's own — not the GUID leaving it.
+    if (movedGuid && primary.toastItemGuid === movedGuid) return false;
+    return true;
+  });
+}
+
 function skippedCount(plan: ImportPlan): number {
   // A dropped duplicate is ONE skipped record even though it can emit several
   // duplicateKeys diagnostics (definition slug + venue slug + Toast GUID).
@@ -499,12 +623,30 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
       return created;
     },
     async updateDefinition(id, row) {
-      await db.spiritDefinition.update({ where: { id }, data: definitionData(row) });
+      const data = definitionData(row) as Record<string, unknown>;
+      // Preserve human-authored, shared editorial content: never null a curated
+      // definition field from the static payload. Objective facts (proof, age,
+      // category, flavor, production, …) still update freely.
+      if (!nonEmpty(row.whyShort)) delete data.whyShort;
+      if (!nonEmpty(row.why)) delete data.why;
+      if (!nonEmpty(row.history)) delete data.history;
+      if (!nonEmpty(row.knowledgeReviewedBy)) delete data.knowledgeReviewedBy;
+      if (row.knowledgeReviewedAt == null) delete data.knowledgeReviewedAt;
+      await db.spiritDefinition.update({
+        where: { id },
+        data: data as Prisma.SpiritDefinitionUncheckedUpdateInput,
+      });
     },
 
     async findVenueSpirit(restaurantId, slug) {
       return db.venueSpirit.findUnique({
         where: { restaurantId_slug: { restaurantId, slug } },
+        select: { id: true, restaurantId: true, slug: true },
+      });
+    },
+    async findVenueSpiritByDefinition(restaurantId, spiritDefinitionId) {
+      return db.venueSpirit.findUnique({
+        where: { restaurantId_spiritDefinitionId: { restaurantId, spiritDefinitionId } },
         select: { id: true, restaurantId: true, slug: true },
       });
     },
@@ -515,11 +657,23 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
       });
     },
     async updateVenueSpirit(id, spiritDefinitionId, row) {
-      // Include spiritDefinitionId so a listing on the wrong definition is fixed.
-      await db.venueSpirit.update({
-        where: { id },
-        data: { spiritDefinitionId, ...venueSpiritData(row) },
-      });
+      // Include spiritDefinitionId so a listing on the wrong definition is fixed;
+      // slug is written too, so a definition-match with a stale slug reconciles.
+      const data: Prisma.VenueSpiritUncheckedUpdateInput = {
+        spiritDefinitionId,
+        slug: row.slug,
+        recordStatus: row.recordStatus,
+        publicationStatus: row.publicationStatus,
+        reviewedAt: parseDate(row.reviewedAt),
+        reviewedBy: row.reviewedBy,
+      };
+      // Preserve curated, venue-authored content: only overwrite when the
+      // incoming value is present — never null a curated field from the payload.
+      if (nonEmpty(row.whyWeCarry)) data.whyWeCarry = row.whyWeCarry;
+      if (nonEmpty(row.seanShort)) data.seanShort = row.seanShort;
+      if (nonEmpty(row.notes)) data.notes = row.notes;
+      if (row.overrides != null) data.overrides = json(row.overrides);
+      await db.venueSpirit.update({ where: { id }, data });
     },
 
     async findOffer(restaurantId, venueSpiritId, toastItemGuid) {
@@ -553,6 +707,16 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
       return count;
     },
 
+    async describeSourceListing(restaurantId, venueSpiritId) {
+      const v = await db.venueSpirit.findFirst({
+        where: { id: venueSpiritId, restaurantId },
+        select: { slug: true, publicationStatus: true },
+      });
+      if (!v) return null;
+      const offerCount = await db.spiritPour.count({ where: { restaurantId, venueSpiritId } });
+      return { slug: v.slug, publicationStatus: v.publicationStatus, offerCount };
+    },
+
     async countObservations(offerId) {
       return db.spiritPriceObservation.count({ where: { offerId } });
     },
@@ -577,6 +741,11 @@ function prismaTxStore(db: PrismaLike): SpiritImportTxStore {
 /** Nullable Json column: JS null must become Prisma.DbNull (SQL NULL). */
 function json(v: unknown): Prisma.InputJsonValue | typeof Prisma.DbNull {
   return v == null ? Prisma.DbNull : (v as Prisma.InputJsonValue);
+}
+
+/** A curated string worth keeping — present and not blank. */
+function nonEmpty(v: string | null | undefined): v is string {
+  return typeof v === "string" && v.trim() !== "";
 }
 
 /** ISO "YYYY-MM-DD" (@db.Date) → Date, or null. */

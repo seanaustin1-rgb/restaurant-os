@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { SpiritLifecycleStatus } from "@prisma/client";
 import { loadGuestRecords } from "./load-guest-records";
 import type {
   SpiritDefinitionRow,
@@ -94,13 +95,19 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
       async updateDefinition(defId, row) {
         const d = state.definitions.find((x) => x.id === defId);
         if (!d) throw new Error("updateDefinition: not found");
-        d.row = row;
+        d.row = mergeDefinitionCurated(d.row, row); // never null curated editorial
       },
 
       async findVenueSpirit(restaurantId, slug) {
         return (
           state.venues.find((v) => v.restaurantId === restaurantId && v.slug === slug) ?? null
         );
+      },
+      async findVenueSpiritByDefinition(restaurantId, spiritDefinitionId) {
+        const v = state.venues.find(
+          (x) => x.restaurantId === restaurantId && x.spiritDefinitionId === spiritDefinitionId,
+        );
+        return v ? { id: v.id, restaurantId: v.restaurantId, slug: v.slug } : null;
       },
       async createVenueSpirit(restaurantId, spiritDefinitionId, row) {
         const rec: FakeVenue = {
@@ -116,7 +123,8 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
       async updateVenueSpirit(venueId, spiritDefinitionId, row) {
         const v = state.venues.find((x) => x.id === venueId);
         if (!v) throw new Error("updateVenueSpirit: not found");
-        v.row = row;
+        v.row = mergeVenueCurated(v.row, row); // preserve curated venue-authored content
+        v.slug = row.slug; // reconcile slug to the incoming slug (definition-match)
         v.spiritDefinitionId = spiritDefinitionId; // correct the definition FK
       },
 
@@ -171,6 +179,19 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
         return count;
       },
 
+      async describeSourceListing(restaurantId, venueSpiritId) {
+        const v = state.venues.find(
+          (x) => x.restaurantId === restaurantId && x.id === venueSpiritId,
+        );
+        if (!v) return null;
+        const offerCount = state.pours.filter(
+          (p) => p.restaurantId === restaurantId && p.venueSpiritId === venueSpiritId,
+        ).length;
+        // Bare test rows may omit publicationStatus → treat as unpublished (DRAFT).
+        const status = (v.row as Partial<VenueSpiritRow>).publicationStatus ?? "DRAFT";
+        return { slug: v.slug, publicationStatus: status, offerCount };
+      },
+
       async countObservations(offerId) {
         return state.observations.filter((o) => o.offerId === offerId).length;
       },
@@ -197,6 +218,36 @@ function createInMemoryStore(db: FakeDb, opts: FakeOptions = {}) {
   };
 
   return store;
+}
+
+// Mirror the Prisma adapter's curated-preservation semantics: on UPDATE, an
+// incoming null/blank never overwrites an existing curated value.
+function keep(incoming: string | null | undefined, existing: string | null | undefined): string | null {
+  return incoming != null && incoming !== "" ? incoming : existing ?? null;
+}
+
+function mergeVenueCurated(existing: VenueSpiritRow, incoming: VenueSpiritRow): VenueSpiritRow {
+  return {
+    ...incoming,
+    whyWeCarry: keep(incoming.whyWeCarry, existing?.whyWeCarry),
+    seanShort: keep(incoming.seanShort, existing?.seanShort),
+    notes: keep(incoming.notes, existing?.notes),
+    overrides: incoming.overrides != null ? incoming.overrides : existing?.overrides ?? null,
+  };
+}
+
+function mergeDefinitionCurated(
+  existing: SpiritDefinitionRow,
+  incoming: SpiritDefinitionRow,
+): SpiritDefinitionRow {
+  return {
+    ...incoming,
+    whyShort: keep(incoming.whyShort, existing?.whyShort),
+    why: keep(incoming.why, existing?.why),
+    history: keep(incoming.history, existing?.history),
+    knowledgeReviewedBy: keep(incoming.knowledgeReviewedBy, existing?.knowledgeReviewedBy),
+    knowledgeReviewedAt: keep(incoming.knowledgeReviewedAt, existing?.knowledgeReviewedAt),
+  };
 }
 
 const ECHO = "echo-reserve-restaurant-id";
@@ -515,6 +566,268 @@ describe("executeImport — tenant existence", () => {
       executeImport(store, singleUnitPlan("x", "g"), { restaurantId: ECHO, apply: true }),
     ).rejects.toThrow(/does not exist/);
     expect(db.definitions).toHaveLength(0);
+  });
+});
+
+// ── Helpers for the dual-identity / orphan-guard / curated-preservation cases ──
+
+function venueRow(slug: string, extra: Partial<VenueSpiritRow> = {}): VenueSpiritRow {
+  return {
+    slug,
+    recordStatus: "PUBLISHED",
+    publicationStatus: "PUBLISHED",
+    whyWeCarry: null,
+    seanShort: null,
+    notes: null,
+    overrides: null,
+    reviewedAt: null,
+    reviewedBy: null,
+    ...extra,
+  };
+}
+
+function unitWith(opts: {
+  venueSlug: string;
+  defSlug: string;
+  guid?: string | null;
+  whyWeCarry?: string | null;
+  publicationStatus?: SpiritLifecycleStatus;
+  priceUsd?: number | null;
+}) {
+  return {
+    slug: opts.venueSlug,
+    definition: {
+      slug: opts.defSlug,
+      brand: "X",
+      category: "Bourbon",
+    } as unknown as SpiritDefinitionRow,
+    venueSpirit: venueRow(opts.venueSlug, {
+      publicationStatus: opts.publicationStatus ?? "PUBLISHED",
+      whyWeCarry: opts.whyWeCarry ?? null,
+    }) as VenueSpiritRow,
+    offers: [
+      {
+        toastItemGuid: opts.guid ?? null,
+        priceUsd: opts.priceUsd === undefined ? 10 : opts.priceUsd,
+        isPrimary: true,
+      } as unknown as SpiritPourRow,
+    ],
+  };
+}
+
+function planOf(...units: ReturnType<typeof unitWith>[]) {
+  return {
+    writable: units,
+    validationFailures: [],
+    duplicateKeys: [],
+    duplicateRecords: 0,
+    totals: { records: units.length, published: units.length, writable: units.length },
+  };
+}
+
+describe("executeImport — VenueSpirit dual-identity reconciliation", () => {
+  it("reconciles a listing matched by spiritDefinitionId under a NEW slug (no second row, no uniqueness violation)", async () => {
+    const db = emptyDb();
+    // Shared definition already imported; the tenant's listing carries the OLD slug.
+    db.definitions.push({ id: "def-1", slug: "shared-def", row: {} as SpiritDefinitionRow });
+    db.venues.push({
+      id: "venue-X",
+      restaurantId: ECHO,
+      slug: "old-slug",
+      spiritDefinitionId: "def-1",
+      row: venueRow("old-slug"),
+    });
+
+    const store = createInMemoryStore(db);
+    // Re-import the SAME definition (slug "shared-def") but under a NEW venue slug.
+    const report = await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "new-slug", defSlug: "shared-def" })),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    // Exactly one listing — reconciled in place, not duplicated.
+    expect(db.venues).toHaveLength(1);
+    const v = db.venues[0];
+    expect(v.id).toBe("venue-X"); // same row
+    expect(v.slug).toBe("new-slug"); // slug reconciled to the incoming one
+    expect(v.spiritDefinitionId).toBe("def-1");
+    expect(report.venueListings).toMatchObject({ inserted: 0, updated: 1 });
+    expect(report.conflicts).toEqual([]);
+  });
+
+  it("dry-run reports the definition-match/new-slug case as update, not insert, writing nothing", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-1", slug: "shared-def", row: {} as SpiritDefinitionRow });
+    db.venues.push({
+      id: "venue-X",
+      restaurantId: ECHO,
+      slug: "old-slug",
+      spiritDefinitionId: "def-1",
+      row: venueRow("old-slug"),
+    });
+
+    const store = createInMemoryStore(db);
+    const report = await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "new-slug", defSlug: "shared-def" })),
+      { restaurantId: ECHO }, // dry-run
+    );
+
+    expect(report.dryRun).toBe(true);
+    expect(report.venueListings).toMatchObject({ inserted: 0, updated: 1 });
+    // Nothing written: still one row, still the OLD slug.
+    expect(db.venues).toHaveLength(1);
+    expect(db.venues[0].slug).toBe("old-slug");
+  });
+
+  it("records a conflict and skips when slug and definition resolve to DIFFERENT rows", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-1", slug: "shared-def", row: {} as SpiritDefinitionRow });
+    // Row A owns the incoming slug; row B owns the incoming definition. Distinct.
+    db.venues.push({
+      id: "venue-slug",
+      restaurantId: ECHO,
+      slug: "target-slug",
+      spiritDefinitionId: "def-other",
+      row: venueRow("target-slug"),
+    });
+    db.venues.push({
+      id: "venue-def",
+      restaurantId: ECHO,
+      slug: "some-other-slug",
+      spiritDefinitionId: "def-1",
+      row: venueRow("some-other-slug"),
+    });
+
+    const store = createInMemoryStore(db);
+    const report = await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "target-slug", defSlug: "shared-def" })),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    expect(report.conflicts).toHaveLength(1);
+    expect(report.conflicts[0]).toMatchObject({
+      kind: "venue-identity-conflict",
+      slugMatchId: "venue-slug",
+      definitionMatchId: "venue-def",
+    });
+    // Neither existing row mutated, no new row, and the venue write is skipped.
+    expect(db.venues).toHaveLength(2);
+    expect(report.venueListings.skipped).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("executeImport — orphaned-source-listing guard on GUID re-parent", () => {
+  it("rejects a move that would leave a PUBLISHED source listing with zero offers", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-A", slug: "def-a", row: {} as SpiritDefinitionRow });
+    // Source listing A is PUBLISHED and its ONLY offer carries GUID-G.
+    db.venues.push({
+      id: "venue-A",
+      restaurantId: ECHO,
+      slug: "listing-a",
+      spiritDefinitionId: "def-A",
+      row: venueRow("listing-a", { publicationStatus: "PUBLISHED" }),
+    });
+    db.pours.push({
+      id: "pour-G",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-A",
+      isPrimary: true,
+      toastItemGuid: "GUID-G",
+      row: {} as SpiritPourRow,
+    });
+
+    const store = createInMemoryStore(db);
+    // Import a DIFFERENT listing claiming GUID-G, with nothing restoring A.
+    const report = await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "listing-b", defSlug: "listing-b-def", guid: "GUID-G" })),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    // The move was rejected and surfaced as a conflict.
+    expect(report.conflicts).toHaveLength(1);
+    expect(report.conflicts[0]).toMatchObject({
+      kind: "orphaned-source-listing",
+      sourceSlug: "listing-a",
+      toastItemGuid: "GUID-G",
+    });
+    expect(report.offers).toMatchObject({ inserted: 0, skipped: 1 });
+
+    // The pour stayed on A; A is NOT left published-with-zero-offers.
+    const pourG = db.pours.find((p) => p.toastItemGuid === "GUID-G")!;
+    expect(pourG.venueSpiritId).toBe("venue-A");
+    expect(db.pours).toHaveLength(1); // no duplicate pour created
+    const offersOnA = db.pours.filter((p) => p.venueSpiritId === "venue-A");
+    expect(offersOnA.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("allows the move when the plan restores the source listing with its own priced offer", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-A", slug: "def-a", row: {} as SpiritDefinitionRow });
+    db.venues.push({
+      id: "venue-A",
+      restaurantId: ECHO,
+      slug: "listing-a",
+      spiritDefinitionId: "def-A",
+      row: venueRow("listing-a", { publicationStatus: "PUBLISHED" }),
+    });
+    db.pours.push({
+      id: "pour-G",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-A",
+      isPrimary: true,
+      toastItemGuid: "GUID-G",
+      row: {} as SpiritPourRow,
+    });
+
+    const store = createInMemoryStore(db);
+    // Destination claims GUID-G; a SECOND unit restores listing-a with its own
+    // priced primary offer (GUID-H), so the move is safe.
+    const report = await executeImport(
+      store,
+      planOf(
+        unitWith({ venueSlug: "listing-b", defSlug: "listing-b-def", guid: "GUID-G" }),
+        unitWith({ venueSlug: "listing-a", defSlug: "def-a", guid: "GUID-H" }),
+      ),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    expect(report.conflicts).toEqual([]);
+    // GUID-G moved to the destination listing…
+    const dest = db.venues.find((v) => v.slug === "listing-b")!;
+    const pourG = db.pours.find((p) => p.toastItemGuid === "GUID-G")!;
+    expect(pourG.venueSpiritId).toBe(dest.id);
+    // …and A ends the run with its own offer — not orphaned.
+    const offersOnA = db.pours.filter((p) => p.venueSpiritId === "venue-A");
+    expect(offersOnA.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe("executeImport — preserves curated venue fields on update", () => {
+  it("keeps an existing whyWeCarry when the re-imported record's whyWeCarry is null", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-1", slug: "cur-def", row: {} as SpiritDefinitionRow });
+    db.venues.push({
+      id: "venue-C",
+      restaurantId: ECHO,
+      slug: "cur",
+      spiritDefinitionId: "def-1",
+      row: venueRow("cur", { whyWeCarry: "Because Sean loves it" }),
+    });
+
+    const store = createInMemoryStore(db);
+    await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "cur", defSlug: "cur-def", whyWeCarry: null })),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    // The curated value survives the null-payload re-import.
+    expect(db.venues[0].row.whyWeCarry).toBe("Because Sean loves it");
   });
 });
 

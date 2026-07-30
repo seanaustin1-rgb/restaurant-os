@@ -255,9 +255,9 @@ const ECHO = "echo-reserve-restaurant-id";
 // ──────────────────────────────── Tests ────────────────────────────────
 
 describe("planImport — real 110 records", () => {
-  it("plans 110 records, 108 published, all writable", () => {
+  it("plans 110 records, 109 published, all writable", () => {
     expect(PLAN.totals.records).toBe(110);
-    expect(PLAN.totals.published).toBe(108);
+    expect(PLAN.totals.published).toBe(109);
     expect(PLAN.totals.writable).toBe(110);
   });
 

@@ -3,7 +3,7 @@
 // Pure and deterministic (same philosophy as src/lib/dashboard/signals.ts): no
 // I/O, no DB, no clock. It answers one question — "is this spirit safe to make
 // guest-visible?" — and is reused by three callers that must agree:
-//   • the importer (before staging the 108 existing dossiers),
+//   • the importer (before staging the 109 existing dossiers),
 //   • the admin editor (before flipping a record to published),
 //   • the publish/export step (before a row is written into the static guest
 //     vault, spirit-vault-data.js).

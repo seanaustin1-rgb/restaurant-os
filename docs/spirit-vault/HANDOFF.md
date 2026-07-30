@@ -1,5 +1,43 @@
 # Spirit Vault — Handoff
 
+## ▶ NEXT SESSION — START HERE (2026-07-30)
+
+Read the **⚖️ BINDING ARCHITECTURE DECISION** block below first (it's authoritative;
+the older "NEXT SESSION — START HERE (2026-07-28)" block further down is superseded).
+
+**Phase 2 state:**
+- **Foundation MERGED** → `main` (PR #137, `dbf41ae`): canonical `SpiritDefinition` /
+  `VenueSpirit` / `SpiritPour` / `SpiritPriceObservation` + migration
+  `20260728000000_add_spirit_vault` (additive) + pure `validate.ts` / `transform.ts` /
+  `load-guest-records.ts`.
+- **Open PRs:**
+  - **#140** (`claude/spirit-vault-middle-west-rye`, draft, green) — resolves the LAST
+    content hold: Middle West held record → **Ported Pumpernickel Rye** (5 yr / 99.5
+    proof / Tawny Port cask finish), published; guest-visible **108 → 109**. Whiskey
+    shelf now COMPLETE. Merge → GitHub Pages updates Coal's link.
+  - **#139** (`claude/spirit-vault-importer`) — the importer (dry-run default, `--apply`
+    guards, transactional, idempotent, completion report); review fixes in `85ecc9b`
+    (dual-identity venue lookup, orphaned-source guard, curated-field preservation);
+    407 tests. Awaiting Codex re-review, then merge.
+  - **#138** (Codex `agent/spirit-vault-doc-sync`, draft) — doc refresh; claims
+    `outfront-demo` migration applied.
+
+**Do first (in order):**
+1. Merge **#140**. Then **rebase #139** on `main` and bump its importer tests **108 → 109**
+   (they still assert 108) so the two stay consistent.
+2. **Operator gate:** independently confirm `outfront-demo` has the 4 tables + constraints
+   before any importer `--apply` (#138 only *claims* it).
+3. Merge **#139** after Codex re-review + rebase.
+
+**Then — open sequencing decisions to lock with Sean:** rebase Codex's `feat/spirit-vault-admin-phase1`
+UI (admin editor / dynamic `/vault` / Toast-pull) onto the canonical model (drop `BeverageItem`;
+first edit fields = `whyWeCarry`/`seanShort`/`notes`/flavor nudges); cat→silo silhouette mapper
+(Phase 1.5); Toast scope (pricing-only vs +availability/86); QR backend / flight creator / placemat
+order; Compare-&-Continue venue-safe curation; venue `overrides` policy.
+
+**Notes:** GitHub-Action Codex reviewer is quota-blocked (its PR comments are noise — ignore);
+manual/cloud Codex works. Start follow-up work fresh from latest `main` on a new branch.
+
 ## ⚖️ BINDING ARCHITECTURE DECISION (2026-07-28, Sean) — canonical schema
 
 **PR #137's normalized schema is the canonical Spirit Vault data model.** It lands
@@ -36,7 +74,7 @@ flight creator + price generator, (d) tasting placemat generator.
 
 **Live state:** Coal (local bourbon-club president) is reviewing the guest preview
 at **https://seanaustin1-rgb.github.io/restaurant-os/spirit-vault/spirit-vault-prototype.html**
-— currently **108 guest dossiers** (5 legacy + 103 published batch records). **The whiskey shelf is COMPLETE.** Sean resolved the held bottles (2026-07-28): published St. George Breaking & Entering *American Whiskey* (86pf), Four Walls *Bartender's Blend* (90pf), Old Grand-Dad *Bottled-in-Bond* (100pf, NAS — the standard, not the 7yr), McConnell's *5 Year Old* (84pf). **Calumet = off** (stays draft). **Middle West Straight Rye = still held, needs Sean:** research finds Middle West makes only ONE rye recipe (~80% dark pumpernickel), so the Toast "Straight Rye" and "Pumpernickel Rye" pours may be the same recipe (standard 96pf vs cask strength) — awaiting Sean's word on what distinguishes his two pours (proof? cask strength?).
+— currently **109 guest dossiers** (5 legacy + 104 published batch records). **The whiskey shelf is COMPLETE — all holds resolved.** Sean resolved the held bottles (2026-07-28): published St. George Breaking & Entering *American Whiskey* (86pf), Four Walls *Bartender's Blend* (90pf), Old Grand-Dad *Bottled-in-Bond* (100pf, NAS — the standard, not the 7yr), McConnell's *5 Year Old* (84pf). **Calumet = off** (stays draft). **Middle West Straight Rye = RESOLVED (2026-07-30):** Sean confirmed the held record is the **Ported Pumpernickel Rye** — 5 yr, 99.5 proof, Tawny Port cask finish (distinct from the standard Pumpernickel Rye already published). Record updated (`middle-west-straight-rye`: expression → "Ported Pumpernickel Rye", proof 99.5, 5 yr, port-finish) and **published** → guest 108 → 109.
 GitHub Pages (main//docs) auto-rebuilds on merge to main, so **merging a batch to
 main updates Coal's link**. `?review=1` on that URL shows drafts too.
 

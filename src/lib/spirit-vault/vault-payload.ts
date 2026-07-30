@@ -64,6 +64,17 @@ export interface VaultOfferInput {
   syncedAt?: Date | string | null;
 }
 
+/** Venue-local presentation overrides of shared definition sensory fields.
+ *  Any field set here wins over the SpiritDefinition value for THIS tenant only;
+ *  the shared canonical record is never mutated. Authored via the admin editor. */
+export interface VaultOverridesInput {
+  body?: number | null;
+  finish?: number | null;
+  flavor?: unknown;
+  topNotes?: string[] | null;
+  pairings?: unknown;
+}
+
 export interface VaultListingInput {
   id: string;
   slug: string;
@@ -72,6 +83,8 @@ export interface VaultListingInput {
   notes?: string | null;
   recordStatus: string;
   publicationStatus: string;
+  // Prisma Json column — the loose shape mirrors VaultOverridesInput; narrowed at use.
+  overrides?: unknown;
   definition: VaultDefinitionInput;
   offers: VaultOfferInput[];
 }
@@ -120,6 +133,8 @@ function priceDisplay(usd: number | null): string {
 /** One VenueSpirit + definition + primary offer -> the guest engine record shape. */
 export function listingToVaultRecord(item: VaultListingInput): Record<string, unknown> {
   const d = item.definition;
+  // Venue presentation overrides win over the shared definition for this tenant.
+  const ov = (item.overrides ?? {}) as VaultOverridesInput;
   const primary = item.offers.find((offer) => offer.isPrimary) ?? item.offers[0] ?? null;
   const price = num(primary?.priceUsd);
   const proofN = num(d.proofN);
@@ -156,10 +171,12 @@ export function listingToVaultRecord(item: VaultListingInput): Record<string, un
     unaged: d.unaged === true,
   };
 
-  rec.flavor = d.flavor ?? DEFAULT_FLAVOR;
-  rec.body = d.body ?? 5;
-  rec.finish = d.finish ?? 5;
-  rec.topNotes = d.topNotes?.length ? d.topNotes : [PENDING, PENDING, PENDING];
+  rec.flavor = ov.flavor ?? d.flavor ?? DEFAULT_FLAVOR;
+  rec.body = ov.body ?? d.body ?? 5;
+  rec.finish = ov.finish ?? d.finish ?? 5;
+  const effTopNotes =
+    Array.isArray(ov.topNotes) && ov.topNotes.length ? ov.topNotes : d.topNotes?.length ? d.topNotes : null;
+  rec.topNotes = effTopNotes ?? [PENDING, PENDING, PENDING];
   rec.whyShort = d.whyShort ?? PENDING;
   rec.why = d.why ?? PENDING;
   rec.production = Array.isArray(d.production) ? d.production : [];
@@ -167,7 +184,7 @@ export function listingToVaultRecord(item: VaultListingInput): Record<string, un
   rec.prodTags = d.prodTags ?? [];
   if (d.press) rec.press = d.press;
   rec.paths = paths(d.paths);
-  rec.pairings = d.pairings ?? [];
+  rec.pairings = ov.pairings ?? d.pairings ?? [];
 
   rec.dist = {
     name: d.distilleryName ?? d.producerName ?? d.brand,

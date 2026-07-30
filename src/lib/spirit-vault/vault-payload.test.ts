@@ -75,6 +75,54 @@ describe("listingToVaultRecord", () => {
   });
 });
 
+describe("listingToVaultRecord — venue overrides", () => {
+  it("prefers VenueSpirit.overrides over the shared definition for sensory fields", () => {
+    const record = listingToVaultRecord({
+      ...baseListing,
+      overrides: {
+        body: 9,
+        finish: 2,
+        flavor: { Sweet: 8, Oak: 2, Spice: 1, Fruit: 9, Smoke: 0, Earth: 1, Herbal: 2 },
+        topNotes: ["Venue note A", "Venue note B", "Venue note C"],
+        pairings: ["Venue pairing"],
+      },
+    });
+
+    expect(record.body).toBe(9);
+    expect(record.finish).toBe(2);
+    expect(record.flavor).toEqual({ Sweet: 8, Oak: 2, Spice: 1, Fruit: 9, Smoke: 0, Earth: 1, Herbal: 2 });
+    expect(record.topNotes).toEqual(["Venue note A", "Venue note B", "Venue note C"]);
+    expect(record.pairings).toEqual(["Venue pairing"]);
+  });
+
+  it("falls through to the definition for any field the override omits", () => {
+    // Only pairings overridden; everything else inherits the shared definition.
+    const record = listingToVaultRecord({ ...baseListing, overrides: { pairings: ["Only this"] } });
+
+    expect(record.pairings).toEqual(["Only this"]);
+    expect(record.body).toBe(6); // from definition
+    expect(record.finish).toBe(7); // from definition
+    expect(record.flavor).toEqual(baseListing.definition.flavor);
+    expect(record.topNotes).toEqual(["Rye spice", "Dark fruit", "Oak"]); // from definition
+  });
+
+  it("uses the definition when overrides is null (unedited listing)", () => {
+    const record = listingToVaultRecord({ ...baseListing, overrides: null });
+
+    expect(record.body).toBe(6);
+    expect(record.finish).toBe(7);
+    expect(record.topNotes).toEqual(["Rye spice", "Dark fruit", "Oak"]);
+    expect(record.flavor).toEqual(baseListing.definition.flavor);
+  });
+
+  it("preserves a 0-valued override (nullish-coalesce, not falsy)", () => {
+    const record = listingToVaultRecord({ ...baseListing, overrides: { body: 0, finish: 0 } });
+
+    expect(record.body).toBe(0);
+    expect(record.finish).toBe(0);
+  });
+});
+
 describe("buildVaultPayloadScript", () => {
   it("serializes records into the window data hook", () => {
     const script = buildVaultPayloadScript([baseListing]);

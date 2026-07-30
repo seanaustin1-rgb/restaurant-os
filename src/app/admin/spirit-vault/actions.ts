@@ -83,15 +83,23 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
     });
     if (!existing) throw new Error("Spirit listing not found");
 
-    const body = bodyFinish(input.body, "Body") ?? existing.definition.body;
-    const finish = bodyFinish(input.finish, "Finish") ?? existing.definition.finish;
-    const definitionData = {
-      body,
-      finish,
-      flavor: flavor as Prisma.InputJsonValue,
+    // Operator edits are venue-local PRESENTATION overrides. They live on
+    // VenueSpirit.overrides and never mutate the shared canonical
+    // SpiritDefinition (which other tenants read). A null body/finish means "no
+    // venue override — inherit the definition."
+    const bodyOverride = bodyFinish(input.body, "Body");
+    const finishOverride = bodyFinish(input.finish, "Finish");
+    const overrides = {
+      body: bodyOverride,
+      finish: finishOverride,
+      flavor,
       topNotes,
-      pairings: pairings as Prisma.InputJsonValue,
+      pairings,
     };
+    // Effective (merged) sensory values = venue override when set, else the
+    // shared definition. This is what the guest sees, so it's what we validate.
+    const effectiveBody = bodyOverride ?? existing.definition.body;
+    const effectiveFinish = finishOverride ?? existing.definition.finish;
     const venueData = {
       whyWeCarry: cleanText(input.whyWeCarry),
       seanShort: cleanText(input.seanShort),
@@ -99,13 +107,14 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
       recordStatus: rec,
       publicationStatus: pub,
       reviewedAt: rec !== "DRAFT" ? new Date() : null,
+      overrides: overrides as Prisma.InputJsonValue,
     };
 
     const errors = validatePublishableSpirit({
       definition: {
         ...existing.definition,
-        body,
-        finish,
+        body: effectiveBody,
+        finish: effectiveFinish,
         flavor,
         topNotes,
       },
@@ -123,10 +132,7 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
       throw new Error(errors.map((error) => `${error.field}: ${error.message}`).join("; "));
     }
 
-    await tx.spiritDefinition.update({
-      where: { id: existing.spiritDefinitionId },
-      data: definitionData,
-    });
+    // Only the tenant listing is written — shared knowledge stays canonical.
     await tx.venueSpirit.update({
       where: { id: existing.id },
       data: venueData,

@@ -35,6 +35,18 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
   });
   if (!item) notFound();
 
+  // Venue presentation overrides win over the shared definition when present, so
+  // the form shows the effective (guest-visible) values this tenant is editing.
+  const ov = (item.overrides && typeof item.overrides === "object" ? item.overrides : {}) as {
+    body?: number | null;
+    finish?: number | null;
+    flavor?: unknown;
+    topNotes?: unknown;
+    pairings?: unknown;
+  };
+  const ovTopNotes = asStrings(ov.topNotes);
+  const ovPairings = asStrings(ov.pairings);
+
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-6 py-10">
       <div>
@@ -55,11 +67,11 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
           whyWeCarry: item.whyWeCarry ?? "",
           seanShort: item.seanShort ?? "",
           notes: item.notes ?? "",
-          body: item.definition.body,
-          finish: item.definition.finish,
-          flavor: asFlavor(item.definition.flavor),
-          topNotes: item.definition.topNotes,
-          pairings: asStrings(item.definition.pairings),
+          body: ov.body ?? item.definition.body,
+          finish: ov.finish ?? item.definition.finish,
+          flavor: asFlavor(ov.flavor ?? item.definition.flavor),
+          topNotes: ovTopNotes.length ? ovTopNotes : item.definition.topNotes,
+          pairings: ovPairings.length ? ovPairings : asStrings(item.definition.pairings),
           recordStatus: item.recordStatus,
           publicationStatus: item.publicationStatus,
         }}

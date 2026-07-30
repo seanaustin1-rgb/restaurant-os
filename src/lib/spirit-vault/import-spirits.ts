@@ -447,40 +447,32 @@ export async function executeImport(
       // update, updateVenueSpirit writes the incoming slug, so a definition-match
       // with a stale slug is reconciled to the new slug.
       const existingVenue = bySlug ?? byDefinition;
-      let venueSpiritId: string | null;
-      if (existingVenue) {
-        // Pass definitionId so a listing attached to the wrong definition is
-        // corrected. In apply mode definitionId is always resolved above.
-        if (apply && definitionId) {
-          await tx.updateVenueSpirit(existingVenue.id, definitionId, unit.venueSpirit);
-        }
-        report.venueListings.updated++;
-        venueSpiritId = existingVenue.id;
-      } else {
-        report.venueListings.inserted++;
-        // On dry-run there is no created id; definitionId may also be null.
-        venueSpiritId =
-          apply && definitionId
-            ? (await tx.createVenueSpirit(opts.restaurantId, definitionId, unit.venueSpirit)).id
-            : null;
-      }
+      // The destination listing id is known WITHOUT writing: an existing match
+      // reuses its id; a brand-new listing has none yet (null). Resolving the
+      // orphan guard against this id lets us reject BEFORE any listing write.
+      const destVenueSpiritId: string | null = existingVenue?.id ?? null;
 
-      // ── SpiritPour (the one primary offer) ──
+      // ── SpiritPour lookup (the one primary offer) ──
+      // With a Toast GUID the offer resolves tenant-wide by (restaurantId, guid),
+      // independent of the destination listing — so this and the guard below can
+      // run before the listing write. Without a GUID the lookup is scoped to the
+      // destination's own primary, which cannot be a cross-listing move (the guard
+      // never fires there). A new listing (null id) has no pour of its own.
       const primary = unit.offers[0];
-      // A new listing (venueSpiritId null) has no pours; only a Toast-GUID match
-      // can find an existing pour parented elsewhere.
       const existingPour = await tx.findOffer(
         opts.restaurantId,
-        venueSpiritId ?? "",
+        destVenueSpiritId ?? "",
         primary.toastItemGuid,
       );
 
-      // ── Orphaned-source-listing guard (GUID re-parent) ──
+      // ── Orphaned-source-listing guard (GUID re-parent) — BEFORE any write ──
       // A GUID-matched offer parented to a DIFFERENT listing would be MOVED here.
       // If that move empties the source listing and the source is PUBLISHED and
-      // the plan does not otherwise restore it, reject the move (don't orphan a
-      // guest-visible listing with no price). Checked for dry-run and apply.
-      if (existingPour && existingPour.venueSpiritId !== venueSpiritId) {
+      // the plan does not otherwise restore it, reject the WHOLE unit up front:
+      // running this after the destination write would strand a new (possibly
+      // guest-visible, zero-offer) listing when the move is rejected. Checked for
+      // dry-run and apply.
+      if (existingPour && existingPour.venueSpiritId !== destVenueSpiritId) {
         const source = await tx.describeSourceListing(
           opts.restaurantId,
           existingPour.venueSpiritId,
@@ -499,11 +491,35 @@ export async function executeImport(
             sourceSlug: source.slug,
             toastItemGuid: primary.toastItemGuid,
           });
+          // Skip the entire unit — no destination listing, offer, or observation
+          // is written, so a rejected move can never orphan the source or leave a
+          // new published zero-offer listing behind.
+          report.venueListings.skipped++;
           report.offers.skipped++;
           report.priceObservations.skipped++;
           continue; // reject the move; the offer stays on its source listing
         }
       }
+
+      // ── VenueSpirit write — only now that the orphan guard has passed ──
+      let venueSpiritId: string | null;
+      if (existingVenue) {
+        // Pass definitionId so a listing attached to the wrong definition is
+        // corrected. In apply mode definitionId is always resolved above.
+        if (apply && definitionId) {
+          await tx.updateVenueSpirit(existingVenue.id, definitionId, unit.venueSpirit);
+        }
+        report.venueListings.updated++;
+        venueSpiritId = existingVenue.id;
+      } else {
+        report.venueListings.inserted++;
+        // On dry-run there is no created id; definitionId may also be null.
+        venueSpiritId =
+          apply && definitionId
+            ? (await tx.createVenueSpirit(opts.restaurantId, definitionId, unit.venueSpirit)).id
+            : null;
+      }
+
       let offerId: string | null;
       let offerExisted: boolean;
       if (existingPour) {

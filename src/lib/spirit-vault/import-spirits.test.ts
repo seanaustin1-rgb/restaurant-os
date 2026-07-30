@@ -765,6 +765,56 @@ describe("executeImport — orphaned-source-listing guard on GUID re-parent", ()
     expect(offersOnA.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("leaves no new destination listing and no published zero-offer listing when a move is rejected", async () => {
+    const db = emptyDb();
+    db.definitions.push({ id: "def-A", slug: "def-a", row: {} as SpiritDefinitionRow });
+    // Source listing A is PUBLISHED and its ONLY offer carries GUID-G.
+    db.venues.push({
+      id: "venue-A",
+      restaurantId: ECHO,
+      slug: "listing-a",
+      spiritDefinitionId: "def-A",
+      row: venueRow("listing-a", { publicationStatus: "PUBLISHED" }),
+    });
+    db.pours.push({
+      id: "pour-G",
+      restaurantId: ECHO,
+      venueSpiritId: "venue-A",
+      isPrimary: true,
+      toastItemGuid: "GUID-G",
+      row: {} as SpiritPourRow,
+    });
+    const venuesBefore = db.venues.length;
+
+    const store = createInMemoryStore(db);
+    // Import a BRAND-NEW listing-b claiming GUID-G, with nothing restoring A. The
+    // imported unit is PUBLISHED — so if the guard ran after the listing write it
+    // would strand a published, zero-offer destination row.
+    const report = await executeImport(
+      store,
+      planOf(unitWith({ venueSlug: "listing-b", defSlug: "listing-b-def", guid: "GUID-G" })),
+      { restaurantId: ECHO, apply: true },
+    );
+
+    // The move was rejected and the WHOLE unit skipped (no listing write).
+    expect(report.conflicts).toHaveLength(1);
+    expect(report.conflicts[0]).toMatchObject({ kind: "orphaned-source-listing" });
+    expect(report.venueListings).toMatchObject({ inserted: 0, skipped: 1 });
+
+    // No new destination listing was created — the rejected move wrote nothing.
+    expect(db.venues.find((v) => v.slug === "listing-b")).toBeUndefined();
+    expect(db.venues).toHaveLength(venuesBefore);
+
+    // No PUBLISHED listing is left with zero offers (source A kept its pour; no
+    // empty destination was stranded).
+    const publishedWithNoOffers = db.venues.filter(
+      (v) =>
+        (v.row as Partial<VenueSpiritRow>).publicationStatus === "PUBLISHED" &&
+        db.pours.filter((p) => p.venueSpiritId === v.id).length === 0,
+    );
+    expect(publishedWithNoOffers).toEqual([]);
+  });
+
   it("allows the move when the plan restores the source listing with its own priced offer", async () => {
     const db = emptyDb();
     db.definitions.push({ id: "def-A", slug: "def-a", row: {} as SpiritDefinitionRow });

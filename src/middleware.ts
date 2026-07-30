@@ -12,6 +12,8 @@ const isPublicRoute = createRouteMatcher([
   "/demo(.*)",
   // Public "Live Heartbeat" marketing landing (no login).
   "/heartbeat(.*)",
+  // Public guest Spirit Vault, served dynamically from the DB (QR sessions gate later).
+  "/vault(.*)",
   // Inngest authenticates via its signing key, not Clerk.
   "/api/inngest(.*)",
   // Dev-only helper routes (additionally guarded by NODE_ENV inside each handler).

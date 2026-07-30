@@ -1,16 +1,9 @@
 /**
- * Public guest vault — served dynamically from the database.
+ * Public guest vault, served dynamically from the canonical Spirit Vault tables.
  *
  * Reuses the proven static engine (`docs/spirit-vault/spirit-vault-prototype.html`)
- * verbatim, swapping only its data `<script src>` for a DB-generated payload
- * (see `buildVaultPayloadScript`). No renderer rewrite; publishing an edit in the
- * admin makes it live here immediately (revalidatePath), with no git/deploy step.
- *
- * Public route — add `/vault` to the middleware allowlist. `?review=1` shows drafts.
- *
- * NOTE (deploy): this reads the engine HTML from `docs/` at runtime. On Vercel add
- *   experimental.outputFileTracingIncludes = { "/vault": ["./docs/spirit-vault/**"] }
- * to next.config so the file is bundled with the function. (Not needed locally.)
+ * and swaps only its data script for a DB-generated payload. `?review=1` shows
+ * draft/review records for the configured tenant.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -23,15 +16,31 @@ export const runtime = "nodejs";
 
 const ENGINE_PATH = join(process.cwd(), "docs/spirit-vault/spirit-vault-prototype.html");
 const DATA_SCRIPT_TAG = '<script src="spirit-vault-data.js"></script>';
+const VAULT_RESTAURANT_ID = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 
 export async function GET(req: NextRequest) {
+  if (!VAULT_RESTAURANT_ID) {
+    return new Response("Spirit Vault restaurant is not configured.", { status: 503 });
+  }
+
   const review = req.nextUrl.searchParams.get("review") === "1";
-  const items = await prisma.beverageItem.findMany({
-    where: review ? {} : { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
-    orderBy: { name: "asc" },
+  const listings = await prisma.venueSpirit.findMany({
+    where: {
+      restaurantId: VAULT_RESTAURANT_ID,
+      ...(review ? {} : { recordStatus: "PUBLISHED" as const, publicationStatus: "PUBLISHED" as const }),
+    },
+    include: {
+      definition: true,
+      offers: {
+        where: { isPrimary: true },
+        orderBy: { updatedAt: "desc" },
+        take: 1,
+      },
+    },
+    orderBy: { slug: "asc" },
   });
 
-  const payload = buildVaultPayloadScript(items);
+  const payload = buildVaultPayloadScript(listings);
   const engine = readFileSync(ENGINE_PATH, "utf8");
   if (!engine.includes(DATA_SCRIPT_TAG)) {
     return new Response("Vault engine template is missing its data-script tag.", { status: 500 });

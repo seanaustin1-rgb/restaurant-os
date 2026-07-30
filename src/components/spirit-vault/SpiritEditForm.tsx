@@ -2,11 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
-import type { ItemStatus } from "@prisma/client";
+import type { SpiritLifecycleStatus } from "@prisma/client";
 import { updateSpirit } from "@/app/admin/spirit-vault/actions";
 
 const FLAVOR_AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
-const STATUSES: ItemStatus[] = ["DRAFT", "REVIEWED", "PUBLISHED"];
+const STATUSES: SpiritLifecycleStatus[] = ["DRAFT", "REVIEWED", "PUBLISHED"];
 
 export interface SpiritEditInitial {
   id: string;
@@ -18,8 +18,8 @@ export interface SpiritEditInitial {
   flavor: Record<string, number>;
   topNotes: string[];
   pairings: string[];
-  recordStatus: ItemStatus;
-  publicationStatus: ItemStatus;
+  recordStatus: SpiritLifecycleStatus;
+  publicationStatus: SpiritLifecycleStatus;
 }
 
 function errMsg(e: unknown): string {
@@ -78,8 +78,8 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
     initial.topNotes[2] ?? "",
   ]);
   const [pairings, setPairings] = useState(initial.pairings.join(", "));
-  const [recordStatus, setRecordStatus] = useState<ItemStatus>(initial.recordStatus);
-  const [publicationStatus, setPublicationStatus] = useState<ItemStatus>(initial.publicationStatus);
+  const [recordStatus, setRecordStatus] = useState<SpiritLifecycleStatus>(initial.recordStatus);
+  const [publicationStatus, setPublicationStatus] = useState<SpiritLifecycleStatus>(initial.publicationStatus);
 
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -123,8 +123,8 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
       {/* Sean's voice */}
       <div className="space-y-4 rounded-lg border border-line bg-surface p-4">
         <h2 className="text-sm font-medium text-ink-text">Your voice</h2>
-        <Textarea label="Why we carry it" hint="Guest-facing. General merit — no fabricated venue claims." value={whyWeCarry} onChange={setWhyWeCarry} />
-        <Textarea label="Curator cue" hint="Short quote shown above the drawers, e.g. “Ask for it neat.”" value={seanShort} onChange={setSeanShort} rows={2} />
+        <Textarea label="Why we carry it" hint="Guest-facing. General merit - no fabricated venue claims." value={whyWeCarry} onChange={setWhyWeCarry} />
+        <Textarea label="Curator cue" hint='Short quote shown above the drawers, e.g. "Ask for it neat."' value={seanShort} onChange={setSeanShort} rows={2} />
         <Textarea label="Sean's Notes" hint="Signed note in the gold drawer. Leave blank to hide it." value={notes} onChange={setNotes} />
       </div>
 
@@ -156,13 +156,13 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
       {/* Status */}
       <div className="space-y-3 rounded-lg border border-line bg-surface p-4">
         <h2 className="text-sm font-medium text-ink-text">Status</h2>
-        <p className="text-xs text-muted">Publication can’t run ahead of the record status. Published shows on the guest vault.</p>
+        <p className="text-xs text-muted">Publication cannot run ahead of the record status. Published shows on the guest vault.</p>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">
             <span className="block text-[11px] uppercase tracking-wider text-muted">Record status</span>
             <select
               value={recordStatus}
-              onChange={(e) => setRecordStatus(e.target.value as ItemStatus)}
+              onChange={(e) => setRecordStatus(e.target.value as SpiritLifecycleStatus)}
               className="mt-1 w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
             >
               {STATUSES.map((s) => (
@@ -174,7 +174,7 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
             <span className="block text-[11px] uppercase tracking-wider text-muted">Publication</span>
             <select
               value={publicationStatus}
-              onChange={(e) => setPublicationStatus(e.target.value as ItemStatus)}
+              onChange={(e) => setPublicationStatus(e.target.value as SpiritLifecycleStatus)}
               className="mt-1 w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
             >
               {STATUSES.map((s) => (
@@ -191,7 +191,7 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
           disabled={pending}
           className="inline-flex items-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20 disabled:opacity-50"
         >
-          {pending ? "Saving…" : "Save"}
+          {pending ? "Saving..." : "Save"}
         </button>
         {saved && !pending && (
           <span className="inline-flex items-center gap-1 text-sm text-health-green">

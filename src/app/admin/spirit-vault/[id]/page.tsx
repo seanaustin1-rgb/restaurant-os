@@ -16,6 +16,10 @@ const asFlavor = (v: unknown): Record<string, number> => {
   return out;
 };
 
+function spiritName(item: { definition: { displayName: string | null; brand: string; expression: string | null } }): string {
+  return item.definition.displayName ?? [item.definition.brand, item.definition.expression].filter(Boolean).join(" ");
+}
+
 export default async function SpiritEditPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -25,19 +29,23 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
   });
   if (!role) redirect("/admin/spirit-vault");
 
-  const item = await prisma.beverageItem.findUnique({ where: { id: params.id } });
+  const item = await prisma.venueSpirit.findFirst({
+    where: { id: params.id, restaurantId: role.restaurantId },
+    include: { definition: true },
+  });
   if (!item) notFound();
 
   return (
     <main className="mx-auto max-w-2xl space-y-6 px-6 py-10">
       <div>
         <Link href="/admin/spirit-vault" className="text-xs text-muted hover:text-copper-soft">
-          ‹ Back to the vault
+          Back to the vault
         </Link>
-        <h1 className="mt-2 font-display text-2xl text-copper-soft">{item.name}</h1>
+        <h1 className="mt-2 font-display text-2xl text-copper-soft">{spiritName(item)}</h1>
         <p className="mt-1 text-sm text-muted">
-          {item.cat}
-          {item.style ? ` · ${item.style}` : ""} · {item.proofN ?? item.proofDisplay ?? "—"} proof
+          {item.definition.category}
+          {item.definition.style ? ` - ${item.definition.style}` : ""} -{" "}
+          {item.definition.proofN?.toString() ?? item.definition.proofDisplay ?? "-"} proof
         </p>
       </div>
 
@@ -47,11 +55,11 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
           whyWeCarry: item.whyWeCarry ?? "",
           seanShort: item.seanShort ?? "",
           notes: item.notes ?? "",
-          body: item.body,
-          finish: item.finish,
-          flavor: asFlavor(item.flavor),
-          topNotes: asStrings(item.topNotes),
-          pairings: asStrings(item.pairings),
+          body: item.definition.body,
+          finish: item.definition.finish,
+          flavor: asFlavor(item.definition.flavor),
+          topNotes: item.definition.topNotes,
+          pairings: asStrings(item.definition.pairings),
           recordStatus: item.recordStatus,
           publicationStatus: item.publicationStatus,
         }}

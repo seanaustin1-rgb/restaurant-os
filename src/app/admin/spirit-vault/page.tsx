@@ -12,6 +12,12 @@ const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Draft",
 };
 
+function spiritName(item: {
+  definition: { displayName: string | null; brand: string; expression: string | null };
+}): string {
+  return item.definition.displayName ?? [item.definition.brand, item.definition.expression].filter(Boolean).join(" ");
+}
+
 export default async function SpiritVaultAdminPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
@@ -31,20 +37,26 @@ export default async function SpiritVaultAdminPage() {
     );
   }
 
-  const items = await prisma.beverageItem.findMany({
-    where: { OR: [{ restaurantId: role.restaurantId }, { restaurantId: null }] },
-    orderBy: [{ publicationStatus: "asc" }, { name: "asc" }],
+  const items = await prisma.venueSpirit.findMany({
+    where: { restaurantId: role.restaurantId },
+    orderBy: [{ publicationStatus: "asc" }, { slug: "asc" }],
     select: {
       id: true,
-      name: true,
-      cat: true,
-      proofN: true,
-      proofDisplay: true,
       recordStatus: true,
       publicationStatus: true,
       whyWeCarry: true,
       seanShort: true,
       notes: true,
+      definition: {
+        select: {
+          brand: true,
+          expression: true,
+          displayName: true,
+          category: true,
+          proofN: true,
+          proofDisplay: true,
+        },
+      },
     },
   });
 
@@ -57,7 +69,7 @@ export default async function SpiritVaultAdminPage() {
       <div>
         <h1 className="font-display text-2xl text-copper-soft">Spirit Vault</h1>
         <p className="mt-1 text-sm text-muted">
-          {role.restaurant?.name ?? "Your bar"} — edit dossiers, add your voice, and publish. Published records go live
+          {role.restaurant?.name ?? "Your bar"} - edit dossiers, add your voice, and publish. Published records go live
           on the guest vault immediately.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
@@ -86,17 +98,19 @@ export default async function SpiritVaultAdminPage() {
                 <tr key={i.id} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
                   <td className="px-3 py-2">
                     <Link href={`/admin/spirit-vault/${i.id}`} className="text-ink-text hover:text-copper-soft">
-                      {i.name}
+                      {spiritName(i)}
                     </Link>
                   </td>
-                  <td className="px-3 py-2 text-muted">{i.cat}</td>
-                  <td className="tnum px-3 py-2 text-muted">{i.proofN ?? i.proofDisplay ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted">{i.definition.category}</td>
+                  <td className="tnum px-3 py-2 text-muted">
+                    {i.definition.proofN?.toString() ?? i.definition.proofDisplay ?? "-"}
+                  </td>
                   <td className="px-3 py-2">
                     <span className={live ? "text-health-green" : "text-muted"}>
                       {STATUS_LABEL[i.publicationStatus] ?? i.publicationStatus}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-muted">{hasVoice ? "✓" : "—"}</td>
+                  <td className="px-3 py-2 text-muted">{hasVoice ? "Yes" : "-"}</td>
                 </tr>
               );
             })}

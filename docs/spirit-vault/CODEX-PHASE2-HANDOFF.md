@@ -142,11 +142,11 @@ Known DB gate:
 - **Flag 2** — operator sensory edits (body/finish/flavor/topNotes/pairings) now write to `VenueSpirit.overrides`, NOT shared `SpiritDefinition`. `actions.ts` persists overrides + validates EFFECTIVE (override ?? definition) values; `admin/spirit-vault/[id]/page.tsx` pre-fills effective values; `vault-payload.ts` `listingToVaultRecord` merges override → definition → default (new `VaultOverridesInput`; listing field typed `unknown` to accept the Prisma Json column, narrowed at use).
 - **Flag 3** — `vault-payload.test.ts` parity: definition-only mapping (Codex) + overrides-win, partial-override fall-through, null-overrides, and 0-valued override (Claude).
 - **Flag 1** (config) — env `SPIRIT_VAULT_RESTAURANT_ID` = `cmpvtkou90000syl9ziir8nlj` (demo tenant on outfront-demo). No code change (the `/vault` route already reads it).
-- Verify: `tsc --noEmit` clean, full vitest **414/414**, `npm run build` ok. No migrations / importer `--apply` / DB writes.
+- **Admin-write test** — `actions.test.ts` asserts `updateSpirit` writes `VenueSpirit.overrides`, never mutates `SpiritDefinition`, persists trimmed voice/status, and rejects publish>record (Clerk/prisma/validate mocked).
+- Verify (tip `d7bcddb`): `tsc --noEmit` clean, full vitest **418/418**, `npm run build` ok. No migrations / importer `--apply` / DB writes.
 
 ### Open / next (in-lane)
-- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmpvtkou90000syl9ziir8nlj` in the deploy env. Runtime `/vault` verification is DEFERRED until the demo DB is populated — that needs an importer `--apply` (Sean-gated, out of lane).
-- **Recommended follow-up:** focused test of the `updateSpirit` server action asserting it writes `VenueSpirit.overrides` and never touches `SpiritDefinition` (needs Clerk/prisma mocks). Not blocking #142.
+- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmpvtkou90000syl9ziir8nlj` in the deploy env (needs Sean's Vercel access). Runtime `/vault` verification is DEFERRED until the demo DB is populated — that needs an importer `--apply` (Sean-gated, out of lane).
 - **When Sean directs:** cat→silo silhouette mapper (Phase 1.5); Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
 - **Merge #142:** Sean-gated + Codex re-review.
 

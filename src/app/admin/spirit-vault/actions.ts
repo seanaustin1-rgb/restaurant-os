@@ -69,6 +69,9 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
   if (STATUS_RANK[pub] > STATUS_RANK[rec]) {
     throw new Error(`Cannot set publication "${pub}" higher than record status "${rec}"`);
   }
+  if (pub === "PUBLISHED" && pairings.length === 0) {
+    throw new Error("Published records need at least one pairing");
+  }
 
   await prisma.$transaction(async (tx) => {
     const existing = await tx.venueSpirit.findFirst({

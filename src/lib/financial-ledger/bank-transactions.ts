@@ -8,6 +8,7 @@ import type {
   TransactionBucket,
 } from "@prisma/client";
 import { buildLedgerDraftLines } from "./source-mapping";
+import { tapBucketToFinancialEventType, tapBucketToLedgerAccount } from "./bucket-map";
 
 type LedgerDb = PrismaClient | Prisma.TransactionClient;
 
@@ -56,28 +57,20 @@ export function ledgerMappingForTap(input: {
     return { eventType: "REVENUE", ledgerAccount: "REVENUE" };
   }
 
-  switch (input.tapBucket) {
-    case "COGS_FOOD":
-    case "COGS_LIQUOR":
-    case "COGS_BEVERAGE":
-      return { eventType: "COGS", ledgerAccount: "COGS" };
-    case "LABOR":
-      return { eventType: "LABOR", ledgerAccount: "LABOR" };
-    case "TAX_SALES":
-    case "TAX_PAYROLL":
-      return { eventType: "TAX_LIABILITY", ledgerAccount: "TAX_VAULT" };
-    case "OWNER_PAY":
-      return { eventType: "OWNER_PAY", ledgerAccount: "OWNER_PAY" };
-    case "PROFIT":
-      return { eventType: "DEBT_SERVICE", ledgerAccount: "DEBT_SERVICE" };
-    case "EXCLUDED":
-      return { eventType: "EXCLUDED", ledgerAccount: "SUSPENSE" };
-    case "OPEX":
-    default:
-      return categoryNameLooksFixed(input.categoryName)
-        ? { eventType: "FIXED_OPEX", ledgerAccount: "FIXED_OPEX" }
-        : { eventType: "OPEX", ledgerAccount: "OPEX" };
+  if (input.tapBucket === "OPEX" || input.tapBucket == null) {
+    return categoryNameLooksFixed(input.categoryName)
+      ? { eventType: "FIXED_OPEX", ledgerAccount: "FIXED_OPEX" }
+      : { eventType: "OPEX", ledgerAccount: "OPEX" };
   }
+
+  if (input.tapBucket) {
+    return {
+      eventType: tapBucketToFinancialEventType(input.tapBucket),
+      ledgerAccount: tapBucketToLedgerAccount(input.tapBucket),
+    };
+  }
+
+  return { eventType: "OPEX", ledgerAccount: "OPEX" };
 }
 
 export async function mirrorBankTransactionToLedger(

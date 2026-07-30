@@ -11,13 +11,13 @@ import { validatePublishableSpirit } from "./validate";
 const ROWS = loadGuestRecords().map(guestRecordToRows);
 
 describe("import parity — transform output satisfies the publish validator", () => {
-  it("maps 108 guest-visible records", () => {
+  it("maps 109 guest-visible records", () => {
     const visible = ROWS.filter(
       ({ venueSpirit }) =>
         venueSpirit.recordStatus === "PUBLISHED" &&
         venueSpirit.publicationStatus === "PUBLISHED",
     );
-    expect(visible.length).toBe(108);
+    expect(visible.length).toBe(109);
   });
 
   it("every published record passes validatePublishableSpirit", () => {

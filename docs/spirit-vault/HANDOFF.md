@@ -5,6 +5,26 @@
 Read the **⚖️ BINDING ARCHITECTURE DECISION** block below first (it's authoritative;
 the older "NEXT SESSION — START HERE (2026-07-28)" block further down is superseded).
 
+**Progress — 2026-07-30 session (Claude):**
+- ✅ **#140 MERGED** → `main` (`7c45237`, squash). Pages rebuilt; live-verified on
+  Coal's link — guest-visible **109**, Ported Pumpernickel Rye present. Whiskey-shelf
+  content is COMPLETE.
+- ✅ **Operator gate PASSED.** Queried `outfront-demo` (Supabase project
+  `jzjscsoasfjsxekyfrgi`) read-only: all 4 tables (`SpiritDefinition` / `VenueSpirit` /
+  `SpiritPour` / `SpiritPriceObservation`) + their FK constraints exist, and
+  `_prisma_migrations` records `20260728000000_add_spirit_vault` applied
+  **2026-07-29 08:03 EDT**. So #138's "migration applied" claim is independently
+  confirmed true. (Still: no `--apply`, no writes, no migrations run this session.)
+- 🔶 **#139 rebased on `main`** + importer tests bumped **108 → 109** published, AND a
+  **P2 fixed**: the orphaned-source guard ran *after* the destination `VenueSpirit`
+  write, so a rejected GUID re-parent stranded a published, zero-offer destination
+  listing. Now the guard resolves against the destination id and rejects the whole
+  unit **before any listing write** (`18693df`), with a regression test asserting a
+  rejected move leaves no new destination listing and no published zero-offer listing.
+  Local: spirit-vault **68/68**, full vitest **408/408**, `tsc --noEmit` clean, build ok.
+  **#139 is STILL BLOCKED** — awaiting Codex re-review + CI on `18693df`, then Sean's
+  merge approval. **Do NOT merge #139 yet.**
+
 **Phase 2 state:**
 - **Foundation MERGED** → `main` (PR #137, `dbf41ae`): canonical `SpiritDefinition` /
   `VenueSpirit` / `SpiritPour` / `SpiritPriceObservation` + migration
@@ -23,11 +43,13 @@ the older "NEXT SESSION — START HERE (2026-07-28)" block further down is super
     `outfront-demo` migration applied.
 
 **Do first (in order):**
-1. Merge **#140**. Then **rebase #139** on `main` and bump its importer tests **108 → 109**
-   (they still assert 108) so the two stay consistent.
-2. **Operator gate:** independently confirm `outfront-demo` has the 4 tables + constraints
-   before any importer `--apply` (#138 only *claims* it).
-3. Merge **#139** after Codex re-review + rebase.
+1. ~~Merge **#140**, rebase **#139**, bump importer tests 108 → 109.~~ ✅ DONE
+   (see Progress above).
+2. ~~**Operator gate:** confirm `outfront-demo` has the 4 tables + constraints~~ ✅ DONE
+   — verified 2026-07-30 (migration applied 2026-07-29). Re-confirm right before any
+   first `--apply` regardless.
+3. **Merge #139** — still gated: needs Codex re-review + CI green on `18693df` (the P2
+   orphaned-source-guard fix) **and** Sean's approval. Not merged yet.
 
 **Then — open sequencing decisions to lock with Sean:** rebase Codex's `feat/spirit-vault-admin-phase1`
 UI (admin editor / dynamic `/vault` / Toast-pull) onto the canonical model (drop `BeverageItem`;

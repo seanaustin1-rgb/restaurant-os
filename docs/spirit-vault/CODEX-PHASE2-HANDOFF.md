@@ -166,9 +166,19 @@ in this doc (incl. the Operator Checklist below) now use `cmqnyvbab0000osvwrxhao
 - **Flag 1** (config) — env `SPIRIT_VAULT_RESTAURANT_ID` = `cmqnyvbab0000osvwrxhaovxo` (demo tenant on outfront-demo). No code change (the `/vault` route already reads it).
 - **Admin-write test** — `actions.test.ts` asserts `updateSpirit` writes `VenueSpirit.overrides`, never mutates `SpiritDefinition`, persists trimmed voice/status, and rejects publish>record (Clerk/prisma/validate mocked).
 - Verify (tip `d7bcddb`): `tsc --noEmit` clean, full vitest **418/418**, `npm run build` ok. No migrations / importer `--apply` / DB writes.
+- **Operator import / runtime DB parity (2026-08-09)** — APPLIED to
+  outfront-demo project `jzjscsoasfjsxekyfrgi`, restaurant Demo Bistro
+  `cmqnyvbab0000osvwrxhaovxo`, via direct host through `scripts/demo-db.cjs`.
+  Apply inserted 110 `SpiritDefinition`, 110 `VenueSpirit`, 110 `SpiritPour`,
+  and 110 `SpiritPriceObservation` rows; validation failures 0; unresolved
+  identities / duplicate keys 0. Post-apply idempotency dry-run: 110 records,
+  109 published, 0 validation failures, 0 duplicate keys, price observations
+  inserted 0 / skipped 110. Post-apply counts: definitions 110, venue listings
+  110, offers 110, price observations 110, guest-visible listings 109, draft
+  listings 1, duplicate price observations 0.
 
 ### Open / next (in-lane)
-- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime `/vault` verification is DEFERRED until the demo DB is populated — that needs an importer `--apply` (Sean-gated, out of lane).
+- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime DB parity for the demo dataset is now proven; deployed `/vault` still needs verification after the env var is set.
 - **When Sean directs:** cat→silo silhouette mapper (Phase 1.5); Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
 - **Merge #142:** Sean-gated + Codex re-review.
 

@@ -94,8 +94,10 @@ Do not run until Claude's Phase 2/importer path is explicitly ready.
 Dry-run first, no writes:
 
 ```powershell
-npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo
+npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo"
 ```
+
+This must print the outfront-demo target from `DEMO_DATABASE_URL` / `DEMO_DIRECT_URL`; do not run the importer through the default `DATABASE_URL`.
 
 Expected after #140/#139:
 
@@ -113,8 +115,8 @@ If any count differs, stop and ask Claude/Codex to inspect before apply.
 Apply only after dry-run matches and Sean explicitly authorizes the write:
 
 ```powershell
-$env:SPIRIT_VAULT_ALLOWED_TARGETS="<outfront-demo-ref>"
-npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo --apply --confirm-target=<outfront-demo-ref>
+$env:SPIRIT_VAULT_ALLOWED_TARGETS="jzjscsoasfjsxekyfrgi"
+npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo --apply --confirm-target=jzjscsoasfjsxekyfrgi"
 ```
 
 Post-apply verification:

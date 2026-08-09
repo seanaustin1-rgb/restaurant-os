@@ -99,6 +99,7 @@ npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-
 
 This must print the outfront-demo target from `DEMO_DATABASE_URL` / `DEMO_DIRECT_URL`; do not run the importer through the default `DATABASE_URL`.
 It must also print `tenant: EXISTS`; `PLANNED (DB-free)` or `existence NOT verified` is a stop condition, not an acceptable dry-run.
+For apply, `DEMO_DIRECT_URL` must be the real Supabase direct host (`db.jzjscsoasfjsxekyfrgi.supabase.co:5432`), not `aws-1-us-west-2.pooler.supabase.com`. The importer uses an interactive transaction; a pooler host can fail mid-import with Prisma `P2028 Transaction not found`.
 
 Expected after #140/#139:
 

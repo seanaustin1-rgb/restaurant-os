@@ -9,6 +9,9 @@ import type {
 import {
   planImport,
   executeImport,
+  createPrismaSpiritStore,
+  SPIRIT_IMPORT_TRANSACTION_MAX_WAIT_MS,
+  SPIRIT_IMPORT_TRANSACTION_TIMEOUT_MS,
   type SpiritImportStore,
   type SpiritImportTxStore,
   type StoredDefinition,
@@ -19,6 +22,25 @@ import {
 // ── The real vault, planned once ──
 const RECORDS = loadGuestRecords();
 const PLAN = planImport(RECORDS);
+
+describe("createPrismaSpiritStore", () => {
+  it("uses a long interactive transaction timeout for remote demo imports", async () => {
+    let receivedOptions: unknown;
+    const prisma = {
+      $transaction: async (fn: (tx: unknown) => Promise<unknown>, options: unknown) => {
+        receivedOptions = options;
+        return fn({});
+      },
+    };
+
+    await createPrismaSpiritStore(prisma as never).runInTransaction(async () => undefined);
+
+    expect(receivedOptions).toEqual({
+      timeout: SPIRIT_IMPORT_TRANSACTION_TIMEOUT_MS,
+      maxWait: SPIRIT_IMPORT_TRANSACTION_MAX_WAIT_MS,
+    });
+  });
+});
 
 // ─────────────────── In-memory store (no DB needed) ───────────────────
 //

@@ -94,10 +94,11 @@ Do not run until Claude's Phase 2/importer path is explicitly ready.
 Dry-run first, no writes:
 
 ```powershell
-npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo"
+npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo --require-db"
 ```
 
 This must print the outfront-demo target from `DEMO_DATABASE_URL` / `DEMO_DIRECT_URL`; do not run the importer through the default `DATABASE_URL`.
+It must also print `tenant: EXISTS`; `PLANNED (DB-free)` or `existence NOT verified` is a stop condition, not an acceptable dry-run.
 
 Expected after #140/#139:
 

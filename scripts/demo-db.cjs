@@ -1,7 +1,7 @@
 /**
  * Run a Prisma command against the SEPARATE demo database only.
  *
- * Remaps DEMO_DATABASE_URL / DEMO_DIRECT_URL onto DATABASE_URL / DIRECT_URL, and
+ * Remaps DEMO_DIRECT_URL onto DATABASE_URL / DIRECT_URL, and
  * hard-aborts if they're missing or equal to production — so a demo migration can
  * never touch the production database.
  *
@@ -9,7 +9,7 @@
  *   npx dotenv -e .env.local -- node scripts/demo-db.cjs "npx prisma migrate deploy"
  *   npx dotenv -e .env.local -- node scripts/demo-db.cjs "npx prisma db push"
  */
-const { execSync } = require("child_process");
+const { spawnSync } = require("child_process");
 
 const cmd = process.argv[2];
 if (!cmd) {
@@ -28,10 +28,18 @@ if (d === process.env.DATABASE_URL || dd === process.env.DIRECT_URL) {
   process.exit(1);
 }
 
-process.env.DATABASE_URL = d;
+// Prisma commands and one-off scripts must verify real table/tenant state.
+// Use the demo direct URL as DATABASE_URL so local operator checks do not fall
+// back to DB-free plans when the pooled URL is unavailable.
+process.env.DATABASE_URL = dd;
 process.env.DIRECT_URL = dd;
 try {
-  console.log("Target DEMO host:", new URL(d).host, "| direct:", new URL(dd).host);
+  console.log("Target DEMO host:", new URL(dd).host, "| pooled:", new URL(d).host);
 } catch {}
 
-execSync(cmd, { stdio: "inherit" });
+const result = spawnSync(cmd, { stdio: "inherit", shell: true });
+if (result.error) {
+  console.error(result.error.message);
+  process.exit(1);
+}
+process.exit(result.status ?? 1);

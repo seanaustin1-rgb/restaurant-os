@@ -3,6 +3,7 @@
 const ALL_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT", "INVESTOR"];
 const ADJUSTMENT_ROLES: UserRole[] = ["OPERATOR", "MANAGER", "CONSULTANT"];
 const OWNER_ROLES: UserRole[] = ["OPERATOR"];
+const SPIRIT_VAULT_STAFF_ROLES: UserRole[] = ["OPERATOR", "MANAGER"];
 
 // Shared primary navigation - used by both the global AppHeader and the
 // dashboard header. Role metadata lets the dashboard menu stay focused.
@@ -36,6 +37,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/settings/allocation", label: "Allocation", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/settings/beverage", label: "Beverage", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/admin/spirit-vault", label: "Spirit Vault", roles: OWNER_ROLES, businessTypes: ["RESTAURANT"] },
+  { href: "/admin/spirit-vault/flights", label: "Spirit Flights", roles: SPIRIT_VAULT_STAFF_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/connections", label: "Connections", roles: OWNER_ROLES },
 ];
 

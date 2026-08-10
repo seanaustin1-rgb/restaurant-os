@@ -58,6 +58,12 @@ describe("navLinksForRoles — role filtering", () => {
     expect(result).not.toContain("/connections"); // owner-only
   });
 
+  it("shows Spirit Flights to restaurant managers without exposing the owner-only vault editor", () => {
+    const result = hrefs(navLinksForRoles(["MANAGER"], ["RESTAURANT"]));
+    expect(result).toContain("/admin/spirit-vault/flights");
+    expect(result).not.toContain("/admin/spirit-vault");
+  });
+
   it("hides the brokerage Executive Cockpit from INVESTOR (locked decision 7)", () => {
     // The Executive Cockpit shows the named per-agent leaderboard — leadership-only.
     const investor = hrefs(navLinksForRoles(["INVESTOR"], ["REAL_ESTATE_BROKERAGE"]));

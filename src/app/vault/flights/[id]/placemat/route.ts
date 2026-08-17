@@ -1,8 +1,12 @@
 import { loadFlightView, type FlightPourView, type FlightView } from "@/lib/spirit-vault/flight-view";
 
-// Standalone, print-ready tasting placemat (US-Letter landscape). Public,
-// single-tenant via SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED flights only. Rich per
-// pour from the vault dossier; flavor as a bar chart (guests read it without a key).
+// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. Public,
+// single-tenant via SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED flights only. Its own
+// HTML document (no app chrome). Rich per pour from the vault dossier; flavor as a
+// bar chart. The @page margins are asymmetric to compensate for the venue printer's
+// offset (measured: shifts content ~3/16in left, ~1/8in down at Actual Size) so it
+// prints centered with the bottom Production line clear of the clip zone.
+// TODO(multi-venue): move the printer-offset margins to a per-venue setting.
 
 const TENANT = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 const AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
@@ -56,7 +60,7 @@ function glass(p: FlightPourView): string {
 function placematHtml(v: FlightView): string {
   const cols = Math.min(Math.max(v.pours.length, 1), 6);
   const through = v.description
-    ? `<div class="through"><div class="l">The through-line</div><p>${esc(v.description)}</p></div>`
+    ? `<div class="through"><span class="l">The through-line</span><p>${esc(v.description)}</p></div>`
     : "";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -65,65 +69,68 @@ function placematHtml(v: FlightView): string {
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
   :root{--parchment:#F5EFE2;--ink:#2A2418;--ink-soft:#5B513C;--copper:#9A6B2F;--copper-deep:#7A5526;--gold:#C8873A;--gold-light:#D9A35E;--band:#17130C;--band-text:#ECE1CB;--display:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'Space Mono',ui-monospace,monospace}
-  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   html,body{width:100%}
-  body{background:#3a3730;font-family:var(--body);color:var(--ink);padding:24px;-webkit-font-smoothing:antialiased}
-  .bar-print{max-width:11in;margin:0 auto 12px;display:flex;justify-content:flex-end}
+  body{background:#3a3730;font-family:var(--body);color:var(--ink);padding:24px}
+  .bar-print{max-width:14in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
-  .sheet{width:100%;max-width:11in;height:7.9in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
-  .band{background:var(--band);color:var(--band-text);padding:.3in .5in .28in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.6in}
+  .sheet{width:100%;max-width:14in;height:7.5in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .band{background:var(--band);color:var(--band-text);padding:.16in .55in .15in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.5in}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-  .venue{font-family:var(--mono);font-size:9px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-light)}
-  .fname{font-family:var(--display);font-weight:600;font-size:36px;line-height:1;color:var(--band-text);margin-top:6px}
-  .through{margin-top:10px;max-width:7in}
-  .through .l{font-family:var(--mono);font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);opacity:.85}
-  .through p{font-family:var(--display);font-style:italic;font-size:17px;line-height:1.3;color:#cdbf9f;margin-top:4px}
-  .pricebox{text-align:right;flex:none;padding-top:2px}
-  .price{font-family:var(--mono);font-weight:700;font-size:30px;color:var(--gold-light);line-height:1}
-  .price-sub{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a;margin-top:6px}
-  .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr)}
-  .glass{display:flex;flex-direction:column;padding:.22in .22in .18in;border-right:1px solid rgba(122,85,38,.18)}
+  .head-l{display:flex;align-items:baseline;gap:.34in;flex-wrap:wrap}
+  .venue{font-family:var(--mono);font-size:8px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold-light)}
+  .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1;color:var(--band-text)}
+  .through{max-width:6in}
+  .through .l{font-family:var(--mono);font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.85}
+  .through p{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.22;color:#cdbf9f;margin-top:2px}
+  .pricebox{text-align:right;flex:none}
+  .price{font-family:var(--mono);font-weight:700;font-size:27px;color:var(--gold-light);line-height:1}
+  .price-sub{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a;margin-top:4px}
+  .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
+  .glass{display:flex;flex-direction:column;padding:.18in .34in .14in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
   .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
-  .ring .n{font-family:var(--display);font-size:38px;color:rgba(154,107,47,.34)}
-  .ring .oz{position:absolute;bottom:16px;font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .gname{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.02;color:var(--ink);text-align:center;margin-top:11px}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;color:var(--copper-deep);text-align:center;margin-top:2px}
-  .stats{display:flex;margin-top:.13in;padding:.09in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
+  .ring .n{font-family:var(--display);font-size:40px;color:rgba(154,107,47,.34)}
+  .ring .oz{position:absolute;bottom:15px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
+  .gname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.02;color:var(--ink);text-align:center;margin-top:8px}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;color:var(--copper-deep);text-align:center;margin-top:1px}
+  .stats{display:flex;margin-top:.09in;padding:.06in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
-  .stat .k{font-family:var(--mono);font-size:6.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
-  .stat .v{font-family:var(--mono);font-size:11px;color:var(--ink);margin-top:3px}
-  .chart{margin-top:.15in}
-  .clab{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:5px;display:flex;justify-content:space-between}
-  .row{display:flex;align-items:center;gap:7px;margin-bottom:4px}
-  .row .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);width:.5in;flex:none}
-  .row .bar{flex:1;height:6px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
+  .stat .k{font-family:var(--mono);font-size:6px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
+  .stat .v{font-family:var(--mono);font-size:10.5px;color:var(--ink);margin-top:2px}
+  .chart{margin-top:.09in}
+  .clab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:3px;display:flex;justify-content:space-between}
+  .row{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+  .row .k{font-family:var(--mono);font-size:7px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);width:.48in;flex:none}
+  .row .bar{flex:1;height:5px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
   .row .bar i{display:block;height:100%;background:var(--gold)}
   .row.tex .bar i{background:var(--copper-deep)}
-  .row .num{font-family:var(--mono);font-size:9px;color:var(--ink-soft);width:12px;text-align:right;flex:none}
-  .tex-wrap{margin-top:7px;padding-top:6px;border-top:1px solid rgba(122,85,38,.14)}
-  .notes{margin-top:.14in}
-  .k-lab{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
-  .notes .v{font-size:12px;color:var(--ink);margin-top:3px;line-height:1.3}
-  .taste{margin-top:.1in;font-size:11.5px;color:var(--ink-soft);line-height:1.4}
-  .prod{margin-top:auto;padding-top:.12in}
-  .prod-head{font-family:var(--mono);font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:7px;margin-bottom:6px}
-  .prow{margin-bottom:6px}
-  .prow .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
-  .prow .v{font-family:var(--display);font-size:14.5px;color:var(--ink);line-height:1.2;margin-top:2px}
-  .foot{background:var(--band);height:.32in;display:flex;align-items:center;justify-content:space-between;padding:0 .5in;color:#9c876a}
-  .foot .l{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase}
-  .foot .box{width:16px;height:16px;border:1px solid rgba(216,163,94,.5);border-radius:3px}
+  .row .num{font-family:var(--mono);font-size:8.5px;color:var(--ink-soft);width:11px;text-align:right;flex:none}
+  .tex-wrap{margin-top:4px;padding-top:4px;border-top:1px solid rgba(122,85,38,.14)}
+  .notes{margin-top:.09in}
+  .k-lab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
+  .notes .v{font-size:11.5px;color:var(--ink);margin-top:2px;line-height:1.26}
+  .taste{margin-top:.07in;font-size:10.5px;color:var(--ink-soft);line-height:1.32}
+  .prod{margin-top:auto;padding-top:.09in}
+  .prod-head{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:5px;margin-bottom:4px}
+  .prow{margin-bottom:4px}
+  .prow .k{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
+  .prow .v{font-family:var(--display);font-size:13.5px;color:var(--ink);line-height:1.16;margin-top:1px}
+  .foot{background:var(--band);height:.28in;display:flex;align-items:center;justify-content:space-between;padding:0 .55in;color:#9c876a;flex:none}
+  .foot .l{font-family:var(--mono);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase}
+  .foot .box{width:15px;height:15px;border:1px solid rgba(216,163,94,.5);border-radius:3px}
   .foot .qr{display:flex;align-items:center;gap:8px}
-  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.9in;box-shadow:none}@page{size:11in 8.5in;margin:0.3in}}
+  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.5in;box-shadow:none}@page{size:14in 8.5in;margin:0.35in 0.11in 0.65in 0.49in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">
     <div class="band">
-      <div>
-        <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
-        <div class="fname">${esc(v.name)}</div>
+      <div class="head-l">
+        <div>
+          <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
+          <div class="fname">${esc(v.name)}</div>
+        </div>
         ${through}
       </div>
       <div class="pricebox"><div class="price">${money(v.totalPriceUsd)}</div><div class="price-sub">${v.pours.length} pours · 1 oz each</div></div>

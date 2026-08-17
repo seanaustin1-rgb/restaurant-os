@@ -1,9 +1,15 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { ArrowDown, ArrowUp, Check, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowDown, ArrowUp, Check, Plus, Trash2, X } from "lucide-react";
 import type { SpiritLifecycleStatus } from "@prisma/client";
-import { createSpiritFlight, type CreateSpiritFlightResult } from "@/app/admin/spirit-vault/flights/actions";
+import {
+  createSpiritFlight,
+  updateSpiritFlight,
+  deleteSpiritFlight,
+  type CreateSpiritFlightResult,
+} from "@/app/admin/spirit-vault/flights/actions";
 
 export interface FlightPourOption {
   venueSpiritId: string;
@@ -22,6 +28,13 @@ interface SelectedFlightItem {
   itemNote: string;
 }
 
+export interface FlightFormInitial {
+  name: string;
+  description: string;
+  status: SpiritLifecycleStatus;
+  items: SelectedFlightItem[];
+}
+
 const STATUS_OPTIONS: SpiritLifecycleStatus[] = ["DRAFT", "REVIEWED", "PUBLISHED"];
 
 function money(n: number): string {
@@ -32,14 +45,25 @@ function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : "Something went wrong";
 }
 
-export function SpiritFlightCreateForm({ pours }: { pours: FlightPourOption[] }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<SpiritLifecycleStatus>("DRAFT");
-  const [selected, setSelected] = useState<SelectedFlightItem[]>([]);
+export function SpiritFlightCreateForm({
+  pours,
+  flightId,
+  initial,
+}: {
+  pours: FlightPourOption[];
+  flightId?: string;
+  initial?: FlightFormInitial;
+}) {
+  const router = useRouter();
+  const isEdit = Boolean(flightId);
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [status, setStatus] = useState<SpiritLifecycleStatus>(initial?.status ?? "DRAFT");
+  const [selected, setSelected] = useState<SelectedFlightItem[]>(initial?.items ?? []);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<CreateSpiritFlightResult | null>(null);
+  const [saved, setSaved] = useState<CreateSpiritFlightResult | null>(null);
   const [pending, startTransition] = useTransition();
+  const [deleting, startDelete] = useTransition();
 
   const pourById = useMemo(() => new Map(pours.map((pour) => [pour.spiritPourId, pour])), [pours]);
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.spiritPourId)), [selected]);
@@ -48,17 +72,17 @@ export function SpiritFlightCreateForm({ pours }: { pours: FlightPourOption[] })
   function add(pour: FlightPourOption) {
     if (selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId)) return;
     if (selected.length >= 6) return;
-    setCreated(null);
+    setSaved(null);
     setSelected((items) => [...items, { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote: "" }]);
   }
 
   function remove(spiritPourId: string) {
-    setCreated(null);
+    setSaved(null);
     setSelected((items) => items.filter((item) => item.spiritPourId !== spiritPourId));
   }
 
   function move(index: number, delta: -1 | 1) {
-    setCreated(null);
+    setSaved(null);
     setSelected((items) => {
       const next = [...items];
       const target = index + delta;
@@ -69,17 +93,42 @@ export function SpiritFlightCreateForm({ pours }: { pours: FlightPourOption[] })
   }
 
   function setNote(spiritPourId: string, itemNote: string) {
-    setCreated(null);
+    setSaved(null);
     setSelected((items) => items.map((item) => (item.spiritPourId === spiritPourId ? { ...item, itemNote } : item)));
   }
 
   function save() {
     setError(null);
-    setCreated(null);
+    setSaved(null);
     startTransition(async () => {
       try {
-        const result = await createSpiritFlight({ name, description, status, items: selected });
-        setCreated(result);
+        const result =
+          isEdit && flightId
+            ? await updateSpiritFlight({ id: flightId, name, description, status, items: selected })
+            : await createSpiritFlight({ name, description, status, items: selected });
+        setSaved(result);
+        if (!isEdit) {
+          setName("");
+          setDescription("");
+          setStatus("DRAFT");
+          setSelected([]);
+        }
+        router.refresh();
+      } catch (e) {
+        setError(errMsg(e));
+      }
+    });
+  }
+
+  function onDelete() {
+    if (!flightId) return;
+    if (typeof window !== "undefined" && !window.confirm("Delete this flight? This cannot be undone.")) return;
+    setError(null);
+    startDelete(async () => {
+      try {
+        await deleteSpiritFlight({ id: flightId });
+        router.push("/admin/spirit-vault/flights");
+        router.refresh();
       } catch (e) {
         setError(errMsg(e));
       }
@@ -89,9 +138,9 @@ export function SpiritFlightCreateForm({ pours }: { pours: FlightPourOption[] })
   return (
     <div className="space-y-6">
       {error && <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</div>}
-      {created && (
+      {saved && (
         <div className="rounded-md border border-health-green/40 bg-health-green/10 px-3 py-2 text-sm text-health-green">
-          Created flight. Generated price: {money(created.totalPriceUsd)}
+          {isEdit ? "Saved changes." : "Created flight."} Generated price: {money(saved.totalPriceUsd)}
         </div>
       )}
 
@@ -228,12 +277,24 @@ export function SpiritFlightCreateForm({ pours }: { pours: FlightPourOption[] })
             <button
               type="button"
               onClick={save}
-              disabled={pending || selected.length < 2}
+              disabled={pending || deleting || selected.length < 2}
               className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20 disabled:opacity-50"
             >
-              {pending ? "Creating..." : "Create flight"}
+              {pending ? "Saving..." : isEdit ? "Save changes" : "Create flight"}
               {!pending && <Check size={14} />}
             </button>
+
+            {isEdit && (
+              <button
+                type="button"
+                onClick={onDelete}
+                disabled={deleting || pending}
+                className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-red-500/30 px-4 py-2 text-sm text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Delete flight"}
+                {!deleting && <Trash2 size={14} />}
+              </button>
+            )}
           </div>
         </aside>
       </div>

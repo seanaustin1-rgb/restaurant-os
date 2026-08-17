@@ -85,7 +85,9 @@ export default async function SpiritFlightsPage() {
             {flights.map((flight) => (
               <tr key={flight.id} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
                 <td className="px-3 py-2">
-                  <div className="text-ink-text">{flight.name}</div>
+                  <Link href={`/admin/spirit-vault/flights/${flight.id}`} className="text-ink-text hover:text-copper-soft">
+                    {flight.name}
+                  </Link>
                   {flight.description && <div className="mt-1 line-clamp-1 text-xs text-muted">{flight.description}</div>}
                 </td>
                 <td className="tnum px-3 py-2 text-muted">{flight._count.items}</td>

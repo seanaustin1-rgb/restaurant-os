@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
-import { calculateFlightPricing } from "@/lib/spirit-vault/flight-pricing";
+import { calculateFlightPricing, type FlightPricingResult } from "@/lib/spirit-vault/flight-pricing";
 
 const FLIGHTS_PATH = "/admin/spirit-vault/flights";
 const STATUS_RANK: Record<SpiritLifecycleStatus, number> = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 };
@@ -23,17 +23,14 @@ export interface CreateSpiritFlightInput {
   items: CreateSpiritFlightItemInput[];
 }
 
+export interface UpdateSpiritFlightInput extends CreateSpiritFlightInput {
+  id: string;
+}
+
 export interface CreateSpiritFlightResult {
   id: string;
   totalPriceUsd: number;
   itemPrices: { venueSpiritId: string; spiritPourId: string; linePriceUsd: number }[];
-}
-
-interface PriceablePour {
-  id: string;
-  venueSpiritId: string;
-  priceUsd: Prisma.Decimal | number | string | null;
-  pourSizeOz: Prisma.Decimal | number | string | null;
 }
 
 async function requireSpiritVaultStaff(): Promise<string> {
@@ -82,6 +79,52 @@ function validateStatus(status: SpiritLifecycleStatus): SpiritLifecycleStatus {
   return status;
 }
 
+/** Look up the ordered source pours, enforce published+priced+belongs-to-spirit,
+ *  and compute the flight pricing. Shared by create and update so both price and
+ *  validate identically. Runs inside the caller's transaction. */
+async function resolvePricingForItems(
+  tx: Prisma.TransactionClient,
+  restaurantId: string,
+  items: CreateSpiritFlightItemInput[],
+): Promise<FlightPricingResult> {
+  const selectedPours = await tx.spiritPour.findMany({
+    where: {
+      restaurantId,
+      id: { in: items.map((item) => item.spiritPourId) },
+      venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
+      venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
+    },
+    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true },
+  });
+
+  const pourById = new Map(selectedPours.map((pour) => [pour.id, pour]));
+  if (pourById.size !== items.length) {
+    throw new Error("Every flight item must reference a published vault spirit and priced pour");
+  }
+
+  const orderedPours = items.map((item) => {
+    const pour = pourById.get(item.spiritPourId);
+    if (!pour || pour.venueSpiritId !== item.venueSpiritId) {
+      throw new Error("Flight item pour does not belong to the selected spirit");
+    }
+    return pour;
+  });
+
+  return calculateFlightPricing(orderedPours);
+}
+
+/** Build the nested `items.create` payload for a flight (order = array index). */
+function flightItemCreateData(restaurantId: string, items: CreateSpiritFlightItemInput[]) {
+  return items.map((item, index) => ({
+    restaurantId,
+    venueSpiritId: item.venueSpiritId,
+    spiritPourId: item.spiritPourId,
+    pourSizeOz: new Prisma.Decimal(1),
+    sortOrder: index,
+    itemNote: item.itemNote,
+  }));
+}
+
 export async function createSpiritFlight(input: CreateSpiritFlightInput): Promise<CreateSpiritFlightResult> {
   const restaurantId = await requireSpiritVaultStaff();
   const name = cleanText(input.name);
@@ -92,34 +135,7 @@ export async function createSpiritFlight(input: CreateSpiritFlightInput): Promis
   const items = normalizeFlightItems(input.items);
 
   const result = await prisma.$transaction(async (tx) => {
-    const selectedPours = await tx.spiritPour.findMany({
-      where: {
-        restaurantId,
-        id: { in: items.map((item) => item.spiritPourId) },
-        venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
-        venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
-      },
-      select: {
-        id: true,
-        venueSpiritId: true,
-        priceUsd: true,
-        pourSizeOz: true,
-      },
-    });
-
-    const pourById = new Map(selectedPours.map((pour) => [pour.id, pour]));
-    if (pourById.size !== items.length) {
-      throw new Error("Every flight item must reference a published vault spirit and priced pour");
-    }
-
-    const orderedPours: PriceablePour[] = items.map((item) => {
-      const pour = pourById.get(item.spiritPourId);
-      if (!pour || pour.venueSpiritId !== item.venueSpiritId) {
-        throw new Error("Flight item pour does not belong to the selected spirit");
-      }
-      return pour;
-    });
-    const pricing = calculateFlightPricing(orderedPours);
+    const pricing = await resolvePricingForItems(tx, restaurantId, items);
 
     const flight = await tx.spiritFlight.create({
       data: {
@@ -130,16 +146,7 @@ export async function createSpiritFlight(input: CreateSpiritFlightInput): Promis
         suggestedPriceUsd: new Prisma.Decimal(pricing.totalPriceUsd),
         pricingFormulaVersion: pricing.formulaVersion,
         pricingSnapshot: pricing as unknown as Prisma.InputJsonValue,
-        items: {
-          create: items.map((item, index) => ({
-            restaurantId,
-            venueSpiritId: item.venueSpiritId,
-            spiritPourId: item.spiritPourId,
-            pourSizeOz: new Prisma.Decimal(1),
-            sortOrder: index,
-            itemNote: item.itemNote,
-          })),
-        },
+        items: { create: flightItemCreateData(restaurantId, items) },
       },
       select: { id: true },
     });
@@ -150,4 +157,78 @@ export async function createSpiritFlight(input: CreateSpiritFlightInput): Promis
   revalidatePath(FLIGHTS_PATH);
   revalidatePath("/vault");
   return result;
+}
+
+/** Edit an existing flight: name/description/status + full item set (add / remove /
+ *  reorder). Items are replaced wholesale from the incoming order, so the price and
+ *  sortOrder always match what the manager sees. */
+export async function updateSpiritFlight(input: UpdateSpiritFlightInput): Promise<CreateSpiritFlightResult> {
+  const restaurantId = await requireSpiritVaultStaff();
+  const id = input.id?.trim();
+  if (!id) throw new Error("Flight id is required");
+  const name = cleanText(input.name);
+  if (!name) throw new Error("Flight name is required");
+  if (name.length > 120) throw new Error("Flight name must be 120 characters or fewer");
+  const description = cleanText(input.description);
+  const status = validateStatus(input.status ?? "DRAFT");
+  const items = normalizeFlightItems(input.items);
+
+  const result = await prisma.$transaction(async (tx) => {
+    const existing = await tx.spiritFlight.findFirst({ where: { id, restaurantId }, select: { id: true } });
+    if (!existing) throw new Error("Flight not found");
+
+    const pricing = await resolvePricingForItems(tx, restaurantId, items);
+
+    // Replace the item set so reorder / add / remove all resolve in one write and
+    // never trip the [flightId, sortOrder] / [flightId, venueSpiritId] uniques.
+    await tx.spiritFlightItem.deleteMany({ where: { flightId: id, restaurantId } });
+    await tx.spiritFlight.update({
+      where: { id },
+      data: {
+        name,
+        description,
+        status,
+        suggestedPriceUsd: new Prisma.Decimal(pricing.totalPriceUsd),
+        pricingFormulaVersion: pricing.formulaVersion,
+        pricingSnapshot: pricing as unknown as Prisma.InputJsonValue,
+        items: { create: flightItemCreateData(restaurantId, items) },
+      },
+    });
+
+    return { id, totalPriceUsd: pricing.totalPriceUsd, itemPrices: pricing.lines };
+  });
+
+  revalidatePath(FLIGHTS_PATH);
+  revalidatePath(`${FLIGHTS_PATH}/${id}`);
+  revalidatePath("/vault");
+  return result;
+}
+
+/** Publish-toggle (or move to any lifecycle status) without touching items/pricing. */
+export async function setSpiritFlightStatus(input: { id: string; status: SpiritLifecycleStatus }): Promise<void> {
+  const restaurantId = await requireSpiritVaultStaff();
+  const id = input.id?.trim();
+  if (!id) throw new Error("Flight id is required");
+  const status = validateStatus(input.status);
+
+  // updateMany scoped by restaurantId → never touches another tenant's flight.
+  const res = await prisma.spiritFlight.updateMany({ where: { id, restaurantId }, data: { status } });
+  if (res.count === 0) throw new Error("Flight not found");
+
+  revalidatePath(FLIGHTS_PATH);
+  revalidatePath(`${FLIGHTS_PATH}/${id}`);
+  revalidatePath("/vault");
+}
+
+export async function deleteSpiritFlight(input: { id: string }): Promise<void> {
+  const restaurantId = await requireSpiritVaultStaff();
+  const id = input.id?.trim();
+  if (!id) throw new Error("Flight id is required");
+
+  // deleteMany scoped by restaurantId; items cascade via the FK.
+  const res = await prisma.spiritFlight.deleteMany({ where: { id, restaurantId } });
+  if (res.count === 0) throw new Error("Flight not found");
+
+  revalidatePath(FLIGHTS_PATH);
+  revalidatePath("/vault");
 }

@@ -10,11 +10,17 @@ export interface FlightPourView {
   slug: string;
   name: string;
   category: string;
+  style: string | null;
   proof: string | null;
   age: string | null;
+  origin: string | null;
   flavor: Record<string, number>;
+  body: number | null;
+  finish: number | null;
   topNotes: string[];
   taste: string | null;
+  mash: string | null;
+  cask: string | null;
   itemNote: string | null;
   bites: string[];
 }
@@ -46,6 +52,18 @@ function asStrings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 }
 
+// Production is stored as rows like [["Mash Bill","70% corn…",true], …]; pull the
+// value of the first row whose label matches.
+function prodRow(production: unknown, re: RegExp): string | null {
+  if (!Array.isArray(production)) return null;
+  for (const row of production) {
+    if (Array.isArray(row) && typeof row[0] === "string" && re.test(row[0]) && typeof row[1] === "string" && row[1].trim()) {
+      return row[1].trim();
+    }
+  }
+  return null;
+}
+
 export async function loadFlightView(
   restaurantId: string,
   id: string,
@@ -75,12 +93,20 @@ export async function loadFlightView(
                   expression: true,
                   displayName: true,
                   category: true,
+                  style: true,
                   proofN: true,
                   proofDisplay: true,
                   ageText: true,
+                  city: true,
+                  region: true,
+                  country: true,
+                  distilleryName: true,
                   flavor: true,
+                  body: true,
+                  finish: true,
                   topNotes: true,
                   whyShort: true,
+                  production: true,
                 },
               },
             },
@@ -98,16 +124,23 @@ export async function loadFlightView(
       : null;
     const proofN = num(d.proofN);
     const ovTop = asStrings(ov?.topNotes);
+    const origin = [d.city, d.region].filter((s): s is string => typeof s === "string" && s.trim() !== "").join(", ") || d.country || null;
     return {
       order: index + 1,
       slug: item.venueSpirit.slug,
       name: d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" "),
       category: d.category,
+      style: d.style ?? null,
       proof: proofN != null ? `${proofN} proof` : d.proofDisplay ?? null,
       age: d.ageText && d.ageText !== "NAS" ? d.ageText : null,
+      origin: d.distilleryName ?? origin,
       flavor: asFlavor(ov?.flavor ?? d.flavor),
+      body: num(d.body),
+      finish: num(d.finish),
       topNotes: (ovTop.length ? ovTop : asStrings(d.topNotes)).slice(0, 3),
       taste: d.whyShort ?? null,
+      mash: prodRow(d.production, /mash/i),
+      cask: prodRow(d.production, /matur|cask|barrel|wood|cooper/i),
       itemNote: item.itemNote,
       bites: asStrings(item.pairingBites),
     };

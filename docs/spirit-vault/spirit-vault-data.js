@@ -45,10 +45,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
   function splitDraftIdentity(displayName){
     var known = [
       "Captain Morgan","Papa's Pilar","Maison Ferrand Plantation","Don Fulano",
-      "Don Ramon","Tres Agaves","Mi Campo","Rey Supremo","Tita Doña Celia",
-      "Casa Amigos","Jose 1800","El Jimador","El Luchador","Don Q",
-      "Grey Goose","Double Cross","Prairie Cucumber","Ketle","Boyd Bair",
-      "Apple Holla","Amsterdam Apple","Ron Batran","Ron Barceló"
+      "Don Ramón","Don Ramon","Tres Agaves","Mi Campo","Rey Supremo","Tita Doña Celia",
+      "Casamigos","Casa Amigos","Jose 1800","El Jimador","El Luchador","Don Q",
+      "Grey Goose","Double Cross","Prairie Cucumber","Ketle","Boyd & Blair","Boyd Bair",
+      "Apple Holla","Amsterdam Apple","Ron Botran","Ron Batran","Ron Barceló"
     ];
     var match = known.find(function(prefix){
       return String(displayName).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -709,7 +709,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','mezcal','Fosforo Mezcal',9,'47a5826e-3e75-40ea-866a-9a092694a260','Fosforo Mezcal','Stone Grille website shelf','Mezcal - Artisanal / 100% Maguey',null],
     ['Agave','mezcal','Granja Nómada',6,'9c29c317-3566-40fc-90b8-166e989a6aad','Granja 100% Maguey','Stone Grille website shelf','Mezcal - 100% Maguey / Traditional Production',null],
     ['Agave','blanco-silver','Aman Tequila Blanco',15,'b657bc99-ede3-42e4-8a48-6be15136ded7','Aman Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / 100% Blue Weber Agave',80],
-    ['Agave','blanco-silver','Casa Amigos 80pf',10.25,'51b46ef9-a4da-4347-b087-75b303494975','Casamigos Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','Casamigos Blanco',10.25,'51b46ef9-a4da-4347-b087-75b303494975','Casamigos Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80,'casa-amigos-80pf'],
     ['Agave','blanco-silver','El Jimador Cristalino',7,'2564383e-dfe8-4b43-9e7c-865077b6f32a','El Jimador, Cristalino','Stone Grille website shelf','Blanco / Silver - 80 Proof / Filtered Añejo',80],
     ['Agave','blanco-silver','El Jimador Silver',7,'db98792a-6c60-459b-bd41-6e4fa3767225','El Jimador, Silver','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','El Luchador Blanco',9.25,'85945271-026a-42dc-a584-b9ff00fcb4ef','El Luchador Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 110 Proof / High-Proof Blanco',110],
@@ -725,11 +725,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','blanco-silver','1800 Silver',8,'62a16d10-23d7-4892-85d1-f289841381ab','1800 Silver Tequila','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','reposado','Adictivo Reposado',12.5,'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9','Adictivo Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / French Oak',80],
     ['Agave','reposado','Agavales Reposado',7,'b0e9ad5a-04c8-4fc7-9747-23e464602a1c','Agavales Respasado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
-    ['Agave','reposado','Don Ramon Reposado Punta Diamante',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Diamond Edition',80],
+    ['Agave','reposado','Don Ramón Reposado Punta Diamante',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Diamond Edition',80,'don-ramon-reposado-punta-diamante'],
     ['Agave','reposado','El Jimador Reposado',7.5,'b3fe0d50-9b6a-4672-8bf2-183675aadf44','El Jimador Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / 2 Months Oak',80],
     ['Agave','reposado','El Luchador Reposado',10.25,'6b7368fd-086c-42a3-a2fe-a30cb80ca148','El Luchador Reposado','Stone Grille website shelf','Reposado - 110 Proof / High-Proof Reposado',110],
     ['Agave','reposado','Herradura Reposado',10,'aa401cdb-3902-4183-95d3-33b25246446b','Herradura, Repo','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / Estate Grown',80],
-    ['Agave','reposado','Jose 1800 Reposado',11,'68345cbb-1da9-4f56-ad43-78e6687f9680','Jose 1800 Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
+    ['Agave','reposado','1800 Reposado',11,'68345cbb-1da9-4f56-ad43-78e6687f9680','Jose 1800 Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80,'jose-1800-reposado'],
     ['Agave','reposado','Mi Campo Reposado',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Wine Barrel Finish',80],
     ['Agave','reposado','Milagro Reposado',8,'02b44e5b-bd59-4ea3-a917-ec6019f8e915','Milagro Resposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Skelly Reposado',19.5,'e599647b-ee8e-4182-b2e4-8f2fcb4a8033','Skelly Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
@@ -738,17 +738,17 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','anejo-and-specialty','El Jimador Añejo',8.5,'2e8b7064-2d84-44c3-9ffe-c468c88473ba','El Jimador, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 14 Months Oak',80],
     ['Agave','anejo-and-specialty','Herradura Añejo',14.25,'7ed22215-7910-4753-b7f7-498c5dab4dba','Herradura, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 25 Months / Estate Grown',80],
     ['Agave','anejo-and-specialty','Zumbador Añejo',null,null,null,'Stone Grille website shelf',"Añejo & Specialty - 80 Proof / 14 Months / Ex-Jack Daniel's Barrels",80],
-    ['Agave','toast-agave-draft','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Casamigos Anejo',14,'d578c965-47f4-42ae-9ae7-b73d8244f900','Cas Amigos Anejo','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Casamigos Reposado',11.75,'e088dc2f-8b1e-4e71-b81f-bedb477c2faa','Casamigos Repo','Toast menu pull','Tequila category',null],
+    ['Agave','reposado','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
+    ['Agave','anejo-and-specialty','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
+    ['Agave','flavored-infused','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
+    ['Agave','anejo-and-specialty','Casamigos Anejo',14,'d578c965-47f4-42ae-9ae7-b73d8244f900','Cas Amigos Anejo','Toast menu pull','Tequila category',null],
+    ['Agave','reposado','Casamigos Reposado',11.75,'e088dc2f-8b1e-4e71-b81f-bedb477c2faa','Casamigos Repo','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Jose Cuervo Tequila',6,'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90','Jose Cuervo Tequila','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Don Fulano Reposado',12.25,'9560c0c8-dcde-4b8b-9df6-8e49ab589a91','Don Fulano Repo','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Don Fulano Anejo',18,'b9fc5d52-c111-443c-a814-5258de3c6808','Don Fulano Añejo','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
+    ['Agave','reposado','Don Fulano Reposado',12.25,'9560c0c8-dcde-4b8b-9df6-8e49ab589a91','Don Fulano Repo','Toast menu pull','Tequila category',null],
+    ['Agave','anejo-and-specialty','Don Fulano Anejo',18,'b9fc5d52-c111-443c-a814-5258de3c6808','Don Fulano Añejo','Toast menu pull','Tequila category',null],
+    ['Agave','anejo-and-specialty','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Apostoles Rosa',9,'b363b248-9670-4002-ae3a-19fd5b6aaa8a','Apostoles Rosa','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Don Roman Anejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null],
+    ['Agave','anejo-and-specialty','Don Ramón Añejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null,'don-roman-anejo-punta-diamante'],
 
     ['Rum','white-and-silver','Angostura White Oak',6,'806c5186-02d9-460c-91d8-8184489a6a18','Angostura White Oak Rum','Stone Grille website shelf','White & Silver - 80 Proof / Trinidad / Column Still',80],
     ['Rum','white-and-silver','Bacardi White',7,'329389fa-73be-4dcc-ae93-7abf1506b7f2','Bacardi  Rum','Stone Grille website shelf','White & Silver - 80 Proof / Column Still / Charcoal Filtered',80],
@@ -769,11 +769,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Rum','premium-and-aged',"Papa's Pilar Sherry Cask",8,'df28cc66-510b-4561-a995-d9ffb4b25c17',"Papa's Pilar Rum Sherry Cask",'Stone Grille website shelf','Premium & Aged - 86 Proof / Sherry Cask Finish',86],
     ['Rum','premium-and-aged','Zaya Gran Reserva 16 Year',11,'c0fd2578-3715-494e-acb9-4a796e5c69fd','Zaya Rum','Stone Grille website shelf','Premium & Aged - 16 Yr / 80 Proof / Guatemala / Solera',80],
     ['Rum','specialty','Don Q 151',7,'8360e46b-eef1-4c21-8e4f-32051d5b2974','Don Q 151 Rum','Stone Grille website shelf','Specialty - 151 Proof / Overproof / Puerto Rico',151],
-    ['Rum','specialty','Ron Batran #12 Reserva Superior',9,'0da69595-de07-452a-b3fe-aac3d351e623','Ron Batran #12 Res. Seperior','Stone Grille website shelf','Specialty - Reserva Superior',null],
+    ['Rum','dark-and-aged','Ron Botran Reserva #12',9,'0da69595-de07-452a-b3fe-aac3d351e623','Ron Batran #12 Res. Seperior','Stone Grille website shelf','Specialty - Reserva Superior',null,'ron-batran-12-reserva-superior'],
     ['Rum','specialty','Ron Barceló Imperial',null,null,null,'Stone Grille website shelf','Specialty - 80 Proof / Dominican Republic / 10 Yr',80],
-    ['Rum','toast-rum-draft','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
-    ['Rum','toast-rum-draft','Diplomatico Mantuano Dark',9,'185450cb-9afb-4f5a-a710-a96d20f67027','Diplomatico Mantuano Dark','Toast menu pull','Rum category',null],
-    ['Rum','toast-rum-draft','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
+    ['Rum','spiced-and-flavored','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
+    ['Rum','dark-and-aged','Diplomatico Mantuano Dark',9,'185450cb-9afb-4f5a-a710-a96d20f67027','Diplomatico Mantuano Dark','Toast menu pull','Rum category',null],
+    ['Rum','white-and-silver','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
 
     ['Vodka','vodka','House Vodka',6.5,'73985435-c504-46b8-8e81-c736c8ab5369','House Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Absolut Vodka',7,'2edc670b-2371-45a5-8548-40a7e57c0182','Absolut Vodka','Toast menu pull','Vodka category',null],
@@ -795,8 +795,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Vodka','vodka','Ketle Vodka',8,'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7','Kettle One Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Haku Vodka',9.5,'d39d8ced-c990-475d-87d5-d6ea4506f1b8','Haku Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Holla Vodka',6.5,'80fc8cb0-ea4e-4aa3-8896-ae0e237ce7ab','Holla Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Belvidere Vodka',10,'24b60efe-dc1d-41c5-9379-0bc207912b6c','Belvidere Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','potato-vodka','Boyd Bair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Belvedere Vodka',10,'24b60efe-dc1d-41c5-9379-0bc207912b6c','Belvidere Vodka','Toast menu pull','Vodka category',null,'belvidere-vodka'],
+    ['Vodka','potato-vodka','Boyd & Blair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null,'boyd-bair-potato-vodka'],
     ['Vodka','vodka','Vodka Grey Whale',8,'9af54e37-36bc-4268-842d-c271d14585e4','Vodka Grey Whale','Toast menu pull','Vodka category',null],
   ];
 
@@ -811,6 +811,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       sourceLabel:row[6],
       sourceDetail:row[7],
       proofN:row[8],
+      id:row[9],
       style:row[0] + ' - ' + row[1].replace(/-/g,' ')
     });
   });

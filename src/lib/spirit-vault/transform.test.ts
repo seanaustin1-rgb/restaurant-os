@@ -115,6 +115,40 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     expect(slugs).toContain("vodka-grey-whale");
   });
 
+  it("applies clear draft identity cleanup without changing prior import slugs", () => {
+    const byDisplayName = new Map(ROWS.map((r) => [r.definition.displayName, r]));
+
+    expect(byDisplayName.get("Casamigos Blanco")?.definition.slug).toBe("casa-amigos-80pf");
+    expect(byDisplayName.get("1800 Reposado")?.definition.slug).toBe("jose-1800-reposado");
+    expect(byDisplayName.get("Don Ramón Reposado Punta Diamante")?.definition.slug).toBe(
+      "don-ramon-reposado-punta-diamante",
+    );
+    expect(byDisplayName.get("Don Ramón Añejo Punta Diamante")?.definition.slug).toBe(
+      "don-roman-anejo-punta-diamante",
+    );
+    expect(byDisplayName.get("Ron Botran Reserva #12")?.definition.slug).toBe(
+      "ron-batran-12-reserva-superior",
+    );
+    expect(byDisplayName.get("Belvedere Vodka")?.definition.slug).toBe("belvidere-vodka");
+    expect(byDisplayName.get("Boyd & Blair Potato Vodka")?.definition.slug).toBe(
+      "boyd-bair-potato-vodka",
+    );
+  });
+
+  it("removes clear Toast catch-all subcategories while leaving unresolved holds draft-only", () => {
+    const draftInventory = ROWS.filter(
+      (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
+    );
+    const catchAll = draftInventory.filter((r) => r.definition.subcategory?.startsWith("toast-"));
+
+    expect(catchAll.map((r) => r.definition.displayName).sort()).toEqual([
+      "Apostoles Rosa",
+      "Jose Cuervo Tequila",
+    ]);
+    expect(catchAll.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
+    expect(catchAll.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
+  });
+
   it("never imports the bourbon silhouette (silo stays null until the mapper exists)", () => {
     for (const { definition } of ROWS) {
       expect(definition.silo).toBeNull();

@@ -177,6 +177,27 @@ in this doc (incl. the Operator Checklist below) now use `cmqnyvbab0000osvwrxhao
   110, offers 110, price observations 110, guest-visible listings 109, draft
   listings 1, duplicate price observations 0.
 
+### Flight Builder split → #143 (Claude, per Sean 2026-07-30)
+Codex's `c15111f "Add Spirit Vault flight builder"` (SpiritFlight/SpiritFlightItem
+migration `20260809000000_add_spirit_flights` + `admin/spirit-vault/flights/*` UI +
+`flight-pricing` + nav/roles) was OUT OF SCOPE for this PR (Claude Lane → "Flight Builder
+UI"). Per Sean it was SPLIT:
+- **#143** `feat/spirit-vault-flight-builder` (= `c15111f`, stacked on #142) — flight work preserved.
+- **#142** `feat/spirit-vault-admin-phase1` reset `c15111f` → **`f26ab2c`**: the flight commit,
+  its migration, and the `SpiritFlight`/`SpiritFlightItem` models are REMOVED. #142 is now
+  purely the in-scope admin/vault/overrides + importer work.
+- The flight migration is **NOT applied to any DB** (verified 0 flight tables in outfront-demo);
+  `/admin/spirit-vault/flights` 500s until applied — a deliberate later step on #143.
+
+⚠ **CODEX SYNC REQUIRED:** if your local `feat/spirit-vault-admin-phase1` is still at `c15111f`,
+do NOT push it (a fast-forward would re-add the flight commit). Sync with:
+`git fetch origin && git checkout feat/spirit-vault-admin-phase1 && git reset --hard origin/feat/spirit-vault-admin-phase1`.
+
+### Deployed demo runtime — LIVE (Codex, 2026-08-09)
+Vercel outfront-demo envs point at the demo DB (`DATABASE_URL` pooler + `DIRECT_URL` direct);
+the exposed DB password was rotated and envs updated. **GET `/vault` → 200, renders 109 spirits.**
+Non-blocking follow-up: `/favicon.ico` 404 + Clerk-middleware noise → next-phase cleanup.
+
 ### Open / next (in-lane)
 - **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime DB parity for the demo dataset is now proven; deployed `/vault` still needs verification after the env var is set.
 - **When Sean directs:** cat→silo silhouette mapper (Phase 1.5); Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.

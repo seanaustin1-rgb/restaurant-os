@@ -131,4 +131,23 @@ describe("buildVaultPayloadScript", () => {
     expect(script).toContain("sample-rye");
     expect(script).toContain("1.5 oz pour");
   });
+
+  it("escapes values that could break out of the inline script tag", () => {
+    const script = buildVaultPayloadScript([
+      {
+        ...baseListing,
+        definition: {
+          ...baseListing.definition,
+          displayName: "</script><script>alert(1)</script>",
+          why: "Line\u2028next & more",
+        },
+      },
+    ]);
+
+    expect(script).not.toContain("</script");
+    expect(script).not.toContain("<script");
+    expect(script).toContain("\\u003c/script\\u003e");
+    expect(script).toContain("\\u0026");
+    expect(script).toContain("\\u2028");
+  });
 });

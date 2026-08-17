@@ -8,6 +8,7 @@ import {
   type FlightPourOption,
   type FlightFormInitial,
 } from "@/components/spirit-vault/SpiritFlightCreateForm";
+import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
       status: true,
       items: {
         orderBy: { sortOrder: "asc" },
-        select: { venueSpiritId: true, spiritPourId: true, itemNote: true },
+        select: { venueSpiritId: true, spiritPourId: true, itemNote: true, pairingBites: true },
       },
     },
   });
@@ -64,7 +65,8 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
     orderBy: [{ definition: { category: "asc" } }, { slug: "asc" }],
     select: {
       id: true,
-      definition: { select: { brand: true, expression: true, displayName: true, category: true } },
+      overrides: true,
+      definition: { select: { brand: true, expression: true, displayName: true, category: true, flavor: true } },
       offers: {
         where: { priceUsd: { not: null }, pourSizeOz: { not: null } },
         orderBy: [{ isPrimary: "desc" }, { pourSizeOz: "asc" }],
@@ -73,8 +75,10 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
     },
   });
 
-  const pours: FlightPourOption[] = listings.flatMap((listing) =>
-    listing.offers.flatMap((offer) => {
+  const pours: FlightPourOption[] = listings.flatMap((listing) => {
+    const ov = listing.overrides && typeof listing.overrides === "object" ? (listing.overrides as { flavor?: unknown }) : null;
+    const suggestedBites = suggestBites(ov?.flavor ?? listing.definition.flavor);
+    return listing.offers.flatMap((offer) => {
       const priceUsd = decimalToNumber(offer.priceUsd);
       const pourSizeOz = decimalToNumber(offer.pourSizeOz);
       if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
@@ -88,10 +92,11 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
           pourSizeOz,
           priceUsd,
           oneOzPriceUsd: oneOz(priceUsd, pourSizeOz),
+          suggestedBites,
         },
       ];
-    }),
-  );
+    });
+  });
 
   // Make sure the flight's current source pours are always present as options, even
   // if that spirit was since unpublished — otherwise editing would silently drop it.
@@ -108,12 +113,15 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
         pourLabel: true,
         pourSizeOz: true,
         priceUsd: true,
-        venueSpirit: { select: { definition: { select: { brand: true, expression: true, displayName: true, category: true } } } },
+        venueSpirit: {
+          select: { overrides: true, definition: { select: { brand: true, expression: true, displayName: true, category: true, flavor: true } } },
+        },
       },
     });
     for (const e of extra) {
       const priceUsd = decimalToNumber(e.priceUsd);
       const pourSizeOz = decimalToNumber(e.pourSizeOz);
+      const ov = e.venueSpirit.overrides && typeof e.venueSpirit.overrides === "object" ? (e.venueSpirit.overrides as { flavor?: unknown }) : null;
       pours.push({
         venueSpiritId: e.venueSpiritId,
         spiritPourId: e.id,
@@ -123,6 +131,7 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
         pourSizeOz: pourSizeOz ?? 0,
         priceUsd: priceUsd ?? 0,
         oneOzPriceUsd: oneOz(priceUsd, pourSizeOz),
+        suggestedBites: suggestBites(ov?.flavor ?? e.venueSpirit.definition.flavor),
       });
     }
   }
@@ -132,8 +141,15 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
     description: flight.description ?? "",
     status: flight.status,
     items: flight.items
-      .filter((i): i is { venueSpiritId: string; spiritPourId: string; itemNote: string | null } => Boolean(i.spiritPourId))
-      .map((i) => ({ venueSpiritId: i.venueSpiritId, spiritPourId: i.spiritPourId, itemNote: i.itemNote ?? "" })),
+      .filter((i): i is { venueSpiritId: string; spiritPourId: string; itemNote: string | null; pairingBites: string[] } =>
+        Boolean(i.spiritPourId),
+      )
+      .map((i) => ({
+        venueSpiritId: i.venueSpiritId,
+        spiritPourId: i.spiritPourId,
+        itemNote: i.itemNote ?? "",
+        bites: (i.pairingBites ?? []).join(", "),
+      })),
   };
 
   return (
@@ -146,16 +162,21 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
         <p className="mt-1 text-sm text-muted">
           Reorder, add or remove spirits, adjust notes, set status, or delete. Price regenerates from the selected pours.
         </p>
-        {flight.status === "PUBLISHED" && (
-          <a
-            href={`/vault/flights/${flight.id}`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-block text-xs text-copper-soft hover:text-copper"
-          >
-            View guest page ↗
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <a href={`/admin/spirit-vault/flights/${flight.id}/prep`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
+            Prep sheet ↗
           </a>
-        )}
+          {flight.status === "PUBLISHED" && (
+            <>
+              <a href={`/vault/flights/${flight.id}/placemat`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
+                Placemat ↗
+              </a>
+              <a href={`/vault/flights/${flight.id}`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
+                Guest page ↗
+              </a>
+            </>
+          )}
+        </div>
       </div>
 
       <SpiritFlightCreateForm pours={pours} flightId={flight.id} initial={initial} />

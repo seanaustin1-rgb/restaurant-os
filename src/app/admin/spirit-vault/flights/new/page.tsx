@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { SpiritFlightCreateForm, type FlightPourOption } from "@/components/spirit-vault/SpiritFlightCreateForm";
+import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
 
 export const dynamic = "force-dynamic";
 
@@ -44,12 +45,14 @@ export default async function NewSpiritFlightPage() {
     orderBy: [{ definition: { category: "asc" } }, { slug: "asc" }],
     select: {
       id: true,
+      overrides: true,
       definition: {
         select: {
           brand: true,
           expression: true,
           displayName: true,
           category: true,
+          flavor: true,
         },
       },
       offers: {
@@ -68,8 +71,10 @@ export default async function NewSpiritFlightPage() {
     },
   });
 
-  const pours: FlightPourOption[] = listings.flatMap((listing) =>
-    listing.offers.flatMap((offer) => {
+  const pours: FlightPourOption[] = listings.flatMap((listing) => {
+    const ov = listing.overrides && typeof listing.overrides === "object" ? (listing.overrides as { flavor?: unknown }) : null;
+    const suggestedBites = suggestBites(ov?.flavor ?? listing.definition.flavor);
+    return listing.offers.flatMap((offer) => {
       const priceUsd = decimalToNumber(offer.priceUsd);
       const pourSizeOz = decimalToNumber(offer.pourSizeOz);
       if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
@@ -83,10 +88,11 @@ export default async function NewSpiritFlightPage() {
           pourSizeOz,
           priceUsd,
           oneOzPriceUsd: Math.round((priceUsd / pourSizeOz) * 100) / 100,
+          suggestedBites,
         },
       ];
-    }),
-  );
+    });
+  });
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-6 py-10">

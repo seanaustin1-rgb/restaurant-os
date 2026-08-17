@@ -1527,6 +1527,10 @@ model SpiritFlightItem {
   pourSizeOz    Decimal  @default(1.0) @db.Decimal(4, 1)
   sortOrder     Int
   itemNote      String?
+  // Internal (non-guest) small-bite accompaniment for this pour — 1-2 bites,
+  // seeded from the spirit's flavor profile and editable by staff. Shown on the
+  // kitchen/bar prep sheet only, never on the guest placemat.
+  pairingBites  String[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

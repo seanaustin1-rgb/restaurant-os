@@ -14,6 +14,8 @@ export interface CreateSpiritFlightItemInput {
   venueSpiritId: string;
   spiritPourId: string;
   itemNote?: string | null;
+  /** Internal 1-2 bite accompaniment (prep sheet only, non-guest). */
+  pairingBites?: string[] | null;
 }
 
 export interface CreateSpiritFlightInput {
@@ -49,12 +51,28 @@ function cleanText(v: string | null | undefined): string | null {
   return t === "" ? null : t;
 }
 
+// At most 2 bites, trimmed, de-duped, no blanks.
+function cleanBites(bites: string[] | null | undefined): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of bites ?? []) {
+    const t = (raw ?? "").trim();
+    const key = t.toLowerCase();
+    if (!t || seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+    if (out.length >= 2) break;
+  }
+  return out;
+}
+
 function normalizeFlightItems(items: CreateSpiritFlightItemInput[]): CreateSpiritFlightItemInput[] {
   const normalized = (items ?? [])
     .map((item) => ({
       venueSpiritId: item.venueSpiritId?.trim(),
       spiritPourId: item.spiritPourId?.trim(),
       itemNote: cleanText(item.itemNote),
+      pairingBites: cleanBites(item.pairingBites),
     }))
     .filter((item) => item.venueSpiritId && item.spiritPourId);
 
@@ -122,6 +140,7 @@ function flightItemCreateData(restaurantId: string, items: CreateSpiritFlightIte
     pourSizeOz: new Prisma.Decimal(1),
     sortOrder: index,
     itemNote: item.itemNote,
+    pairingBites: item.pairingBites ?? [],
   }));
 }
 

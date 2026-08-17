@@ -103,6 +103,7 @@ describe("createSpiritFlight", () => {
         pourSizeOz: expect.anything(),
         sortOrder: 0,
         itemNote: "opener",
+        pairingBites: [],
       },
       {
         restaurantId: "rest_1",
@@ -111,9 +112,23 @@ describe("createSpiritFlight", () => {
         pourSizeOz: expect.anything(),
         sortOrder: 1,
         itemNote: null,
+        pairingBites: [],
       },
     ]);
     expect(JSON.stringify(data.items.create)).not.toMatch(/brand|expression|topNotes|flavor/);
+  });
+
+  it("persists per-item bites (trimmed, de-duped, capped at 2)", async () => {
+    await createSpiritFlight({
+      ...baseInput,
+      items: [
+        { venueSpiritId: "venue_1", spiritPourId: "pour_1", pairingBites: ["  Salted caramel  ", "Salted caramel", "Pecans", "Extra"] },
+        { venueSpiritId: "venue_2", spiritPourId: "pour_2", pairingBites: [] },
+      ],
+    });
+    const create = h.flightCreate.mock.calls[0][0].data.items.create;
+    expect(create[0].pairingBites).toEqual(["Salted caramel", "Pecans"]);
+    expect(create[1].pairingBites).toEqual([]);
   });
 
   it("rejects duplicate spirits in the same flight", async () => {

@@ -20,12 +20,22 @@ export interface FlightPourOption {
   pourSizeOz: number;
   priceUsd: number;
   oneOzPriceUsd: number;
+  suggestedBites: string[];
 }
 
 interface SelectedFlightItem {
   venueSpiritId: string;
   spiritPourId: string;
   itemNote: string;
+  bites: string;
+}
+
+function splitBites(s: string): string[] {
+  return s
+    .split(",")
+    .map((b) => b.trim())
+    .filter(Boolean)
+    .slice(0, 2);
 }
 
 export interface FlightFormInitial {
@@ -73,7 +83,10 @@ export function SpiritFlightCreateForm({
     if (selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId)) return;
     if (selected.length >= 6) return;
     setSaved(null);
-    setSelected((items) => [...items, { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote: "" }]);
+    setSelected((items) => [
+      ...items,
+      { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote: "", bites: (pour.suggestedBites ?? []).join(", ") },
+    ]);
   }
 
   function remove(spiritPourId: string) {
@@ -97,15 +110,26 @@ export function SpiritFlightCreateForm({
     setSelected((items) => items.map((item) => (item.spiritPourId === spiritPourId ? { ...item, itemNote } : item)));
   }
 
+  function setBites(spiritPourId: string, bites: string) {
+    setSaved(null);
+    setSelected((items) => items.map((item) => (item.spiritPourId === spiritPourId ? { ...item, bites } : item)));
+  }
+
   function save() {
     setError(null);
     setSaved(null);
+    const payloadItems = selected.map((item) => ({
+      venueSpiritId: item.venueSpiritId,
+      spiritPourId: item.spiritPourId,
+      itemNote: item.itemNote,
+      pairingBites: splitBites(item.bites),
+    }));
     startTransition(async () => {
       try {
         const result =
           isEdit && flightId
-            ? await updateSpiritFlight({ id: flightId, name, description, status, items: selected })
-            : await createSpiritFlight({ name, description, status, items: selected });
+            ? await updateSpiritFlight({ id: flightId, name, description, status, items: payloadItems })
+            : await createSpiritFlight({ name, description, status, items: payloadItems });
         setSaved(result);
         if (!isEdit) {
           setName("");
@@ -268,6 +292,13 @@ export function SpiritFlightCreateForm({
                       onChange={(e) => setNote(item.spiritPourId, e.target.value)}
                       placeholder="Item note"
                       className="mt-2 w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs text-ink-text outline-none focus:border-copper-soft"
+                    />
+                    <input
+                      value={item.bites}
+                      onChange={(e) => setBites(item.spiritPourId, e.target.value)}
+                      placeholder="Bites — prep only, comma-separated"
+                      title="Internal small-bite accompaniment (staff prep sheet, not guest-facing)"
+                      className="mt-1.5 w-full rounded-md border border-line bg-surface px-2 py-1.5 text-xs text-copper-soft/90 outline-none placeholder:text-muted focus:border-copper-soft"
                     />
                   </div>
                 );

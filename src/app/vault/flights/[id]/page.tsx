@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadFlightView } from "@/lib/spirit-vault/flight-view";
-import { FlavorRadar } from "@/components/spirit-vault/FlavorRadar";
+import { FlavorBars } from "@/components/spirit-vault/FlavorBars";
 
 // Guest-facing digital flight view (QR / discovery). Public, single-tenant via
 // SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED only. One flight price, no per-pour price.
@@ -52,20 +52,32 @@ export default async function GuestFlightPage({ params }: { params: { id: string
               <p className="mt-1 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-copper-dim">
                 {[pour.category, pour.proof, pour.age].filter(Boolean).join(" · ")}
               </p>
-              <div className="mt-3 flex items-center gap-4">
-                <FlavorRadar flavor={pour.flavor} size={82} />
-                {pour.topNotes.length > 0 && (
-                  <ol className="text-[0.82rem] leading-relaxed text-ink-text-soft">
-                    {pour.topNotes.map((note, n) => (
-                      <li key={note}>
-                        <span className="mr-1.5 font-mono text-[0.6rem] text-copper-dim">{String(n + 1).padStart(2, "0")}</span>
-                        {note}
-                      </li>
-                    ))}
-                  </ol>
-                )}
+              <div className="mt-3.5 max-w-[19rem]">
+                <FlavorBars flavor={pour.flavor} body={pour.body} finish={pour.finish} />
               </div>
+              {pour.topNotes.length > 0 && (
+                <div className="mt-3">
+                  <p className="font-mono text-[0.5625rem] uppercase tracking-[0.18em] text-copper-dim">Top notes</p>
+                  <p className="mt-1 text-[0.85rem] text-ink-text-soft">{pour.topNotes.join(" · ")}</p>
+                </div>
+              )}
               {pour.taste && <p className="mt-3 text-[0.9rem] leading-relaxed text-ink-text-soft">{pour.taste}</p>}
+              {(pour.mash || pour.cask) && (
+                <div className="mt-3 border-t border-line pt-3">
+                  {pour.mash && (
+                    <p className="text-[0.82rem] text-ink-text-soft">
+                      <span className="mr-1.5 font-mono text-[0.55rem] uppercase tracking-wider text-copper-dim">Mash</span>
+                      {pour.mash}
+                    </p>
+                  )}
+                  {pour.cask && (
+                    <p className="mt-1 text-[0.82rem] text-ink-text-soft">
+                      <span className="mr-1.5 font-mono text-[0.55rem] uppercase tracking-wider text-copper-dim">Cask</span>
+                      {pour.cask}
+                    </p>
+                  )}
+                </div>
+              )}
               {pour.itemNote && (
                 <div className="mt-3">
                   <p className="font-mono text-[0.5625rem] uppercase tracking-[0.18em] text-copper-dim">What to notice</p>

@@ -2,12 +2,10 @@
  * Public guest vault, served dynamically from the canonical Spirit Vault tables.
  *
  * Reuses the proven static engine (`docs/spirit-vault/spirit-vault-prototype.html`)
- * and swaps only its data script for a DB-generated payload. `?review=1` shows
- * draft/review records for the configured tenant.
+ * and swaps only its data script for a DB-generated payload.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { buildVaultPayloadScript } from "@/lib/spirit-vault/vault-payload";
 
@@ -18,16 +16,16 @@ const ENGINE_PATH = join(process.cwd(), "docs/spirit-vault/spirit-vault-prototyp
 const DATA_SCRIPT_TAG = '<script src="spirit-vault-data.js"></script>';
 const VAULT_RESTAURANT_ID = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   if (!VAULT_RESTAURANT_ID) {
     return new Response("Spirit Vault restaurant is not configured.", { status: 503 });
   }
 
-  const review = req.nextUrl.searchParams.get("review") === "1";
   const listings = await prisma.venueSpirit.findMany({
     where: {
       restaurantId: VAULT_RESTAURANT_ID,
-      ...(review ? {} : { recordStatus: "PUBLISHED" as const, publicationStatus: "PUBLISHED" as const }),
+      recordStatus: "PUBLISHED",
+      publicationStatus: "PUBLISHED",
     },
     include: {
       definition: true,

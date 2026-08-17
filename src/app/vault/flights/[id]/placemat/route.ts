@@ -66,56 +66,57 @@ function placematHtml(v: FlightView): string {
 <style>
   :root{--parchment:#F5EFE2;--ink:#2A2418;--ink-soft:#5B513C;--copper:#9A6B2F;--copper-deep:#7A5526;--gold:#C8873A;--gold-light:#D9A35E;--band:#17130C;--band-text:#ECE1CB;--display:'Cormorant Garamond',Georgia,serif;--body:'DM Sans',system-ui,sans-serif;--mono:'Space Mono',ui-monospace,monospace}
   *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%}
   body{background:#3a3730;font-family:var(--body);color:var(--ink);padding:24px;-webkit-font-smoothing:antialiased}
   .bar-print{max-width:11in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
-  .sheet{width:11in;height:8.5in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
-  .band{background:var(--band);color:var(--band-text);padding:.32in .55in .3in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.6in}
+  .sheet{width:100%;max-width:11in;height:7.9in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .band{background:var(--band);color:var(--band-text);padding:.3in .5in .28in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.6in}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-  .venue{font-family:var(--mono);font-size:8px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-light)}
-  .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1;color:var(--band-text);margin-top:5px}
-  .through{margin-top:9px;max-width:7in}
-  .through .l{font-family:var(--mono);font-size:7px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);opacity:.85}
-  .through p{font-family:var(--display);font-style:italic;font-size:14.5px;line-height:1.3;color:#cdbf9f;margin-top:3px}
+  .venue{font-family:var(--mono);font-size:9px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold-light)}
+  .fname{font-family:var(--display);font-weight:600;font-size:36px;line-height:1;color:var(--band-text);margin-top:6px}
+  .through{margin-top:10px;max-width:7in}
+  .through .l{font-family:var(--mono);font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);opacity:.85}
+  .through p{font-family:var(--display);font-style:italic;font-size:17px;line-height:1.3;color:#cdbf9f;margin-top:4px}
   .pricebox{text-align:right;flex:none;padding-top:2px}
-  .price{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--gold-light);line-height:1}
-  .price-sub{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a;margin-top:5px}
+  .price{font-family:var(--mono);font-weight:700;font-size:30px;color:var(--gold-light);line-height:1}
+  .price-sub{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a;margin-top:6px}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr)}
-  .glass{display:flex;flex-direction:column;padding:.16in .2in .14in;border-right:1px solid rgba(122,85,38,.18)}
+  .glass{display:flex;flex-direction:column;padding:.22in .22in .18in;border-right:1px solid rgba(122,85,38,.18)}
   .glass:last-child{border-right:0}
-  .ring{width:1.32in;height:1.32in;margin:0 auto;border-radius:50%;border:1.6px solid var(--gold);box-shadow:inset 0 0 0 5px var(--parchment),inset 0 0 0 6px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
-  .ring .n{font-family:var(--display);font-size:28px;color:rgba(154,107,47,.34)}
-  .ring .oz{position:absolute;bottom:12px;font-family:var(--mono);font-size:6.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .gname{font-family:var(--display);font-weight:600;font-size:19px;line-height:1.02;color:var(--ink);text-align:center;margin-top:8px}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:12px;color:var(--copper-deep);text-align:center;margin-top:1px}
-  .stats{display:flex;margin-top:.1in;padding:.07in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
+  .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
+  .ring .n{font-family:var(--display);font-size:38px;color:rgba(154,107,47,.34)}
+  .ring .oz{position:absolute;bottom:16px;font-family:var(--mono);font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
+  .gname{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.02;color:var(--ink);text-align:center;margin-top:11px}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;color:var(--copper-deep);text-align:center;margin-top:2px}
+  .stats{display:flex;margin-top:.13in;padding:.09in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
-  .stat .k{font-family:var(--mono);font-size:5.6px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
-  .stat .v{font-family:var(--mono);font-size:9.5px;color:var(--ink);margin-top:2px}
-  .chart{margin-top:.12in}
-  .clab{font-family:var(--mono);font-size:6px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:4px;display:flex;justify-content:space-between}
-  .row{display:flex;align-items:center;gap:6px;margin-bottom:3px}
-  .row .k{font-family:var(--mono);font-size:6.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);width:.46in;flex:none}
-  .row .bar{flex:1;height:5px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
+  .stat .k{font-family:var(--mono);font-size:6.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
+  .stat .v{font-family:var(--mono);font-size:11px;color:var(--ink);margin-top:3px}
+  .chart{margin-top:.15in}
+  .clab{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:5px;display:flex;justify-content:space-between}
+  .row{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+  .row .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);width:.5in;flex:none}
+  .row .bar{flex:1;height:6px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
   .row .bar i{display:block;height:100%;background:var(--gold)}
   .row.tex .bar i{background:var(--copper-deep)}
-  .row .num{font-family:var(--mono);font-size:7.5px;color:var(--ink-soft);width:10px;text-align:right;flex:none}
-  .tex-wrap{margin-top:6px;padding-top:5px;border-top:1px solid rgba(122,85,38,.14)}
-  .notes{margin-top:.1in}
-  .k-lab{font-family:var(--mono);font-size:6px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
-  .notes .v{font-size:10px;color:var(--ink);margin-top:2px;line-height:1.3}
-  .taste{margin-top:.08in;font-size:9.5px;color:var(--ink-soft);line-height:1.38}
-  .prod{margin-top:auto;padding-top:.1in}
-  .prod-head{font-family:var(--mono);font-size:6px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:6px;margin-bottom:5px}
-  .prow{margin-bottom:5px}
-  .prow .k{font-family:var(--mono);font-size:6.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
-  .prow .v{font-family:var(--display);font-size:12.5px;color:var(--ink);line-height:1.2;margin-top:1px}
-  .foot{background:var(--band);height:.3in;display:flex;align-items:center;justify-content:space-between;padding:0 .55in;color:#9c876a}
-  .foot .l{font-family:var(--mono);font-size:7px;letter-spacing:.22em;text-transform:uppercase}
-  .foot .box{width:14px;height:14px;border:1px solid rgba(216,163,94,.5);border-radius:3px}
-  .foot .qr{display:flex;align-items:center;gap:7px}
-  @media print{body{background:none;padding:0}.bar-print{display:none}.sheet{box-shadow:none}@page{size:letter landscape;margin:0}}
+  .row .num{font-family:var(--mono);font-size:9px;color:var(--ink-soft);width:12px;text-align:right;flex:none}
+  .tex-wrap{margin-top:7px;padding-top:6px;border-top:1px solid rgba(122,85,38,.14)}
+  .notes{margin-top:.14in}
+  .k-lab{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
+  .notes .v{font-size:12px;color:var(--ink);margin-top:3px;line-height:1.3}
+  .taste{margin-top:.1in;font-size:11.5px;color:var(--ink-soft);line-height:1.4}
+  .prod{margin-top:auto;padding-top:.12in}
+  .prod-head{font-family:var(--mono);font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:7px;margin-bottom:6px}
+  .prow{margin-bottom:6px}
+  .prow .k{font-family:var(--mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
+  .prow .v{font-family:var(--display);font-size:14.5px;color:var(--ink);line-height:1.2;margin-top:2px}
+  .foot{background:var(--band);height:.32in;display:flex;align-items:center;justify-content:space-between;padding:0 .5in;color:#9c876a}
+  .foot .l{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase}
+  .foot .box{width:16px;height:16px;border:1px solid rgba(216,163,94,.5);border-radius:3px}
+  .foot .qr{display:flex;align-items:center;gap:8px}
+  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.9in;box-shadow:none}@page{size:11in 8.5in;margin:0.3in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">

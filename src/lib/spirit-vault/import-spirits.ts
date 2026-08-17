@@ -608,12 +608,15 @@ type PrismaLike = PrismaClient | Prisma.TransactionClient;
  * interactive transaction (generous timeout — ~110 records × a few queries) and
  * binds every op to the tx client, so a throw anywhere rolls the batch back.
  */
+export const SPIRIT_IMPORT_TRANSACTION_TIMEOUT_MS = 600_000;
+export const SPIRIT_IMPORT_TRANSACTION_MAX_WAIT_MS = 60_000;
+
 export function createPrismaSpiritStore(prisma: PrismaClient): SpiritImportStore {
   return {
     async runInTransaction(fn) {
       return prisma.$transaction((tx) => fn(prismaTxStore(tx)), {
-        timeout: 120_000,
-        maxWait: 20_000,
+        timeout: SPIRIT_IMPORT_TRANSACTION_TIMEOUT_MS,
+        maxWait: SPIRIT_IMPORT_TRANSACTION_MAX_WAIT_MS,
       });
     },
   };

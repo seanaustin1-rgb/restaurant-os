@@ -3,14 +3,14 @@
  * (SpiritDefinition / VenueSpirit / SpiritPour / SpiritPriceObservation).
  *
  * Run (DRY RUN — projects the DB effect, writes nothing):
- *   npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId>
+ *   npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId> --require-db"
  *   (reads existing rows to show would-insert/would-update; falls back to PLANNED
  *    counts with existence unverified if the DB is unreachable)
  *
  * Run (APPLY — writes to the DB DATABASE_URL points at; NON-PROD only):
  *   SPIRIT_VAULT_ALLOWED_TARGETS=<outfront-demo-ref> \
- *   npx dotenv -e .env.local -o -- tsx scripts/import-spirit-vault.ts \
- *     --restaurant=<restaurantId> --apply --confirm-target=<outfront-demo-ref>
+ *   npx dotenv -e .env.local -o -- node scripts/demo-db.cjs \
+ *     "npx tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId> --apply --confirm-target=<outfront-demo-ref>"
  *
  * Guards (all must hold before a single row is written):
  *   • --apply is required to write; default is a dry run with ZERO writes.
@@ -117,7 +117,7 @@ function printPlannedFallback(plan: ImportPlan, restaurantId: string) {
 function assertPlanMatchesExpectation(plan: ImportPlan) {
   const problems: string[] = [];
   if (plan.totals.records !== 110) problems.push(`expected 110 records, got ${plan.totals.records}`);
-  if (plan.totals.published !== 108) problems.push(`expected 108 published, got ${plan.totals.published}`);
+  if (plan.totals.published !== 109) problems.push(`expected 109 published, got ${plan.totals.published}`);
   if (plan.validationFailures.length)
     problems.push(`expected 0 validation failures, got ${plan.validationFailures.length}`);
   if (plan.duplicateKeys.length)
@@ -126,7 +126,7 @@ function assertPlanMatchesExpectation(plan: ImportPlan) {
     console.error("\n✗ Plan does not match the known-good baseline — refusing to apply:");
     for (const p of problems) console.error(`  • ${p}`);
     console.error(
-      "\n(Dry-run only prints; --apply is blocked until the vault plans to 110/108 cleanly.)",
+      "\n(Dry-run only prints; --apply is blocked until the vault plans to 110/109 cleanly.)",
     );
     return false;
   }
@@ -136,6 +136,7 @@ function assertPlanMatchesExpectation(plan: ImportPlan) {
 async function main() {
   const restaurantId = arg("restaurant");
   const apply = flag("apply");
+  const requireDb = flag("require-db");
   const confirmTarget = arg("confirm-target");
 
   if (!restaurantId) {
@@ -160,6 +161,10 @@ async function main() {
           "DRY RUN complete — no writes. ⚠ The restaurant does not exist in this DB, so the\n" +
             "projection above is NOT executable: --apply would abort. Fix --restaurant, then re-run.",
         );
+        if (requireDb) {
+          await prisma.$disconnect();
+          process.exit(1);
+        }
       } else {
         console.log(
           "DRY RUN complete — no database writes. Counts are the projected effect against this DB.\n" +
@@ -172,6 +177,11 @@ async function main() {
       console.warn(`\n⚠ Could not read the database (${(dbErr as Error).message}).`);
       console.warn("Falling back to PLANNED counts — tenant/target existence NOT verified.\n");
       printPlannedFallback(plan, restaurantId);
+      if (requireDb) {
+        console.error("--require-db was passed, so this dry-run is not acceptable for operator apply.");
+        await prisma.$disconnect();
+        process.exit(1);
+      }
     }
     await prisma.$disconnect();
     return;

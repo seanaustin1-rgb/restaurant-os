@@ -35,6 +35,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/settings/sources", label: "Source Map", roles: ADJUSTMENT_ROLES },
   { href: "/settings/allocation", label: "Allocation", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/settings/beverage", label: "Beverage", roles: ADJUSTMENT_ROLES, businessTypes: ["RESTAURANT"] },
+  { href: "/admin/spirit-vault", label: "Spirit Vault", roles: OWNER_ROLES, businessTypes: ["RESTAURANT"] },
   { href: "/connections", label: "Connections", roles: OWNER_ROLES },
 ];
 

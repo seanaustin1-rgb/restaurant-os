@@ -32,6 +32,103 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     jepthaWheated:'https://jepthacreed.com/product/six-year-old-wheated-bourbon/',
   };
 
+  function draftSlug(value){
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/&/g,' and ')
+      .replace(/[^a-z0-9]+/g,'-')
+      .replace(/^-|-$/g,'');
+  }
+
+  function splitDraftIdentity(displayName){
+    var known = [
+      "Captain Morgan","Papa's Pilar","Maison Ferrand Plantation","Don Fulano",
+      "Don Ramon","Tres Agaves","Mi Campo","Rey Supremo","Tita Doña Celia",
+      "Casa Amigos","Jose 1800","El Jimador","El Luchador","Don Q",
+      "Grey Goose","Double Cross","Prairie Cucumber","Ketle","Boyd Bair",
+      "Apple Holla","Amsterdam Apple","Ron Batran","Ron Barceló"
+    ];
+    var match = known.find(function(prefix){
+      return String(displayName).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+        .indexOf(prefix.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()) === 0;
+    });
+    if(match){
+      return {brand:match, expression:String(displayName).slice(match.length).replace(/^[-,\s]+/,'') || null};
+    }
+    var parts = String(displayName || '').trim().split(/\s+/);
+    return {brand:parts[0] || displayName, expression:parts.slice(1).join(' ') || null};
+  }
+
+  function draftInventorySpirit(config){
+    var identity = splitDraftIdentity(config.displayName);
+    var sourceRows = [
+      ['Draft Source', [config.sourceLabel, config.sourceDetail].filter(Boolean).join(' - '), true],
+      ['Review Status', 'Product identity, producer, origin, production method, and tasting language pending source review before publication.', true]
+    ];
+    if(config.toastMenuName){
+      sourceRows.splice(1, 0, ['Toast Menu Label', config.toastMenuName, true]);
+    }
+    var record = makeBatchSpirit({
+      id:config.id || draftSlug(config.displayName),
+      brand:config.brand || identity.brand,
+      expression:config.expression || identity.expression,
+      displayName:config.displayName,
+      cat:config.cat,
+      subcategory:config.subcategory,
+      country:null,
+      style:config.style || (config.cat + ' - draft inventory record'),
+      proofN:config.proofN ?? null,
+      proofDisplay:config.proofN == null ? 'Pending' : undefined,
+      ageText:'Pending',
+      priceUsd:config.priceUsd ?? null,
+      toastItemGuid:config.toastItemGuid || null,
+      flavor:{Sweet:5,Oak:3,Spice:3,Fruit:4,Smoke:0,Earth:2,Herbal:2},
+      body:4,
+      finish:4,
+      topNotes:['Pending source review','Pending source review','Pending source review'],
+      productionRows:sourceRows,
+      prodTags:[config.subcategory || config.cat, 'Draft Inventory'],
+      pairings:[],
+      recordStatus:'draft',
+      publicationStatus:'draft',
+      verificationStatus:'unverified',
+      why:'Draft inventory record created from Stone Grille shelf and/or Toast menu data. Do not publish until product facts and venue copy are source-reviewed.',
+      whyShort:'Draft inventory record pending source review.',
+      whyWeCarry:'Pending Sean review.',
+      sourcingLimitations:[
+        'Draft inventory setup only; do not publish until identity, producer, origin, strength, and tasting language are source-reviewed.'
+      ]
+    });
+    record.country = null;
+    record.region = null;
+    record.city = null;
+    record.distillery = (record.brand || config.displayName) + ' - Origin pending';
+    record.dist.place = '';
+    record.dist.history = 'Production background pending source review.';
+    record.reviewedAt = null;
+    record.notes = 'Draft inventory setup. Do not publish until source review is complete.';
+    record.seanShort = 'Pending Sean review.';
+    record.status = [{k:'draft',t:'Draft - Source Review Pending'}];
+    record.commerce.sourceRecordedAt = '2026-08-10';
+    if(!config.toastItemGuid){
+      record.commerce.pourPriceUsd = null;
+      record.commerce.toastItemGuid = null;
+      record.commerce.priceProvenance = 'Listed on Stone Grille website shelf; Toast price/GUID not matched in this draft setup.';
+      record.commerce.priceIsTemporary = true;
+      record.commerce.source = 'Website';
+    } else {
+      record.commerce.priceProvenance = 'Price and item identity from the Toast POS menu pull on 2026-08-10; product facts still pending source review.';
+      record.commerce.priceIsTemporary = false;
+      record.commerce.source = 'Toast';
+    }
+    record.provenance.addedAt = '2026-08-10';
+    record.provenance.updatedAt = '2026-08-10';
+    record.provenance.reviewedAt = null;
+    return record;
+  }
+
   // ── Legacy five — now single canonical records (merged from the retired
   //    SPIRIT_DATA + DOSSIER_DETAILS split; values identical to pre-migration). ──
   var LEGACY = [
@@ -604,5 +701,119 @@ window.SPIRIT_VAULT_DATA = function(ctx){
   makeBatchSpirit({"id":"seagrams-vo","brand":"Seagram's","expression":"VO","cat":"Canadian","subcategory":"blended-canadian","country":"Canada","region":"Quebec","city":"Valleyfield","producer":"Sazerac Company (brand owner)","distilleryName":"Valleyfield Distillery, Quebec (Diageo)","style":"Blended Canadian Whisky · Minimum 6 Years","proofN":80,"ageText":"6 yr","minYears":6,"maxYears":6,"flavor":{"Sweet":6,"Oak":3,"Spice":4,"Fruit":5,"Smoke":0,"Earth":1,"Herbal":2},"body":4,"finish":3,"topNotes":["Caramel","Vanilla","Baking spice"],"productionRows":[["Class","Blended Canadian Whisky",true],["Composition","Blend of whiskies aged a minimum of 6 years in oak",true],["Distillation","Column still (Canadian style)"],["Maturation","Oak barrels, minimum 6 years",true],["Blended/Bottled","Valleyfield, Quebec (production moved there after the Waterloo, Ontario distillery closed in 1992)",true],["Proof","80 (40% ABV)",true]],"prodTags":["Blended","Canadian","Min 6 Years"],"why":"Seagram's VO is a light, mellow blended Canadian whisky bottled at 80 proof (40% ABV) from whiskies aged a minimum of six years in oak. Like most Canadian blends it leans sweet and easygoing, showing caramel, vanilla and soft baking spice with orchard-fruit notes and a clean, gentle finish. It is a workhorse mixing whisky rather than a sipping-focused release, built for highballs and cocktails.","whyShort":"A century-old, light-and-mellow Canadian blend built for easy highballs and mixing.","whyWeCarry":null,"pairings":["Ginger ale","Aged cheddar","Apple pie"],"history":"Seagram's VO traces to 1913, when a blend was prepared at Joseph E. Seagram's Waterloo, Ontario distillery to mark the wedding of his son Thomas — the initials most commonly held to mean 'Very Own.' It became one of Canada's longest-running whisky labels and a flagship of the Seagram empire. The original Waterloo distillery closed in 1992 and production shifted to the Valleyfield distillery in Quebec; the brand is now owned by the Sazerac Company.","timeline":[["1913","VO blend first prepared at Joseph E. Seagram's Waterloo, Ontario distillery"],["1992","Waterloo distillery closes; production moves to Valleyfield, Quebec"],["2010s","Seagram's whiskey brands, including VO, come under the Sazerac Company"]],"sources":[{"url":"https://www.sazerac.com/our-brands/sazerac-brands/seagrams.html","sourceType":"producer","coversFields":["identity"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/804/seagrams-vo-canadian-blended-whisky","sourceType":"review","coversFields":["identity","production","strength","tasting"]},{"url":"https://theliquorbarn.com/products/seagrams-v-o-canadian-whisky-1l","sourceType":"retailer","coversFields":["age","strength"]},{"url":"https://www.thirtyonewhiskey.com/whiskey-review-seagrams-vo-canadian-whiskey/","sourceType":"review","coversFields":["strength","tasting"]}],"sourcingLimitations":["Exact grain/mash bill percentages are not publicly disclosed by the producer.","The blend's minimum-6-year age is stated by multiple Canadian retailers and diffordsguide; some US bottlings carry no age statement on the label.","Column-still distillation is the standard Canadian-whisky method but is not explicitly published for this specific brand.","Current owner (Sazerac) confirmed via Sazerac brand listing; exact date of the brand-ownership transfer from Seagram/successors not pinned to a single source."],"priceUsd":7.5,"toastItemGuid":"9c577922-75f2-4225-83b8-e9cf98f1253e","recordStatus":"published","publicationStatus":"published","verificationStatus":"source-reviewed"}),
   ];
 
-  return LEGACY.concat(BATCH);
+  // ── Agave / Rum / Vodka draft inventory setup.
+  //    These records are intentionally unpublished and unverified. They seed the
+  //    review queue from the current Stone Grille shelf and Toast pull without
+  //    inventing production facts or guest-facing copy.
+  var DRAFT_INVENTORY_ROWS = [
+    ['Agave','mezcal','Fosforo Mezcal',9,'47a5826e-3e75-40ea-866a-9a092694a260','Fosforo Mezcal','Stone Grille website shelf','Mezcal - Artisanal / 100% Maguey',null],
+    ['Agave','mezcal','Granja Nómada',6,'9c29c317-3566-40fc-90b8-166e989a6aad','Granja 100% Maguey','Stone Grille website shelf','Mezcal - 100% Maguey / Traditional Production',null],
+    ['Agave','blanco-silver','Aman Tequila Blanco',15,'b657bc99-ede3-42e4-8a48-6be15136ded7','Aman Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / 100% Blue Weber Agave',80],
+    ['Agave','blanco-silver','Casa Amigos 80pf',10.25,'51b46ef9-a4da-4347-b087-75b303494975','Casamigos Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','El Jimador Cristalino',7,'2564383e-dfe8-4b43-9e7c-865077b6f32a','El Jimador, Cristalino','Stone Grille website shelf','Blanco / Silver - 80 Proof / Filtered Añejo',80],
+    ['Agave','blanco-silver','El Jimador Silver',7,'db98792a-6c60-459b-bd41-6e4fa3767225','El Jimador, Silver','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','El Luchador Blanco',9.25,'85945271-026a-42dc-a584-b9ff00fcb4ef','El Luchador Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 110 Proof / High-Proof Blanco',110],
+    ['Agave','blanco-silver','Herradura Ultra Blanco',13.5,'3554205e-72c8-48b4-bcd7-91254a104184','Herradura Ultra Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Cristalino',80],
+    ['Agave','blanco-silver','Herradura Silver',9,'0ff5a853-aec0-4ee2-8b20-5235c5245740','Herradura, Silver','Stone Grille website shelf','Blanco / Silver - 80 Proof / Estate Grown',80],
+    ['Agave','blanco-silver','Mi Campo Blanco',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','Milagro Silver',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','Patrón Silver',10.75,'d7ecb6ae-4fdf-4cca-a390-2f3b22188a35','Patron Silver Tequila','Stone Grille website shelf','Blanco / Silver - 80 Proof / Ultra-Premium Blanco',80],
+    ['Agave','blanco-silver','Rey Supremo Rosa',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Red Wine Barrel Finish',80],
+    ['Agave','blanco-silver','Santaleza Blanco',9.25,'a62216ff-3e9d-4642-9043-2aabd645d01e','Santaleza Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','blanco-silver','Tres Agaves Organic Blanco',7,'8d4a2ff0-9fa2-4860-9147-eeccf229b755','Tres agaves "organic" blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Certified Organic',80],
+    ['Agave','blanco-silver','Zumbador Blanco',7,'c9694ac6-04e8-495a-bc6d-65c3d9300470','Zumbador Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Highland Blanco',80],
+    ['Agave','blanco-silver','1800 Silver',8,'62a16d10-23d7-4892-85d1-f289841381ab','1800 Silver Tequila','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
+    ['Agave','reposado','Adictivo Reposado',12.5,'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9','Adictivo Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / French Oak',80],
+    ['Agave','reposado','Agavales Reposado',7,'b0e9ad5a-04c8-4fc7-9747-23e464602a1c','Agavales Respasado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
+    ['Agave','reposado','Don Ramon Reposado Punta Diamante',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Diamond Edition',80],
+    ['Agave','reposado','El Jimador Reposado',7.5,'b3fe0d50-9b6a-4672-8bf2-183675aadf44','El Jimador Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / 2 Months Oak',80],
+    ['Agave','reposado','El Luchador Reposado',10.25,'6b7368fd-086c-42a3-a2fe-a30cb80ca148','El Luchador Reposado','Stone Grille website shelf','Reposado - 110 Proof / High-Proof Reposado',110],
+    ['Agave','reposado','Herradura Reposado',10,'aa401cdb-3902-4183-95d3-33b25246446b','Herradura, Repo','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / Estate Grown',80],
+    ['Agave','reposado','Jose 1800 Reposado',11,'68345cbb-1da9-4f56-ad43-78e6687f9680','Jose 1800 Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
+    ['Agave','reposado','Mi Campo Reposado',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Wine Barrel Finish',80],
+    ['Agave','reposado','Milagro Reposado',8,'02b44e5b-bd59-4ea3-a917-ec6019f8e915','Milagro Resposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
+    ['Agave','reposado','Skelly Reposado',19.5,'e599647b-ee8e-4182-b2e4-8f2fcb4a8033','Skelly Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
+    ['Agave','reposado','Terralta Reposado',12,'145112ea-d187-4d80-90f3-e723bf0d9b0b','Terralta Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Highlands',80],
+    ['Agave','reposado','Tita Doña Celia Reposado',16,'eb2f5d2b-7775-4f11-b2e5-b1b05adf0415','Tita Dona Celia Reposado','Stone Grille website shelf','Reposado - 80 Proof / Woman-Owned / Jalisco',80],
+    ['Agave','anejo-and-specialty','El Jimador Añejo',8.5,'2e8b7064-2d84-44c3-9ffe-c468c88473ba','El Jimador, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 14 Months Oak',80],
+    ['Agave','anejo-and-specialty','Herradura Añejo',14.25,'7ed22215-7910-4753-b7f7-498c5dab4dba','Herradura, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 25 Months / Estate Grown',80],
+    ['Agave','anejo-and-specialty','Zumbador Añejo',null,null,null,'Stone Grille website shelf',"Añejo & Specialty - 80 Proof / 14 Months / Ex-Jack Daniel's Barrels",80],
+    ['Agave','toast-agave-draft','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Casamigos Anejo',14,'d578c965-47f4-42ae-9ae7-b73d8244f900','Cas Amigos Anejo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Casamigos Reposado',11.75,'e088dc2f-8b1e-4e71-b81f-bedb477c2faa','Casamigos Repo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Jose Cuervo Tequila',6,'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90','Jose Cuervo Tequila','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Don Fulano Reposado',12.25,'9560c0c8-dcde-4b8b-9df6-8e49ab589a91','Don Fulano Repo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Don Fulano Anejo',18,'b9fc5d52-c111-443c-a814-5258de3c6808','Don Fulano Añejo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Apostoles Rosa',9,'b363b248-9670-4002-ae3a-19fd5b6aaa8a','Apostoles Rosa','Toast menu pull','Tequila category',null],
+    ['Agave','toast-agave-draft','Don Roman Anejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null],
+
+    ['Rum','white-and-silver','Angostura White Oak',6,'806c5186-02d9-460c-91d8-8184489a6a18','Angostura White Oak Rum','Stone Grille website shelf','White & Silver - 80 Proof / Trinidad / Column Still',80],
+    ['Rum','white-and-silver','Bacardi White',7,'329389fa-73be-4dcc-ae93-7abf1506b7f2','Bacardi  Rum','Stone Grille website shelf','White & Silver - 80 Proof / Column Still / Charcoal Filtered',80],
+    ['Rum','spiced-and-flavored','Bacardi Dragonberry',7,'6f2146b9-f9dd-4130-a475-9347afdbd86c','Bacardi Dragonberry  Rum','Stone Grille website shelf','Spiced & Flavored - 70 Proof / Flavored / Dragon Fruit',70],
+    ['Rum','spiced-and-flavored','Captain Morgan Original Spiced',6,'d0c2815e-2734-425e-97c3-a475cb3f8d18','Captain Morgan  Rum','Stone Grille website shelf','Spiced & Flavored - 70 Proof / Spiced',70],
+    ['Rum','spiced-and-flavored','Captain Morgan Private Stock',6.5,'7a8c1dfd-e561-46d0-a164-be3a15497049','Captain Morgan Private Stock','Stone Grille website shelf','Spiced & Flavored - 80 Proof / Premium Spiced',80],
+    ['Rum','spiced-and-flavored','Hidden Still Spiced',7,'a7c28066-95f0-456d-9349-fabbbfda1add','Hidden Still Rum','Stone Grille website shelf','Spiced & Flavored - Spiced / Craft',null],
+    ['Rum','spiced-and-flavored','Malibu',7,'59bc0ace-9834-4c9b-ba06-80d09b24c40a','Malibu Coconut Rum','Stone Grille website shelf','Spiced & Flavored - 42 Proof / Coconut Flavored',42],
+    ['Rum','dark-and-aged','Bumbu Dark',9,'81953ac0-d66e-4c20-9661-753a95be4b1e','Bumbu Rum','Stone Grille website shelf','Dark & Aged - 85 Proof / Barbados / Spiced & Aged',85],
+    ['Rum','dark-and-aged',"Gosling's Black Seal",7,'e66d8156-6271-4d37-aa60-90b1b211130a','Goslings Rum','Stone Grille website shelf','Dark & Aged - 80 Proof / Bermuda / Dark Blend',80],
+    ['Rum','dark-and-aged','Kasama Small Batch 7 Year',6.5,'0fb40a27-2699-41fa-86ac-5ce4da3dea80','Kasama Small Batch 7 yr','Stone Grille website shelf','Dark & Aged - 7 Yr / 80 Proof / Philippine',80],
+    ['Rum','dark-and-aged','Maison Ferrand Plantation Moko Dark',10,'7255317b-1c75-4f49-a4b6-751650e93793','Maison Peryat Moko Dark','Stone Grille website shelf','Dark & Aged - 80 Proof / Martinique / Agricole',80],
+    ['Rum','dark-and-aged',"Myers's Dark",6,'28c8ae0c-27ec-40d9-babc-91b23f63c77a','Meyers Dark  Rum','Stone Grille website shelf','Dark & Aged - 80 Proof / Jamaica / Pot Still Blend',80],
+    ['Rum','dark-and-aged',"Papa's Pilar Blonde",6.5,'74f10a76-9858-482f-9968-73903acf365f','Papas Pillar Blonde Rum','Stone Grille website shelf','Dark & Aged - 84 Proof / Solera Aged',84],
+    ['Rum','dark-and-aged',"Papa's Pilar Dark Rye Barrel",7.75,'883091ed-10cd-42a5-8a4b-5bee9caccfd8',"Papa's Pilar Rum Dark Rye barrel",'Stone Grille website shelf','Dark & Aged - 86 Proof / Rye Whiskey Cask Finish',86],
+    ['Rum','premium-and-aged','Don Q 2x Aged Cognac Cask',19,'cc170791-4ab7-454c-8621-76d5c9cfe481','Don Q 2x aged Congnac cask','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / Cognac Finish',80],
+    ['Rum','premium-and-aged','Don Q Gran Reserva Añejo XO',9.25,'3e684b36-cec2-4550-a325-41e4d03e3076','Don Q Gran Reserva Anejo XO','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / XO Solera',80],
+    ['Rum','premium-and-aged',"Papa's Pilar Sherry Cask",8,'df28cc66-510b-4561-a995-d9ffb4b25c17',"Papa's Pilar Rum Sherry Cask",'Stone Grille website shelf','Premium & Aged - 86 Proof / Sherry Cask Finish',86],
+    ['Rum','premium-and-aged','Zaya Gran Reserva 16 Year',11,'c0fd2578-3715-494e-acb9-4a796e5c69fd','Zaya Rum','Stone Grille website shelf','Premium & Aged - 16 Yr / 80 Proof / Guatemala / Solera',80],
+    ['Rum','specialty','Don Q 151',7,'8360e46b-eef1-4c21-8e4f-32051d5b2974','Don Q 151 Rum','Stone Grille website shelf','Specialty - 151 Proof / Overproof / Puerto Rico',151],
+    ['Rum','specialty','Ron Batran #12 Reserva Superior',9,'0da69595-de07-452a-b3fe-aac3d351e623','Ron Batran #12 Res. Seperior','Stone Grille website shelf','Specialty - Reserva Superior',null],
+    ['Rum','specialty','Ron Barceló Imperial',null,null,null,'Stone Grille website shelf','Specialty - 80 Proof / Dominican Republic / 10 Yr',80],
+    ['Rum','toast-rum-draft','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
+    ['Rum','toast-rum-draft','Diplomatico Mantuano Dark',9,'185450cb-9afb-4f5a-a710-a96d20f67027','Diplomatico Mantuano Dark','Toast menu pull','Rum category',null],
+    ['Rum','toast-rum-draft','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
+
+    ['Vodka','vodka','House Vodka',6.5,'73985435-c504-46b8-8e81-c736c8ab5369','House Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Absolut Vodka',7,'2edc670b-2371-45a5-8548-40a7e57c0182','Absolut Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','potato-vodka','Chopin Potato Vodka',8.5,'37a467d2-b15a-4ee5-9bd7-39da78a729e6','Chopin Potato Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Grey Goose Vodka',9,'ac130009-b8ee-4a7b-aa2a-80814b34a910','Grey Goose Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Strawberry Vodka',6,'6b34648c-9761-4edc-8865-7575b140bb7e','Vodka Strawberry','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Stoli Vodka',7,'5089405f-f571-403a-8da9-e946401bde5c','Stoli Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Double Cross Vodka',9,'4d76da46-c944-4b68-8aee-1f81aa8246bb','Double Cross Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Amsterdam Apple Vodka',7,'16e51ad9-e1ff-494c-be4a-7050b0b38d3c','Amsterdam Apple Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Vodka Blueberry',6.5,'3528cb35-9482-4ebb-abd9-1c0abd255ced','Vodka Blueberry','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Vodka Peach',6.5,'c1e4a3e6-fb0e-4f54-b62c-43bfb8a6e471','Vodka Peach','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Prairie Cucumber Vodka',8,'eb4f8d26-cfd1-46a8-ba70-53413447fc90','Vodka Prairie Cucumber','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Whipped Vodka',6.5,'31369476-51dc-4931-9e6a-c5fd3e06bc97','Whipped Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Vodka Caramel',6.5,'88a213b8-4b22-4211-9fa6-e9496a6e5558','Vodka Caramel','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Vodka Orange',6.5,'a1839375-ad6d-45d0-83d2-98f069899bdd','Vodka Orange','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka',"Tito's Vodka",8,'c0fbdedb-63cd-43f2-bdbd-2983a35152ff',"Tito's Vodka",'Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Raspberry Vodka',6.5,'a381bc86-6d97-43b5-a7de-65c7b51db268','Vodka Raspberry','Toast menu pull','Vodka category',null],
+    ['Vodka','flavored-vodka','Apple Holla Vodka',6.5,'38dfd08e-bbb5-4d72-8e39-9fcde27c77e4','Vodka Apple Holla','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Ketle Vodka',8,'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7','Kettle One Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Haku Vodka',9.5,'d39d8ced-c990-475d-87d5-d6ea4506f1b8','Haku Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Holla Vodka',6.5,'80fc8cb0-ea4e-4aa3-8896-ae0e237ce7ab','Holla Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Belvidere Vodka',10,'24b60efe-dc1d-41c5-9379-0bc207912b6c','Belvidere Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','potato-vodka','Boyd Bair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null],
+    ['Vodka','vodka','Vodka Grey Whale',8,'9af54e37-36bc-4268-842d-c271d14585e4','Vodka Grey Whale','Toast menu pull','Vodka category',null],
+  ];
+
+  var DRAFT_INVENTORY = DRAFT_INVENTORY_ROWS.map(function(row){
+    return draftInventorySpirit({
+      cat:row[0],
+      subcategory:row[1],
+      displayName:row[2],
+      priceUsd:row[3],
+      toastItemGuid:row[4],
+      toastMenuName:row[5],
+      sourceLabel:row[6],
+      sourceDetail:row[7],
+      proofN:row[8],
+      style:row[0] + ' - ' + row[1].replace(/-/g,' ')
+    });
+  });
+
+  return LEGACY.concat(BATCH,DRAFT_INVENTORY);
 };

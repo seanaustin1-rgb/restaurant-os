@@ -4,14 +4,15 @@ import { guestRecordToRows, ECHO_TOAST_POUR_OZ } from "./transform";
 
 // These run against the REAL static vault (docs/spirit-vault/*), reconstructed
 // exactly as a guest's browser builds it — so the transform is proven on all
-// 110 records (both the legacy and batch shapes), not hand-picked fixtures.
+// 200 records (both the legacy, source-reviewed batch, and draft inventory
+// shapes), not hand-picked fixtures.
 const RECORDS = loadGuestRecords();
 const ROWS = RECORDS.map(guestRecordToRows);
 
 describe("loadGuestRecords", () => {
-  it("reconstructs the full vault (110 records)", () => {
-    expect(RECORDS.length).toBe(110);
-    expect(ROWS.length).toBe(110);
+  it("reconstructs the full vault (200 records)", () => {
+    expect(RECORDS.length).toBe(200);
+    expect(ROWS.length).toBe(200);
   });
 });
 
@@ -94,6 +95,26 @@ describe("guestRecordToRows — legacy vs batch shapes both resolve", () => {
 });
 
 describe("guestRecordToRows — review data-boundary fixes", () => {
+  it("keeps the category inventory additions hidden as unverified drafts", () => {
+    const draftInventory = ROWS.filter(
+      (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
+    );
+
+    expect(draftInventory).toHaveLength(90);
+    expect(draftInventory.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
+    expect(draftInventory.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
+    expect(draftInventory.every((r) => r.definition.verificationStatus === "UNSOURCED")).toBe(true);
+
+    const slugs = new Set(draftInventory.map((r) => r.definition.slug));
+    expect(slugs).toContain("milagro-silver");
+    expect(slugs).toContain("milagro-reposado");
+    expect(slugs).toContain("zumbador-blanco");
+    expect(slugs).toContain("zumbador-anejo");
+    expect(slugs).toContain("zumbador-reposado");
+    expect(slugs).toContain("ketle-vodka");
+    expect(slugs).toContain("vodka-grey-whale");
+  });
+
   it("never imports the bourbon silhouette (silo stays null until the mapper exists)", () => {
     for (const { definition } of ROWS) {
       expect(definition.silo).toBeNull();
@@ -106,10 +127,10 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     }
   });
 
-  it("maps verification labels to the real distribution (56 SOURCED / 49 PARTIALLY / 5 UNSOURCED)", () => {
+  it("maps verification labels to the real distribution (56 SOURCED / 49 PARTIALLY / 95 UNSOURCED)", () => {
     const counts = { SOURCED: 0, PARTIALLY_SOURCED: 0, UNSOURCED: 0 } as Record<string, number>;
     for (const { definition } of ROWS) counts[definition.verificationStatus]++;
-    expect(counts).toEqual({ SOURCED: 56, PARTIALLY_SOURCED: 49, UNSOURCED: 5 });
+    expect(counts).toEqual({ SOURCED: 56, PARTIALLY_SOURCED: 49, UNSOURCED: 95 });
   });
 
   it("retains the source's own provenance, appends the 1.5oz correction, and never mislabels a manual price as Toast", () => {
@@ -130,8 +151,8 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
         }
       }
     }
-    expect(toast).toBe(90); // real vault: 90 Toast offers
-    expect(manual).toBe(20); // 15 Sean + 5 legacy
+    expect(toast).toBe(173); // real vault: 90 reviewed Toast offers + 83 draft Toast offers
+    expect(manual).toBe(27); // 15 Sean + 5 legacy + 7 website-only draft offers
   });
 
   it("puts the dossier review date on shared knowledge, not the venue listing", () => {

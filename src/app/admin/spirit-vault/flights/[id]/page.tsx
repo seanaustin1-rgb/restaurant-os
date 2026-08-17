@@ -146,6 +146,16 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
         <p className="mt-1 text-sm text-muted">
           Reorder, add or remove spirits, adjust notes, set status, or delete. Price regenerates from the selected pours.
         </p>
+        {flight.status === "PUBLISHED" && (
+          <a
+            href={`/vault/flights/${flight.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-block text-xs text-copper-soft hover:text-copper"
+          >
+            View guest page ↗
+          </a>
+        )}
       </div>
 
       <SpiritFlightCreateForm pours={pours} flightId={flight.id} initial={initial} />

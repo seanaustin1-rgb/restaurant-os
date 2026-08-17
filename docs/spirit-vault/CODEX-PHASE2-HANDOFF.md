@@ -196,7 +196,7 @@ do NOT push it (a fast-forward would re-add the flight commit). Sync with:
 ### Deployed demo runtime — LIVE (Codex, 2026-08-09)
 Vercel outfront-demo envs point at the demo DB (`DATABASE_URL` pooler + `DIRECT_URL` direct);
 the exposed DB password was rotated and envs updated. **GET `/vault` → 200, renders 109 spirits.**
-Non-blocking follow-up: `/favicon.ico` 404 + Clerk-middleware noise → next-phase cleanup.
+Non-blocking cleanup fixed after this note: `/favicon.ico` now serves as a static asset, so missing-favicon requests do not fall through Clerk-aware rendering.
 
 ### Open / next (in-lane)
 - **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime DB parity for the demo dataset is now proven; deployed `/vault` still needs verification after the env var is set.

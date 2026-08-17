@@ -192,12 +192,13 @@ export function SpiritFlightCreateForm({
           </select>
         </label>
         <label className="block sm:col-span-2">
-          <span className="block text-[11px] uppercase tracking-wider text-muted">Why these spirits are together</span>
+          <span className="block text-[11px] uppercase tracking-wider text-muted">The through-line — why this flight</span>
           <textarea
-            rows={3}
+            rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+            placeholder="Why you curated these together and what they express as a group — the experience beyond four 1 oz tastes. Shown on the placemat and guest page."
+            className="mt-1 w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none placeholder:text-muted/70 focus:border-copper-soft"
           />
         </label>
       </div>

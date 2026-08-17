@@ -26,7 +26,12 @@ export default async function GuestFlightPage({ params }: { params: { id: string
         <h1 className="mt-2 text-balance font-display text-[clamp(2.1rem,7vw,2.8rem)] font-semibold leading-[1.05] text-copper-soft">
           {flight.name}
         </h1>
-        {flight.description && <p className="mt-3 max-w-[60ch] text-pretty text-[0.95rem] text-ink-text-soft">{flight.description}</p>}
+        {flight.description && (
+          <div className="mt-4">
+            <p className="font-mono text-[0.5625rem] uppercase tracking-[0.2em] text-copper-dim">The through-line</p>
+            <p className="mt-1.5 max-w-[60ch] text-pretty font-display text-[1.15rem] leading-snug text-ink-text-soft">{flight.description}</p>
+          </div>
+        )}
         <div className="mt-5 flex flex-wrap items-baseline gap-x-5 gap-y-2">
           {flight.totalPriceUsd != null && <span className="font-mono text-2xl font-bold text-copper-soft">{money(flight.totalPriceUsd)}</span>}
           <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-muted">{flight.pours.length} pours · 1 oz each</span>

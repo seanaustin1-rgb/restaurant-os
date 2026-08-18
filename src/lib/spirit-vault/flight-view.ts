@@ -52,6 +52,19 @@ function asStrings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
 }
 
+// A compact "made at" value for the placemat stat — drop parentheticals/notes and
+// cap length so a verbose distilleryName can't blow up the column height.
+function shortOrigin(distilleryName: string | null, city: string | null, region: string | null, country: string | null): string | null {
+  let s: string | null =
+    distilleryName?.trim() ||
+    [city, region].filter((x): x is string => typeof x === "string" && x.trim() !== "").join(", ") ||
+    country ||
+    null;
+  if (!s) return null;
+  s = s.split(/\s*[(·;]/)[0].trim(); // drop "(…)", "· …", "; …"
+  return s.length > 26 ? s.slice(0, 25).trimEnd() + "…" : s;
+}
+
 // Production is stored as rows like [["Mash Bill","70% corn…",true], …]; pull the
 // value of the first row whose label matches.
 function prodRow(production: unknown, re: RegExp): string | null {
@@ -124,7 +137,6 @@ export async function loadFlightView(
       : null;
     const proofN = num(d.proofN);
     const ovTop = asStrings(ov?.topNotes);
-    const origin = [d.city, d.region].filter((s): s is string => typeof s === "string" && s.trim() !== "").join(", ") || d.country || null;
     return {
       order: index + 1,
       slug: item.venueSpirit.slug,
@@ -133,7 +145,7 @@ export async function loadFlightView(
       style: d.style ?? null,
       proof: proofN != null ? `${proofN} proof` : d.proofDisplay ?? null,
       age: d.ageText && d.ageText !== "NAS" ? d.ageText : null,
-      origin: d.distilleryName ?? origin,
+      origin: shortOrigin(d.distilleryName ?? null, d.city ?? null, d.region ?? null, d.country ?? null),
       flavor: asFlavor(ov?.flavor ?? d.flavor),
       body: num(d.body),
       finish: num(d.finish),

@@ -108,7 +108,7 @@ imply a review Sean has explicitly closed).
    `publishedVaultListingArgs` PUBLISHED/PUBLISHED filter), but confirm.
 5. ~~**A static/DB inconsistency I chose to flag rather than fix**~~ — **RESOLVED,
    see below.** Codex reviewed this and correctly widened it: the defect was not
-   limited to shelf-only pours. Fixed in `d0e5b4b`.
+   limited to shelf-only pours. Fixed in `c959cfe`.
 
 ## Added after review: the engine-validator fix (Codex's P2 on #145)
 
@@ -193,7 +193,7 @@ origin, while simultaneously writing the confirmed brand into the DB as a
 distillery. A brand is not a distillery — Ketel One's is Nolet, Herradura's is NOM
 1119 — so this was the vault asserting an unsourced production fact.
 
-**Fix (`d0e5b4b`):** cleared `distilleryName` and `dist.name` in
+**Fix (`c959cfe`):** cleared `distilleryName` and `dist.name` in
 `draftInventorySpirit`, the shared base, rather than in the two new wrappers. That
 corrects all **64** draft-inventory records in one place — the 12 from this PR plus
 **52 pre-existing rows from #145** carrying the same false claim. `distilleryName`

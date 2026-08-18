@@ -14,10 +14,12 @@ function prepHtml(v: FlightView): string {
   const rows = v.pours
     .map((p) => {
       const meta = [p.category, p.proof, p.age].filter(Boolean).join(" · ");
+      const notes = p.topNotes.length ? p.topNotes.map(esc).join(" · ") : "—";
       const bites = p.bites.length ? p.bites.map(esc).join(" · ") : "—";
       return `<tr>
         <td class="n">${String(p.order).padStart(2, "0")}</td>
         <td><div class="sp">${esc(p.name)}</div><div class="meta">${esc(meta)}</div></td>
+        <td class="tn">${notes}</td>
         <td class="bites">${bites}</td>
       </tr>`;
     })
@@ -45,7 +47,8 @@ function prepHtml(v: FlightView): string {
   td.n{font-family:var(--display);font-size:20px;color:var(--copper);width:.5in}
   .sp{font-family:var(--display);font-size:17px;font-weight:600}
   .meta{font-family:var(--mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px}
-  td.bites{font-size:14px;color:var(--ink);width:2.9in}
+  td.tn{font-size:12.5px;color:var(--ink);width:2in}
+  td.bites{font-size:13.5px;color:var(--ink);width:2in}
   @media print{body{background:none;padding:0}.bar button{display:none}.sheet{border:0;padding:.5in}@page{size:letter portrait;margin:.4in}}
 </style></head><body>
   <div class="bar"><span class="tag">Internal · not guest-facing</span><button onclick="window.print()">Print prep sheet</button></div>
@@ -55,7 +58,7 @@ function prepHtml(v: FlightView): string {
     <div class="sub">${v.pours.length} pours · 1 oz each · bites are a 1–2 bite accompaniment</div>
     <div class="note">Suggested from each pour's flavor profile — adjust to what the kitchen can build.</div>
     <table>
-      <thead><tr><th>#</th><th>Pour</th><th>Bites</th></tr></thead>
+      <thead><tr><th>#</th><th>Pour</th><th>Top notes</th><th>Bites</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>

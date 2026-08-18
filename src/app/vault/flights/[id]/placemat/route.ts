@@ -92,13 +92,14 @@ function placematHtml(v: FlightView): string {
   .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
   .ring .n{font-family:var(--display);font-size:40px;color:rgba(154,107,47,.34)}
   .ring .oz{position:absolute;bottom:15px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .gname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.02;color:var(--ink);text-align:center;margin-top:8px}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;color:var(--copper-deep);text-align:center;margin-top:1px}
+  .clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .gname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.05;color:var(--ink);text-align:center;margin-top:8px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .stats{display:flex;margin-top:.09in;padding:.06in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
   .stat .k{font-family:var(--mono);font-size:6px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
-  .stat .v{font-family:var(--mono);font-size:10.5px;color:var(--ink);margin-top:2px}
+  .stat .v{font-family:var(--mono);font-size:10.5px;line-height:1.15;color:var(--ink);margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .chart{margin-top:.09in}
   .clab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:3px;display:flex;justify-content:space-between}
   .row{display:flex;align-items:center;gap:7px;margin-bottom:2px}
@@ -111,12 +112,12 @@ function placematHtml(v: FlightView): string {
   .notes{margin-top:.09in}
   .k-lab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
   .notes .v{font-size:11.5px;color:var(--ink);margin-top:2px;line-height:1.26}
-  .taste{margin-top:.07in;font-size:10.5px;color:var(--ink-soft);line-height:1.32}
+  .taste{margin-top:.07in;font-size:10.5px;color:var(--ink-soft);line-height:1.32;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .prod{margin-top:auto;padding-top:.09in}
   .prod-head{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:5px;margin-bottom:4px}
   .prow{margin-bottom:4px}
   .prow .k{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
-  .prow .v{font-family:var(--display);font-size:13.5px;color:var(--ink);line-height:1.16;margin-top:1px}
+  .prow .v{font-family:var(--display);font-size:13.5px;color:var(--ink);line-height:1.16;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .foot{background:var(--band);height:.28in;display:flex;align-items:center;justify-content:space-between;padding:0 .55in;color:#9c876a;flex:none}
   .foot .l{font-family:var(--mono);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase}
   .foot .box{width:15px;height:15px;border:1px solid rgba(216,163,94,.5);border-radius:3px}

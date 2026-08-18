@@ -1,5 +1,5 @@
 /**
- * Import the 110 static Spirit Vault guest records into the #137 split schema
+ * Import the static Spirit Vault guest records into the #137 split schema
  * (SpiritDefinition / VenueSpirit / SpiritPour / SpiritPriceObservation).
  *
  * Run (DRY RUN — projects the DB effect, writes nothing):
@@ -44,6 +44,9 @@ function arg(name: string): string | undefined {
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
 }
+
+const EXPECTED_RECORDS = 200;
+const EXPECTED_PUBLISHED = 109;
 
 /** Best-effort identity of the DB DATABASE_URL points at, for the confirm gate. */
 function targetIdentity(dbUrl: string | undefined): { token: string; host: string } {
@@ -116,8 +119,12 @@ function printPlannedFallback(plan: ImportPlan, restaurantId: string) {
 
 function assertPlanMatchesExpectation(plan: ImportPlan) {
   const problems: string[] = [];
-  if (plan.totals.records !== 110) problems.push(`expected 110 records, got ${plan.totals.records}`);
-  if (plan.totals.published !== 109) problems.push(`expected 109 published, got ${plan.totals.published}`);
+  if (plan.totals.records !== EXPECTED_RECORDS) {
+    problems.push(`expected ${EXPECTED_RECORDS} records, got ${plan.totals.records}`);
+  }
+  if (plan.totals.published !== EXPECTED_PUBLISHED) {
+    problems.push(`expected ${EXPECTED_PUBLISHED} published, got ${plan.totals.published}`);
+  }
   if (plan.validationFailures.length)
     problems.push(`expected 0 validation failures, got ${plan.validationFailures.length}`);
   if (plan.duplicateKeys.length)
@@ -126,7 +133,7 @@ function assertPlanMatchesExpectation(plan: ImportPlan) {
     console.error("\n✗ Plan does not match the known-good baseline — refusing to apply:");
     for (const p of problems) console.error(`  • ${p}`);
     console.error(
-      "\n(Dry-run only prints; --apply is blocked until the vault plans to 110/109 cleanly.)",
+      `\n(Dry-run only prints; --apply is blocked until the vault plans to ${EXPECTED_RECORDS}/${EXPECTED_PUBLISHED} cleanly.)`,
     );
     return false;
   }

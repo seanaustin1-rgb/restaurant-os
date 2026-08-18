@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { OPERATOR_ROLES } from "@/lib/access/roles";
+import { vaultOperatorRoleWhere } from "@/lib/spirit-vault/admin-access";
 import { validatePublishableSpirit } from "@/lib/spirit-vault/validate";
 
 const ADMIN_PATH = "/admin/spirit-vault";
@@ -14,7 +14,7 @@ async function requireVaultOperator(): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("unauthorized");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...OPERATOR_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    where: vaultOperatorRoleWhere(userId),
     select: { restaurantId: true },
   });
   if (!role) throw new Error("forbidden");

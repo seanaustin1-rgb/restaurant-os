@@ -2,7 +2,14 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { OPERATOR_ROLES } from "@/lib/access/roles";
+import {
+  filterSpiritAdminList,
+  parseSpiritAdminListFilters,
+  spiritAdminCategoryOptions,
+  summarizeSpiritAdminList,
+  type SpiritAdminListItem,
+} from "@/lib/spirit-vault/admin-list";
+import { vaultOperatorRoleWhere } from "@/lib/spirit-vault/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +25,32 @@ function spiritName(item: {
   return item.definition.displayName ?? [item.definition.brand, item.definition.expression].filter(Boolean).join(" ");
 }
 
-export default async function SpiritVaultAdminPage() {
+function verificationLabel(status: string): string {
+  if (status === "PARTIALLY_SOURCED") return "Partially sourced";
+  if (status === "SOURCED") return "Sourced";
+  return "Unsourced";
+}
+
+function statusTone(item: Pick<SpiritAdminListItem, "recordStatus" | "publicationStatus">): string {
+  if (item.recordStatus === "PUBLISHED" && item.publicationStatus === "PUBLISHED") return "text-health-green";
+  if (item.recordStatus === "REVIEWED" || item.publicationStatus === "REVIEWED") return "text-copper-soft";
+  return "text-muted";
+}
+
+function filterUrl(status: string): string {
+  return status === "all" ? "/admin/spirit-vault" : `/admin/spirit-vault?status=${status}`;
+}
+
+export default async function SpiritVaultAdminPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...OPERATOR_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    where: vaultOperatorRoleWhere(userId),
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
@@ -53,6 +80,7 @@ export default async function SpiritVaultAdminPage() {
           expression: true,
           displayName: true,
           category: true,
+          verificationStatus: true,
           proofN: true,
           proofDisplay: true,
         },
@@ -60,9 +88,22 @@ export default async function SpiritVaultAdminPage() {
     },
   });
 
-  const total = items.length;
-  const published = items.filter((i) => i.publicationStatus === "PUBLISHED" && i.recordStatus === "PUBLISHED").length;
-  const needsVoice = items.filter((i) => !i.whyWeCarry && !i.seanShort && !i.notes).length;
+  const filters = parseSpiritAdminListFilters(searchParams);
+  const listItems: SpiritAdminListItem[] = items.map((item) => ({
+    id: item.id,
+    name: spiritName(item),
+    brand: item.definition.brand,
+    expression: item.definition.expression,
+    category: item.definition.category,
+    recordStatus: item.recordStatus,
+    publicationStatus: item.publicationStatus,
+    verificationStatus: item.definition.verificationStatus,
+    hasVoice: !!(item.whyWeCarry || item.seanShort || item.notes),
+  }));
+  const summary = summarizeSpiritAdminList(listItems);
+  const categories = spiritAdminCategoryOptions(listItems);
+  const filteredItems = filterSpiritAdminList(listItems, filters);
+  const itemById = new Map(items.map((item) => [item.id, item]));
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
@@ -73,9 +114,99 @@ export default async function SpiritVaultAdminPage() {
           on the guest vault immediately.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
-          <span className="rounded border border-line px-2 py-1">{total} bottles</span>
-          <span className="rounded border border-line px-2 py-1">{published} live</span>
-          <span className="rounded border border-line px-2 py-1">{needsVoice} awaiting your voice</span>
+          <span className="rounded border border-line px-2 py-1">{summary.total} bottles</span>
+          <span className="rounded border border-line px-2 py-1">{summary.live} live</span>
+          <span className="rounded border border-line px-2 py-1">{summary.hidden} hidden</span>
+          <span className="rounded border border-line px-2 py-1">{summary.missingVoice} awaiting voice</span>
+          <span className="rounded border border-line px-2 py-1">{summary.unsourced} unsourced</span>
+        </div>
+      </div>
+
+      <div className="space-y-3 rounded-lg border border-line bg-surface p-3">
+        <div className="flex flex-wrap gap-2 text-xs">
+          {[
+            ["all", "All"],
+            ["live", "Live"],
+            ["hidden", "Hidden"],
+            ["draft", "Draft"],
+            ["reviewed", "Reviewed"],
+          ].map(([value, label]) => (
+            <Link
+              key={value}
+              href={filterUrl(value)}
+              className={`rounded border px-2 py-1 ${
+                filters.status === value
+                  ? "border-copper-soft bg-copper/10 text-copper-soft"
+                  : "border-line text-muted hover:text-ink-text"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+        <form className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_170px_160px_auto]" action="/admin/spirit-vault">
+          <input
+            name="q"
+            defaultValue={filters.q}
+            placeholder="Search bottle, brand, category"
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+          />
+          <select
+            name="category"
+            defaultValue={filters.category}
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+          >
+            <option value="">All categories</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+          <select
+            name="status"
+            defaultValue={filters.status}
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+          >
+            <option value="all">All statuses</option>
+            <option value="live">Live only</option>
+            <option value="hidden">Hidden from guests</option>
+            <option value="draft">Draft</option>
+            <option value="reviewed">Reviewed</option>
+            <option value="published">Published status</option>
+          </select>
+          <select
+            name="verification"
+            defaultValue={filters.verification}
+            className="rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+          >
+            <option value="all">All sourcing</option>
+            <option value="unsourced">Unsourced</option>
+            <option value="partially-sourced">Partially sourced</option>
+            <option value="sourced">Sourced</option>
+          </select>
+          <div className="flex gap-2">
+            <select
+              name="voice"
+              defaultValue={filters.voice}
+              className="min-w-28 rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+            >
+              <option value="all">All voice</option>
+              <option value="missing">Missing voice</option>
+              <option value="present">Has voice</option>
+            </select>
+            <button className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20">
+              Filter
+            </button>
+          </div>
+        </form>
+        <div className="flex items-center justify-between text-xs text-muted">
+          <span>
+            Showing {filteredItems.length} of {summary.total}
+          </span>
+          <Link href="/admin/spirit-vault" className="hover:text-copper-soft">
+            Reset
+          </Link>
         </div>
       </div>
 
@@ -87,11 +218,14 @@ export default async function SpiritVaultAdminPage() {
               <th className="px-3 py-2 font-medium">Category</th>
               <th className="px-3 py-2 font-medium">Proof</th>
               <th className="px-3 py-2 font-medium">Status</th>
+              <th className="px-3 py-2 font-medium">Sourcing</th>
               <th className="px-3 py-2 font-medium">Voice</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((i) => {
+            {filteredItems.map((listItem) => {
+              const i = itemById.get(listItem.id);
+              if (!i) return null;
               const live = i.publicationStatus === "PUBLISHED" && i.recordStatus === "PUBLISHED";
               const hasVoice = !!(i.whyWeCarry || i.seanShort || i.notes);
               return (
@@ -106,14 +240,26 @@ export default async function SpiritVaultAdminPage() {
                     {i.definition.proofN?.toString() ?? i.definition.proofDisplay ?? "-"}
                   </td>
                   <td className="px-3 py-2">
-                    <span className={live ? "text-health-green" : "text-muted"}>
-                      {STATUS_LABEL[i.publicationStatus] ?? i.publicationStatus}
+                    <span className={statusTone(i)}>
+                      {live
+                        ? "Live"
+                        : `${STATUS_LABEL[i.recordStatus] ?? i.recordStatus} / ${
+                            STATUS_LABEL[i.publicationStatus] ?? i.publicationStatus
+                          }`}
                     </span>
                   </td>
+                  <td className="px-3 py-2 text-muted">{verificationLabel(i.definition.verificationStatus)}</td>
                   <td className="px-3 py-2 text-muted">{hasVoice ? "Yes" : "-"}</td>
                 </tr>
               );
             })}
+            {filteredItems.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-3 py-8 text-center text-sm text-muted">
+                  No bottles match these filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -1,4 +1,4 @@
-// Spirit Vault — importer: the 110 rendered guest records → the #137 split DB.
+// Spirit Vault — importer: the rendered static records → the #137 split DB.
 //
 // Three layers, deliberately separated so the risky part (writes) is tiny and
 // the tested part (planning) is pure:
@@ -7,7 +7,7 @@
 //      definition / venueSpirit / offers rows (reusing the merged transform.ts),
 //      validates each COMPOSED unit (reusing validate.ts), and detects duplicate
 //      canonical keys within the batch. No DB, no clock, no I/O. Unit-tested
-//      against the real 110 records.
+//      against the real static records.
 //   2. A narrow persistence PORT (SpiritImportTxStore) — the only surface that
 //      touches rows. The Prisma adapter and the in-memory test fake both satisfy
 //      it, so idempotency / rollback / tenant-isolation are provable without a
@@ -100,7 +100,7 @@ export interface ImportPlan {
 /**
  * Compose + validate every guest record. Pure: no DB, no clock, no env.
  * `restaurantId` is not needed here (it only decorates writes), so planning can
- * be asserted against the real 110 records with no tenant.
+ * be asserted against the real static records with no tenant.
  */
 export function planImport(records: GuestRecord[]): ImportPlan {
   const composed: ComposedSpirit[] = records.map((r) => {
@@ -605,7 +605,7 @@ type PrismaLike = PrismaClient | Prisma.TransactionClient;
 
 /**
  * Build the real store backed by Prisma. `runInTransaction` opens one
- * interactive transaction (generous timeout — ~110 records × a few queries) and
+ * interactive transaction (generous timeout — static records × a few queries) and
  * binds every op to the tx client, so a throw anywhere rolls the batch back.
  */
 export const SPIRIT_IMPORT_TRANSACTION_TIMEOUT_MS = 600_000;

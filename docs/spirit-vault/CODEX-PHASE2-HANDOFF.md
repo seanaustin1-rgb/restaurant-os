@@ -101,7 +101,7 @@ This must print the outfront-demo target from `DEMO_DATABASE_URL` / `DEMO_DIRECT
 It must also print `tenant: EXISTS`; `PLANNED (DB-free)` or `existence NOT verified` is a stop condition, not an acceptable dry-run.
 For apply, `DEMO_DIRECT_URL` must be the real Supabase direct host (`db.jzjscsoasfjsxekyfrgi.supabase.co:5432`), not `aws-1-us-west-2.pooler.supabase.com`. The importer uses an interactive transaction; a pooler host can fail mid-import with Prisma `P2028 Transaction not found`.
 
-Expected after #140/#139:
+Current applied baseline after #140/#139:
 
 - 110 definitions
 - 110 venue listings
@@ -109,6 +109,18 @@ Expected after #140/#139:
 - 110 initial price observations
 - 109 published
 - 1 draft
+- no validation failures
+- no duplicate keys
+
+Expected after `feat/spirit-vault-draft-loader` is reviewed, merged, dry-run verified,
+and explicitly approved for apply:
+
+- 200 definitions
+- 200 venue listings
+- 200 offers
+- 193 initial price observations (7 draft website-only records have no matched price)
+- 109 published
+- 91 drafts
 - no validation failures
 - no duplicate keys
 
@@ -121,7 +133,7 @@ $env:SPIRIT_VAULT_ALLOWED_TARGETS="jzjscsoasfjsxekyfrgi"
 npx dotenv -e .env.local -o -- node scripts/demo-db.cjs "npx tsx scripts/import-spirit-vault.ts --restaurant=cmqnyvbab0000osvwrxhaovxo --apply --confirm-target=jzjscsoasfjsxekyfrgi"
 ```
 
-Post-apply verification:
+Post-apply verification for the 110-record baseline:
 
 - Count all four tables.
 - Confirm 110 definitions/listings/offers/observations.
@@ -129,6 +141,15 @@ Post-apply verification:
 - Rerun dry-run to prove idempotency.
 - Confirm no duplicate price observations.
 - Record results before any dependent merge.
+
+Post-apply verification for the 200-record draft-loader branch:
+
+- Count all four tables.
+- Confirm 200 definitions/listings/offers and 193 price observations.
+- Confirm 109 guest-visible listings and 91 drafts.
+- Rerun dry-run to prove idempotency.
+- Confirm no duplicate price observations.
+- Record results before any dependent merge or publication pass.
 
 Known DB gate:
 
@@ -199,9 +220,9 @@ the exposed DB password was rotated and envs updated. **GET `/vault` → 200, re
 Non-blocking cleanup fixed in follow-up: `/favicon.ico` now serves as a static asset, so missing-favicon requests do not fall through Clerk-aware rendering.
 
 ### Open / next (in-lane)
-- **Deployment TODO (Flag 1):** set `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo` in the deploy env (needs Sean's Vercel access). Runtime DB parity for the demo dataset is now proven; deployed `/vault` still needs verification after the env var is set.
-- **When Sean directs:** cat→silo silhouette mapper (Phase 1.5); Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
-- **Merge #142:** Sean-gated + Codex re-review.
+- **Runtime verified:** Vercel outfront-demo serves `/vault` with `SPIRIT_VAULT_RESTAURANT_ID=cmqnyvbab0000osvwrxhaovxo`; guest-visible count is 109.
+- **Draft inventory loader branch:** `feat/spirit-vault-draft-loader` stages Agave/Rum/Vodka draft inventory as hidden, unverified records. Do not apply until dry-run projects 200 total records, 109 published, 91 drafts, no validation failures, and no duplicate keys.
+- **When Sean directs:** Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
 
 ### Decisions locked (Sean, 2026-07-30)
 - Sensory edits → `VenueSpirit.overrides` (venue-local; shared knowledge stays canonical).

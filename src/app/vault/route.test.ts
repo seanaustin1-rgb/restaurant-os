@@ -37,4 +37,17 @@ describe("GET /vault", () => {
       }),
     );
   });
+
+  it("returns a controlled 503 when the database read fails", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    h.findMany.mockRejectedValueOnce(new Error("db unavailable"));
+    const { GET } = await import("./route");
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(await response.text()).toBe("Spirit Vault is temporarily unavailable.");
+    expect(errorSpy).toHaveBeenCalledWith("Spirit Vault database read failed", expect.any(Error));
+    errorSpy.mockRestore();
+  });
 });

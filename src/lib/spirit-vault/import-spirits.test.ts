@@ -22,6 +22,10 @@ import {
 // ── The real vault, planned once ──
 const RECORDS = loadGuestRecords();
 const PLAN = planImport(RECORDS);
+const EXPECTED_RECORDS = 200;
+const EXPECTED_PUBLISHED = 109;
+const EXPECTED_PRICED_OFFERS = 193;
+const EXPECTED_UNPRICED_OFFERS = 7;
 
 describe("createPrismaSpiritStore", () => {
   it("uses a long interactive transaction timeout for remote demo imports", async () => {
@@ -276,11 +280,11 @@ const ECHO = "echo-reserve-restaurant-id";
 
 // ──────────────────────────────── Tests ────────────────────────────────
 
-describe("planImport — real 110 records", () => {
-  it("plans 110 records, 109 published, all writable", () => {
-    expect(PLAN.totals.records).toBe(110);
-    expect(PLAN.totals.published).toBe(109);
-    expect(PLAN.totals.writable).toBe(110);
+describe("planImport — real 200 records", () => {
+  it("plans 200 records, 109 published, all writable", () => {
+    expect(PLAN.totals.records).toBe(EXPECTED_RECORDS);
+    expect(PLAN.totals.published).toBe(EXPECTED_PUBLISHED);
+    expect(PLAN.totals.writable).toBe(EXPECTED_RECORDS);
   });
 
   it("has no validation failures or duplicate canonical keys", () => {
@@ -297,10 +301,13 @@ describe("executeImport — dry-run projection", () => {
 
     expect(report.dryRun).toBe(true);
     // Against an empty tenant every record would be inserted — NOT all-zero.
-    expect(report.definitions).toEqual({ inserted: 110, updated: 0, skipped: 0 });
-    expect(report.venueListings).toEqual({ inserted: 110, updated: 0, skipped: 0 });
-    expect(report.offers).toEqual({ inserted: 110, updated: 0, skipped: 0 });
-    expect(report.priceObservations).toEqual({ inserted: 110, skipped: 0 });
+    expect(report.definitions).toEqual({ inserted: EXPECTED_RECORDS, updated: 0, skipped: 0 });
+    expect(report.venueListings).toEqual({ inserted: EXPECTED_RECORDS, updated: 0, skipped: 0 });
+    expect(report.offers).toEqual({ inserted: EXPECTED_RECORDS, updated: 0, skipped: 0 });
+    expect(report.priceObservations).toEqual({
+      inserted: EXPECTED_PRICED_OFFERS,
+      skipped: EXPECTED_UNPRICED_OFFERS,
+    });
 
     // …but nothing was actually written.
     expect(db.definitions).toHaveLength(0);
@@ -323,9 +330,9 @@ describe("executeImport — dry-run projection", () => {
     const dry = await executeImport(store, PLAN, { restaurantId: ECHO }); // dry-run
 
     expect(dry.dryRun).toBe(true);
-    expect(dry.definitions).toMatchObject({ inserted: 0, updated: 110 });
-    expect(dry.offers).toMatchObject({ inserted: 0, updated: 110 });
-    expect(dry.priceObservations).toEqual({ inserted: 0, skipped: 110 });
+    expect(dry.definitions).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
+    expect(dry.offers).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
+    expect(dry.priceObservations).toEqual({ inserted: 0, skipped: EXPECTED_RECORDS });
     // No row counts changed by the projection.
     expect(db.definitions).toHaveLength(before.d);
     expect(db.venues).toHaveLength(before.v);
@@ -341,31 +348,31 @@ describe("executeImport — apply then idempotent rerun", () => {
 
     const first = await executeImport(store, PLAN, { restaurantId: ECHO, apply: true });
     expect(first.dryRun).toBe(false);
-    expect(first.definitions.inserted).toBe(110);
-    expect(first.venueListings.inserted).toBe(110);
-    expect(first.offers.inserted).toBe(110);
-    // Every real record has a price, so every offer seeds one observation.
-    expect(first.priceObservations.inserted).toBe(110);
-    expect(first.priceObservations.skipped).toBe(0);
+    expect(first.definitions.inserted).toBe(EXPECTED_RECORDS);
+    expect(first.venueListings.inserted).toBe(EXPECTED_RECORDS);
+    expect(first.offers.inserted).toBe(EXPECTED_RECORDS);
+    // Website-only draft records without a matched Toast price do not seed observations.
+    expect(first.priceObservations.inserted).toBe(EXPECTED_PRICED_OFFERS);
+    expect(first.priceObservations.skipped).toBe(EXPECTED_UNPRICED_OFFERS);
 
-    expect(db.definitions).toHaveLength(110);
-    expect(db.venues).toHaveLength(110);
-    expect(db.pours).toHaveLength(110);
-    expect(db.observations).toHaveLength(110);
+    expect(db.definitions).toHaveLength(EXPECTED_RECORDS);
+    expect(db.venues).toHaveLength(EXPECTED_RECORDS);
+    expect(db.pours).toHaveLength(EXPECTED_RECORDS);
+    expect(db.observations).toHaveLength(EXPECTED_PRICED_OFFERS);
 
     const second = await executeImport(store, PLAN, { restaurantId: ECHO, apply: true });
-    expect(second.definitions).toMatchObject({ inserted: 0, updated: 110 });
-    expect(second.venueListings).toMatchObject({ inserted: 0, updated: 110 });
-    expect(second.offers).toMatchObject({ inserted: 0, updated: 110 });
+    expect(second.definitions).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
+    expect(second.venueListings).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
+    expect(second.offers).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
     // The first observation is never re-seeded.
     expect(second.priceObservations.inserted).toBe(0);
-    expect(second.priceObservations.skipped).toBe(110);
+    expect(second.priceObservations.skipped).toBe(EXPECTED_RECORDS);
 
     // No row growth on the rerun.
-    expect(db.definitions).toHaveLength(110);
-    expect(db.venues).toHaveLength(110);
-    expect(db.pours).toHaveLength(110);
-    expect(db.observations).toHaveLength(110);
+    expect(db.definitions).toHaveLength(EXPECTED_RECORDS);
+    expect(db.venues).toHaveLength(EXPECTED_RECORDS);
+    expect(db.pours).toHaveLength(EXPECTED_RECORDS);
+    expect(db.observations).toHaveLength(EXPECTED_PRICED_OFFERS);
   });
 });
 
@@ -378,16 +385,16 @@ describe("executeImport — tenant isolation", () => {
     const secondTenant = await executeImport(store, PLAN, { restaurantId: "tenant-b", apply: true });
 
     // Shared knowledge: tenant B reuses (updates) A's definitions, adds none.
-    expect(secondTenant.definitions).toMatchObject({ inserted: 0, updated: 110 });
-    expect(db.definitions).toHaveLength(110);
+    expect(secondTenant.definitions).toMatchObject({ inserted: 0, updated: EXPECTED_RECORDS });
+    expect(db.definitions).toHaveLength(EXPECTED_RECORDS);
 
-    // Tenant-scoped: B gets its own 110 listings + pours; A's stay intact.
-    expect(secondTenant.venueListings.inserted).toBe(110);
-    expect(secondTenant.offers.inserted).toBe(110);
-    expect(db.venues.filter((v) => v.restaurantId === "tenant-a")).toHaveLength(110);
-    expect(db.venues.filter((v) => v.restaurantId === "tenant-b")).toHaveLength(110);
-    expect(db.pours.filter((p) => p.restaurantId === "tenant-a")).toHaveLength(110);
-    expect(db.pours.filter((p) => p.restaurantId === "tenant-b")).toHaveLength(110);
+    // Tenant-scoped: B gets its own listings + pours; A's stay intact.
+    expect(secondTenant.venueListings.inserted).toBe(EXPECTED_RECORDS);
+    expect(secondTenant.offers.inserted).toBe(EXPECTED_RECORDS);
+    expect(db.venues.filter((v) => v.restaurantId === "tenant-a")).toHaveLength(EXPECTED_RECORDS);
+    expect(db.venues.filter((v) => v.restaurantId === "tenant-b")).toHaveLength(EXPECTED_RECORDS);
+    expect(db.pours.filter((p) => p.restaurantId === "tenant-a")).toHaveLength(EXPECTED_RECORDS);
+    expect(db.pours.filter((p) => p.restaurantId === "tenant-b")).toHaveLength(EXPECTED_RECORDS);
 
     // Every pour belongs to a venue of the same tenant (composite-FK invariant).
     const venueTenant = new Map(db.venues.map((v) => [v.id, v.restaurantId]));

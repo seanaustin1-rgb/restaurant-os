@@ -1,6 +1,37 @@
 # Spirit Vault Phase 2 - Codex Handoff
 
-Last updated: 2026-07-30
+Last updated: 2026-08-18
+
+## Day-code gate + placemat QR (Claude, 2026-08-18, branch `feat/spirit-vault-day-code`)
+
+Guest digital vault is now behind a **daily physical-presence gate** and the tasting
+placemat carries a **real QR** (was an empty placeholder box). Phase-1 of the
+guest-layer roadmap; the guest-account/tasting-log tables are still deferred (Codex
+data-spine lane — do not build blind).
+
+- **How it works:** `src/lib/spirit-vault/day-code.ts` derives a deterministic 6-char
+  code from `HMAC(SPIRIT_VAULT_DAY_SECRET, tenant + venue-local-date)` — same all day,
+  regenerable, unguessable without the secret. `/v/[code]` validates today's code, sets
+  an end-of-day cookie, and forwards into `/vault`. Guest pages (`/vault`,
+  `/vault/flights`, `/vault/flights/[id]`) call `resolveVaultAccess()` and show
+  `VaultGate` when locked. Placemat + prep footers render the QR / show today's code.
+- **NOT a hard wall:** `resolveVaultAccess` is `validDayCode OR (future) member
+  off-premise entitlement` — off-premise access is a planned PAID tier, so keep that
+  seam. See `vault-access.ts`.
+- **Fail-open until configured:** if `SPIRIT_VAULT_DAY_SECRET` is unset the gate is
+  DISABLED (vault open, QR links straight to the flight) so merging never locks the
+  live vault. **To activate in prod, set in Vercel:**
+  - `SPIRIT_VAULT_DAY_SECRET` = a long random string (required to enable the gate)
+  - `NEXT_PUBLIC_APP_URL` = `https://www.outfrontdata.com` (QR absolute base; already
+    used elsewhere)
+  - `SPIRIT_VAULT_TZ` = `America/New_York` (optional; default already NY)
+- Placemat header was restructured to a fixed-height band (through-line under the
+  flight name) so the QR can't steal column height; overflow re-verified 0 at print
+  width with worst-case content.
+
+## Current State
+
+- PR #139 is merged into `main` at `a3efe5b`.
 
 ## Current State
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadFlightView } from "@/lib/spirit-vault/flight-view";
 import { FlavorBars } from "@/components/spirit-vault/FlavorBars";
+import { resolveVaultAccess } from "@/lib/spirit-vault/vault-access";
+import { VaultGate } from "@/components/spirit-vault/VaultGate";
 
 // Guest-facing digital flight view (QR / discovery). Public, single-tenant via
 // SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED only. One flight price, no per-pour price.
@@ -14,8 +16,20 @@ function money(n: number | null): string {
   return "$" + n.toFixed(2).replace(/\.00$/, "");
 }
 
-export default async function GuestFlightPage({ params }: { params: { id: string } }) {
+export default async function GuestFlightPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams?: { k?: string; gate?: string };
+}) {
   if (!TENANT) notFound();
+
+  // Physical-presence gate: on-site (today's code) or a future paid member.
+  if (!resolveVaultAccess(searchParams?.k).allowed) {
+    return <VaultGate expired={searchParams?.gate === "expired"} />;
+  }
+
   const flight = await loadFlightView(TENANT, params.id, { publishedOnly: true });
   if (!flight) notFound();
 

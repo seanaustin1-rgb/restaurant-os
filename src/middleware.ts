@@ -12,8 +12,11 @@ const isPublicRoute = createRouteMatcher([
   "/demo(.*)",
   // Public "Live Heartbeat" marketing landing (no login).
   "/heartbeat(.*)",
-  // Public guest Spirit Vault, served dynamically from the DB (QR sessions gate later).
+  // Public guest Spirit Vault, served dynamically from the DB. The day-code gate is
+  // enforced inside the vault routes (physical-presence), not by Clerk auth.
   "/vault(.*)",
+  // Day-code entry point that unlocks the vault for the day.
+  "/v/(.*)",
   // Inngest authenticates via its signing key, not Clerk.
   "/api/inngest(.*)",
   // Dev-only helper routes (additionally guarded by NODE_ENV inside each handler).

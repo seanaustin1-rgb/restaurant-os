@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { resolveVaultAccess } from "@/lib/spirit-vault/vault-access";
+import { VaultGate } from "@/components/spirit-vault/VaultGate";
 
 // Public index of published tasting flights for the configured venue.
 export const dynamic = "force-dynamic";
@@ -14,8 +16,16 @@ function money(v: { toString(): string } | number | string | null): string | nul
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 }
 
-export default async function GuestFlightsIndexPage() {
+export default async function GuestFlightsIndexPage({
+  searchParams,
+}: {
+  searchParams?: { k?: string; gate?: string };
+}) {
   if (!TENANT) notFound();
+
+  if (!resolveVaultAccess(searchParams?.k).allowed) {
+    return <VaultGate expired={searchParams?.gate === "expired"} />;
+  }
 
   const flights = await prisma.spiritFlight.findMany({
     where: { restaurantId: TENANT, status: "PUBLISHED" },

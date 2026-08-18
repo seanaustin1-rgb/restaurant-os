@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightView } from "@/lib/spirit-vault/flight-view";
+import { dayGateEnabled, todayCode } from "@/lib/spirit-vault/day-code";
 
 // Internal, print-ready bar/kitchen prep sheet: each pour + its 1-2 bite
 // accompaniment. Staff only, any status, standalone HTML (no app chrome).
@@ -10,7 +11,7 @@ function esc(s: string | null | undefined): string {
   return (s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function prepHtml(v: FlightView): string {
+function prepHtml(v: FlightView, dayCode: string | null): string {
   const rows = v.pours
     .map((p) => {
       const meta = [p.category, p.proof, p.age].filter(Boolean).join(" · ");
@@ -41,6 +42,9 @@ function prepHtml(v: FlightView): string {
   h1{font-family:var(--display);font-weight:600;font-size:26px;color:var(--ink);margin-top:5px}
   .sub{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px}
   .note{font-size:11.5px;color:var(--muted);margin-top:14px;font-style:italic}
+  .daycode{margin-top:12px;display:inline-flex;align-items:baseline;gap:8px;border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+  .daycode .l{font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .daycode .c{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.16em;color:var(--copper)}
   table{width:100%;border-collapse:collapse;margin-top:16px}
   th{text-align:left;font-family:var(--mono);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-bottom:1.5px solid var(--ink);padding:0 8px 7px}
   td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -57,6 +61,7 @@ function prepHtml(v: FlightView): string {
     <h1>${esc(v.name)}</h1>
     <div class="sub">${v.pours.length} pours · 1 oz each · bites are a 1–2 bite accompaniment</div>
     <div class="note">Suggested from each pour's flavor profile — adjust to what the kitchen can build.</div>
+    ${dayCode ? `<div class="daycode"><span class="l">Today's vault code</span><span class="c">${esc(dayCode)}</span></div>` : ""}
     <table>
       <thead><tr><th>#</th><th>Pour</th><th>Top notes</th><th>Bites</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -76,7 +81,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
-  return new Response(prepHtml(view), {
+  return new Response(prepHtml(view, dayGateEnabled() ? todayCode() : null), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }

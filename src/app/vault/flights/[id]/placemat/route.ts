@@ -1,14 +1,19 @@
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightPourView, type FlightView } from "@/lib/spirit-vault/flight-view";
+import { dayGateEnabled, qrTargetUrl, todayCode } from "@/lib/spirit-vault/day-code";
+import { qrSvg } from "@/lib/spirit-vault/qr";
 
-// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. Public,
-// single-tenant via SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED flights only. Its own
-// HTML document (no app chrome). Rich per pour from the vault dossier; flavor as a
-// bar chart. The @page margins are asymmetric to compensate for the venue printer's
-// offset (measured: shifts content ~3/16in left, ~1/8in down at Actual Size) so it
-// prints centered with the bottom Production line clear of the clip zone.
+// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. STAFF ONLY:
+// this print artifact renders today's vault code + a QR containing it, so it must
+// never be publicly fetchable (that would leak the day's access code and defeat the
+// physical-presence gate). Guests use the digital flight page, not this route. Rich
+// per pour from the vault dossier; flavor as a bar chart. The @page margins are
+// asymmetric to compensate for the venue printer's offset (measured: shifts content
+// ~3/16in left, ~1/8in down at Actual Size) so it prints centered with the bottom
+// Production line clear of the clip zone.
 // TODO(multi-venue): move the printer-offset margins to a per-venue setting.
-
-const TENANT = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 const AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
 
 function esc(s: string | null | undefined): string {
@@ -57,7 +62,7 @@ function glass(p: FlightPourView): string {
   </div>`;
 }
 
-function placematHtml(v: FlightView): string {
+function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): string {
   const cols = Math.min(Math.max(v.pours.length, 1), 6);
   const through = v.description
     ? `<div class="through"><span class="l">The through-line</span><p>${esc(v.description)}</p></div>`
@@ -75,17 +80,26 @@ function placematHtml(v: FlightView): string {
   .bar-print{max-width:14in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
   .sheet{width:100%;max-width:14in;height:7.5in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
-  .band{background:var(--band);color:var(--band-text);padding:.16in .55in .15in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.5in}
+  /* Fixed-height band so the header can never steal column height, no matter how
+     long the name/through-line/QR payload is. The left stack (venue → name →
+     through-line) and the right stack (price → QR) are each bounded and clipped. */
+  .band{background:var(--band);color:var(--band-text);padding:.12in .5in;height:1.08in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.4in;overflow:hidden}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-  .head-l{display:flex;align-items:baseline;gap:.34in;flex-wrap:wrap}
+  .head-l{min-width:0;flex:1}
   .venue{font-family:var(--mono);font-size:8px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold-light)}
-  .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1;color:var(--band-text)}
-  .through{max-width:6in}
+  .fname{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.02;color:var(--band-text);margin-top:2px;-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .through{margin-top:4px}
   .through .l{font-family:var(--mono);font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.85}
-  .through p{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.22;color:#cdbf9f;margin-top:2px}
-  .pricebox{text-align:right;flex:none}
-  .price{font-family:var(--mono);font-weight:700;font-size:27px;color:var(--gold-light);line-height:1}
-  .price-sub{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a;margin-top:4px}
+  .through p{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.2;color:#cdbf9f;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .pricebox{display:flex;flex-direction:column;align-items:flex-end;gap:.07in;flex:none}
+  .pricestack{text-align:right}
+  .price{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--gold-light);line-height:1}
+  .qrrow{display:flex;align-items:center;gap:8px}
+  .qrmeta{text-align:right;max-width:.95in}
+  .qrcap{font-family:var(--mono);font-size:6.5px;letter-spacing:.08em;text-transform:uppercase;color:#9c876a;line-height:1.25}
+  .qrcode{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--gold-light);margin-top:2px}
+  .qrbox{width:.5in;height:.5in;background:#fff;border-radius:5px;padding:3px;flex:none}
+  .qrbox svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
   .glass{display:flex;flex-direction:column;padding:.18in .34in .14in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
@@ -112,43 +126,58 @@ function placematHtml(v: FlightView): string {
   .notes{margin-top:.09in}
   .k-lab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
   .notes .v{font-size:11.5px;color:var(--ink);margin-top:2px;line-height:1.26}
-  .taste{margin-top:.07in;font-size:10.5px;color:var(--ink-soft);line-height:1.32;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .taste{margin-top:.06in;font-size:10.5px;color:var(--ink-soft);line-height:1.3;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .prod{margin-top:auto;padding-top:.09in}
   .prod-head{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:5px;margin-bottom:4px}
   .prow{margin-bottom:4px}
   .prow .k{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
   .prow .v{font-family:var(--display);font-size:13.5px;color:var(--ink);line-height:1.16;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .foot{background:var(--band);height:.28in;display:flex;align-items:center;justify-content:space-between;padding:0 .55in;color:#9c876a;flex:none}
+  .foot{background:var(--band);height:.22in;display:flex;align-items:center;justify-content:space-between;padding:0 .5in;color:#9c876a;flex:none}
   .foot .l{font-family:var(--mono);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase}
-  .foot .box{width:15px;height:15px;border:1px solid rgba(216,163,94,.5);border-radius:3px}
-  .foot .qr{display:flex;align-items:center;gap:8px}
   @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.5in;box-shadow:none}@page{size:14in 8.5in;margin:0.35in 0.11in 0.65in 0.49in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">
     <div class="band">
       <div class="head-l">
-        <div>
-          <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
-          <div class="fname">${esc(v.name)}</div>
-        </div>
+        <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
+        <div class="fname">${esc(v.name)}</div>
         ${through}
       </div>
-      <div class="pricebox"><div class="price">${money(v.totalPriceUsd)}</div><div class="price-sub">${v.pours.length} pours · 1 oz each</div></div>
+      <div class="pricebox">
+        <div class="pricestack"><div class="price">${money(v.totalPriceUsd)}</div></div>
+        <div class="qrrow">
+          <div class="qrmeta"><div class="qrcap">Scan for<br/>today’s dossier</div>${qr.code ? `<div class="qrcode">${esc(qr.code)}</div>` : ""}</div>
+          <div class="qrbox">${qr.svg}</div>
+        </div>
+      </div>
     </div>
     <div class="flight">${v.pours.map(glass).join("")}</div>
-    <div class="foot"><span class="l">${esc(v.venueName ?? "Spirit Vault")}</span><span class="qr"><span class="l">Scan for the full dossier</span><span class="box"></span></span></div>
+    <div class="foot"><span class="l">${esc(v.venueName ?? "Spirit Vault")} · ${v.pours.length} pours · 1 oz each</span><span class="l">${qr.code ? "Scan or enter today’s code for every pour’s dossier" : "Scan for every pour’s full dossier"}</span></div>
   </div>
 </body></html>`;
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  if (!TENANT) return new Response("Spirit Vault is not configured", { status: 503 });
-  // Any status — the placemat is a staff print artifact (previewed before publish),
-  // reached by an unguessable flight id. The guest digital page stays published-only.
-  const view = await loadFlightView(TENANT, params.id);
+  // Staff-only: the placemat prints today's access code, so gate it like the prep
+  // sheet. Do NOT rely on middleware — /vault is Clerk-public — enforce here.
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
+  const role = await prisma.userRestaurantRole.findFirst({
+    where: { clerkUserId: userId, role: { in: [...SPIRIT_VAULT_STAFF_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    select: { restaurantId: true },
+  });
+  if (!role) return new Response("Forbidden", { status: 403 });
+
+  // Any status — the placemat is a staff print artifact (previewed before publish).
+  // The guest digital page stays published-only.
+  const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
-  return new Response(placematHtml(view), {
+  const qr = {
+    svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),
+    code: dayGateEnabled() ? todayCode() : null,
+  };
+  return new Response(placematHtml(view, qr), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }

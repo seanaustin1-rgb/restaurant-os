@@ -56,12 +56,22 @@ export default async function SpiritFlightsPage() {
             {role.restaurant?.name ?? "Your bar"} - build Toast-trackable flights from existing vault spirits.
           </p>
         </div>
-        <Link
-          href="/admin/spirit-vault/flights/new"
-          className="rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20"
-        >
-          New flight
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="/admin/spirit-vault/today"
+            target="_blank"
+            rel="noreferrer"
+            className="rounded-md border border-line px-4 py-2 text-sm text-copper-soft hover:bg-surface"
+          >
+            Print today&apos;s code ↗
+          </a>
+          <Link
+            href="/admin/spirit-vault/flights/new"
+            className="rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20"
+          >
+            New flight
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-line">

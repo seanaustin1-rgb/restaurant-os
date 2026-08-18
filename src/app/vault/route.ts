@@ -45,7 +45,7 @@ function gateHtml(expired: boolean): string {
     <input name="c" placeholder="e.g. K7Q2M9" autocapitalize="characters" autocomplete="off" spellcheck="false"/>
     <button type="submit">Enter</button>
   </form>
-  <p class="fine">Want your vault anywhere? Off-premise access is coming as a member perk.</p>
+  <p class="fine">Echo’s Reserve member? <a href="/vault/join" style="color:#C8873A;text-decoration:underline">Sign in</a> for access anywhere.</p>
 </div></body></html>`;
 }
 

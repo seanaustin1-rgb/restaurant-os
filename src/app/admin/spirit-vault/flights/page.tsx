@@ -57,6 +57,12 @@ export default async function SpiritFlightsPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/admin/spirit-vault/membership"
+            className="rounded-md border border-line px-4 py-2 text-sm text-copper-soft hover:bg-surface"
+          >
+            Membership codes
+          </Link>
           <a
             href="/admin/spirit-vault/today"
             target="_blank"

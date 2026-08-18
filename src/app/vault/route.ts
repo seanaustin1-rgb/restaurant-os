@@ -4,16 +4,12 @@
  * Reuses the proven static engine (`docs/spirit-vault/spirit-vault-prototype.html`)
  * and swaps only its data script for a DB-generated payload.
  */
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { prisma } from "@/lib/prisma";
-import { buildVaultPayloadScript } from "@/lib/spirit-vault/vault-payload";
+import { publishedVaultListingArgs, renderPublicVaultHtml } from "@/lib/spirit-vault/public-vault-artifact";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const ENGINE_PATH = join(process.cwd(), "docs/spirit-vault/spirit-vault-prototype.html");
-const DATA_SCRIPT_TAG = '<script src="spirit-vault-data.js"></script>';
 const VAULT_RESTAURANT_ID = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 
 export async function GET() {
@@ -23,33 +19,19 @@ export async function GET() {
 
   let listings;
   try {
-    listings = await prisma.venueSpirit.findMany({
-      where: {
-        restaurantId: VAULT_RESTAURANT_ID,
-        recordStatus: "PUBLISHED",
-        publicationStatus: "PUBLISHED",
-      },
-      include: {
-        definition: true,
-        offers: {
-          where: { isPrimary: true },
-          orderBy: { updatedAt: "desc" },
-          take: 1,
-        },
-      },
-      orderBy: { slug: "asc" },
-    });
+    listings = await prisma.venueSpirit.findMany(publishedVaultListingArgs(VAULT_RESTAURANT_ID));
   } catch (error) {
     console.error("Spirit Vault database read failed", error);
     return new Response("Spirit Vault is temporarily unavailable.", { status: 503 });
   }
 
-  const payload = buildVaultPayloadScript(listings);
-  const engine = readFileSync(ENGINE_PATH, "utf8");
-  if (!engine.includes(DATA_SCRIPT_TAG)) {
+  let html;
+  try {
+    html = renderPublicVaultHtml(listings);
+  } catch (error) {
+    console.error("Spirit Vault engine render failed", error);
     return new Response("Vault engine template is missing its data-script tag.", { status: 500 });
   }
-  const html = engine.replace(DATA_SCRIPT_TAG, `<script>${payload}</script>`);
 
   return new Response(html, {
     headers: {

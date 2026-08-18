@@ -6,6 +6,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { buildVaultPayloadScript } from "@/lib/spirit-vault/vault-payload";
 import { resolveVaultAccess } from "@/lib/spirit-vault/vault-access";
@@ -54,7 +55,13 @@ export async function GET(req: Request) {
   }
 
   const url = new URL(req.url);
-  if (!resolveVaultAccess(url.searchParams.get("k")).allowed) {
+  const { userId } = await auth();
+  const access = await resolveVaultAccess({
+    restaurantId: VAULT_RESTAURANT_ID,
+    providedCode: url.searchParams.get("k"),
+    clerkUserId: userId,
+  });
+  if (!access.allowed) {
     return new Response(gateHtml(url.searchParams.get("gate") === "expired"), {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

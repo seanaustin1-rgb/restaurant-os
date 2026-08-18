@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { resolveVaultAccess } from "@/lib/spirit-vault/vault-access";
 import { VaultGate } from "@/components/spirit-vault/VaultGate";
@@ -23,7 +24,8 @@ export default async function GuestFlightsIndexPage({
 }) {
   if (!TENANT) notFound();
 
-  if (!resolveVaultAccess(searchParams?.k).allowed) {
+  const { userId } = await auth();
+  if (!(await resolveVaultAccess({ restaurantId: TENANT, providedCode: searchParams?.k, clerkUserId: userId })).allowed) {
     return <VaultGate expired={searchParams?.gate === "expired"} />;
   }
 

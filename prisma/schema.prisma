@@ -285,6 +285,8 @@ model Restaurant {
   metricNotes                     MetricNote[]
   venueSpirits                    VenueSpirit[]
   spiritFlights                   SpiritFlight[]
+  membershipCodes                 MembershipCode[]
+  guestMemberships                GuestMembership[]
 }
 
 model UserRestaurantRole {
@@ -1543,4 +1545,98 @@ model SpiritFlightItem {
   @@index([restaurantId])
   @@index([venueSpiritId])
   @@index([spiritPourId])
+}
+
+// ── Spirit Vault guest membership layer ──────────────────────────────────────
+// Account-based access: a member redeems a code once and their account carries a
+// year of full vault access (on and off premise), bypassing the daily code gate.
+// Codes are stored HASHED (never plaintext), tenant-scoped, server-verified.
+
+enum MembershipCodeStatus {
+  ACTIVE
+  REVOKED
+}
+
+enum GuestMembershipStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+/// Global guest identity — a Clerk user with no UserRestaurantRole.
+model GuestProfile {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String?
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships GuestMembership[]
+  redemptions MembershipRedemption[]
+
+  @@index([email])
+}
+
+/// Admin-issued, restaurant-scoped code that grants a fixed-length membership when
+/// redeemed. Stored as codeHash (never plaintext); `hint` is a safe display label.
+model MembershipCode {
+  id                   String               @id @default(cuid())
+  restaurantId         String
+  codeHash             String // sha256/hmac of the normalized plaintext; never the code itself
+  hint                 String // safe display fragment, e.g. "RSRV·7K2Q·••••"
+  tier                 String               @default("echo_reserve")
+  grantDays            Int                  @default(365)
+  maxRedemptions       Int? // null = unlimited; 1 = single-use (per member)
+  redemptionCount      Int                  @default(0)
+  status               MembershipCodeStatus @default(ACTIVE)
+  label                String?
+  expiresAt            DateTime?
+  createdByClerkUserId String
+  createdAt            DateTime             @default(now())
+
+  restaurant  Restaurant             @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  redemptions MembershipRedemption[]
+
+  @@unique([restaurantId, codeHash])
+  @@index([restaurantId, status])
+}
+
+/// Append-only redemption log. One account may redeem a given code at most once.
+model MembershipRedemption {
+  id               String   @id @default(cuid())
+  membershipCodeId String
+  guestId          String
+  restaurantId     String
+  membershipId     String?
+  redeemedAt       DateTime @default(now())
+
+  code  MembershipCode @relation(fields: [membershipCodeId], references: [id], onDelete: Cascade)
+  guest GuestProfile   @relation(fields: [guestId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipCodeId, guestId])
+  @@index([restaurantId, redeemedAt])
+  @@index([guestId])
+}
+
+/// The entitlement the gate checks. Read-cache-compatible with a future Clerk
+/// Billing sync; code-granted memberships leave clerkSubscriptionId null.
+model GuestMembership {
+  id                  String                @id @default(cuid())
+  guestId             String
+  restaurantId        String
+  tier                String                @default("echo_reserve")
+  status              GuestMembershipStatus @default(ACTIVE)
+  source              String                @default("code") // "code" | "billing"
+  clerkSubscriptionId String?
+  startedAt           DateTime              @default(now())
+  currentPeriodEnd    DateTime
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  guest      GuestProfile @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([guestId, restaurantId, status])
+  @@index([restaurantId, currentPeriodEnd])
 }

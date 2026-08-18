@@ -17,6 +17,11 @@ vi.mock("next/headers", () => ({
   cookies: () => ({ get: h.cookieGet }),
 }));
 
+// Public route: signed-out guest. Membership branch is only reached with a userId.
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: () => Promise.resolve({ userId: null }),
+}));
+
 function req(url: string): unknown {
   return { url };
 }

@@ -284,6 +284,7 @@ model Restaurant {
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
   venueSpirits                    VenueSpirit[]
+  spiritFlights                   SpiritFlight[]
 }
 
 model UserRestaurantRole {
@@ -1438,6 +1439,7 @@ model VenueSpirit {
   restaurant Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   definition SpiritDefinition @relation(fields: [spiritDefinitionId], references: [id], onDelete: Restrict)
   offers     SpiritPour[]
+  flightItems SpiritFlightItem[]
 
   @@unique([id, restaurantId]) // composite target for the tenant-agreement FK on offers
   @@unique([restaurantId, slug]) // tenant-stable public id
@@ -1470,6 +1472,7 @@ model SpiritPour {
   // its VenueSpirit's — no cross-tenant pours possible.
   venueSpirit       VenueSpirit              @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
   priceObservations SpiritPriceObservation[]
+  flightItems       SpiritFlightItem[]
 
   @@unique([id, restaurantId]) // composite target for the price-observation FK
   @@unique([restaurantId, toastItemGuid]) // a Toast menu item maps to one offer (multiple NULLs ok)
@@ -1493,4 +1496,51 @@ model SpiritPriceObservation {
 
   @@index([offerId, observedAt])
   @@index([restaurantId])
+}
+
+model SpiritFlight {
+  id                    String                @id @default(cuid())
+  restaurantId          String
+  name                  String
+  description           String?
+  status                SpiritLifecycleStatus @default(DRAFT)
+  suggestedPriceUsd     Decimal?              @db.Decimal(10, 2)
+  pricingFormulaVersion String                @default("component_1oz_sum_v1")
+  pricingSnapshot       Json?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  restaurant Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items      SpiritFlightItem[]
+
+  @@unique([id, restaurantId])
+  @@unique([restaurantId, name])
+  @@index([restaurantId, status])
+}
+
+model SpiritFlightItem {
+  id            String   @id @default(cuid())
+  restaurantId  String
+  flightId      String
+  venueSpiritId String
+  spiritPourId  String?
+  pourSizeOz    Decimal  @default(1.0) @db.Decimal(4, 1)
+  sortOrder     Int
+  itemNote      String?
+  // Internal (non-guest) small-bite accompaniment for this pour — 1-2 bites,
+  // seeded from the spirit's flavor profile and editable by staff. Shown on the
+  // kitchen/bar prep sheet only, never on the guest placemat.
+  pairingBites  String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  flight      SpiritFlight @relation(fields: [flightId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
+  venueSpirit VenueSpirit  @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  spiritPour  SpiritPour?  @relation(fields: [spiritPourId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@unique([flightId, sortOrder])
+  @@unique([flightId, venueSpiritId])
+  @@index([restaurantId])
+  @@index([venueSpiritId])
+  @@index([spiritPourId])
 }

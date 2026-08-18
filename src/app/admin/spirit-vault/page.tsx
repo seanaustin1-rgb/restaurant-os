@@ -67,7 +67,15 @@ export default async function SpiritVaultAdminPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div>
-        <h1 className="font-display text-2xl text-copper-soft">Spirit Vault</h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <h1 className="font-display text-2xl text-copper-soft">Spirit Vault</h1>
+          <Link
+            href="/admin/spirit-vault/flights"
+            className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20"
+          >
+            Create a Flight
+          </Link>
+        </div>
         <p className="mt-1 text-sm text-muted">
           {role.restaurant?.name ?? "Your bar"} - edit dossiers, add your voice, and publish. Published records go live
           on the guest vault immediately.

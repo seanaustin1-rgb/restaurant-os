@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { loadFlightView } from "@/lib/spirit-vault/flight-view";
 import { FlavorBars } from "@/components/spirit-vault/FlavorBars";
 import { resolveVaultAccess } from "@/lib/spirit-vault/vault-access";
@@ -26,7 +27,8 @@ export default async function GuestFlightPage({
   if (!TENANT) notFound();
 
   // Physical-presence gate: on-site (today's code) or a future paid member.
-  if (!resolveVaultAccess(searchParams?.k).allowed) {
+  const { userId } = await auth();
+  if (!(await resolveVaultAccess({ restaurantId: TENANT, providedCode: searchParams?.k, clerkUserId: userId })).allowed) {
     return <VaultGate expired={searchParams?.gate === "expired"} />;
   }
 

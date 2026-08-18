@@ -11,6 +11,70 @@ whiskey lane).
 
 ---
 
+## ✅ Sean's answers — 2026-08-18 (all seven open questions closed)
+
+Every question at the bottom of this file has an answer. What each one changed in
+`spirit-vault-data.js` is recorded here so the decision and its encoding stay together.
+
+| # | Question | Sean's answer | Encoded as |
+|---|---|---|---|
+| 1 | Tier C flavored / house vodkas | **Shelf-only, no dossiers** | 8 records moved to `shelfOnlyListing()` — listed, no producer, no tasting notes, removed from the review queue |
+| 2 | Jose Cuervo — which SKU? | **Especial Gold** | `identityConfirmedDraft()`, brand `Jose Cuervo` / expression `Especial Gold`, re-filed `toast-agave-draft` → new `gold-joven` |
+| 3 | Apostoles Rosa — agave at all? | **It's the gin** | Moved out of Agave: `cat:'Gin'`, `subcategory:'gin'`, brand `Príncipe de los Apóstoles` |
+| 4 | Moko Dark — which producer? | **Keep it held** | Unchanged. Still a factless draft; the shelf/Toast label conflict is unresolved |
+| 5 | Herradura Ultra — the Cristalino? | **Yes** | Re-filed `blanco-silver` → `anejo-and-specialty`, expression `Ultra Añejo Cristalino` |
+| 6 | Ketle Vodka — is it Ketel One? | **Yes** | Brand `Ketel One`; venue display spelling `Ketle Vodka` kept per Sean, mismatch logged |
+| 7 | Flavor radar | **Derive from published tasting notes** | ⚠️ **Not done — blocked.** See below |
+
+### Two new record states
+
+Sean's answers describe states the draft scaffold could not express, so both are now
+explicit rather than implied:
+
+- **`identityConfirmedDraft()` — identity confirmed, facts still unsourced.** Sean read
+  the bottle at the shelf, so we know *which product* a row is. That sources the identity
+  and nothing else: producer, origin, strength and production stay `unverified`, cite
+  nothing, and carry a limitation saying an identity confirmation is not a source for
+  them. Only `brand` / `expression` / `subcategory` / `cat` moved. Display names are
+  deliberately unchanged — the venue's shelf label stays the shelf label.
+- **`shelfOnlyListing()` — listed, never dossiered.** The 8 house/flavored pours keep
+  their place on the shelf so the menu reads complete, but carry no producer, no tasting
+  notes (`topNotes: null`, not three placeholders) and no "pending source review" copy.
+  Leaving the scaffold language on them would have parked them in a review queue Sean
+  has explicitly closed.
+
+### ⚠️ Question 7 (flavor radar) is BLOCKED, not skipped
+
+Sean asked for the radar axes to be derived from tasting notes found online. **That work
+could not be done in this session: the container's network egress blocks every producer
+and reference domain** (`herradura.com`, `cuervo.com`, `ketelone.com`, `diffordsguide.com`,
+even Wikipedia all fail through the proxy). Web *search* returns summaries, but writing
+axis values from a search snippet — while citing a producer page nobody opened — is
+precisely the failure mode the rest of this audit exists to prevent.
+
+**What the next session should know:**
+
+- All 26 Batch-2 sourced drafts still carry the **identical** scaffold radar
+  (`Sweet:5, Oak:5, Spice:5, Fruit:4, Smoke:1, Earth:3, Herbal:2`, body 5, finish 5).
+  Malibu and Herradura Añejo currently render the same shape. These are
+  `makeBatchSpirit` defaults, not tasting profiles.
+- 11 of the 26 already carry cited tasting descriptors in `topNotes`; 15 have none and
+  need fresh producer sourcing.
+- **Structural finding worth Sean's decision:** the engine *requires* all seven axes to
+  be finite numbers 0–10 (`spirit-vault-prototype.html`, the `FLAVOR_AXES` loop in the
+  record validator), so there is no way to express "this radar is not set". A record
+  with no tasting data is therefore indistinguishable from one with a real profile.
+  Giving the radar a nullable/absent state is an engine change, out of lane for this
+  pass — flagged rather than done quietly.
+
+### Tally after these decisions
+
+Tier A 57 + Tier B 21 + identity-confirmed 4 + shelf-only 8 = the 90
+`DRAFT_INVENTORY_ROWS`. Category split is now **42 agave / 24 rum / 23 vodka / 1 gin**
+(Apostoles Rosa left the agave count).
+
+---
+
 ## Legend
 
 | Tier | Meaning |
@@ -21,8 +85,9 @@ whiskey lane).
 
 ---
 
-**Tally:** Tier A 57 + Tier B 25 + Tier C 8 = the 90 `DRAFT_INVENTORY_ROWS`
-(43 agave / 24 rum / 23 vodka).
+**Tally (as first audited, 2026-08-17):** Tier A 57 + Tier B 25 + Tier C 8 = the 90
+`DRAFT_INVENTORY_ROWS` (43 agave / 24 rum / 23 vodka). See the 2026-08-18 decisions
+above for the current split.
 
 ## Tier A — source-ready (57)
 
@@ -56,14 +121,11 @@ Stoli Vodka · Vodka Grey Whale (SKU = Grey Whale Vodka; venue spelling kept per
 
 ---
 
-## Tier B — needs identity confirmation (25 records, grouped below)
+## Tier B — needs identity confirmation (21 records — 4 resolved 2026-08-18, see above)
 
 | Record | What has to be pinned first |
 |---|---|
-| `Jose Cuervo Tequila` | **Known hold.** Especial Gold vs Especial Silver vs Tradicional — subcategory and every fact depend on the SKU. Currently parked in `toast-agave-draft`. |
-| `Apostoles Rosa` | **Known hold.** Confirm the exact product (Apóstoles is better known as a gin); confirm whether this is a rosa / wine-cask tequila and which subcategory. Currently `toast-agave-draft`. |
 | `Maison Ferrand Plantation Moko Dark` | **Known hold.** Plantation rebranded to Planteray; "Moko" needs a producer/source check before any rename or fact. Toast label reads `Maison Peryat Moko Dark`. |
-| `Herradura Ultra Blanco` | Row is filed `blanco-silver` with style "Cristalino". The Herradura SKU is **Ultra Añejo Cristalino**. Confirm the bottle, then re-file. |
 | `Aman Tequila Blanco` | Small brand; no citable producer spec sheet found. |
 | `Santaleza Blanco` | Same. |
 | `Rey Supremo Rosa` | Confirm expression and whether "Rosa" means a wine-barrel finish. |
@@ -79,19 +141,19 @@ Stoli Vodka · Vodka Grey Whale (SKU = Grey Whale Vodka; venue spelling kept per
 | `Planteray Pineapple Rum` | Confirm whether this is Stiggins' Fancy Pineapple under the Planteray name. |
 | `Amsterdam Apple Vodka` | Confirm this is New Amsterdam Apple. |
 | `Holla Vodka` / `Apple Holla Vodka` | Confirm producer; may be a house/well pour rather than a brand. |
-| `Ketle Vodka` | Venue spelling kept per Sean; the Toast label reads `Kettle One Vodka`, so this is almost certainly **Ketel One**. Confirm before writing Nolet / Schiedam facts. |
 | `Prairie Cucumber Vodka` | Confirm this is Prairie Organic Cucumber. |
 
 ---
 
-## Tier C — house / shelf-only hold (8) — **PENDING SEAN**
+## Tier C — house / flavored pours (8) — **DECIDED 2026-08-18: SHELF-ONLY**
 
 `House Vodka` · `Strawberry Vodka` · `Raspberry Vodka` · `Vodka Blueberry` ·
 `Vodka Peach` · `Vodka Caramel` · `Vodka Orange` · `Whipped Vodka`
 
-These are almost certainly well / flavored pours with no single confirmable producer.
-Sean has not decided whether they get full guest dossiers or stay shelf-only.
-**No content written. No identity guessed.**
+Well / flavored pours with no single confirmable producer. **Sean's decision: they stay
+listed on the shelf and never get a guest dossier.** Built through `shelfOnlyListing()`;
+no producer, no tasting notes, no sources, and none of the "pending source review"
+language that would imply work still to come. No content written. No identity guessed.
 
 ---
 
@@ -133,7 +195,10 @@ Chopin Potato Vodka, Haku Vodka
 
 ---
 
-## Open questions for Sean
+## Open questions for Sean — ✅ ALL ANSWERED 2026-08-18
+
+> Answers and their encoding are in the decision table at the top of this file.
+> Kept below for the reasoning behind each question.
 
 1. **Flavored / house vodkas (Tier C):** dossiers or shelf-only? Blocks 8 records.
 2. **Jose Cuervo:** which SKU is actually on the shelf?

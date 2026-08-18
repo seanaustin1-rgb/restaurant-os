@@ -224,6 +224,30 @@ Non-blocking cleanup fixed in follow-up: `/favicon.ico` now serves as a static a
 - **Draft inventory loader branch:** `feat/spirit-vault-draft-loader` stages Agave/Rum/Vodka draft inventory as hidden, unverified records. Do not apply until dry-run projects 200 total records, 109 published, 91 drafts, no validation failures, and no duplicate keys.
 - **When Sean directs:** Toast pull → `SpiritPour` price/availability/observation wiring; admin list polish.
 
+### Sean's audit answers encoded — 2026-08-18 (stacked on the draft-loader branch)
+All seven `DRAFT-CONTENT-AUDIT.md` open questions are answered and encoded; the decision
+table and the reasoning live at the top of that file. Corpus shape is untouched — still
+200 records, 91 drafts, and the same guest-visible set. Two new record states were added
+(`identityConfirmedDraft`, `shelfOnlyListing`) so "we know the bottle but not its facts"
+and "listed, never dossiered" stop being implied by silence.
+
+**⛔ One answer could NOT be delivered: the flavor radar (question 7).** Sean asked for the
+axes to be derived from tasting notes found online. This container's network egress blocks
+every producer and reference domain (herradura.com, cuervo.com, ketelone.com,
+diffordsguide.com, Wikipedia — all fail through the proxy). Web search returns summaries
+only, and writing axis values from a snippet while citing a page nobody opened is the exact
+failure mode this lane guards against. **Next session needs an environment with outbound
+web access** to do question 7 and the remaining Tier-A sourcing.
+
+Two findings worth a decision when that happens:
+- All 26 Batch-2 sourced drafts still carry the **identical** scaffold radar
+  (`Sweet:5 Oak:5 Spice:5 Fruit:4 Smoke:1 Earth:3 Herbal:2`, body/finish 5). Malibu and
+  Herradura Añejo render the same shape today.
+- The engine has **no way to express "radar not set"** — the record validator in
+  `spirit-vault-prototype.html` requires all seven axes to be finite 0–10 numbers, so an
+  untasted record is indistinguishable from a profiled one. Giving the radar an absent
+  state is an engine change and was left alone rather than done quietly.
+
 ### Decisions locked (Sean, 2026-07-30)
 - Sensory edits → `VenueSpirit.overrides` (venue-local; shared knowledge stays canonical).
 - `/vault` serves demo tenant `cmqnyvbab0000osvwrxhaovxo` on `outfront-demo`.

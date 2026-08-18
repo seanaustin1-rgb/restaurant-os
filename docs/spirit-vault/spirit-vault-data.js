@@ -104,7 +104,16 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     record.country = null;
     record.region = null;
     record.city = null;
+    // A brand is not a distillery. makeBatchSpirit falls back
+    // distilleryName -> producer -> brand, and guestRecordToRows() imports the
+    // STRUCTURED fields (distilleryName ?? dist.name) rather than the display
+    // string below - so leaving them set writes "Milagro" / "Ketel One" / "House"
+    // into the DB as a distillery, on records that explicitly say producer and
+    // origin are unsourced. Null is the honest value until a producer is cited.
+    // (Codex P2 on #146.)
+    record.distilleryName = null;
     record.distillery = (record.brand || config.displayName) + ' - Origin pending';
+    record.dist.name = null;
     record.dist.place = '';
     record.dist.history = 'Production background pending source review.';
     record.reviewedAt = null;
@@ -126,6 +135,78 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     record.provenance.addedAt = '2026-08-10';
     record.provenance.updatedAt = '2026-08-10';
     record.provenance.reviewedAt = null;
+    return record;
+  }
+
+  // ═══ Sean's answers to the DRAFT-CONTENT-AUDIT open questions (2026-08-18) ═══
+  //
+  // Two of those answers describe record states the draft scaffold had no way to
+  // express, and both are worth making explicit rather than implying:
+  //
+  //   • IDENTITY CONFIRMED, FACTS STILL UNSOURCED. Sean read the bottle at the
+  //     shelf, so we now know WHICH product a row is. That tells us nothing about
+  //     its producer, proof or production, so these stay `unverified` and only
+  //     brand / expression / subcategory move. The confirmation is a source for
+  //     identity and for nothing else.
+  //   • SHELF-ONLY. House and generic flavored pours that will never get a guest
+  //     dossier. Leaving them reading "pending source review" would park them in
+  //     the review queue forever and promise work that is not coming.
+
+  var IDENTITY_ONLY_LIMITATION =
+    'Identity was confirmed by Sean at the Stone Grille shelf on 2026-08-18. Producer, origin, strength, production method and tasting language are still UNSOURCED - an identity confirmation is not a source for any of them.';
+
+  var SHELF_ONLY_LIMITATION =
+    'Shelf listing only, by Sean\'s decision on 2026-08-18: the house and generic flavored pours do not get guest dossiers. There is no single confirmable producer behind a well pour, so a dossier would have to be invented. No producer, origin, strength or tasting claim is made for this record.';
+
+  var SCAFFOLD_RADAR_LIMITATION =
+    'The flavor radar, body and finish values on this record are inert scaffold defaults from makeBatchSpirit, not a tasting profile. They carry no claim and must not be rendered as one.';
+
+  function identityConfirmedDraft(config){
+    var record = draftInventorySpirit(config);
+    record.production = [
+      ['Confirmed Identity', config.confirmedIdentity, true],
+      ['Identity Source', 'Sean, from the Stone Grille shelf, 2026-08-18', true],
+      ['Shelf Label', config.displayName + ' (display name deliberately unchanged)', true]
+    ];
+    if(config.toastMenuName){
+      record.production.push(['Toast Menu Label', config.toastMenuName, true]);
+    }
+    record.production.push(
+      ['Review Status', 'Producer, origin, production method and tasting language pending source review before publication.', true]
+    );
+    record.prodTags = [config.subcategory || config.cat, 'Identity Confirmed'];
+    record.status = [{k:'draft',t:'Draft - Identity Confirmed'}];
+    record.why = 'Identity confirmed by Sean at the shelf on 2026-08-18: ' + config.confirmedIdentity
+      + '. Product facts are still pending source review - do not publish until they are sourced.';
+    record.whyShort = 'Identity confirmed; product facts pending source review.';
+    record.notes = 'Identity confirmed by Sean 2026-08-18. Product facts and venue copy still pending.';
+    record.provenance.sourcingLimitations =
+      [IDENTITY_ONLY_LIMITATION].concat(config.extraLimitations || [], [SCAFFOLD_RADAR_LIMITATION]);
+    record.provenance.updatedAt = '2026-08-18';
+    return record;
+  }
+
+  function shelfOnlyListing(config){
+    var record = draftInventorySpirit(config);
+    record.production = [
+      ['Listing Type', 'Shelf listing - no guest dossier', true],
+      ['Decision', 'Sean, 2026-08-18: house and generic flavored pours stay shelf-only', true],
+      ['Toast Menu Label', config.toastMenuName, true]
+    ];
+    record.prodTags = [config.subcategory || config.cat, 'Shelf Listing'];
+    record.status = [{k:'draft',t:'Shelf Listing - No Dossier'}];
+    record.why = 'A house pour, listed so the shelf reads complete. It carries no dossier by decision: '
+      + 'there is no single confirmable producer behind a well or flavored pour, and the vault does not invent one.';
+    record.whyShort = 'House pour - listed on the shelf, no dossier by decision.';
+    record.notes = 'Shelf-only by Sean\'s decision on 2026-08-18. Not in the source-review queue.';
+    // Exactly 3 or falsy - the engine rejects any other length, and placeholder
+    // notes here would imply a review that is never coming.
+    record.topNotes = null;
+    record.distillery = 'House pour - no producer claimed';
+    record.distilleryName = null;
+    record.dist.name = null;
+    record.provenance.sourcingLimitations = [SHELF_ONLY_LIMITATION, SCAFFOLD_RADAR_LIMITATION];
+    record.provenance.updatedAt = '2026-08-18';
     return record;
   }
 
@@ -1591,7 +1672,6 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','blanco-silver','Aman Tequila Blanco',15,'b657bc99-ede3-42e4-8a48-6be15136ded7','Aman Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / 100% Blue Weber Agave',80],
     ['Agave','blanco-silver','El Jimador Cristalino',7,'2564383e-dfe8-4b43-9e7c-865077b6f32a','El Jimador, Cristalino','Stone Grille website shelf','Blanco / Silver - 80 Proof / Filtered Añejo',80],
     ['Agave','blanco-silver','El Luchador Blanco',9.25,'85945271-026a-42dc-a584-b9ff00fcb4ef','El Luchador Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 110 Proof / High-Proof Blanco',110],
-    ['Agave','blanco-silver','Herradura Ultra Blanco',13.5,'3554205e-72c8-48b4-bcd7-91254a104184','Herradura Ultra Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Cristalino',80],
     ['Agave','blanco-silver','Mi Campo Blanco',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','Milagro Silver',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','Rey Supremo Rosa',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Red Wine Barrel Finish',80],
@@ -1613,9 +1693,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','reposado','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
     ['Agave','flavored-infused','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Jose Cuervo Tequila',6,'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90','Jose Cuervo Tequila','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
-    ['Agave','toast-agave-draft','Apostoles Rosa',9,'b363b248-9670-4002-ae3a-19fd5b6aaa8a','Apostoles Rosa','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','Don Ramón Añejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null,'don-roman-anejo-punta-diamante'],
 
     ['Rum','white-and-silver','Angostura White Oak',6,'806c5186-02d9-460c-91d8-8184489a6a18','Angostura White Oak Rum','Stone Grille website shelf','White & Silver - 80 Proof / Trinidad / Column Still',80],
@@ -1635,20 +1713,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Rum','spiced-and-flavored','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
     ['Rum','white-and-silver','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
 
-    ['Vodka','vodka','House Vodka',6.5,'73985435-c504-46b8-8e81-c736c8ab5369','House Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Strawberry Vodka',6,'6b34648c-9761-4edc-8865-7575b140bb7e','Vodka Strawberry','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Stoli Vodka',7,'5089405f-f571-403a-8da9-e946401bde5c','Stoli Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Double Cross Vodka',9,'4d76da46-c944-4b68-8aee-1f81aa8246bb','Double Cross Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Amsterdam Apple Vodka',7,'16e51ad9-e1ff-494c-be4a-7050b0b38d3c','Amsterdam Apple Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Vodka Blueberry',6.5,'3528cb35-9482-4ebb-abd9-1c0abd255ced','Vodka Blueberry','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Vodka Peach',6.5,'c1e4a3e6-fb0e-4f54-b62c-43bfb8a6e471','Vodka Peach','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Prairie Cucumber Vodka',8,'eb4f8d26-cfd1-46a8-ba70-53413447fc90','Vodka Prairie Cucumber','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Whipped Vodka',6.5,'31369476-51dc-4931-9e6a-c5fd3e06bc97','Whipped Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Vodka Caramel',6.5,'88a213b8-4b22-4211-9fa6-e9496a6e5558','Vodka Caramel','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Vodka Orange',6.5,'a1839375-ad6d-45d0-83d2-98f069899bdd','Vodka Orange','Toast menu pull','Vodka category',null],
-    ['Vodka','flavored-vodka','Raspberry Vodka',6.5,'a381bc86-6d97-43b5-a7de-65c7b51db268','Vodka Raspberry','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Apple Holla Vodka',6.5,'38dfd08e-bbb5-4d72-8e39-9fcde27c77e4','Vodka Apple Holla','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Ketle Vodka',8,'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7','Kettle One Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Holla Vodka',6.5,'80fc8cb0-ea4e-4aa3-8896-ae0e237ce7ab','Holla Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','potato-vodka','Boyd & Blair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null,'boyd-bair-potato-vodka'],
     ['Vodka','vodka','Vodka Grey Whale',8,'9af54e37-36bc-4268-842d-c271d14585e4','Vodka Grey Whale','Toast menu pull','Vodka category',null],
@@ -1670,5 +1739,105 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     });
   });
 
-  return LEGACY.concat(BATCH,SOURCED_DRAFTS,DRAFT_INVENTORY);
+  // ── Identity confirmed by Sean, 2026-08-18 (audit questions 2, 3, 5, 6) ──
+  //    These four left the plain draft scaffold because we now know which bottle
+  //    each one is. Nothing else changed: they are still `unverified` drafts with
+  //    no sourced producer, origin, strength or tasting language.
+  var IDENTITY_CONFIRMED = [
+    identityConfirmedDraft({
+      cat:'Agave', subcategory:'gold-joven',
+      displayName:'Jose Cuervo Tequila', id:'jose-cuervo-tequila',
+      brand:'Jose Cuervo', expression:'Especial Gold',
+      confirmedIdentity:'Jose Cuervo Especial Gold',
+      priceUsd:6, toastItemGuid:'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90',
+      toastMenuName:'Jose Cuervo Tequila',
+      sourceLabel:'Toast menu pull', sourceDetail:'Tequila category',
+      proofN:null, style:'Agave - gold joven',
+      extraLimitations:[
+        'Filed under a new `gold-joven` subcategory. Especial Gold is a joven/gold - not a blanco and not a true reposado - and the shelf taxonomy had no bucket for it. Filing it under `reposado` or `blanco-silver` would have been a false statement about the class. Re-file if Sean prefers it grouped with the reposados.',
+        'Whether this bottle is a mixto (the Especial line is not 100% agave) is NOT recorded here: it is a product fact and needs a producer source like every other fact on this record.'
+      ]
+    }),
+    identityConfirmedDraft({
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      displayName:'Herradura Ultra Blanco', id:'herradura-ultra-blanco',
+      brand:'Herradura', expression:'Ultra Añejo Cristalino',
+      confirmedIdentity:'Herradura Ultra Añejo Cristalino',
+      priceUsd:13.5, toastItemGuid:'3554205e-72c8-48b4-bcd7-91254a104184',
+      toastMenuName:'Herradura Ultra Blanco',
+      sourceLabel:'Stone Grille website shelf', sourceDetail:'Blanco / Silver - 80 Proof / Cristalino',
+      proofN:80, style:'Agave - anejo and specialty',
+      extraLimitations:[
+        'Re-filed from `blanco-silver` to `anejo-and-specialty`. Sean confirmed the bottle is the Ultra Añejo Cristalino - an añejo that is charcoal-filtered clear, not a blanco - so the old filing put an aged tequila on the silver shelf. The display name keeps the venue shelf label "Herradura Ultra Blanco"; the real identity sits in brand/expression.',
+        'The 80-proof value is carried over unchanged from the website shelf row and has NOT been re-sourced against the producer.'
+      ]
+    }),
+    identityConfirmedDraft({
+      cat:'Vodka', subcategory:'vodka',
+      displayName:'Ketle Vodka', id:'ketle-vodka',
+      brand:'Ketel One', expression:'Vodka',
+      confirmedIdentity:'Ketel One Vodka',
+      priceUsd:8, toastItemGuid:'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7',
+      toastMenuName:'Kettle One Vodka',
+      sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - vodka',
+      extraLimitations:[
+        'The venue spelling "Ketle Vodka" is kept as the display name per Sean; the Toast menu label reads "Kettle One Vodka". Both are misspellings of Ketel One, which is now recorded in brand/expression. Producer, origin and production stay unsourced - no Nolet or Schiedam claim is made on this record yet.'
+      ]
+    }),
+    identityConfirmedDraft({
+      cat:'Gin', subcategory:'gin',
+      displayName:'Apostoles Rosa', id:'apostoles-rosa',
+      brand:'Príncipe de los Apóstoles', expression:'Rosa',
+      confirmedIdentity:'Príncipe de los Apóstoles Rosa - a gin, not a tequila',
+      priceUsd:9, toastItemGuid:'b363b248-9670-4002-ae3a-19fd5b6aaa8a',
+      toastMenuName:'Apostoles Rosa',
+      sourceLabel:'Toast menu pull', sourceDetail:'Tequila category (Toast) - re-filed out of Agave',
+      proofN:null, style:'Gin - gin',
+      extraLimitations:[
+        'Moved out of Agave entirely. Sean confirmed on 2026-08-18 that this is the Argentine gin, not a tequila; it was drafted as agave only because it arrived through the Toast "Tequila" category.',
+        'Gin is a NEW category in this corpus. There are no other Gin records, and the category has no silhouette mapping (the cat→silo mapper is Phase 1.5), so the gin shelf is a shelf of one until it is built out. This record is hidden, so nothing reaches guests in the meantime.'
+      ]
+    }),
+  ];
+
+  // ── Shelf-only, by Sean's decision 2026-08-18 (audit question 1 / Tier C) ──
+  //    Listed so the shelf reads complete; no dossier, ever. These are deliberately
+  //    NOT in the source-review queue - see SHELF_ONLY_LIMITATION.
+  var SHELF_ONLY = [
+    shelfOnlyListing({cat:'Vodka', subcategory:'vodka', displayName:'House Vodka', id:'house-vodka',
+      brand:'House', expression:null, priceUsd:6.5, toastItemGuid:'73985435-c504-46b8-8e81-c736c8ab5369',
+      toastMenuName:'House Vodka', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Strawberry Vodka', id:'strawberry-vodka',
+      brand:'House', expression:'Strawberry', priceUsd:6, toastItemGuid:'6b34648c-9761-4edc-8865-7575b140bb7e',
+      toastMenuName:'Vodka Strawberry', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Raspberry Vodka', id:'raspberry-vodka',
+      brand:'House', expression:'Raspberry', priceUsd:6.5, toastItemGuid:'a381bc86-6d97-43b5-a7de-65c7b51db268',
+      toastMenuName:'Vodka Raspberry', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Vodka Blueberry', id:'vodka-blueberry',
+      brand:'House', expression:'Blueberry', priceUsd:6.5, toastItemGuid:'3528cb35-9482-4ebb-abd9-1c0abd255ced',
+      toastMenuName:'Vodka Blueberry', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Vodka Peach', id:'vodka-peach',
+      brand:'House', expression:'Peach', priceUsd:6.5, toastItemGuid:'c1e4a3e6-fb0e-4f54-b62c-43bfb8a6e471',
+      toastMenuName:'Vodka Peach', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Vodka Caramel', id:'vodka-caramel',
+      brand:'House', expression:'Caramel', priceUsd:6.5, toastItemGuid:'88a213b8-4b22-4211-9fa6-e9496a6e5558',
+      toastMenuName:'Vodka Caramel', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Vodka Orange', id:'vodka-orange',
+      brand:'House', expression:'Orange', priceUsd:6.5, toastItemGuid:'a1839375-ad6d-45d0-83d2-98f069899bdd',
+      toastMenuName:'Vodka Orange', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+    shelfOnlyListing({cat:'Vodka', subcategory:'flavored-vodka', displayName:'Whipped Vodka', id:'whipped-vodka',
+      brand:'House', expression:'Whipped', priceUsd:6.5, toastItemGuid:'31369476-51dc-4931-9e6a-c5fd3e06bc97',
+      toastMenuName:'Whipped Vodka', sourceLabel:'Toast menu pull', sourceDetail:'Vodka category',
+      proofN:null, style:'Vodka - flavored house pour'}),
+  ];
+
+  return LEGACY.concat(BATCH,SOURCED_DRAFTS,DRAFT_INVENTORY,IDENTITY_CONFIRMED,SHELF_ONLY);
 };

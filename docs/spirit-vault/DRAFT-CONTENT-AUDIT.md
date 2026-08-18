@@ -21,7 +21,10 @@ whiskey lane).
 
 ---
 
-## Tier A — source-ready (56)
+**Tally:** Tier A 57 + Tier B 25 + Tier C 8 = the 90 `DRAFT_INVENTORY_ROWS`
+(43 agave / 24 rum / 23 vodka).
+
+## Tier A — source-ready (57)
 
 ### Agave (28)
 Casamigos Blanco · Casamigos Reposado · Casamigos Anejo · El Jimador Silver ·
@@ -37,14 +40,14 @@ El Jimador Cristalino †
 confirm whether the bottle on the shelf is the reposado-based or añejo-based cristalino
 before writing the aging line.
 
-### Rum (18)
+### Rum (19)
 Bacardi White (SKU = BACARDÍ Superior) · Bacardi Dragonberry ·
 Captain Morgan Original Spiced · Captain Morgan Private Stock · Malibu ·
 Gosling's Black Seal · Myers's Dark (SKU = Myers's Original Dark) · Bumbu Dark ·
 Kasama Small Batch 7 Year · Angostura White Oak · Don Q 151 ·
 Don Q Gran Reserva Añejo XO · Don Q 2x Aged Cognac Cask · Zaya Gran Reserva 16 Year ·
 Diplomatico Mantuano Dark · Ron Botran Reserva #12 · Ron Barceló Imperial ·
-Planteray 3-Star
+Planteray 3-Star · Papa's Pilar Blonde
 
 ### Vodka (10)
 Absolut Vodka · Grey Goose Vodka · Tito's Vodka · Belvedere Vodka ·
@@ -53,7 +56,7 @@ Stoli Vodka · Vodka Grey Whale (SKU = Grey Whale Vodka; venue spelling kept per
 
 ---
 
-## Tier B — needs identity confirmation (23)
+## Tier B — needs identity confirmation (25 records, grouped below)
 
 | Record | What has to be pinned first |
 |---|---|

@@ -135,4 +135,11 @@ describe("qrTargetUrl", () => {
     delete process.env.SPIRIT_VAULT_DAY_SECRET;
     expect(qrTargetUrl("/vault")).toBe("https://staging.example.com/vault");
   });
+
+  it("never emits a localhost base for a QR (falls back to canonical)", () => {
+    for (const v of ["http://localhost:3000", "http://127.0.0.1:3000/", "http://0.0.0.0"]) {
+      process.env.NEXT_PUBLIC_APP_URL = v;
+      expect(appBaseUrl()).toBe("https://www.outfrontdata.com");
+    }
+  });
 });

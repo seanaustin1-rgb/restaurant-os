@@ -96,10 +96,19 @@ export function secondsUntilVenueMidnight(now: Date = new Date(), tz: string = v
   return Math.max(60, 86400 - secondsSinceMidnight);
 }
 
-/** Canonical app origin for absolute links (QR targets). No trailing slash. */
+const CANONICAL_BASE_URL = "https://www.outfrontdata.com";
+
+/**
+ * Canonical app origin for absolute links (QR targets). No trailing slash.
+ * Guard: a QR is printed ink — if NEXT_PUBLIC_APP_URL resolves to a localhost/loopback
+ * value (dev default, or a misconfigured prod env), fall back to the canonical domain
+ * so a placemat can never carry a dead localhost link. Runtime redirects self-correct;
+ * a printed QR cannot.
+ */
 export function appBaseUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://www.outfrontdata.com";
-  return raw.replace(/\/+$/, "");
+  const raw = (process.env.NEXT_PUBLIC_APP_URL?.trim() || CANONICAL_BASE_URL).replace(/\/+$/, "");
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(raw)) return CANONICAL_BASE_URL;
+  return raw;
 }
 
 /**

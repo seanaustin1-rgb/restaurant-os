@@ -2,8 +2,8 @@
 
 **Repo:** `seanaustin1-rgb/restaurant-os`
 **Branch:** `claude/previous-session-continuation-ls0rka` → base **`feat/spirit-vault-draft-loader`** (PR #145, not `main`)
-**PR:** #146 · single commit `b2ee812` on top of #145's `7bb3ea1`
-**CI:** green — Typecheck ✅ Test ✅ (454/454) Build ✅. The Codex Review job's own log
+**PR:** #146 · commits `b2ee812` (decisions) + the engine-validator fix below, on top of #145's `7bb3ea1`
+**CI:** green — Typecheck ✅ Test ✅ (458/458) Build ✅. The Codex Review job's own log
 shows `You have no credits remaining` on the OpenAI API; it has failed that way on every
 push to #145 and #146 alike and is not a signal about this diff.
 
@@ -47,7 +47,7 @@ The 12 changed records and their changed fields:
   `sourcingLimitations` / `venue.notes`
 - **Shelf-only (8):** the house + flavored vodkas — same set plus `topNotes`
 
-## Files changed (5)
+## Files changed (7)
 
 1. `docs/spirit-vault/spirit-vault-data.js` — two new helpers
    (`identityConfirmedDraft`, `shelfOnlyListing`), 12 rows moved out of
@@ -62,6 +62,10 @@ The 12 changed records and their changed fields:
 4. `docs/spirit-vault/DRAFT-CONTENT-AUDIT.md` — decision table, the two new record
    states, revised tallies, and the blocked-question writeup.
 5. `docs/spirit-vault/CODEX-PHASE2-HANDOFF.md` — session state + the blocker.
+6. `docs/spirit-vault/spirit-vault-prototype.html` — the engine-validator fix
+   (see "Added after review" below). The only guest-engine change in this PR.
+7. `src/lib/spirit-vault/engine-validator.test.ts` — **new**; runs the engine's own
+   validator over the real corpus, which nothing did before.
 
 ## The two new record states
 
@@ -86,15 +90,15 @@ imply a review Sean has explicitly closed).
 2. **Nothing became guest-visible** — every touched record must remain
    `DRAFT`/`DRAFT`/`UNSOURCED`. Both new helpers build on `draftInventorySpirit`,
    which sets those; confirm neither helper overrides them on any path.
-3. **`topNotes: null` on the 8 shelf-only records** *(the change I'm least sure
-   about)* — the engine validator in `spirit-vault-prototype.html` reads
-   `if(spirit.topNotes && spirit.topNotes.length !== 3)`. `null` passes only
-   because it is **falsy**; an empty array `[]` would fail (truthy, length 0).
-   That is a real coupling to a falsy-check. Is `null` the right representation
-   for "no notes, ever", or should these carry three placeholders after all and
-   accept the misleading queue signal? `transform.ts` maps null → `[]` for the DB,
-   and `validate.ts`'s publish gate still demands exactly 3 — fine only because
-   these never publish.
+3. **`topNotes: null` on the 8 shelf-only records, and the engine change it forced**
+   *(the part I'm least sure about)* — `null` was originally chosen to mean "no
+   notes, ever". It turned out the engine validator rejected it outright, which is
+   how the P2 below surfaced; the validator is now explicitly exempted for drafts
+   rather than the record relying on a falsy-check quirk. Still worth a second
+   opinion on the representation itself: is `null` right for "no notes, ever", or
+   should shelf-only pours carry three placeholders and accept the misleading
+   review-queue signal? `transform.ts` maps null → `[]` for the DB, and
+   `validate.ts`'s publish gate still demands exactly 3.
 4. **Invented taxonomy strings** — `subcategory: 'gold-joven'` (new) and
    `cat: 'Gin'` (new category, currently a category of one). Neither is enum-backed;
    `silo` stays null for both (the cat→silhouette mapper is still Phase 1.5). Sanity
@@ -109,6 +113,59 @@ imply a review Sean has explicitly closed).
    to the brand `'House'` — so the DB asserts a distillery literally named "House"
    while the static record says no producer is claimed. Is `'House'` acceptable
    there, or should `distilleryName` be null for a well pour?
+
+## Added after review: the engine-validator fix (Codex's P2 on #145)
+
+Codex left an unresolved **P2** review thread on #145 saying draft records fail the
+prototype's own validator. **Verified — it is real, and worse than reported.** The
+engine runs `validateSpiritRecords(ALL_BOTTLES)` over *all* records at startup and
+escalates to a hard throw on dev hosts (`location.protocol === 'file:'` or
+localhost), so opening the prototype locally threw before rendering a single bottle.
+Production only `console.error`s, so the live vault was never affected.
+
+Reproducing the engine's blank-check predicate over the real corpus found **72
+failures across 3 causes**:
+
+| Cause | Records | Origin |
+|---|---|---|
+| `reviewedAt: null` on drafts | 64 | pre-existing (#145 and earlier) |
+| `topNotes: null` on shelf-only pours | 8 | **introduced by this PR** |
+| `topNotes.length !== 3` (Malibu 1, Myers's Dark 2) | 2 | pre-existing (Batch 2) |
+
+The third is a genuine rule conflict already in the repo: `sourced-drafts.test.ts`
+deliberately permits a short note list when it declares itself (recording only the
+descriptors a producer actually publishes, rather than padding to three), while the
+engine demanded exactly three of every record. Malibu and Myers's Dark could
+therefore never have rendered locally or published.
+
+**Fix (2 edits, both in `spirit-vault-prototype.html`, both gated on
+`recordStatus === 'draft'`):**
+
+1. `DRAFT_OPTIONAL_FIELDS = ['reviewedAt','topNotes']` — exempt from the blank check
+   for drafts only. A draft has not been reviewed, so a review date would be a lie;
+   and a record with no tasting notes must be able to say so with `null` instead of
+   three placeholders implying notes are coming.
+2. The exactly-3 `topNotes` rule now applies only to non-drafts.
+
+**Guest safety is unchanged and worth confirming in review:** both exemptions key on
+`recordStatus === 'draft'`; published records still require every field and exactly
+three notes; `isGuestVisible()` still requires *both* statuses to be `published`; and
+`validate.ts` independently gates publication on exactly three notes. The loosening
+cannot reach a guest.
+
+**The real gap was test coverage** — nothing exercised the engine's validator, which
+is how a bug that breaks local rendering of the entire vault shipped with a 100%
+green suite. `src/lib/spirit-vault/engine-validator.test.ts` now extracts the real
+validator source (not a reimplementation, so it cannot drift) and runs it over the
+real corpus, including a case asserting the local/`file://` path does not throw and
+one asserting published records are still held to the strict rules.
+
+**Worth a reviewer's judgment:** this touches the guest engine, which the rest of
+this PR deliberately avoided. It was done because the bug was real, Codex
+recommended exactly this fix, and 8 of the 72 failures were introduced here. If Sean
+would rather the engine stay untouched, the alternative is giving the 8 shelf-only
+pours three placeholder notes — which reintroduces the "review coming" implication
+his shelf-only decision closed.
 
 ## Explicitly NOT in this PR
 

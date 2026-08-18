@@ -500,6 +500,16 @@ const REQUIRED_SPIRIT_FIELDS = [
   'dist','btb','notes','reviewedAt','topNotes','whyShort','seanShort','whyWeCarry',
   'paths','commerce','recordStatus','publicationStatus','verificationStatus','provenance',
 ];
+// Fields a DRAFT is allowed to leave blank. Everything in REQUIRED_SPIRIT_FIELDS
+// is still required of a published record; this only stops the validator from
+// demanding data a draft cannot honestly have yet:
+//   • reviewedAt — a draft has not been reviewed, so a review date would be a lie.
+//   • topNotes  — a record with no tasting notes must be able to say so with null
+//     rather than three placeholder strings implying notes are on the way (the
+//     shelf-only house pours never get any).
+// Guest safety is unaffected: this exemption is keyed on recordStatus === 'draft',
+// and isGuestVisible() requires BOTH statuses to be 'published'.
+const DRAFT_OPTIONAL_FIELDS = ['reviewedAt','topNotes'];
 const DEFAULT_COMMERCE_FIELDS = {
   pourPriceUsd:null,
   pourSizeOz:2,
@@ -675,6 +685,7 @@ function validateSpiritRecords(records){
   records.forEach((spirit, index)=>{
     const isDraft = spirit.recordStatus === 'draft';
     REQUIRED_SPIRIT_FIELDS.forEach(field=>{
+      if(isDraft && DRAFT_OPTIONAL_FIELDS.includes(field)) return;
       const value = spirit[field];
       if(isBlank(value) || (Array.isArray(value) && value.length === 0 && !isDraft)) pushMissing(errors, spirit, field);
     });
@@ -701,7 +712,12 @@ function validateSpiritRecords(records){
       errors.push(`${spirit.id}: publicationStatus "${spirit.publicationStatus}" cannot exceed recordStatus "${spirit.recordStatus}" (a ${spirit.recordStatus} record cannot be published to guests)`);
     }
 
-    if(spirit.topNotes && spirit.topNotes.length !== 3){
+    // A published record shows exactly three notes. A DRAFT may legitimately carry
+    // fewer: the sourced drafts record only the descriptors a producer actually
+    // publishes rather than padding to three (see sourced-drafts.test.ts, which
+    // requires a short list to declare itself). The publish gate in validate.ts
+    // still demands exactly three before anything reaches guests.
+    if(!isDraft && spirit.topNotes && spirit.topNotes.length !== 3){
       errors.push(`${spirit.id}: topNotes must contain exactly 3 entries`);
     }
 

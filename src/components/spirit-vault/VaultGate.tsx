@@ -43,15 +43,19 @@ export function VaultGate({ expired = false }: { expired?: boolean }) {
           <button
             type="submit"
             disabled={clean.length < 4}
-            className="rounded-md bg-ink px-4 py-2 font-mono text-sm text-parchment disabled:opacity-40 dark:bg-parchment dark:text-ink"
+            className="rounded-md bg-copper px-4 py-2 font-mono text-sm text-ink disabled:opacity-40"
           >
             Enter
           </button>
         </div>
       </form>
 
-      <p className="mt-6 text-xs text-muted">
-        Want your vault anywhere? Off-premise access is coming as a member perk.
+      <p className="mt-8 text-sm text-muted">
+        Echo&apos;s Reserve member?{" "}
+        <a href="/vault/join" className="text-copper-soft underline underline-offset-4 hover:text-copper">
+          Sign in
+        </a>{" "}
+        for access anywhere.
       </p>
     </main>
   );

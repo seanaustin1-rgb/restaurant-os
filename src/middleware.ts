@@ -19,6 +19,8 @@ const isPublicRoute = createRouteMatcher([
   // (/vault/flights/[id]/placemat) additionally enforces its own staff-role check.
   "/vault",
   "/vault/flights(.*)",
+  // Member sign-in + code redemption (the page is public; the redeem action is auth-gated).
+  "/vault/join(.*)",
   // Day-code entry point that unlocks the vault for the day.
   "/v/(.*)",
   // Inngest authenticates via its signing key, not Clerk.

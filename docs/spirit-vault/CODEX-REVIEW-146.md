@@ -3,7 +3,7 @@
 **Repo:** `seanaustin1-rgb/restaurant-os`
 **Branch:** `claude/previous-session-continuation-ls0rka` → base **`feat/spirit-vault-draft-loader`** (PR #145, not `main`)
 **PR:** #146 · commits `b2ee812` (decisions) + the engine-validator fix below, on top of #145's `7bb3ea1`
-**CI:** green — Typecheck ✅ Test ✅ (458/458) Build ✅. The Codex Review job's own log
+**CI:** green — Typecheck ✅ Test ✅ (461/461) Build ✅. The Codex Review job's own log
 shows `You have no credits remaining` on the OpenAI API; it has failed that way on every
 push to #145 and #146 alike and is not a signal about this diff.
 
@@ -106,13 +106,9 @@ imply a review Sean has explicitly closed).
    assume a closed set of categories or subcategories? Both records are hidden
    drafts, so guest impact today should be nil (`isGuestVisible` + the
    `publishedVaultListingArgs` PUBLISHED/PUBLISHED filter), but confirm.
-5. **A static/DB inconsistency I chose to flag rather than fix** — for shelf-only
-   records I set `record.distillery = 'House pour - no producer claimed'`, which is
-   the *display* string used by the static guest payload. `transform.ts` builds the
-   DB row's `distilleryName` from `r.distilleryName ?? r.dist?.name`, which resolves
-   to the brand `'House'` — so the DB asserts a distillery literally named "House"
-   while the static record says no producer is claimed. Is `'House'` acceptable
-   there, or should `distilleryName` be null for a well pour?
+5. ~~**A static/DB inconsistency I chose to flag rather than fix**~~ — **RESOLVED,
+   see below.** Codex reviewed this and correctly widened it: the defect was not
+   limited to shelf-only pours. Fixed in `d0e5b4b`.
 
 ## Added after review: the engine-validator fix (Codex's P2 on #145)
 
@@ -166,6 +162,52 @@ recommended exactly this fix, and 8 of the 72 failures were introduced here. If 
 would rather the engine stay untouched, the alternative is giving the 8 shelf-only
 pours three placeholder notes — which reintroduces the "review coming" implication
 his shelf-only decision closed.
+
+## Codex round 2 — the inferred-distillery P2 (fixed)
+
+Codex reviewed `be27f46` and returned one P2, which was **item 5 above, but broader
+and sharper than I had framed it**. I had described it as a shelf-only cosmetic
+mismatch. Codex correctly identified it as a self-contradiction affecting both new
+states:
+
+> `draftInventorySpirit(config)` inherits `makeBatchSpirit`'s brand-based values, and
+> `guestRecordToRows()` imports those structured fields instead of the top-level
+> `record.distillery`. Consequently the four identity-only records assert their newly
+> confirmed brands as distilleries, while all eight shelf-only records assert a
+> distillery named `House`.
+
+Verified — the DB rows read exactly that:
+
+| Record | `distilleryName` written to the DB (before) |
+|---|---|
+| `ketle-vodka` | `Ketel One` |
+| `jose-cuervo-tequila` | `Jose Cuervo` |
+| `herradura-ultra-blanco` | `Herradura` |
+| `apostoles-rosa` | `Príncipe de los Apóstoles` |
+| the 8 shelf-only pours | `House` |
+| the 52 plain scaffold rows (pre-existing, #145) | `Milagro`, `Zumbador`, … |
+
+The identity-confirmed case is the worst of the three: those records carry a
+limitation reading *"an identity confirmation is not a source"* for producer and
+origin, while simultaneously writing the confirmed brand into the DB as a
+distillery. A brand is not a distillery — Ketel One's is Nolet, Herradura's is NOM
+1119 — so this was the vault asserting an unsourced production fact.
+
+**Fix (`d0e5b4b`):** cleared `distilleryName` and `dist.name` in
+`draftInventorySpirit`, the shared base, rather than in the two new wrappers. That
+corrects all **64** draft-inventory records in one place — the 12 from this PR plus
+**52 pre-existing rows from #145** carrying the same false claim. `distilleryName`
+is nullable in Prisma and `validate.ts` never reads it, so nothing else moves. The
+top-level `distillery` *display* string stays non-blank (`"<brand> - Origin
+pending"`, or "House pour - no producer claimed") because the engine's
+`REQUIRED_SPIRIT_FIELDS` includes it.
+
+Guarded by three new assertions in `sourced-drafts.test.ts` covering all 64 records:
+structured distillery fields null, display string non-blank, and the count itself.
+
+**Note for the reviewer:** this widens the PR's blast radius from 12 changed records
+to 64. The extra 52 are a strict correction — a false distillery claim removed — but
+they are #145's rows, so say if you would rather have this scoped to the 12.
 
 ## Explicitly NOT in this PR
 

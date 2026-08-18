@@ -104,7 +104,16 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     record.country = null;
     record.region = null;
     record.city = null;
+    // A brand is not a distillery. makeBatchSpirit falls back
+    // distilleryName -> producer -> brand, and guestRecordToRows() imports the
+    // STRUCTURED fields (distilleryName ?? dist.name) rather than the display
+    // string below - so leaving them set writes "Milagro" / "Ketel One" / "House"
+    // into the DB as a distillery, on records that explicitly say producer and
+    // origin are unsourced. Null is the honest value until a producer is cited.
+    // (Codex P2 on #146.)
+    record.distilleryName = null;
     record.distillery = (record.brand || config.displayName) + ' - Origin pending';
+    record.dist.name = null;
     record.dist.place = '';
     record.dist.history = 'Production background pending source review.';
     record.reviewedAt = null;
@@ -194,6 +203,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // notes here would imply a review that is never coming.
     record.topNotes = null;
     record.distillery = 'House pour - no producer claimed';
+    record.distilleryName = null;
+    record.dist.name = null;
     record.provenance.sourcingLimitations = [SHELF_ONLY_LIMITATION, SCAFFOLD_RADAR_LIMITATION];
     record.provenance.updatedAt = '2026-08-18';
     return record;

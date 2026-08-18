@@ -210,6 +210,38 @@ describe("shelf-only listings (Sean, 2026-08-18)", () => {
   });
 });
 
+describe("no draft-inventory record infers a distillery from its brand", () => {
+  // Codex P2 on #146. makeBatchSpirit falls back distilleryName -> producer ->
+  // brand, and guestRecordToRows() imports the STRUCTURED fields, not the
+  // display string — so an unguarded draft wrote "Milagro" / "Ketel One" /
+  // "House" into the DB as a distillery while its own limitations said producer
+  // and origin were unsourced. The display string may still say "<brand> -
+  // Origin pending"; the structured fields must be null until a producer is cited.
+  const draftInventory = RECORDS.filter((r) =>
+    ["Draft inventory setup", "Identity confirmed by Sean", "Shelf-only by Sean"].some((p) =>
+      String(r.notes ?? "").startsWith(p),
+    ),
+  );
+
+  it("covers all 64 draft-inventory records", () => {
+    expect(draftInventory).toHaveLength(64);
+  });
+
+  it("leaves distilleryName and dist.name null on every one of them", () => {
+    for (const r of draftInventory) {
+      expect(r.distilleryName ?? null, `${r.id} distilleryName`).toBeNull();
+      expect(r.dist?.name ?? null, `${r.id} dist.name`).toBeNull();
+    }
+  });
+
+  it("still gives the engine a non-blank distillery display string", () => {
+    // REQUIRED_SPIRIT_FIELDS includes 'distillery'; a blank one fails validation.
+    for (const r of draftInventory) {
+      expect(String(r.distillery ?? "").trim(), `${r.id} distillery display`).not.toBe("");
+    }
+  });
+});
+
 describe("identity confirmed but facts still unsourced (Sean, 2026-08-18)", () => {
   it("records the confirmed brand and re-files the record", () => {
     for (const [id, expected] of Object.entries(IDENTITY_CONFIRMED)) {

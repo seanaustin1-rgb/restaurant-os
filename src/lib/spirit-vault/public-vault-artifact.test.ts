@@ -69,6 +69,18 @@ describe("renderPublicVaultHtml", () => {
     expect(html).not.toContain(VAULT_DATA_SCRIPT_TAG);
   });
 
+  it("keeps first load on the Vault browse view instead of opening the first dossier", () => {
+    const html = renderPublicVaultHtml(
+      [listing],
+      `<html><body><div class="view" id="view-vault"></div><div class="view" id="view-detail"></div>${VAULT_DATA_SCRIPT_TAG}<script>/* INIT */\nshowVault();</script></body></html>`,
+    );
+
+    expect(html).toContain('<div class="view" id="view-detail"></div>');
+    expect(html).toContain("showVault();");
+    expect(html).not.toContain('<div class="view active" id="view-detail">');
+    expect(html).not.toContain("renderDetail(0);");
+  });
+
   it("fails closed when the engine template is missing the data hook", () => {
     expect(() => renderPublicVaultHtml([listing], "<html></html>")).toThrow(
       "Vault engine template is missing its data-script tag.",

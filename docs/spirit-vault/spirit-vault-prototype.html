@@ -455,7 +455,7 @@ body::before{
   </div>
 
   <!-- ═══ DETAIL VIEW ═══ -->
-  <div class="view active" id="view-detail">
+  <div class="view" id="view-detail">
     <div class="bottle-nav">
       <button class="bn-btn" onclick="stepBottle(-1)">‹</button>
       <div class="bn-center">
@@ -1245,7 +1245,7 @@ function tickSession(){
 setInterval(tickSession,1000);
 
 /* INIT */
-renderDetail(0);
+showVault();
 </script>
 </body>
 </html>

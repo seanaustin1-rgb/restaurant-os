@@ -166,15 +166,13 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
           <a href={`/admin/spirit-vault/flights/${flight.id}/prep`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
             Prep sheet ↗
           </a>
+          <a href={`/vault/flights/${flight.id}/placemat`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
+            Placemat ↗
+          </a>
           {flight.status === "PUBLISHED" && (
-            <>
-              <a href={`/vault/flights/${flight.id}/placemat`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
-                Placemat ↗
-              </a>
-              <a href={`/vault/flights/${flight.id}`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
-                Guest page ↗
-              </a>
-            </>
+            <a href={`/vault/flights/${flight.id}`} target="_blank" rel="noreferrer" className="text-copper-soft hover:text-copper">
+              Guest page ↗
+            </a>
           )}
         </div>
       </div>

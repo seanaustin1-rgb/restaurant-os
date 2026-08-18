@@ -143,7 +143,9 @@ function placematHtml(v: FlightView): string {
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   if (!TENANT) return new Response("Spirit Vault is not configured", { status: 503 });
-  const view = await loadFlightView(TENANT, params.id, { publishedOnly: true });
+  // Any status — the placemat is a staff print artifact (previewed before publish),
+  // reached by an unguessable flight id. The guest digital page stays published-only.
+  const view = await loadFlightView(TENANT, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
   return new Response(placematHtml(view), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

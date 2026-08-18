@@ -118,6 +118,19 @@ export function SpiritFlightCreateForm({
   function save() {
     setError(null);
     setSaved(null);
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Enter a flight name.");
+      return;
+    }
+    if (trimmedName.length > 120) {
+      setError("Flight name must be 120 characters or fewer.");
+      return;
+    }
+    if (selected.length < 2 || selected.length > 6) {
+      setError("A flight needs 2–6 spirits.");
+      return;
+    }
     const payloadItems = selected.map((item) => ({
       venueSpiritId: item.venueSpiritId,
       spiritPourId: item.spiritPourId,
@@ -309,7 +322,7 @@ export function SpiritFlightCreateForm({
             <button
               type="button"
               onClick={save}
-              disabled={pending || deleting || selected.length < 2}
+              disabled={pending || deleting || !name.trim() || selected.length < 2}
               className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20 disabled:opacity-50"
             >
               {pending ? "Saving..." : isEdit ? "Save changes" : "Create flight"}

@@ -100,10 +100,21 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
     );
 
-    expect(draftInventory).toHaveLength(90);
+    // 64 of the original 90 scaffold rows remain; the other 26 were promoted to
+    // source-reviewed drafts in Batch 2 (see sourced-drafts.test.ts). They are
+    // still drafts — only their verification status and content depth changed.
+    expect(draftInventory).toHaveLength(64);
     expect(draftInventory.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.definition.verificationStatus === "UNSOURCED")).toBe(true);
+
+    const sourcedDrafts = ROWS.filter(
+      (r) =>
+        r.venueSpirit.recordStatus === "DRAFT" && r.definition.verificationStatus === "SOURCED",
+    );
+    expect(sourcedDrafts).toHaveLength(26);
+    expect(sourcedDrafts.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
+    expect(draftInventory.length + sourcedDrafts.length).toBe(90);
 
     const slugs = new Set(draftInventory.map((r) => r.definition.slug));
     expect(slugs).toContain("milagro-silver");
@@ -161,10 +172,12 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     }
   });
 
-  it("maps verification labels to the real distribution (56 SOURCED / 49 PARTIALLY / 95 UNSOURCED)", () => {
+  // SOURCED counts sourced FACTS, not publication: 56 published dossiers plus the
+  // 26 Batch 2 drafts whose facts are cited but which stay hidden pending Sean.
+  it("maps verification labels to the real distribution (82 SOURCED / 49 PARTIALLY / 69 UNSOURCED)", () => {
     const counts = { SOURCED: 0, PARTIALLY_SOURCED: 0, UNSOURCED: 0 } as Record<string, number>;
     for (const { definition } of ROWS) counts[definition.verificationStatus]++;
-    expect(counts).toEqual({ SOURCED: 56, PARTIALLY_SOURCED: 49, UNSOURCED: 95 });
+    expect(counts).toEqual({ SOURCED: 82, PARTIALLY_SOURCED: 49, UNSOURCED: 69 });
   });
 
   it("retains the source's own provenance, appends the 1.5oz correction, and never mislabels a manual price as Toast", () => {
@@ -194,8 +207,9 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       expect(venueSpirit.reviewedAt).toBeNull();
     }
     // Every source record carries reviewedAt, so every definition gets it.
+    // 110 before Batch 2; +26 sourced drafts, each carrying its own knowledge-review date.
     const withKnowledgeReview = ROWS.filter((r) => r.definition.knowledgeReviewedAt != null);
-    expect(withKnowledgeReview.length).toBe(110);
+    expect(withKnowledgeReview.length).toBe(136);
   });
 });
 

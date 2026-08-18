@@ -623,7 +623,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
   makeBatchSpirit({"id":"chicken-cock-double-oak-bourbon","brand":"Chicken Cock","expression":"Double Oak","displayName":"Chicken Cock Double Oak","cat":"Bourbon","subcategory":"Kentucky Whiskey","style":"Double-Oaked","producer":"Grain & Barrel Spirits","distilleryName":"Bardstown Bourbon Company","region":"Kentucky","city":"Bardstown","country":"USA","ageText":"8 Years","minYears":8,"maxYears":8,"proofN":92,"proofDisplay":"92 proof","flavor":{"Sweet":7,"Oak":9,"Spice":6,"Fruit":5,"Smoke":3,"Earth":3,"Herbal":1},"body":7,"finish":7,"topNotes":["Charred Oak","Caramel & Vanilla","Dark Berries"],"productionRows":[["Mash Bill","80.5% corn, 11% rye, 8.5% malted barley"],["Age","8 years"],["Maturation","Aged in used bourbon barrels, then re-barreled into new Level-4 char American white oak",true],["Proof","92 (46% ABV)"],["Distilled At","Bardstown Bourbon Company"],["Bottled By","Grain & Barrel Spirits, Bardstown, KY"]],"productionStructured":{"mashBill":"80.5% corn, 11% rye, 8.5% malted barley","maturation":"Eight years first maturing in used bourbon barrels, then transferred into new Level-4 char/toast American white oak barrels for a second maturation (~18 months) on the top floor of the Bardstown Bourbon Company rickhouse","methodTags":["Double-oaked","Level-4 char","Top-floor rickhouse"]},"prodTags":["Double Oaked","8 Years","92 Proof"],"why":"Double Oak takes Chicken Cock's 8-year-old Kentucky whiskey and gives it a second life in brand-new Level-4 char American white oak, layering charred-oak, caramel, and dark-berry depth over the base spirit. The re-barreled stock matured on the top floor of the Bardstown Bourbon Company rickhouse through one of the hottest Kentucky summers on record, pushing extra oak extraction, while the 92-proof bottling keeps it approachable rather than hot. It reads as oak-forward but balanced, sitting between an everyday pour and a special-occasion bottle.","whyShort":"An 8-year Kentucky whiskey re-barreled into fresh Level-4 char oak for a deeper, oakier second maturation.","whyWeCarry":"Double-oaked bourbons are one of the fastest-growing corners of the category, and this one earns its place on liquid alone: eight years of age, a second maturation in fresh Level-4 char American oak, and a 92-proof bottling that stays balanced rather than over-extracted. It carries genuine heritage too, from a brand dating to 1856 that ran through Prohibition speakeasies, poured from a striking replica apothecary bottle that reads instantly on a back bar. For a guest who likes their bourbon oaky, rich, and a little different, it is an easy and memorable step up.","history":"Chicken Cock traces to an 1856 distillery built by James A. Miller in Paris, Kentucky, and by the 1920s it was smuggled into Prohibition speakeasies like Harlem's Cotton Club in tin cans, earning the nickname \"the whiskey in a tin can.\" The brand went dark around 1950 before Grain & Barrel Spirits rediscovered and revived it beginning in 2011, later partnering with Bardstown Bourbon Company for its Kentucky whiskey. Double Oak, released in June 2023, extends that heritage with a second maturation in fresh oak.","timeline":[["1856","James A. Miller builds the Chicken Cock distillery in Paris, Kentucky"],["1920s","Smuggled into speakeasies like Harlem's Cotton Club as 'the whiskey in a tin can'"],["1950","Brand discontinued and fades from the market"],["2011","Grain & Barrel Spirits rediscovers and begins reviving the brand"],["2023","Double Oak Kentucky Whiskey released (June 7, 2023)"]],"statTiles":[["Age","8 Yr"],["Proof","92"],["ABV","46%"],["Char","Level 4"]],"facts":["The double-oak concept traces to the 2014 barrel shortage, when heavy rains disrupted logging and cooperage and pushed distillers to lean on re-barreling existing stock.","The second-maturation barrels sat on the top floor of Bardstown Bourbon Company's rickhouse during one of the hottest Kentucky summers on record, accelerating oak extraction.","It is bottled in a replica of the Prohibition-era Chicken Cock apothecary bottle, a nod to the brand once smuggled into speakeasies like Harlem's Cotton Club in tin cans."],"pairings":[["🍫","Dark Chocolate","Bittersweet chocolate or a flourless torte mirrors the dark-chocolate-covered-berry notes"],["🥩","Grilled Ribeye","A charred, fatty steak stands up to the oak and baking-spice backbone"],["🍮","Crème Brûlée","Echoes the whiskey's crème brûlée and vanilla-bean finish"],["🧀","Aged Gouda","Nutty, caramelized cheese plays off the toffee and caramel"],["☕","Coffee-Rubbed Pork","The caramel-coffee nose links to a coffee-rubbed roast"]],"sources":[{"url":"https://chickencockwhiskey.com/whiskey/double-oak-kentucky-whiskey/","sourceType":"producer_official","coversFields":["proof","mashBill","maturation","topNotes","prodTags","productionRows"]},{"url":"https://www.breakingbourbon.com/review/chicken-cock-double-oak","sourceType":"publication","coversFields":["ageText","maturation","topNotes","facts","why"]},{"url":"https://grainandbarrel.com/blogs/news/chicken-cock-whiskey-debuts-double-oak-kentucky-whiskey","sourceType":"producer_press","coversFields":["timeline","facts","maturation","proof"]},{"url":"https://chickencockwhiskey.com/history/","sourceType":"producer_official","coversFields":["history","timeline"]}],"sourcingLimitations":["Officially labeled 'Double Oak Kentucky Whiskey,' not straight bourbon: because it first matures in used barrels it cannot legally be called bourbon, though its mash bill (80.5% corn) is bourbon-style. Categorized as Bourbon here per the venue's taxonomy.","Mash bill varies slightly by source (producer: 80.5% corn / 11% rye / 8.5% malted barley; Breaking Bourbon: 80% / 11.5% / 8.5%); the producer's official figures are used.","Flavor-axis integers, body, finish, and the three top notes are an editorial consensus read from published tasting notes, not a lab measurement or the owner's own tasting.","Barrel-proof private-cask/single-barrel versions of Double Oak exist at varying proofs; this dossier reflects the standard 92-proof release."],"priceUsd":16.5,"toastItemGuid":"00664075-6442-48bf-96ec-ddbdf405bc87","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"stonestreet-founders-edition-bourbon","brand":"Stonestreet","expression":"Founder's Edition Kentucky Straight Bourbon","displayName":"Stonestreet Founder's Edition","cat":"Bourbon","subcategory":"Wheated Kentucky Straight Bourbon","style":"Wheated","producer":"Jackson Family Wines","distilleryName":"Green River Distillery","region":"Kentucky","city":null,"country":"USA","ageText":"5 years (minimum)","minYears":5,"maxYears":null,"proofN":94,"proofDisplay":"94 proof (47% ABV)","flavor":{"Sweet":8,"Oak":4,"Spice":4,"Fruit":5,"Smoke":0,"Earth":2,"Herbal":0},"body":7,"finish":7,"topNotes":["Toasted caramel","Vanilla & toffee","Baked stone fruit"],"productionRows":[["Mash Bill","70% corn · 21% wheat · 9% malted barley",true],["Style","Wheated Kentucky Straight Bourbon"],["Age","Minimum 5 years"],["Proof","94 (47% ABV)"],["Distillery","Green River Distillery, Owensboro, KY"],["Release","Small batch — 131 barrels"]],"productionStructured":{"mashBill":"70% corn, 21% wheat, 9% malted barley","maturation":"Aged a minimum of 5 years in new charred oak","methodTags":["Small batch","Wheated mash bill","Kentucky straight"]},"prodTags":["Wheated","Small Batch","5-Year"],"why":"Stonestreet is the winemaking Jackson family's first move into American whiskey, applying a small-batch, blending-led approach to a high-wheat Kentucky straight bourbon. The 70% corn, 21% wheat mash bill trades rye's pepper for a softer, creamier character, and a minimum five years in oak rounds it into a caramel-and-stone-fruit pour finished with gentle spice.","whyShort":"A wheated Kentucky straight bourbon and the debut spirit from the family behind Kendall-Jackson.","whyWeCarry":"Built on a 21% wheat mash bill, this delivers the soft, caramel-forward sweetness that reads easily to newcomers yet holds depth for seasoned bourbon drinkers — equally at home neat or as a cocktail base. As the first spirit from the family behind Kendall-Jackson, released in a small 131-barrel Founder's Edition, it brings a genuine provenance story that rewards a second look. At five years and 94 proof it lands in an approachable, food-friendly sweet spot without thinning out.","history":"Stonestreet is the debut spirit from Jackson Family Wines, the family behind Kendall-Jackson, launched in May 2024. The name comes from founder Jess Jackson's middle name, long carried by the family's Kentucky thoroughbred operation, Stonestreet Farms, established in 2005. Christopher Stonestreet Jackson serves as master blender for the small-batch, wheated bourbon, of which only 131 barrels were produced for this Founder's Edition.","timeline":[["2005","Jackson family establishes Stonestreet Farms in Kentucky"],["2007","Farm's Curlin named American Horse of the Year (repeats 2008)"],["2009","Rachel Alexandra earns a third straight Horse of the Year"],["2024","Stonestreet Founder's Edition debuts — Jackson Family Wines' first spirit"]],"statTiles":[["Proof","94"],["Age","5 yr min"],["Wheat","21%"],["Release","131 barrels"]],"facts":["Stonestreet is the middle name of Jackson Family Wines founder Jess Jackson, passed down through the family and lent to its Kentucky horse farm and estate vineyards.","The Founder's Edition is Jackson Family Wines' first-ever spirit, launched in May 2024 with only 131 barrels produced.","It is named for Stonestreet Farms (est. 2005), which bred three consecutive American Horses of the Year — Curlin (2007, 2008) and Rachel Alexandra (2009); Christopher Stonestreet Jackson is master blender."],"pairings":[["🍮","Crème brûlée","Echoes the toffee and vanilla-bean sweetness"],["🍑","Grilled stone fruit","Mirrors the baked-peach and dried-stone-fruit notes"],["🍫","Dark chocolate","Plays to the mocha and dark-chocolate mid-palate"],["🥧","Pecan pie","Toasted almond and caramel find a natural match"],["🧀","Aged gouda","A creamy, nutty foil to the silky texture"]],"sources":[{"url":"https://www.stonestreetwhiskey.com/","sourceType":"producer","coversFields":["producer","mashBill","proof","age","style","history"]},{"url":"https://www.fredminnick.com/2024/05/13/jackson-family-wines-releases-stonestreet-bourbon/","sourceType":"press","coversFields":["producer","proof","age","history","timeline","release","launchDate"]},{"url":"https://bourbonlens.com/stonestreet-bourbon-founders-edition/","sourceType":"press","coversFields":["tastingNotes","mashBill","proof","age","history","masterBlender"]},{"url":"https://theliquorbarn.com/products/stone-street-bourbon-750ml","sourceType":"retailer","coversFields":["tastingNotes","mashBill","distillery","age"]}],"sourcingLimitations":["Proof: the producer's own label and press (Fred Minnick, Bourbon Lens) state 94 proof / 47% ABV, which is used here; one retailer (The Liquor Barn) lists 90 proof / 45% ABV. The 94-proof label figure was treated as authoritative.","Distillery of origin: retailers and press attribute distillation to Green River Distillery (Owensboro, KY), while the official bottle label reads 'Distilled and bottled by Stonestreet in Bardstown, KY.' This looks like a contract-distilling / bottling nuance and is unresolved — city left unset.","Tasting notes are a consensus read from published producer/retailer/press descriptions, not a bar re-tasting. Any numeric review score was deliberately excluded."],"priceUsd":15,"toastItemGuid":"20ec2fde-ce8b-42c0-b435-bfb2cd51ae81","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"chicken-cock-small-batch-bourbon","brand":"Chicken Cock","expression":"Small Batch","displayName":"Chicken Cock Small Batch Bourbon","cat":"Bourbon","subcategory":"Kentucky Straight Bourbon","style":"Kentucky Straight Bourbon, Bottled-in-Bond","ageText":"4+ years","minYears":4,"maxYears":null,"proofN":100,"proofDisplay":"100 (Bottled-in-Bond)","producer":"Grain & Barrel Spirits","distilleryName":null,"region":"Kentucky","city":null,"country":"United States","flavor":{"Sweet":8,"Oak":7,"Spice":6,"Fruit":6,"Smoke":1,"Earth":2,"Herbal":1},"body":7,"finish":6,"topNotes":["Butterscotch & honey","Orange peel","Clove & baking spice"],"productionRows":[["Proof","100 (50% ABV), Bottled-in-Bond",true],["Mash Bill","70% Corn / 21% Rye / 9% Malted Barley"],["Age","Minimum 4 years"],["Barrel","New charred American oak, Level 3 char + toast"],["Rickhouse","Bardstown, KY — 2nd & 5th floors"],["Batching","Small number of casks, numbered by batch"]],"productionStructured":{"mashBill":"70% corn, 21% rye, 9% malted barley","maturation":"Minimum 4 years in new charred American oak (Level 3 char plus toast); barrels drawn from the 2nd and 5th floors of a Bardstown, KY rickhouse","methodTags":["Bottled-in-Bond","Small Batch","Kentucky Straight"]},"prodTags":["Bottled-in-Bond","Small Batch","Kentucky Straight"],"why":"Chicken Cock Small Batch is the brand's bottled-in-bond expression: Kentucky straight bourbon aged a minimum of four years and bottled at a federally regulated 100 proof. It is built on a 70% corn, 21% rye, 9% malted barley mash and drawn from a small number of casks pulled from specific rickhouse floors, and the line was created to restore genuine smallness to a term the category had diluted.","whyShort":"Bottled-in-bond Kentucky straight bourbon at 100 proof, aged 4+ years from a small-cask 70/21/9 mash.","whyWeCarry":"Bottled-in-bond is a hard-won designation — one distilling season, at least four years in a federally bonded warehouse, and a non-negotiable 100 proof — and this pour delivers all of it from a genuinely small run of casks. The 70/21/9 mash lands in a crowd-pleasing middle: caramel-and-honey sweetness carried on a dense, oak-framed body, with enough rye spice and orange-peel fruit to stay interesting neat or over a large cube. Add a documented 19th-century Kentucky pedigree and real speakeasy lore, and it reads as an approachable but serious back-bar bourbon at a fair pour price.","history":"Chicken Cock traces to 1856, when James A. Miller built a distillery in Paris, Kentucky, and the whiskey grew into a nationally advertised brand that later poured in Prohibition-era speakeasies such as Harlem's Cotton Club — smuggled in tin cans that earned it the nickname \"the whiskey in a tin can.\" The label faded by the 1950s and sat dormant for decades until Matti Anttila's Grain & Barrel Spirits acquired it in 2011 and relaunched it, returning proper Kentucky bourbon to the brand. The bottled-in-bond Small Batch line arrived in April 2024 as an addition to the core range.","timeline":[["1856","James A. Miller builds the distillery in Paris, Kentucky"],["1920s","Poured in Cotton Club speakeasies; smuggled across the border in tin cans"],["1950s","Brand fades and goes dormant"],["2011","Grain & Barrel Spirits acquires the dormant brand"],["2024","Bottled-in-bond Small Batch line launches in April"]],"statTiles":[["Proof","100"],["Age","4+ yrs"],["Mash","70/21/9"],["Est.","1856"]],"facts":["Prohibition-era bottles were smuggled across the Canadian border in tin cans, earning Chicken Cock the nickname 'the whiskey in a tin can.'","The brand was the house whiskey of Harlem's Cotton Club, and Duke Ellington referenced it in his memoir.","Grain & Barrel founder Matti Anttila rediscovered the dormant brand at the Oscar Getz Museum of Whiskey History in Bardstown before reviving it."],"pairings":[["🍮","Crème brûlée","Butterscotch and vanilla-custard notes echo a torched caramel top."],["🦆","Orange-glazed duck","Orange-peel and red-apple fruit lean into citrus-glazed roast poultry."],["🧀","Aged cheddar","The dense body and oak spice stand up to a sharp, crystalline cheddar."],["🥧","Apple spice pie","Baked red apple and cinnamon on the palate mirror the dessert."],["🍫","Dark chocolate","Roasted oak and coffee undertones complement bittersweet chocolate."]],"sources":[{"url":"https://chickencockwhiskey.com/whiskey/small-batch/","sourceType":"producer_official","coversFields":["proofN","productionStructured","productionRows","flavor","topNotes","ageText"]},{"url":"https://grainandbarrel.com/blogs/news/chicken-cock-whiskey-introduces-new-small-batch-bourbon-line","sourceType":"producer_press","coversFields":["proofN","productionStructured","timeline","facts","history","prodTags"]},{"url":"https://chickencockwhiskey.com/history/","sourceType":"producer_official","coversFields":["history","timeline","facts"]},{"url":"https://www.thewhiskeyshelf.com/chicken-cock-small-batch-bourbon-review/","sourceType":"review","coversFields":["flavor","body","finish","topNotes"]}],"sourcingLimitations":["The specific distillery that produced the liquid is not disclosed; Chicken Cock is a Kentucky-sourced non-distiller brand, and only the Bardstown, KY rickhouse maturation location is stated.","Maturation timelines vary by batch (Batch 1 used five-year-aged barrels); the stated figure is a four-year minimum, so no maximum age is confirmed.","Flavor axes, body, finish, and the three top notes are an interpretive consensus from producer and third-party tasting notes, not measured values.","Producer material indicates the Small Batch was replaced in the core lineup by a new Wheated Bourbon in March 2026, so this may now be a limited or closeout item."],"priceUsd":16.5,"toastItemGuid":"eccbbe2a-fbee-42f5-8e4a-2c16f3658737","recordStatus":"published","publicationStatus":"published"}),
-  makeBatchSpirit({"id":"jeffersons-small-batch-bourbon","brand":"Jefferson's","expression":"Small Batch","displayName":"Jefferson's Small Batch Bourbon","cat":"Bourbon","subcategory":"Kentucky Straight Bourbon","style":"Blended Kentucky straight bourbon (high-rye)","producer":"Jefferson's (McLain & Kyne / Castle Brands, Pernod Ricard)","distilleryName":null,"region":"Kentucky","country":"USA","city":null,"ageText":"NAS · blend of reportedly 6-10 yr bourbons","minYears":6,"maxYears":10,"proofN":82.3,"proofDisplay":"82.3","flavor":{"Sweet":6,"Oak":5,"Spice":4,"Fruit":3,"Smoke":1,"Earth":2,"Herbal":1},"body":4,"finish":3,"topNotes":["Vanilla","Toasted oak","Sweet corn & maple"],"productionRows":[["Type","Blended Kentucky straight bourbon"],["Batched from","Up to 4 KY straight bourbons of different ages",true],["Mash bill (reported)","~60% corn / 30% rye / 10% malted barley"],["Age","NAS · reportedly 6-10 years"],["Proof","82.3 (41.15% ABV)"],["Barrel char","Light No. 1 char"],["Producer model","Non-distiller producer (blender)"]],"productionStructured":{"mashBill":"~60% corn, 30% rye, 10% malted barley (widely reported; not officially disclosed by the producer)","maturation":"New charred oak, light No. 1 char; no age statement, reportedly a blend of 6-10 year bourbons","methodTags":["Small-batch blend","Non-distiller producer","High-rye recipe","Kentucky straight bourbon"]},"prodTags":["Small-batch blend","High-rye","Kentucky straight"],"why":"Jefferson's built its name by blending rather than distilling, and the Small Batch is the expression that started it: up to four mature Kentucky straight bourbons of different ages, married into one approachable pour with one component making up at least 55% of the batch. Bottled at an easy 82.3 proof over a high-rye recipe, it leans on vanilla, toasted oak and sweet corn — the everyday face of a brand better known for its experimental aging.","whyShort":"A small-batch marriage of up to four Kentucky straight bourbons — the expression that launched Jefferson's.","whyWeCarry":"As the expression that launched Jefferson's, this small-batch blend earns its place on merit and story alike: a marriage of up to four Kentucky straight bourbons that drinks soft and sweet at an approachable 82.3 proof. Its high-rye backbone and gentle price make it a versatile, easy pour — welcoming to newcomers yet carrying the pedigree of one of bourbon's best-known blending houses. Few entry-level bottles fold this much narrative into the glass.","history":"Jefferson's was launched in 1997 by Trey Zoeller and his father Chet, a bourbon historian, under the company name McLain & Kyne — a nod to an eighth-generation ancestor said to have been arrested for moonshining in 1799. Named for Thomas Jefferson and his experimental spirit, the brand built its identity as a blender rather than a distiller, sourcing and marrying mature Kentucky straight bourbons. Castle Brands acquired the label in 2005, and Pernod Ricard took over the parent company in 2019.","timeline":[["1997","Trey and Chet Zoeller launch Jefferson's under the company McLain & Kyne"],["2005","Castle Brands acquires the Jefferson's brand"],["2019","Pernod Ricard acquires Castle Brands"],["2022","Pernod Ricard invests $250M in a new Marion County, Kentucky distillery"]],"statTiles":[["Proof","82.3"],["Recipe","High-rye"],["Batch","Up to 4 bourbons"],["Founded","1997"]],"facts":["Founded in 1997 by Trey Zoeller and his bourbon-historian father Chet, the brand was originally named McLain & Kyne.","That company name honored an eighth-generation ancestor said to have been arrested for moonshining in 1799.","Jefferson's is a blender, not a distiller — each small batch is built from up to four Kentucky straight bourbons of different ages, one making up at least 55% of the blend."],"pairings":[["🍖","Smoked brisket","Vanilla-and-oak sweetness cuts through rich, smoky bark"],["🧀","Aged cheddar","Nutty, buttery notes echo the whiskey's oak"],["🍎","Apple pie","Maple and sweet-corn character plays into baked-fruit desserts"],["🥓","Bacon-wrapped dates","Sweet-savory bite mirrors the honeyed palate"],["🥜","Pecan pralines","Toasted-nut confection matches the popcorn-like finish"]],"sources":[{"url":"https://en.wikipedia.org/wiki/Jefferson's_Bourbon","sourceType":"reference","coversFields":["history","timeline","producer","productionStructured","facts","statTiles"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/1403/jeffersons-very-small-batch","sourceType":"publication","coversFields":["proofN","productionStructured","productionRows","ageText","flavor","topNotes","facts"]},{"url":"https://www.breakingbourbon.com/review/jeffersons-very-small-batch","sourceType":"publication","coversFields":["proofN","productionRows","flavor","topNotes","body","finish"]},{"url":"https://woodencork.com/pages/about-jeffersons-bourbon","sourceType":"retailer","coversFields":["history","timeline","facts","producer"]}],"sourcingLimitations":["The official producer site (jeffersonsbourbon.com) blocked automated fetching (HTTP 403); all specs were corroborated via Wikipedia, Difford's Guide, Breaking Bourbon, and Wooden Cork instead.","The mash bill (~60% corn / 30% rye / 10% malted barley) is widely reported by Difford's Guide but is NOT officially disclosed by the producer — Breaking Bourbon lists the mash bill as undisclosed.","This is a no-age-statement blend; the 6-10 year range is per Difford's Guide and does not appear on the label.","Proof is cited as 82.3 by Breaking Bourbon and 82.4 (41.2% ABV) by Difford's Guide; 82.3 was used as the headline figure.","Jefferson's rebranded its flagship 'Very Small Batch' to 'Jefferson's Bourbon (Signature Blended Bourbon)'; the venue lists it as 'Small Batch,' treated here as the same core expression.","Flavor axes, body, finish, and the three topNotes are a consensus read of published tasting notes, not producer claims."],"priceUsd":14.5,"toastItemGuid":"0dca0da4-4c19-42af-ba84-704ed9db685e","recordStatus":"published","publicationStatus":"published"}),
+  makeBatchSpirit({"id":"jeffersons-small-batch-bourbon","brand":"Jefferson's","expression":"Small Batch","displayName":"Jefferson's Small Batch Bourbon","cat":"Bourbon","subcategory":"Kentucky Straight Bourbon","style":"Blended Kentucky straight bourbon (high-rye)","producer":"Jefferson's (McLain & Kyne / Castle Brands, Pernod Ricard)","distilleryName":null,"region":"Kentucky","country":"USA","city":null,"ageText":"NAS · blend of reportedly 6-10 yr bourbons","minYears":6,"maxYears":10,"proofN":82.3,"proofDisplay":"82.3","flavor":{"Sweet":6,"Oak":5,"Spice":4,"Fruit":3,"Smoke":1,"Earth":2,"Herbal":1},"body":4,"finish":3,"topNotes":["Vanilla","Toasted oak","Sweet corn & maple"],"productionRows":[["Type","Blended Kentucky straight bourbon"],["Batched from","Up to 4 KY straight bourbons of different ages",true],["Mash bill (reported)","~60% corn / 30% rye / 10% malted barley"],["Age","NAS · reportedly 6-10 years"],["Proof","82.3 (41.15% ABV)"],["Barrel char","Light No. 1 char"],["Producer model","Non-distiller producer (blender)"]],"productionStructured":{"mashBill":"~60% corn, 30% rye, 10% malted barley (widely reported; not officially disclosed by the producer)","maturation":"New charred oak, light No. 1 char; no age statement, reportedly a blend of 6-10 year bourbons","methodTags":["Small-batch blend","Non-distiller producer","High-rye recipe","Kentucky straight bourbon"]},"prodTags":["Small-batch blend","High-rye","Kentucky straight"],"why":"Jefferson's built its name by blending rather than distilling, and the Small Batch is the expression that started it: up to four mature Kentucky straight bourbons of different ages, married into one approachable pour with one component making up at least 55% of the batch. Bottled at an easy 82.3 proof over a high-rye recipe, it leans on vanilla, toasted oak and sweet corn — the everyday face of a brand better known for its experimental aging.","whyShort":"A small-batch marriage of up to four Kentucky straight bourbons — the expression that launched Jefferson's.","whyWeCarry":"As the expression that launched Jefferson's, this small-batch blend earns its place on merit and story alike: a marriage of up to four Kentucky straight bourbons that drinks soft and sweet at an approachable 82.3 proof. Its high-rye backbone and gentle price make it a versatile, easy pour — welcoming to newcomers yet carrying the pedigree of one of bourbon's best-known blending houses. Few entry-level bottles fold this much narrative into the glass.","history":"Jefferson's was launched in 1997 by Trey Zoeller and his father Chet, a bourbon historian, under the company name McLain & Kyne — a nod to an eighth-generation ancestor said to have been arrested for moonshining in 1799. Named for Thomas Jefferson and his experimental spirit, the brand built its identity as a blender rather than a distiller, sourcing and marrying mature Kentucky straight bourbons. Castle Brands acquired the label in 2005, and Pernod Ricard took over the parent company in 2019.","timeline":[["1997","Trey and Chet Zoeller launch Jefferson's under the company McLain & Kyne"],["2005","Castle Brands acquires the Jefferson's brand"],["2019","Pernod Ricard acquires Castle Brands"],["2022","Pernod Ricard invests $250M in a new Marion County, Kentucky distillery"]],"statTiles":[["Proof","82.3"],["Recipe","High-rye"],["Batch","Up to 4 bourbons"],["Founded","1997"]],"facts":["Founded in 1997 by Trey Zoeller and his bourbon-historian father Chet, the brand was originally named McLain & Kyne.","That company name honored an eighth-generation ancestor said to have been arrested for moonshining in 1799.","Jefferson's is a blender, not a distiller — each small batch is built from up to four Kentucky straight bourbons of different ages, one making up at least 55% of the blend."],"pairings":[["🍖","Smoked brisket","Vanilla-and-oak sweetness cuts through rich, smoky bark"],["🧀","Aged cheddar","Nutty, buttery notes echo the whiskey's oak"],["🍎","Apple pie","Maple and sweet-corn character plays into baked-fruit desserts"],["🥓","Bacon-wrapped dates","Sweet-savory bite mirrors the honeyed palate"],["🥜","Pecan pralines","Toasted-nut confection matches the popcorn-like finish"]],"sources":[{"url":"https://en.wikipedia.org/wiki/Jefferson's_Bourbon","sourceType":"reference","coversFields":["history","timeline","producer","productionStructured","facts","statTiles"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/1403/jeffersons-very-small-batch","sourceType":"publication","coversFields":["proofN","productionStructured","productionRows","ageText","flavor","topNotes","facts"]},{"url":"https://www.breakingbourbon.com/review/jeffersons-very-small-batch","sourceType":"publication","coversFields":["proofN","productionRows","flavor","topNotes","body","finish"]},{"url":"https://woodencork.com/pages/about-jeffersons-bourbon","sourceType":"retailer","coversFields":["history","timeline","facts","producer"]}],"sourcingLimitations":["The official producer site (jeffersonsbourbon.com) blocked automated fetching (HTTP 403); all specs were corroborated via Wikipedia, Difford\'s Guide, Breaking Bourbon, and Wooden Cork instead.","The mash bill (~60% corn / 30% rye / 10% malted barley) is widely reported by Difford\'s Guide but is NOT officially disclosed by the producer — Breaking Bourbon lists the mash bill as undisclosed.","This is a no-age-statement blend; the 6-10 year range is per Difford\'s Guide and does not appear on the label.","Proof is cited as 82.3 by Breaking Bourbon and 82.4 (41.2% ABV) by Difford\'s Guide; 82.3 was used as the headline figure.","Jefferson's rebranded its flagship 'Very Small Batch' to 'Jefferson's Bourbon (Signature Blended Bourbon)'; the venue lists it as 'Small Batch,' treated here as the same core expression.","Flavor axes, body, finish, and the three topNotes are a consensus read of published tasting notes, not producer claims."],"priceUsd":14.5,"toastItemGuid":"0dca0da4-4c19-42af-ba84-704ed9db685e","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"rebel-bottled-in-bond","brand":"Rebel","expression":"Bottled-in-Bond","displayName":"Rebel Bottled-in-Bond","cat":"Bourbon","subcategory":"Wheated Bourbon (Bottled-in-Bond)","style":"Kentucky Straight Wheated Bourbon","producer":"Lux Row Distillers","distilleryName":"Lux Row Distillers","country":"USA","region":"Kentucky","city":"Bardstown","ageText":"Bottled-in-Bond (min. 4 years)","minYears":4,"maxYears":null,"proofN":100,"proofDisplay":"100 Proof","flavor":{"Sweet":7,"Oak":5,"Spice":3,"Fruit":4,"Smoke":1,"Earth":2,"Herbal":1},"body":6,"finish":5,"topNotes":["Vanilla & Caramel","Brown-Sugar Honey","Dry Oak & Cinnamon"],"productionRows":[["Classification","Kentucky Straight Bourbon, Bottled-in-Bond",true],["Proof","100 (50% ABV)"],["Mash Bill","68% Corn / 20% Wheat / 12% Malted Barley"],["Minimum Age","4 years (Bottled-in-Bond standard)"],["Distillery","Lux Row Distillers, Bardstown, KY"],["Maturation","New charred white oak barrels"],["Water","Kentucky limestone-filtered"]],"productionStructured":{"mashBill":"68% corn, 20% wheat, 12% malted barley","maturation":"New charred white oak barrels; minimum 4 years per the federal Bottled-in-Bond standard","methodTags":["Wheated mash bill","Bottled-in-Bond","Single distillery / single distilling season","Charred new oak"]},"prodTags":["Wheated","Bottled-in-Bond","100 Proof"],"why":"Rebel is one of the comparatively few wheated bourbons to carry the Bottled-in-Bond seal, a federal standard that requires the whiskey be the product of one distillery and one distilling season, aged at least four years in charred new oak, and bottled at exactly 100 proof. Swapping wheat for rye in the flavoring slot (68% corn, 20% wheat, 12% malted barley) softens the grain bite and pushes caramel, vanilla and honey forward, placing it in the same wheated lineage as Maker's Mark and the Weller/Old Fitzgerald family, while the bonded 100 proof keeps the pour structured rather than thin.","whyShort":"A wheated bourbon under the Bottled-in-Bond seal: one distillery, one season, four-plus years, exactly 100 proof, with a soft caramel-and-vanilla profile and bonded backbone.","whyWeCarry":"Bottled-in-Bond wheated bourbon is a genuinely narrow slice of the category: the federal bond seal guarantees a single distillery, a single distilling season, four years minimum in charred new oak, and a full 100 proof, all wrapped around the softer, sweeter wheated recipe rather than the usual rye. It delivers Weller-adjacent caramel-and-vanilla character with real structural backbone, and it punches above its shelf slot for anyone chasing the wheated profile without the allocation hunt. That combination of a legally guaranteed pedigree and an approachable, crowd-friendly flavor makes it an easy anchor for a value-minded bourbon lineup.","history":"Rebel traces its wheated recipe to 1849, when wheat rather than rye was chosen as the secondary flavoring grain; the brand was long sold as \"Rebel Yell\" (trademark registered in the 1930s) before being renamed simply \"Rebel\" in a 2019 packaging overhaul. Today the whiskey is produced by Lux Row Distillers in Bardstown, Kentucky, under master distiller John Rempe, though older stock was contract-distilled at Heaven Hill before Lux Row's own distillery opened in 2018. The Bottled-in-Bond bottling presents that wheated recipe at the bonded standard of 100 proof, made with Kentucky limestone-filtered water and matured in new charred white oak.","timeline":[["1849","Wheated recipe devised, with wheat swapped for rye as the flavoring grain"],["1936","Rebel Yell brand trademark registered"],["2018","Lux Row Distillers opens in Bardstown, KY, and begins distilling the brand's own stock"],["2019","Brand rebranded from 'Rebel Yell' to 'Rebel' with refreshed packaging"]],"statTiles":[["Proof","100"],["ABV","50%"],["Wheat","20%"],["Min. Age","4 yrs"]],"facts":["Bottled-in-Bond is a legal standard set by the 1897 Bottled-in-Bond Act: one distillery, one distilling season, at least four years in a federally bonded warehouse, and exactly 100 proof.","Rebel uses a wheated mash bill (68% corn, 20% wheat, 12% malted barley), the same rye-free style that defines Larceny and Old Fitzgerald.","The brand was formerly known as 'Rebel Yell' and was renamed simply 'Rebel' during a 2019 label refresh, though its recipe is marketed as dating to 1849."],"pairings":[["🍫","Dark Chocolate","Cocoa and brown-sugar notes in the bourbon echo a 70% dark square, and the wheated softness tames the bitterness."],["🥧","Pecan Pie","Caramel and roasted-pecan tones mirror the dessert's toasted, syrupy filling."],["🧀","Aged Gouda","A nutty, caramel-forward cheese meets the whiskey's vanilla and honey."],["🍖","Maple-Glazed Pork","A sweet glaze leans into the low-spice, caramel-heavy palate without fighting the wheat."]],"sources":[{"url":"https://rebelbourbon.com/whiskey/100-proof-bourbon/","sourceType":"producer","coversFields":["proofN","productionStructured","topNotes","brand"]},{"url":"https://luxrowdistillers.com/rebel-bourbon/","sourceType":"producer","coversFields":["history","distilleryName","productionRows","timeline"]},{"url":"https://www.rebelbourbon.com/whiskey/","sourceType":"producer","coversFields":["history","prodTags","facts"]},{"url":"https://www.binnys.com/spirits/whiskey/rebel-bottled-in-bond-wheated-bourbon-single-barrel-binnys-handpicked-173054/","sourceType":"retailer","coversFields":["expression","subcategory","prodTags","proofDisplay"]},{"url":"https://www.thewhiskeyshelf.com/rebel-yell-100-proof-review/","sourceType":"publication","coversFields":["flavor","topNotes","body","finish","productionStructured"]},{"url":"https://www.breakingbourbon.com/review/rebel-yell-100-bourbon","sourceType":"publication","coversFields":["productionStructured","history","timeline"]},{"url":"https://www.totalwine.com/discover/learn/bottled-in-bond-bourbon","sourceType":"reference","coversFields":["facts","productionStructured","ageText"]},{"url":"https://mgpingredients.com/more-information/news-press/news-releases/lux-row-distillers-introduces-rebel-100-6-year-bourbon","sourceType":"producer","coversFields":["history","topNotes"]}],"sourcingLimitations":["No dedicated official product page for the Bottled-in-Bond expression was located; its identity was confirmed via a retailer single-barrel handpick listing (Binny's) plus the official Rebel/Lux Row wheated-recipe pages. Proof (100) and the 4-year minimum are fixed by the federal Bottled-in-Bond standard rather than a distillery-stated age.","The 68% corn / 20% wheat / 12% malted-barley mash bill is reported consistently by whiskey publications but is not printed on the official label.","Rebel Bottled-in-Bond has been issued largely as single barrels and store picks, so exact flavor varies barrel to barrel; the flavor axes and tasting notes are a consensus read across the wheated Rebel 100 line rather than one specific barrel.","No awards, scores, or press ratings were included per sourcing rules."],"priceUsd":15,"toastItemGuid":"e0a4c5bb-2dc7-4c60-909b-75ad69ff1a22","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"horse-soldier-small-batch-bourbon","brand":"Horse Soldier","expression":"Signature Small Batch Bourbon","displayName":"Horse Soldier Signature Small Batch Bourbon","cat":"Bourbon","subcategory":"Wheated Bourbon","style":"Wheated","region":"United States","country":"USA","city":"St. Petersburg, FL","producer":"American Freedom Distillery","distilleryName":"American Freedom Distillery","ageText":"No age statement","minYears":null,"maxYears":null,"proofN":95,"proofDisplay":"95","flavor":{"Sweet":7,"Oak":5,"Spice":5,"Fruit":5,"Smoke":1,"Earth":2,"Herbal":2},"body":7,"finish":6,"topNotes":["Vanilla","Toffee","Dark Cherry"],"productionRows":[["Mash Bill","70% corn / 20% wheat / 10% barley (wheated)",true],["Proof","95 (47.5% ABV)"],["Filtration","Non-chill filtered"],["Maturation","New American oak barrels"],["Distillery","American Freedom Distillery"],["Age","No age statement"]],"productionStructured":{"mashBill":"70% corn, 20% wheat, 10% barley","maturation":"New American oak barrels; non-chill filtered","methodTags":["Wheated mash bill","Non-chill filtered","Small batch blend"]},"prodTags":["Wheated","Non-Chill Filtered","Veteran-Founded"],"why":"A wheated bourbon bottled at 95 proof and non-chill filtered, blended in small batches from mature stock by American Freedom Distillery. The soft red winter wheat in place of rye pushes the profile toward caramel, vanilla, and rounded fruit rather than sharp spice, while skipping chill filtration keeps the body full and the texture unclipped.","whyShort":"Wheated, 95-proof, non-chill-filtered small batch built for soft caramel-and-vanilla richness.","whyWeCarry":"A wheated mash bill and non-chill filtration make this a soft, caramel-forward pour that reads easily to guests stepping up from an entry bourbon while still holding body at 95 proof. The provenance is genuine and rare on a back bar: it is built by the Green Beret \"Horse Soldiers\" of American Freedom Distillery, and the bottle glass is pressed from a mold made with steel from the World Trade Center. That combination of an approachable wheated profile and an unusually concrete story gives it a clear role as a neat-or-rocks flagship pour.","history":"American Freedom Distillery was founded by U.S. Army Special Forces veterans — the Green Beret \"Horse Soldiers\" who deployed on horseback into Afghanistan in the weeks after 9/11, a mission later dramatized in the film 12 Strong. The team's distilling venture took shape around 2015 after a distillery tour, and the Signature Small Batch Bourbon was announced in March 2018 and launched in Florida on Memorial Day that year. The wheated bourbon is blended in small batches and non-chill filtered, and its bottles are pressed from a mold created with steel from the World Trade Center. The distillery, headquartered in St. Petersburg, Florida, has since pointed its long-term home toward Horse Soldier Farms in Somerset-Pulaski County, Kentucky.","timeline":[["2001","Green Beret \"Horse Soldiers\" deploy on horseback into Afghanistan after 9/11"],["2015","Veterans establish American Freedom Distillery"],["2018","Signature Small Batch Bourbon launches in Florida on Memorial Day"],["2018","Bottle glass pressed from a mold made with World Trade Center steel"]],"statTiles":[["Proof","95"],["ABV","47.5%"],["Mash","Wheated"],["Filtration","Non-Chill"]],"facts":["The bottle glass is pressed from a mold created with steel from the World Trade Center, made by Anchor Glass alongside U.S. Steelworkers.","It is a wheated bourbon (70% corn, 20% wheat, 10% barley), bottled at 95 proof and non-chill filtered.","The founders are the Green Beret \"Horse Soldiers\" who rode into Afghanistan after 9/11 — the story behind the film 12 Strong."],"pairings":[["🍫","Dark Chocolate","Bittersweet squares echo the toffee and vanilla and tame the 95-proof warmth."],["🥩","Grilled Ribeye","A charred, fatty steak stands up to the full body and caramelized sweetness."],["🍒","Cherry-Glazed Pork","Dark stone fruit in the glass mirrors a sweet-savory cherry glaze."],["🧀","Aged Gouda","Nutty, butterscotch-edged cheese plays into the wheated softness."]],"sources":[{"url":"https://horsesoldierbourbon.com/pages/signature-bourbon","sourceType":"producer","coversFields":["proofN","productionStructured","prodTags","topNotes","flavor"]},{"url":"https://horsesoldierbourbon.com/products/small-batch-bourbon-whiskey","sourceType":"producer","coversFields":["expression","proofN","style","productionRows"]},{"url":"https://horsesoldierbourbon.com/pages/our-story","sourceType":"producer","coversFields":["history","timeline","producer"]},{"url":"https://horsesoldierbourbon.com/blogs/news/american-freedom-distillery-launches-horse-soldier-signature-bourbon","sourceType":"producer","coversFields":["history","timeline","facts"]},{"url":"https://www.bourbonbanter.com/horse-soldier-small-batch-bourbon-review/","sourceType":"publication","coversFields":["productionStructured","flavor","topNotes","facts"]},{"url":"https://www.breakingbourbon.com/tnt/horse-soldier-bourbon-whiskey","sourceType":"publication","coversFields":["subcategory"]}],"sourcingLimitations":["\"Horse Soldier Bourbon\" is ambiguous: this dossier documents the flagship Signature Small Batch (wheated, 95 proof, non-chill filtered). A separate, lower-priced Horse Soldier Straight Bourbon Whiskey also exists (reported as 87 proof, 65% corn / 30% rye / 5% malted barley, contract-distilled in Ohio via Middle West Spirits per Breaking Bourbon) — confirm the exact bottle on the shelf.","No age statement is published; a 2018 launch article described early batches as aged over five years, but current official pages list age as undisclosed, so no age is asserted.","Distillation origin is nuanced: early production was contract/sourced while Horse Soldier Farms in Somerset, Kentucky was being built; a precise 'distilled at' location for current small-batch stock is not cleanly stated on the official product page.","Flavor axes and topNotes are a consensus read from official and published tasting notes, not a lab measurement; one reviewer flagged an off/chemical note, so re-taste to confirm the house pour.","Per instructions, no awards, scores, or press ratings are included even though the producer and reviewers cite them."],"priceUsd":14.25,"toastItemGuid":"1047667a-eb1e-4b0d-be64-2c8fa85a4e83","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"elijah-craig-straight-rye","brand":"Elijah Craig","expression":"Straight Rye","displayName":"Elijah Craig Straight Rye","cat":"Rye","subcategory":"Kentucky Straight Rye","style":"Kentucky straight rye","producer":"Heaven Hill","distilleryName":"Heaven Hill Distillery","region":"Kentucky","country":"USA","city":"Bardstown","ageText":"No age statement (extra-aged)","minYears":null,"maxYears":null,"proofN":94,"proofDisplay":"94","flavor":{"Sweet":7,"Oak":4,"Spice":7,"Fruit":4,"Smoke":2,"Earth":1,"Herbal":3},"body":4,"finish":5,"topNotes":["Rye spice","Caramel sweetness","Orange peel"],"productionRows":[["Mash Bill","51% Rye, 35% Corn, 14% Malted Barley",true],["Proof","94 (47% ABV)"],["Age","No age statement (extra-aged)"],["Grain","Classic Kentucky rye mash bill"],["Distillery","Heaven Hill, Bardstown KY"],["Released","2020"]],"productionStructured":{"mashBill":"51% Rye, 35% Corn, 14% Malted Barley","maturation":"Aged in charred new oak barrels; no age statement, described as extra-aged","methodTags":["Column-distilled","Charred oak","Kentucky straight rye"]},"prodTags":["51% Rye Mash","94 Proof","Kentucky Straight"],"statTiles":[["Proof","94"],["Rye","51%"],["Age","NAS"],["Distillery","Heaven Hill"]],"why":"Elijah Craig Straight Rye pairs a barely-legal 51% rye mash bill with 35% corn and 14% malted barley, the same grain formula Heaven Hill runs across its rye whiskeys. Bottled at 94 proof with no age statement, it balances rye's baking-spice bite against corn-driven sweetness for an approachable, mixable Kentucky straight rye.","whyShort":"A barely-legal 51% rye at 94 proof on Heaven Hill's classic Kentucky mash bill.","whyWeCarry":"A recognizable name from America's largest family-owned distillery, Elijah Craig Straight Rye delivers a dependable Kentucky rye at an accessible price. Its 51% rye build leans on corn sweetness alongside baking-spice heat, making it as comfortable in a Manhattan or Old Fashioned as it is neat. It rounds out a rye shelf with a value-forward, well-known bottle that mixes cleanly and drinks easily.","history":"Elijah Craig Straight Rye is Heaven Hill's rye extension of its flagship Elijah Craig line, named for the 18th-century Baptist minister and distiller credited as the \"Father of Bourbon\" for being among the first to age whiskey in charred oak barrels. It carries the classic 51% rye Kentucky mash bill, bottled at 94 proof with no age statement. Heaven Hill, family-owned by the Shapira family since 1935, announced the rye in 2019 and brought it to market the following year.","timeline":[["1789","Elijah Craig builds a distillery and is credited as first to age whiskey in charred oak"],["1935","The Shapira family founds Heaven Hill in Bardstown, Kentucky"],["2019","Heaven Hill announces an Elijah Craig straight rye"],["2020","Elijah Craig Straight Rye reaches the market"]],"facts":["Shares the classic 51% rye / 35% corn / 14% malted barley Kentucky mash bill that Heaven Hill also uses for its Rittenhouse and Pikesville ryes.","Named for Elijah Craig, an 18th-century Baptist minister credited as the 'Father of Bourbon' for first aging whiskey in charred oak barrels.","Made by Heaven Hill, family-owned by the Shapira family since 1935 and billed as the largest family-owned distillery in America."],"pairings":[["🥩","Grilled steak","The rye's baking-spice bite cuts through charred, fatty beef."],["🍫","Dark chocolate","Echoes the cocoa and spice notes on the nose."],["🍎","Spiced apple pie","Caramel and cinnamon in the glass mirror baked-apple sweetness."],["🧀","Aged cheddar","Sharp, salty cheese balances the corn-driven sweetness."]],"sources":[{"url":"https://heavenhilldistillery.com/elijah-craig-rye.php","sourceType":"producer","coversFields":["proofN","ageText","maturation","tastingNotes","history","producer","distilleryName"]},{"url":"https://www.breakingbourbon.com/review/elijah-craig-rye","sourceType":"editorial","coversFields":["mashBill","proofN","ageText","releaseDate","tastingNotes"]},{"url":"https://woodencork.com/pages/about-elijah-craig","sourceType":"editorial","coversFields":["history","timeline"]}],"sourcingLimitations":["Heaven Hill's official page publishes proof (94) and tasting notes but does not disclose the mash bill; the 51% rye / 35% corn / 14% malted barley breakdown comes from Breaking Bourbon.","No age statement is published — the whiskey is described only as 'extra-aged' — so exact maturation years are unknown.","Elijah Craig's exact birth/death years and the year Heaven Hill first launched the Elijah Craig brand were not confirmed on the pages fetched, so they are omitted from the timeline.","Flavor axes, body, finish, and topNotes are a consensus read of published producer and editorial tasting notes, not lab measurements."],"priceUsd":14.25,"toastItemGuid":"e363dde6-d656-4469-89f2-93d65997e9a1","recordStatus":"published","publicationStatus":"published"}),
@@ -648,9 +648,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
 
   // ── Batch 5 (standard-tier bourbon/whiskey; agent-researched, audited 2026-07-27) ──
   makeBatchSpirit({"id":"makers-mark-cask-strength","brand":"Maker's Mark","expression":"Cask Strength","displayName":"Maker's Mark Cask Strength","cat":"Bourbon","subcategory":"Kentucky Straight Wheated Bourbon","ageText":"No age statement (min. ~7 years)","minYears":7,"maxYears":null,"proofN":null,"proofDisplay":"Cask","producer":"Suntory Global Spirits (Maker's Mark Distillery)","distilleryName":"Maker's Mark Distillery","country":"USA","region":"Kentucky","city":"Loretto","style":"Wheated bourbon, bottled at barrel proof","flavor":{"Sweet":7,"Oak":6,"Spice":6,"Fruit":5,"Smoke":1,"Earth":3,"Herbal":1},"body":8,"finish":7,"topNotes":["Salted caramel","Toasted oak","Warm vanilla"],"productionRows":[["Mash bill","70% corn, 16% soft red winter wheat, 14% malted barley",true],["Grain style","Wheated (no rye)"],["Proof","Cask strength, varies by batch (~107-114)"],["Age","No age statement; aged to taste, min. ~7 years"],["Batch size","Distilled in small quantities (24 barrels at a time)"],["Bottling","Blended and bottled straight from the barrel, nothing added or taken away"],["Distillery","Maker's Mark Distillery, Loretto, KY"]],"productionStructured":{"mashBill":"70% corn, 16% soft red winter wheat, 14% malted barley","maturation":"Aged to taste before bottling, minimum roughly 7 years; bottled at cask strength straight from the barrel","methodTags":["Wheated mash bill","Cask strength","Small batch"]},"prodTags":["Wheated","Cask strength","Small batch"],"why":"The barrel-proof expression of Maker's Mark: the distillery's signature wheated mash bill bottled straight from the barrel with nothing added or taken away, so the proof and character shift batch to batch. Swapping rye for soft red winter wheat gives a rounder, sweeter profile, and the undiluted strength amplifies the salted caramel, toasted oak and warm vanilla found in the standard bottling.","whyShort":"Maker's signature wheated bourbon, bottled straight from the barrel at cask strength for an amplified, rounder profile.","whyWeCarry":"This is Maker's Mark stripped of dilution: the same soft-wheat mash bill guests already trust, bottled straight from the barrel so every batch lands somewhere around 107 to 114 proof with fuller body and deeper caramel-and-oak intensity. It rewards a splash of water at the rail, giving guests a hands-on way to taste how proof reshapes a familiar bourbon. The wheated recipe also makes it an easy, approachable pour for drinkers who find high-rye barrel-proof whiskeys too sharp.","history":"In 1953 T. William \"Bill\" Samuels Sr. purchased the Burks' Distillery in Loretto, Kentucky, and the first Maker's Mark was bottled in 1958 under its now-iconic dipped red wax seal. The brand built its identity on a wheated mash bill, using soft red winter wheat in place of rye for a softer, sweeter character. The Cask Strength expression arrived in 2014, first sold only at the distillery gift shop before a wider U.S. release in 2016. Maker's Mark is today owned by Suntory Global Spirits, the company formerly branded Beam Suntory.","timeline":[["1953","Bill Samuels Sr. buys the Burks' Distillery in Loretto, KY"],["1958","First Maker's Mark bottled with its dipped red wax seal"],["2014","Cask Strength released, initially only at the distillery gift shop"],["2016","Cask Strength gets a wider U.S. retail release"],["2024","Owner Beam Suntory rebranded as Suntory Global Spirits"]],"statTiles":[["Proof","Cask (~107-114)"],["Mash bill","70/16/14 wheated"],["Age","Min. ~7 yrs"],["Origin","Loretto, KY"]],"facts":["Bottled straight from the barrel with nothing added or taken away, so proof varies by batch (roughly 107-114).","Uses Maker's signature wheated mash bill: 70% corn, 16% soft red winter wheat, 14% malted barley, with no rye.","Each batch is distilled in small quantities (24 barrels at a time) and aged to taste for a minimum of about 7 years."],"pairings":[["🍫","Dark chocolate","Echoes the dark-chocolate and espresso notes on the finish"],["🧈","Salted caramel dessert","Leans into the salted-caramel core of the palate"],["🥩","Grilled ribeye","Full body and cask-strength heat stand up to a fatty, charred steak"],["🍒","Dark cherry / stone fruit","Complements the dark-cherry fruit in the profile"]],"sources":[{"url":"https://www.makersmark.com/en-us/bourbons/makers-mark-cask-strength","sourceType":"producer","coversFields":["proofDisplay","productionRows","productionStructured","topNotes","facts","why"]},{"url":"https://en.wikipedia.org/wiki/Maker's_Mark","sourceType":"reference","coversFields":["history","timeline","productionStructured","producer","region"]},{"url":"https://breakingbourbon.com/review/makers-mark-cask-strength-bourbon","sourceType":"review","coversFields":["flavor","body","finish","topNotes","productionStructured"]}],"sourcingLimitations":["Cask Strength is bottled at barrel proof and varies by batch (roughly 107-114 proof), so proofN is null and proofDisplay is 'Cask'; the exact proof depends on the specific batch on hand.","Flavor intensities, body and finish are a consensus read from published producer and reviewer tasting notes, not a lab measurement; individual batches differ.","Maker's Mark carries no age statement; the ~7-year minimum reflects the producer's stated 'aged to taste' practice, not a guaranteed age. As of early 2026 the producer announced adding an age statement to the label, which may vary by future batch."],"priceUsd":10.75,"toastItemGuid":"027f67bd-e162-4aa0-b5d1-390fa9a34cff","recordStatus":"published","publicationStatus":"published"}),
-  makeBatchSpirit({"id":"few-straight-bourbon","brand":"FEW","expression":"Straight Bourbon","displayName":"FEW Straight Bourbon","cat":"Bourbon","subcategory":"Straight Bourbon","style":"Straight Bourbon","producer":"FEW Spirits","distilleryName":"FEW Spirits","city":"Evanston","region":"Illinois","country":"USA","ageText":"No age statement","minYears":null,"maxYears":null,"proofN":93,"proofDisplay":"93 proof (46.5% ABV)","flavor":{"Sweet":6,"Oak":7,"Spice":7,"Fruit":3,"Smoke":1,"Earth":3,"Herbal":2},"body":6,"finish":8,"topNotes":["Rye spice","Dry oak","Caramel and vanilla"],"productionRows":[["Mash Bill","70% corn · 20% rye · 10% malted barley",true],["ABV / Proof","46.5% ABV (93 proof)"],["Maturation","New charred Minnesota oak barrels"],["Age","No age statement (straight, min. 2 yrs)"],["Production","Grain-to-glass, small batch"],["Distillery","FEW Spirits, Evanston, Illinois"]],"productionStructured":{"mashBill":"70% corn, 20% rye, 10% malted barley (two-row malt)","maturation":"Aged in new charred barrels made from tight-grained Minnesota oak; no age statement (straight bourbon, minimum 2 years)","methodTags":["Grain-to-glass","Small batch","New charred oak","High-rye mash"]},"prodTags":["Grain-to-glass","High-rye mash","Evanston, IL"],"why":"A grain-to-glass straight bourbon from FEW Spirits in Evanston, Illinois, built on a three-grain mash of 70% corn, 20% rye and 10% malted barley. Bottled at 46.5% ABV and matured in charred, tight-grained Minnesota oak, it pairs Southern corn sweetness with an assertive northern rye spice and a long, dry, oaky finish.","whyShort":"Grain-to-glass Evanston straight bourbon: corn-sweet, rye-spiced, dry oak finish at 46.5% ABV.","whyWeCarry":"This is a genuine grain-to-glass craft bourbon, milled and distilled in-house on a high-rye three-grain mash that gives it far more spice and structure than the usual corn-forward pour. Aged in tight-grained Minnesota oak, it lands a dry, peppery, caramel-and-oak profile at an approachable 93 proof that drinks well neat or as the backbone of a bolder Old Fashioned. Its origin story, craft whiskey born in the historic heart of the American temperance movement, gives it a talking point few bottles on the shelf can match.","history":"FEW Spirits was founded in 2011 by Paul Hletko in Evanston, Illinois, a Chicago suburb that was long a stronghold of the American temperance movement. Operating as a grain-to-glass distillery, FEW mills, ferments, distills and barrels its whiskey on-site, drawing on the pre-Prohibition whiskey heritage evoked by Chicago's 1893 World's Fair. The Straight Bourbon is built on a three-grain mash of corn, rye and malted barley and matured in charred barrels made from tight-grained Minnesota oak.","timeline":[["1893","Chicago hosts the World's Fair, the pre-Prohibition whiskey era FEW's brand looks back to"],["2011","Paul Hletko founds FEW Spirits in Evanston, Illinois, a former temperance stronghold"],["2014","First craft whiskey and gin releases establish the brand's reputation"]],"statTiles":[["ABV","46.5%"],["Proof","93"],["Founded","2011"],["Rye in mash","20%"]],"facts":["Distilled grain-to-glass in Evanston, Illinois, a town historically central to the American temperance movement.","Its mash bill is 70% corn, 20% rye and 10% two-row malted barley, a comparatively high-rye recipe for a bourbon.","Aged in barrels made from Minnesota oak, whose shorter growing season yields a tighter grain."],"pairings":[["🥩","Grilled steak","The dry oak and black-pepper spine stand up to a charred ribeye"],["🍫","Dark chocolate","Toffee and caramel notes echo bittersweet chocolate"],["🍎","Spiced apple pie","Cinnamon, clove and green-apple hints mirror the dessert"],["🧀","Aged cheddar","Malt sweetness and nutty depth pair with a sharp, aged cheddar"]],"sources":[{"url":"https://fewspirits.com/products/","sourceType":"producer_official","coversFields":["why","prodTags","productionStructured","maturation"]},{"url":"https://fewspirits.com/story/","sourceType":"producer_official","coversFields":["history","timeline","founding"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/5022/few-bourbon","sourceType":"secondary","coversFields":["mashBill","proofN","flavor","maturation","facts"]},{"url":"https://whiskeyreviewer.com/2014/05/few-spirits-bourbon-review_052814/","sourceType":"secondary","coversFields":["flavor","body","finish"]},{"url":"https://whiskipedia.com/distilleries/few-spirits/","sourceType":"secondary","coversFields":["timeline","history"]}],"sourcingLimitations":["No age statement is published; as a 'straight' bourbon it is aged a minimum of 2 years, but FEW does not disclose an exact age, so minYears/maxYears are null.","Flavor scores are a consensus reading from published tasting notes (Difford's Guide, Whiskey Reviewer), not lab measurements.","The FEW name is widely reported to echo the initials of temperance leader Frances Elizabeth Willard, but the distillery states the coincidence was unintentional and refers to its small-batch output; treated as anecdote, not confirmed branding.","A separate FEW Bottled-in-Bond bourbon exists at 100 proof; this dossier covers the standard 93-proof (46.5% ABV) Straight Bourbon matching the POS item."],"priceUsd":10.75,"toastItemGuid":"997874be-1067-4c9c-929c-d6bd0121f655","recordStatus":"published","publicationStatus":"published"}),
+  makeBatchSpirit({"id":"few-straight-bourbon","brand":"FEW","expression":"Straight Bourbon","displayName":"FEW Straight Bourbon","cat":"Bourbon","subcategory":"Straight Bourbon","style":"Straight Bourbon","producer":"FEW Spirits","distilleryName":"FEW Spirits","city":"Evanston","region":"Illinois","country":"USA","ageText":"No age statement","minYears":null,"maxYears":null,"proofN":93,"proofDisplay":"93 proof (46.5% ABV)","flavor":{"Sweet":6,"Oak":7,"Spice":7,"Fruit":3,"Smoke":1,"Earth":3,"Herbal":2},"body":6,"finish":8,"topNotes":["Rye spice","Dry oak","Caramel and vanilla"],"productionRows":[["Mash Bill","70% corn · 20% rye · 10% malted barley",true],["ABV / Proof","46.5% ABV (93 proof)"],["Maturation","New charred Minnesota oak barrels"],["Age","No age statement (straight, min. 2 yrs)"],["Production","Grain-to-glass, small batch"],["Distillery","FEW Spirits, Evanston, Illinois"]],"productionStructured":{"mashBill":"70% corn, 20% rye, 10% malted barley (two-row malt)","maturation":"Aged in new charred barrels made from tight-grained Minnesota oak; no age statement (straight bourbon, minimum 2 years)","methodTags":["Grain-to-glass","Small batch","New charred oak","High-rye mash"]},"prodTags":["Grain-to-glass","High-rye mash","Evanston, IL"],"why":"A grain-to-glass straight bourbon from FEW Spirits in Evanston, Illinois, built on a three-grain mash of 70% corn, 20% rye and 10% malted barley. Bottled at 46.5% ABV and matured in charred, tight-grained Minnesota oak, it pairs Southern corn sweetness with an assertive northern rye spice and a long, dry, oaky finish.","whyShort":"Grain-to-glass Evanston straight bourbon: corn-sweet, rye-spiced, dry oak finish at 46.5% ABV.","whyWeCarry":"This is a genuine grain-to-glass craft bourbon, milled and distilled in-house on a high-rye three-grain mash that gives it far more spice and structure than the usual corn-forward pour. Aged in tight-grained Minnesota oak, it lands a dry, peppery, caramel-and-oak profile at an approachable 93 proof that drinks well neat or as the backbone of a bolder Old Fashioned. Its origin story, craft whiskey born in the historic heart of the American temperance movement, gives it a talking point few bottles on the shelf can match.","history":"FEW Spirits was founded in 2011 by Paul Hletko in Evanston, Illinois, a Chicago suburb that was long a stronghold of the American temperance movement. Operating as a grain-to-glass distillery, FEW mills, ferments, distills and barrels its whiskey on-site, drawing on the pre-Prohibition whiskey heritage evoked by Chicago's 1893 World's Fair. The Straight Bourbon is built on a three-grain mash of corn, rye and malted barley and matured in charred barrels made from tight-grained Minnesota oak.","timeline":[["1893","Chicago hosts the World's Fair, the pre-Prohibition whiskey era FEW's brand looks back to"],["2011","Paul Hletko founds FEW Spirits in Evanston, Illinois, a former temperance stronghold"],["2014","First craft whiskey and gin releases establish the brand's reputation"]],"statTiles":[["ABV","46.5%"],["Proof","93"],["Founded","2011"],["Rye in mash","20%"]],"facts":["Distilled grain-to-glass in Evanston, Illinois, a town historically central to the American temperance movement.","Its mash bill is 70% corn, 20% rye and 10% two-row malted barley, a comparatively high-rye recipe for a bourbon.","Aged in barrels made from Minnesota oak, whose shorter growing season yields a tighter grain."],"pairings":[["🥩","Grilled steak","The dry oak and black-pepper spine stand up to a charred ribeye"],["🍫","Dark chocolate","Toffee and caramel notes echo bittersweet chocolate"],["🍎","Spiced apple pie","Cinnamon, clove and green-apple hints mirror the dessert"],["🧀","Aged cheddar","Malt sweetness and nutty depth pair with a sharp, aged cheddar"]],"sources":[{"url":"https://fewspirits.com/products/","sourceType":"producer_official","coversFields":["why","prodTags","productionStructured","maturation"]},{"url":"https://fewspirits.com/story/","sourceType":"producer_official","coversFields":["history","timeline","founding"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/5022/few-bourbon","sourceType":"secondary","coversFields":["mashBill","proofN","flavor","maturation","facts"]},{"url":"https://whiskeyreviewer.com/2014/05/few-spirits-bourbon-review_052814/","sourceType":"secondary","coversFields":["flavor","body","finish"]},{"url":"https://whiskipedia.com/distilleries/few-spirits/","sourceType":"secondary","coversFields":["timeline","history"]}],"sourcingLimitations":["No age statement is published; as a 'straight' bourbon it is aged a minimum of 2 years, but FEW does not disclose an exact age, so minYears/maxYears are null.","Flavor scores are a consensus reading from published tasting notes (Difford\'s Guide, Whiskey Reviewer), not lab measurements.","The FEW name is widely reported to echo the initials of temperance leader Frances Elizabeth Willard, but the distillery states the coincidence was unintentional and refers to its small-batch output; treated as anecdote, not confirmed branding.","A separate FEW Bottled-in-Bond bourbon exists at 100 proof; this dossier covers the standard 93-proof (46.5% ABV) Straight Bourbon matching the POS item."],"priceUsd":10.75,"toastItemGuid":"997874be-1067-4c9c-929c-d6bd0121f655","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"old-elk-blended-straight-bourbon","brand":"Old Elk","expression":"Blended Straight Bourbon","displayName":"Old Elk Blended Straight Bourbon","cat":"Bourbon","ageText":"No age statement","minYears":null,"maxYears":null,"flavor":{"Sweet":8,"Oak":4,"Spice":5,"Fruit":5,"Smoke":1,"Earth":3,"Herbal":2},"body":6,"finish":5,"topNotes":["Vanilla & caramel","Malted almond","Clove & baking spice"],"proofN":88,"proofDisplay":"88 proof (44% ABV)","distilleryName":"Old Elk Distillery","producer":"Old Elk Distillery","country":"USA","region":"Colorado","city":"Fort Collins","style":"High-malt blended straight bourbon","subcategory":"Blended Straight Bourbon","productionRows":[["Mash Bill","51% corn / 34% malted barley / 15% rye",true],["Proof","88 (44% ABV)"],["Age","No age statement"],["Proofing","Slow Cut — water added over several weeks"],["Grain note","~4x the malted barley of a conventional bourbon"],["Master Distiller","Greg Metze"],["Origin","Fort Collins, Colorado"]],"productionStructured":{"mashBill":"51% corn, 34% malted barley, 15% rye","maturation":"Aged in new charred American oak; a blend of straight bourbons finished with the proprietary Slow Cut proofing process","methodTags":["High-malt mash bill","Slow Cut proofing","Blended straight bourbon"]},"prodTags":["High-Malt Mash Bill","Slow Cut Proofing","Colorado"],"why":"Old Elk's flagship pours from a deliberately unconventional recipe — roughly four times the malted barley of a typical bourbon — then softens it through a Slow Cut proofing process that stretches water addition over several weeks instead of the usual day or two. The result is a notably smooth, creamy bourbon led by vanilla, caramel and nutty malt, developed by veteran master distiller Greg Metze.","whyShort":"High-malt Colorado bourbon, slow-cut for a smooth, vanilla-and-caramel pour from master distiller Greg Metze.","whyWeCarry":"This is an approachable, distinctly smooth bourbon that rewards curiosity: a high-malt mash bill and multi-week Slow Cut proofing give it a creamy texture and caramel-vanilla sweetness that lands easily neat or in a cocktail. Built by a four-decade master distiller in Greg Metze, it offers a recognizable name and a genuine point of difference at a friendly pour price, making it an easy recommendation for guests exploring beyond mainstream bourbon.","history":"Old Elk Distillery was founded in Fort Collins, Colorado by entrepreneur Curt Richardson, who brought in veteran master distiller Greg Metze — a four-decade industry figure who began at the Seagram's distillery in Lawrenceburg, Indiana in 1978 and later served as master distiller at MGP. Metze developed Old Elk's signature high-malt mash bill in 2013, and the Blended Straight Bourbon reached the market by late 2017. The brand is defined by two hallmarks: a malted-barley-heavy recipe and the proprietary Slow Cut proofing method Metze's team uses to bring the whiskey down to bottling strength.","timeline":[["1978","Greg Metze begins his career at the Seagram's distillery in Lawrenceburg, Indiana"],["2013","Metze develops Old Elk's signature high-malt bourbon mash bill"],["2017","Old Elk Blended Straight Bourbon reaches the market"]],"statTiles":[["Proof","88 (44% ABV)"],["Malted Barley","34% of mash bill"],["Proofing","Slow Cut / weeks"],["Origin","Fort Collins, CO"]],"facts":["The mash bill carries roughly four times more malted barley than a conventional bourbon recipe — 51% corn, 34% malted barley, 15% rye.","The recipe was created by former MGP master distiller Greg Metze, who developed the signature mash bill in 2013.","Old Elk's proprietary Slow Cut proofing stretches water addition from the industry-standard 24–48 hours to several weeks, cutting and resting the spirit repeatedly for a smoother character."],"pairings":[["🥧","Pecan pie","Echoes the bourbon's caramel, brown sugar and nutty malt sweetness."],["🍫","Dark chocolate","Plays off the cocoa and vanilla notes without overwhelming the smooth palate."],["🧀","Aged gouda","The nutty, caramelized cheese mirrors the malted-barley character."],["🍎","Baked apple with cinnamon","Highlights the clove and baking-spice edge on the finish."]],"sources":[{"url":"https://www.oldelk.com/old-elk-bourbon-press-release","sourceType":"producer","coversFields":["mashBill","prodTags","history","facts","why","productionStructured"]},{"url":"https://www.breakingbourbon.com/review/old-elk-blended-straight-bourbon","sourceType":"review","coversFields":["proofN","proofDisplay","mashBill","ageText","flavor","topNotes","productionStructured"]},{"url":"https://bourbonlens.com/101-old-elk-distillery/","sourceType":"editorial","coversFields":["history","timeline","distilleryName","facts"]},{"url":"https://www.thirtyonewhiskey.com/whiskey-review-old-elk-blended-straight-bourbon-whiskey/","sourceType":"review","coversFields":["flavor","body","finish","proofN","mashBill"]},{"url":"https://distiller.com/spirits/old-elk-blended-straight-bourbon","sourceType":"reference","coversFields":["mashBill","proofN","flavor"]}],"sourcingLimitations":["Bottle carries no age statement; secondary reviews cite roughly 4–5 years but this is not stated on the label, so minYears/maxYears are left null.","Early releases were reported by reviewers as sourced/blended from multiple distilleries (including MGP in Indiana) before blending in Colorado; sourcing composition may vary by batch and is not fully disclosed by the producer.","Flavor, body and finish scores are a consensus read of published tasting notes (Breaking Bourbon, Thirty-One Whiskey, The Whiskey Wash, official aroma notes), not a lab measurement.","The official producer product page could not be fetched directly (404); official details were confirmed via the Old Elk press-release page and search snippets of oldelk.com.","No awards, press ratings, or review scores are included per sourcing rules.","Maturation cooperage (new charred American oak) reflects the legal requirement for straight bourbon rather than a distinct producer disclosure."],"priceUsd":10.75,"toastItemGuid":"1b3602e2-f7f0-4229-81a3-7496f30da6a4","recordStatus":"published","publicationStatus":"published"}),
-  makeBatchSpirit({"id":"jameson-black-barrel","brand":"Jameson","expression":"Black Barrel","displayName":"Jameson Black Barrel","cat":"Irish","subcategory":"Blended Irish Whiskey","style":"Blended","country":"Ireland","region":"County Cork","distilleryName":"New Midleton Distillery","producer":"Irish Distillers (Pernod Ricard)","ageText":"No Age Statement","minYears":null,"maxYears":null,"proofN":80,"proofDisplay":"80 proof (40% ABV)","flavor":{"Sweet":8,"Oak":6,"Spice":5,"Fruit":5,"Smoke":1,"Earth":2,"Herbal":2},"body":6,"finish":6,"topNotes":["Butterscotch & Toffee","Toasted Oak","Vanilla Spice"],"productionRows":[["Distillery","New Midleton Distillery, Co. Cork, Ireland"],["Distillation","Triple distilled"],["Whiskey type","Blend of small-batch grain & single pot still"],["Maturation","Double-charred ex-bourbon barrels",true],["Age statement","None"],["ABV","40% (80 proof)"],["Owner","Irish Distillers / Pernod Ricard"]],"productionStructured":{"mashBill":"Blend of grain whiskey and single pot still whiskey (malted & unmalted barley); exact ratio and grain recipe not officially disclosed","maturation":"Grain whiskey aged in heavily/double-charred ex-bourbon barrels; single pot still whiskey matured in sherry casks, with a portion of virgin oak-aged pot still added for vanilla and tannin","methodTags":["Triple distilled","Double-charred barrels","Blended"]},"prodTags":["Double-charred","Blended Irish","Triple distilled"],"why":"Jameson Black Barrel is the distillery's small-batch spin on the classic blend: a higher proportion of single pot still whiskey married with grain whiskey aged in bourbon barrels that are charred a second time. That extra char coaxes out deeper butterscotch, fudge and toasted-wood character while keeping the triple-distilled smoothness Jameson is known for.","whyShort":"A double-charred, pot-still-forward take on classic Jameson — richer, nuttier and more oak-driven.","whyWeCarry":"Jameson Black Barrel delivers recognizable, approachable Irish whiskey with a genuine step up in depth: the double-charred ex-bourbon barrels build butterscotch, toffee and toasted-oak layers over Jameson's signature triple-distilled smoothness. Its pot-still-forward blend is versatile enough to sip neat yet robust enough to carry an elevated Irish cocktail. The trusted Jameson name paired with a small-batch story gives guests an easy, confident trade-up.","history":"Jameson traces to the Bow Street distillery founded in Dublin in 1780 by John Jameson. After the Irish Distillers Group was formed in 1966, production consolidated at the New Midleton Distillery in County Cork, which opened in 1976, and Pernod Ricard acquired the brand in 1988. Black Barrel itself is a more recent expression, introduced in New York in October 2011 (previously sold as Jameson Select Reserve) as a darker, fuller-bodied blend.","timeline":[["1780","John Jameson establishes his distillery on Bow Street, Dublin"],["1976","Production moves to the New Midleton Distillery in County Cork"],["1988","Pernod Ricard acquires Irish Distillers and the Jameson brand"],["2011","Black Barrel introduced in New York (formerly Select Reserve)"]],"statTiles":[["ABV","40%"],["Proof","80"],["Style","Blended Irish"],["Cask","Double-charred"]],"facts":["Introduced in New York in October 2011; it was previously sold as Jameson Select Reserve.","The grain-whiskey component is matured in ex-bourbon barrels that are charred a second time to intensify butterscotch, fudge and toffee notes.","It carries no age statement, though Difford's Guide estimates the blend averages roughly 12 years."],"pairings":[["🧀","Aged cheese","Nutty aged Gouda or Cheddar echoes its walnut and toffee notes"],["🍫","Dark chocolate","Bittersweet chocolate plays off the butterscotch and charred-oak sweetness"],["☕","Coffee & espresso","Roasted coffee mirrors the toasted-wood and vanilla character"],["🍏","Spiced apple dessert","Apple and apricot fruit notes complement warm baked pastries"]],"sources":[{"url":"https://www.jamesonwhiskey.com/en-us/our-whiskey/jameson-black-barrel/","sourceType":"producer","coversFields":["production","maturation","distillation","tasting","flavor"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/1126/jameson-black-barrel","sourceType":"reference","coversFields":["proofN","proofDisplay","productionStructured","maturation","facts","timeline","history","flavor"]},{"url":"https://www.whiskynotes.be/2022/irish-whiskey/jameson-black-barrel-jameson-black-barrel-proof/","sourceType":"review","coversFields":["tasting","flavor","maturation","body","finish"]},{"url":"https://en.wikipedia.org/wiki/Jameson_Irish_Whiskey","sourceType":"reference","coversFields":["history","timeline","producer","distilleryName"]}],"sourcingLimitations":["The official Jameson product-page wording was captured via search preview; direct fetches of jamesonwhiskey.com returned HTTP 403, so producer claims are corroborated against Difford's Guide and WhiskyNotes.","No age statement is printed on the bottle; the ~12-year average is Difford's Guide's estimate, not an official figure, so minYears/maxYears are left null.","Exact blend ratio and the grain-whiskey mash bill are not officially disclosed; flavor scores are a consensus read of published tasting notes.","No awards, scores, or press ratings are included, per sourcing policy."],"priceUsd":10.75,"toastItemGuid":"ec5464de-2e2e-4d8b-bfe8-e788086ae812","recordStatus":"published","publicationStatus":"published"}),
+  makeBatchSpirit({"id":"jameson-black-barrel","brand":"Jameson","expression":"Black Barrel","displayName":"Jameson Black Barrel","cat":"Irish","subcategory":"Blended Irish Whiskey","style":"Blended","country":"Ireland","region":"County Cork","distilleryName":"New Midleton Distillery","producer":"Irish Distillers (Pernod Ricard)","ageText":"No Age Statement","minYears":null,"maxYears":null,"proofN":80,"proofDisplay":"80 proof (40% ABV)","flavor":{"Sweet":8,"Oak":6,"Spice":5,"Fruit":5,"Smoke":1,"Earth":2,"Herbal":2},"body":6,"finish":6,"topNotes":["Butterscotch & Toffee","Toasted Oak","Vanilla Spice"],"productionRows":[["Distillery","New Midleton Distillery, Co. Cork, Ireland"],["Distillation","Triple distilled"],["Whiskey type","Blend of small-batch grain & single pot still"],["Maturation","Double-charred ex-bourbon barrels",true],["Age statement","None"],["ABV","40% (80 proof)"],["Owner","Irish Distillers / Pernod Ricard"]],"productionStructured":{"mashBill":"Blend of grain whiskey and single pot still whiskey (malted & unmalted barley); exact ratio and grain recipe not officially disclosed","maturation":"Grain whiskey aged in heavily/double-charred ex-bourbon barrels; single pot still whiskey matured in sherry casks, with a portion of virgin oak-aged pot still added for vanilla and tannin","methodTags":["Triple distilled","Double-charred barrels","Blended"]},"prodTags":["Double-charred","Blended Irish","Triple distilled"],"why":"Jameson Black Barrel is the distillery's small-batch spin on the classic blend: a higher proportion of single pot still whiskey married with grain whiskey aged in bourbon barrels that are charred a second time. That extra char coaxes out deeper butterscotch, fudge and toasted-wood character while keeping the triple-distilled smoothness Jameson is known for.","whyShort":"A double-charred, pot-still-forward take on classic Jameson — richer, nuttier and more oak-driven.","whyWeCarry":"Jameson Black Barrel delivers recognizable, approachable Irish whiskey with a genuine step up in depth: the double-charred ex-bourbon barrels build butterscotch, toffee and toasted-oak layers over Jameson's signature triple-distilled smoothness. Its pot-still-forward blend is versatile enough to sip neat yet robust enough to carry an elevated Irish cocktail. The trusted Jameson name paired with a small-batch story gives guests an easy, confident trade-up.","history":"Jameson traces to the Bow Street distillery founded in Dublin in 1780 by John Jameson. After the Irish Distillers Group was formed in 1966, production consolidated at the New Midleton Distillery in County Cork, which opened in 1976, and Pernod Ricard acquired the brand in 1988. Black Barrel itself is a more recent expression, introduced in New York in October 2011 (previously sold as Jameson Select Reserve) as a darker, fuller-bodied blend.","timeline":[["1780","John Jameson establishes his distillery on Bow Street, Dublin"],["1976","Production moves to the New Midleton Distillery in County Cork"],["1988","Pernod Ricard acquires Irish Distillers and the Jameson brand"],["2011","Black Barrel introduced in New York (formerly Select Reserve)"]],"statTiles":[["ABV","40%"],["Proof","80"],["Style","Blended Irish"],["Cask","Double-charred"]],"facts":["Introduced in New York in October 2011; it was previously sold as Jameson Select Reserve.","The grain-whiskey component is matured in ex-bourbon barrels that are charred a second time to intensify butterscotch, fudge and toffee notes.","It carries no age statement, though Difford\'s Guide estimates the blend averages roughly 12 years."],"pairings":[["🧀","Aged cheese","Nutty aged Gouda or Cheddar echoes its walnut and toffee notes"],["🍫","Dark chocolate","Bittersweet chocolate plays off the butterscotch and charred-oak sweetness"],["☕","Coffee & espresso","Roasted coffee mirrors the toasted-wood and vanilla character"],["🍏","Spiced apple dessert","Apple and apricot fruit notes complement warm baked pastries"]],"sources":[{"url":"https://www.jamesonwhiskey.com/en-us/our-whiskey/jameson-black-barrel/","sourceType":"producer","coversFields":["production","maturation","distillation","tasting","flavor"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/1126/jameson-black-barrel","sourceType":"reference","coversFields":["proofN","proofDisplay","productionStructured","maturation","facts","timeline","history","flavor"]},{"url":"https://www.whiskynotes.be/2022/irish-whiskey/jameson-black-barrel-jameson-black-barrel-proof/","sourceType":"review","coversFields":["tasting","flavor","maturation","body","finish"]},{"url":"https://en.wikipedia.org/wiki/Jameson_Irish_Whiskey","sourceType":"reference","coversFields":["history","timeline","producer","distilleryName"]}],"sourcingLimitations":["The official Jameson product-page wording was captured via search preview; direct fetches of jamesonwhiskey.com returned HTTP 403, so producer claims are corroborated against Difford\'s Guide and WhiskyNotes.","No age statement is printed on the bottle; the ~12-year average is Difford\'s Guide's estimate, not an official figure, so minYears/maxYears are left null.","Exact blend ratio and the grain-whiskey mash bill are not officially disclosed; flavor scores are a consensus read of published tasting notes.","No awards, scores, or press ratings are included, per sourcing policy."],"priceUsd":10.75,"toastItemGuid":"ec5464de-2e2e-4d8b-bfe8-e788086ae812","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"buffalo-trace-kentucky-straight-bourbon","brand":"Buffalo Trace","expression":"Kentucky Straight Bourbon","displayName":"Buffalo Trace Kentucky Straight Bourbon","cat":"Bourbon","subcategory":"Kentucky Straight Bourbon","style":"Low-rye","producer":"Buffalo Trace Distillery","distilleryName":"Buffalo Trace Distillery","region":"Kentucky","city":"Frankfort","country":"USA","ageText":"No Age Statement","minYears":null,"maxYears":null,"proofN":90,"proofDisplay":"90 proof (45% ABV)","flavor":{"Sweet":7,"Oak":6,"Spice":4,"Fruit":4,"Smoke":2,"Earth":3,"Herbal":1},"body":5,"finish":4,"topNotes":["Honey & caramel","Vanilla","Oak & light spice"],"productionRows":[["Proof","90 (45% ABV)",true],["Category","Kentucky Straight Bourbon"],["Mash Bill","Undisclosed 'Mash Bill #1' - low-rye (10% or less rye)"],["Corn Content","~90% corn (widely reported estimate)"],["Age","No age statement"],["Distillation","Column still"],["Maturation","New charred American oak barrels"],["Distillery","Buffalo Trace Distillery, Frankfort, KY"]],"prodTags":["Kentucky Straight","Low-Rye Mash Bill #1","90 Proof"],"productionStructured":{"mashBill":"Undisclosed 'Mash Bill #1' - a low-rye recipe (10% or less rye), reported to be roughly 90% corn","maturation":"Aged in new charred American oak barrels with no age statement","methodTags":["Kentucky Straight","Low-rye Mash Bill #1","Column still","New charred oak"]},"statTiles":[["Proof","90"],["ABV","45%"],["Mash Bill","#1 Low-Rye"],["Age","NAS"]],"why":"Buffalo Trace is the namesake flagship of the Buffalo Trace Distillery in Frankfort, Kentucky - the oldest continuously operating distillery in America. Built on the distillery's low-rye Mash Bill #1 and bottled at 90 proof with no age statement, it leans sweet with honey, caramel and vanilla before oak and a whisper of spice close things out. It is the everyman's benchmark bourbon: balanced, approachable and endlessly mixable.","whyShort":"Frankfort's flagship low-rye bourbon: honeyed, oak-kissed and easy.","whyWeCarry":"Few bottles deliver this much pedigree for the money: it is the flagship of America's oldest continuously operating distillery, built on the same low-rye Mash Bill #1 that underpins cult labels like Eagle Rare and George T. Stagg. At 90 proof it is gentle enough for a newcomer's first neat pour yet balanced enough to reward a seasoned drinker, and its honey-caramel-oak profile makes it a versatile backbone for sipping and for classic cocktails alike. A crowd-pleasing benchmark bourbon that punches well above its shelf price.","history":"The distillery on the Buffalo Trace site in Frankfort, Kentucky is the oldest continuously operating distillery in America, staying in production before, during and after Prohibition - when it held a federal permit to make \"medicinal\" whiskey. Known over the years by names including the O.F.C. and the George T. Stagg distillery, the operation and its flagship bourbon were rechristened Buffalo Trace in 1999, taking the name from the ancient buffalo paths that led America's earliest pioneers west. In 2013 the distillery was designated a National Historic Landmark.","timeline":[["1920","Kept operating through Prohibition under a federal permit to produce 'medicinal' whiskey"],["1953","End of the National Historic Landmark period of significance (1933-1953) as a distillery running before, during and after Prohibition"],["1999","The distillery and its flagship bourbon were rechristened Buffalo Trace"],["2013","Designated a National Historic Landmark, recognized as the oldest continuously operating distillery in America"]],"facts":["Distilled at the Buffalo Trace Distillery in Frankfort, KY - the oldest continuously operating distillery in America.","Made from the distillery's low-rye 'Mash Bill #1' (10% or less rye), the same recipe reported behind stablemates like Eagle Rare and George T. Stagg.","Bottled at 90 proof (45% ABV) with no age statement."],"pairings":[["🥩","Grilled steak","Caramel and oak stand up to a charred ribeye"],["🍫","Dark chocolate","Vanilla sweetness echoes the cocoa's bitter edge"],["🧀","Aged cheddar","Nutty sharpness plays off the honeyed corn sweetness"],["🥧","Pecan pie","Brown sugar and fruit notes mirror the dessert"]],"sources":[{"url":"https://www.buffalotracedistillery.com/our-brands/buffalo-trace.html","sourceType":"producer","coversFields":["brand","proofDisplay","history","why"]},{"url":"https://www.buffalotrace.com/distillery.html","sourceType":"producer","coversFields":["history","facts","timeline"]},{"url":"https://www.breakingbourbon.com/review/buffalo-trace-bourbon","sourceType":"review","coversFields":["proofN","flavor","topNotes","body","finish","productionRows"]},{"url":"https://vinepair.com/articles/buffalo-trace-mash-bill-guide/","sourceType":"reference","coversFields":["productionStructured","prodTags","facts"]},{"url":"https://vinepair.com/articles/buffalo-trace-bourbon-whiskey-guide/","sourceType":"reference","coversFields":["history","timeline","proofDisplay"]},{"url":"https://savingplaces.org/distinctive-destinations/buffalo-trace-distillery","sourceType":"reference","coversFields":["history","timeline"]}],"sourcingLimitations":["The mash bill is undisclosed by the producer; 'Mash Bill #1' as a low-rye (10% or less rye) recipe and the ~90% corn figure are widely reported estimates, not official numbers.","No age statement; the commonly cited 8-10 year range is an estimate, not confirmed by the distillery.","Flavor scores, body and finish are a consensus reading of published tasting notes, not a lab measurement.","The official brand page lists both 40% and 45% ABV (market-dependent); the US flagship is 90 proof / 45% ABV per the producer and multiple secondary sources.","No awards, scores or press are included per sourcing rules."],"priceUsd":10,"toastItemGuid":"d48301e5-1634-4e63-aebe-0f111ac92169","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"bulleit-bourbon-frontier-whiskey","brand":"Bulleit","expression":"Bourbon Frontier Whiskey","displayName":"Bulleit Bourbon (Frontier Whiskey)","cat":"Bourbon","subcategory":"Kentucky Straight Bourbon","style":"High-rye","producer":"Diageo","distilleryName":"Bulleit Distilling Co. (Shelbyville, KY)","country":"United States","region":"Kentucky","ageText":"No age statement","minYears":null,"maxYears":null,"proofN":90,"proofDisplay":"90 proof (45% ABV)","flavor":{"Sweet":5,"Oak":7,"Spice":8,"Fruit":3,"Smoke":2,"Earth":2,"Herbal":3},"body":4,"finish":7,"topNotes":["Rye spice","Peppery oak","Vanilla & caramel"],"productionRows":[["Mash Bill","68% corn, 28% rye, 4% malted barley",true],["Proof","90 (45% ABV)"],["Age","No age statement"],["Water","Kentucky limestone-filtered"],["Distillery","Diageo - Shelbyville & Lebanon, KY"],["Style","Kentucky Straight Bourbon, high-rye"]],"productionStructured":{"mashBill":"68% corn, 28% rye, 4% malted barley","maturation":"Aged in charred new American oak barrels; current standard release carries no age statement","methodTags":["High-rye mash","Limestone-filtered water","Charred new oak"]},"prodTags":["High-Rye","90 Proof","Kentucky Straight"],"why":"Bulleit's signature is its unusually high rye content - about 28% of the mash bill - which gives the bourbon a bold, spicy backbone framed by sweet oak, maple and nutmeg. Bottled at 90 proof, it lands smooth on the mid-palate and finishes long, dry and satiny with a light toffee note.","whyShort":"High-rye Kentucky bourbon, bold and spicy at 90 proof.","whyWeCarry":"Its unusually high 28% rye mash gives a bold, peppery spine that most bourbons lack, so it holds its own in an Old Fashioned yet still drinks smooth neat. At 90 proof with sweet oak, maple and nutmeg leading into a long, dry finish, it delivers real backbone at an approachable price - a versatile pour that mixes and sips with equal ease.","history":"Brand legend traces the recipe to Augustus Bulleit, a tavern-keeper who reportedly made a high-rye whiskey around 1830 until his death around 1860. His great-great-grandson Tom Bulleit revived the recipe in 1987, and the bourbon reached retail shelves in the summer of 1995. Seagram acquired the brand in 1997, and it later passed to Diageo, which opened a dedicated Bulleit distillery in Shelbyville, Kentucky in 2017.","timeline":[["1830","Augustus Bulleit reportedly creates the original high-rye recipe (brand legend)"],["1987","Tom Bulleit revives the family recipe and begins distilling"],["1995","Bulleit Bourbon reaches retail shelves in summer"],["1997","Seagram acquires the Bulleit brand"],["2017","Diageo opens the dedicated Bulleit distillery in Shelbyville, KY"]],"statTiles":[["Proof","90"],["ABV","45%"],["Rye Content","28%"],["Origin","Kentucky"]],"facts":["The mash bill runs about 28% rye - unusually high for a bourbon - which drives its bold, spicy character.","It is owned and produced by Diageo at Kentucky facilities in Shelbyville and Lebanon.","The current standard release is bottled at 90 proof (45% ABV) and carries no age statement."],"pairings":[["🥩","Grilled steak","The peppery oak and rye spice stand up to charred red meat."],["🍫","Dark chocolate","Bittersweet cocoa echoes the caramel and warm spice notes."],["🍖","Smoked BBQ","High-rye bite cuts cleanly through fatty, smoky barbecue."],["🍊","Old Fashioned","The rye backbone shines against orange peel and bitters."]],"sources":[{"url":"https://www.bulleit.com/whiskeys/bulleit-bourbon","sourceType":"producer","coversFields":["proofN","proofDisplay","flavor","topNotes","why","productionRows","productionStructured"]},{"url":"https://en.wikipedia.org/wiki/Bulleit_Bourbon","sourceType":"reference","coversFields":["productionStructured","history","timeline","facts","statTiles","producer","distilleryName","region"]},{"url":"https://www.breakingbourbon.com/review/bulleit-bourbon","sourceType":"review","coversFields":["flavor","body","finish","topNotes","ageText"]},{"url":"https://distiller.com/spirits/bulleit-bourbon","sourceType":"review","coversFields":["flavor","statTiles"]}],"sourcingLimitations":["The current standard Bulleit Bourbon carries no age statement; older marketing and some retailers cite 'at least six years,' so an exact age is not confirmed for current bottlings.","The Augustus Bulleit ~1830 origin is a brand legend and is not independently documented history.","Flavor, body and finish scores are a consensus interpretation of published tasting notes, not laboratory measurements.","No awards, press, or scores are included per sourcing rules."],"priceUsd":10,"toastItemGuid":"6958bb90-7668-4c33-ace5-e78036d1ce56","recordStatus":"published","publicationStatus":"published"}),
   makeBatchSpirit({"id":"woodford-reserve-rye","brand":"Woodford Reserve","expression":"Kentucky Straight Rye","displayName":"Woodford Reserve Kentucky Straight Rye","cat":"Rye","subcategory":"Kentucky Straight Rye Whiskey","style":"Kentucky Straight Rye","ageText":"No age statement","minYears":null,"maxYears":null,"proofN":90.4,"proofDisplay":"90.4 proof (45.2% ABV)","producer":"Brown-Forman","distilleryName":"Woodford Reserve Distillery","region":"Kentucky","country":"USA","city":"Versailles","flavor":{"Sweet":6,"Oak":5,"Spice":8,"Fruit":5,"Smoke":1,"Earth":3,"Herbal":3},"body":6,"finish":7,"topNotes":["Black Pepper","Clove & Cinnamon","Honeyed Fruit"],"productionRows":[["Mash Bill","53% rye, 33% corn, 14% malted barley",true],["Proof","90.4 (45.2% ABV)"],["Distillation","Copper pot still and column still blend"],["Filtration","Non-chill filtered"],["Classification","Kentucky Straight Rye (no age statement)"],["Distillery","Woodford Reserve Distillery, near Versailles, KY"]],"productionStructured":{"mashBill":"53% rye, 33% corn, 14% malted barley","maturation":"New charred oak barrels; bottled as Kentucky Straight Rye (2-year minimum per the legal designation)","methodTags":["Copper pot + column still blend","Non-chill filtered","Kentucky Straight"]},"prodTags":["53% Rye Mash","Non-Chill Filtered","Pot + Column Blend"],"why":"Woodford Reserve's Kentucky Straight Rye is built on a pre-Prohibition-style mash bill of 53% rye, 33% corn and 14% malted barley, giving it bold black-pepper and tobacco spice wrapped around a sweeter, bourbon-adjacent core of honey, apple and pear. It is produced as a blend of copper pot still and column still spirit and bottled non-chill filtered at 90.4 proof, which preserves a fuller body and a long, sweetly spiced finish.","whyShort":"A pre-Prohibition-style 53% rye mash, bottled non-chill filtered at 90.4 proof: bold pepper and tobacco over a sweeter, bourbon-adjacent core.","whyWeCarry":"This is a straight rye that speaks to two crowds at once: the 53% pre-Prohibition mash delivers genuine pepper-and-tobacco rye backbone, while the corn and malted barley keep it approachable for bourbon drinkers. Bottled non-chill filtered at a comfortable 90.4 proof, it mixes cleanly into a Manhattan or Sazerac yet has the length and sweet spice to hold up neat. It is a widely recognized Kentucky name that pours as easily in a classic cocktail as it does on its own.","history":"The Woodford Reserve Distillery sits on a National Historic Landmark site near Versailles, Kentucky, where the stone distillery building dates to 1838. Brown-Forman acquired and restored the property in the mid-1990s and introduced the Woodford Reserve brand in 1996. The whiskey is made by blending copper pot still spirit from the Versailles distillery with column still spirit from Brown-Forman's Shively, Kentucky distillery. The Kentucky Straight Rye expression joined the core range in 2015, extending the label from bourbon into pre-Prohibition-style rye.","timeline":[["1838","Historic stone distillery building constructed in Woodford County, Kentucky"],["1994","Brown-Forman acquires and begins restoring the distillery"],["1996","Woodford Reserve brand introduced"],["2015","Woodford Reserve Kentucky Straight Rye released"]],"statTiles":[["Proof","90.4"],["Rye in Mash","53%"],["Filtration","Non-Chill"],["Released","2015"]],"facts":["Its 53% rye mash bill nods to pre-Prohibition rye whiskeys, when rye ratios ran higher than most modern examples.","The whiskey is bottled non-chill filtered, preserving a fuller body and texture.","Woodford Reserve blends copper pot still spirit from its Versailles distillery with column still spirit from Brown-Forman's Shively, Kentucky distillery."],"pairings":[["🥩","Peppered steak","The rye's black-pepper spice mirrors a coarse-ground pepper crust."],["🍫","Dark chocolate","Cocoa and molasses notes in the whiskey echo bittersweet chocolate."],["🍎","Baked apple dessert","Apple and cinnamon in the glass lift warm baked-apple flavors."],["🧀","Aged cheddar","Sharp, nutty cheddar stands up to the tobacco and cedar backbone."]],"sources":[{"url":"https://www.woodfordreserve.com/whiskey/rye-whiskey/","sourceType":"producer","coversFields":["proofN","productionStructured.mashBill","topNotes","flavor","prodTags"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/6060/woodford-reserve-straight-rye","sourceType":"reference","coversFields":["productionStructured.mashBill","proofN","timeline","flavor","distilleryName","producer"]},{"url":"https://en.wikipedia.org/wiki/Woodford_Reserve","sourceType":"encyclopedia","coversFields":["history","producer","productionRows","region","timeline"]},{"url":"https://theclio.com/entry/26276","sourceType":"historical","coversFields":["history","timeline"]}],"sourcingLimitations":["Exact maturation age and barrel char level for the rye are not published by the producer; new charred oak and a 2-year minimum are inferred from its 'Kentucky Straight' legal designation.","Per the task rules, awards and competition scores were deliberately excluded even though several sources list them.","The 1994 acquisition and 1838 building dates come from secondary historical sources (Clio, Wikipedia), not the producer's own product page.","Flavor intensity ratings are a consensus interpretation of published tasting notes, not a producer-supplied numeric scale."],"priceUsd":10,"toastItemGuid":"f75a4f82-76b1-4684-9534-02ee579a0ef7","recordStatus":"published","publicationStatus":"published"}),
@@ -701,6 +701,886 @@ window.SPIRIT_VAULT_DATA = function(ctx){
   makeBatchSpirit({"id":"seagrams-vo","brand":"Seagram's","expression":"VO","cat":"Canadian","subcategory":"blended-canadian","country":"Canada","region":"Quebec","city":"Valleyfield","producer":"Sazerac Company (brand owner)","distilleryName":"Valleyfield Distillery, Quebec (Diageo)","style":"Blended Canadian Whisky · Minimum 6 Years","proofN":80,"ageText":"6 yr","minYears":6,"maxYears":6,"flavor":{"Sweet":6,"Oak":3,"Spice":4,"Fruit":5,"Smoke":0,"Earth":1,"Herbal":2},"body":4,"finish":3,"topNotes":["Caramel","Vanilla","Baking spice"],"productionRows":[["Class","Blended Canadian Whisky",true],["Composition","Blend of whiskies aged a minimum of 6 years in oak",true],["Distillation","Column still (Canadian style)"],["Maturation","Oak barrels, minimum 6 years",true],["Blended/Bottled","Valleyfield, Quebec (production moved there after the Waterloo, Ontario distillery closed in 1992)",true],["Proof","80 (40% ABV)",true]],"prodTags":["Blended","Canadian","Min 6 Years"],"why":"Seagram's VO is a light, mellow blended Canadian whisky bottled at 80 proof (40% ABV) from whiskies aged a minimum of six years in oak. Like most Canadian blends it leans sweet and easygoing, showing caramel, vanilla and soft baking spice with orchard-fruit notes and a clean, gentle finish. It is a workhorse mixing whisky rather than a sipping-focused release, built for highballs and cocktails.","whyShort":"A century-old, light-and-mellow Canadian blend built for easy highballs and mixing.","whyWeCarry":null,"pairings":["Ginger ale","Aged cheddar","Apple pie"],"history":"Seagram's VO traces to 1913, when a blend was prepared at Joseph E. Seagram's Waterloo, Ontario distillery to mark the wedding of his son Thomas — the initials most commonly held to mean 'Very Own.' It became one of Canada's longest-running whisky labels and a flagship of the Seagram empire. The original Waterloo distillery closed in 1992 and production shifted to the Valleyfield distillery in Quebec; the brand is now owned by the Sazerac Company.","timeline":[["1913","VO blend first prepared at Joseph E. Seagram's Waterloo, Ontario distillery"],["1992","Waterloo distillery closes; production moves to Valleyfield, Quebec"],["2010s","Seagram's whiskey brands, including VO, come under the Sazerac Company"]],"sources":[{"url":"https://www.sazerac.com/our-brands/sazerac-brands/seagrams.html","sourceType":"producer","coversFields":["identity"]},{"url":"https://www.diffordsguide.com/beer-wine-spirits/804/seagrams-vo-canadian-blended-whisky","sourceType":"review","coversFields":["identity","production","strength","tasting"]},{"url":"https://theliquorbarn.com/products/seagrams-v-o-canadian-whisky-1l","sourceType":"retailer","coversFields":["age","strength"]},{"url":"https://www.thirtyonewhiskey.com/whiskey-review-seagrams-vo-canadian-whiskey/","sourceType":"review","coversFields":["strength","tasting"]}],"sourcingLimitations":["Exact grain/mash bill percentages are not publicly disclosed by the producer.","The blend's minimum-6-year age is stated by multiple Canadian retailers and diffordsguide; some US bottlings carry no age statement on the label.","Column-still distillation is the standard Canadian-whisky method but is not explicitly published for this specific brand.","Current owner (Sazerac) confirmed via Sazerac brand listing; exact date of the brand-ownership transfer from Seagram/successors not pinned to a single source."],"priceUsd":7.5,"toastItemGuid":"9c577922-75f2-4225-83b8-e9cf98f1253e","recordStatus":"published","publicationStatus":"published","verificationStatus":"source-reviewed"}),
   ];
 
+  // ── Batch 2 — SOURCE-REVIEWED DRAFTS (agave / rum / vodka).
+  //    These left the row-driven placeholder set: producer, origin, strength and
+  //    aging are now sourced and cited. They are still DRAFT and still hidden —
+  //    `verificationStatus:'source-reviewed'` describes the FACTS, never permission
+  //    to publish. Venue voice (whyWeCarry / seanShort / notes) stays Sean's, and
+  //    the flavor radar stays an unsourced placeholder until he tastes them.
+  //    Slugs are pinned to the ids the importer already knows, so an --apply
+  //    updates these rows in place instead of inserting duplicates.
+  var UNSOURCED_RADAR_NOTE =
+    'Flavor radar, body and finish are unsourced placeholders carried over from the draft scaffold. A tasting profile is a judgment, not a published fact; these need Sean\'s tasting pass before publication.';
+
+  function sourcedDraftSpirit(config){
+    var record = makeBatchSpirit(Object.assign({}, config, {
+      recordStatus:'draft',
+      publicationStatus:'draft',
+      verificationStatus:'source-reviewed',
+      topNotes:config.topNotes || ['Pending source review','Pending source review','Pending source review'],
+      sourcingLimitations:(config.sourcingLimitations || []).concat([UNSOURCED_RADAR_NOTE])
+    }));
+    record.status = [{k:'draft',t:'Draft - Source Reviewed'}];
+    // Knowledge (facts/sources) was reviewed today; the VENUE review has not happened.
+    record.reviewedAt = '2026-08-17';
+    record.notes = 'Product facts source-reviewed 2026-08-17. Venue copy and publication pending Sean review.';
+    record.seanShort = 'Pending Sean review.';
+    record.whyWeCarry = 'Pending Sean review.';
+    record.commerce.pourPriceUsd = config.priceUsd == null ? null : config.priceUsd;
+    record.commerce.toastItemGuid = config.toastItemGuid || null;
+    record.commerce.priceIsTemporary = !config.toastItemGuid;
+    record.commerce.source = config.toastItemGuid ? 'Toast' : 'Website';
+    record.commerce.priceProvenance = config.toastItemGuid
+      ? 'Price and item identity from the Toast POS menu pull on 2026-08-10; Toast is the commerce source of truth.'
+      : 'Listed on the Stone Grille website shelf; Toast price/GUID not matched for this record.';
+    record.commerce.sourceRecordedAt = '2026-08-10';
+    record.provenance.addedAt = '2026-08-10';
+    record.provenance.updatedAt = '2026-08-17';
+    record.provenance.reviewedAt = null;
+    return record;
+  }
+
+  var PENDING_VENUE_COPY_NOTE =
+    'Pairings and venue framing are deliberately empty; that copy is Sean\'s voice, not a sourced fact.';
+
+  var SOURCED_DRAFTS = [
+    // ───────────── Agave ─────────────
+    sourcedDraftSpirit({
+      id:'herradura-silver', brand:'Herradura', expression:'Silver', displayName:'Herradura Silver',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Blanco - 100% Blue Weber Agave - 45-Day Rest',
+      proofN:80, ageText:'45 days',
+      priceUsd:9, toastItemGuid:'0ff5a853-aec0-4ee2-8b20-5235c5245740',
+      topNotes:['Agave forward','Vanilla','Crisp finish'],
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Blanco',true],
+        ['Rest','45 days in barrel - unusually long for a blanco',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','45-Day Rested Blanco','NOM 1119','Est. 1870'],
+      why:'Herradura Silver is a 100% blue Weber agave tequila blanco bottled at 40% ABV (80 proof). Where most blancos go straight from still to bottle, Herradura rests this one 45 days in barrel - a step the producer says lends hints of vanilla while keeping the spirit agave-forward, smooth and crisp.',
+      whyShort:'A blanco rested 45 days in barrel - vanilla softness without losing the agave.',
+      history:'Casa Herradura was founded in 1870 in Amatitán, Jalisco. The distillery operates as NOM 1119 and is owned by Brown-Forman.',
+      timeline:[['1870','Casa Herradura founded in Amatitán, Jalisco'],['Today','Operates as NOM 1119 under Brown-Forman ownership']],
+      sources:[
+        {url:'https://www.herradura.com/blog/product/silver/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
+        {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'The producer states only a 45-day barrel rest. Difford\'s Guide describes it as refill American whiskey casks; cask type is therefore recorded as unconfirmed.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'herradura-reposado', brand:'Herradura', expression:'Reposado', displayName:'Herradura Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Reposado - 100% Blue Weber Agave - 11 Months',
+      proofN:80, ageText:'11 months',
+      priceUsd:10, toastItemGuid:'aa401cdb-3902-4183-95d3-33b25246446b',
+      topNotes:['Roasted agave','Dried fruit and anise','Butterscotch finish'],
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Maturation','11 months in charred American white oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','11 Months Oak','NOM 1119','Est. 1870'],
+      why:'Herradura Reposado is a 100% blue Weber agave tequila aged 11 months in charred American white oak and bottled at 40% ABV - well past the two-month legal minimum for the reposado class. The producer describes an herbal, warm-wood nose, roasted agave with anise and dried fruit on the palate, and a butterscotch finish.',
+      whyShort:'Eleven months in charred American oak - five times the legal reposado minimum.',
+      history:'Casa Herradura was founded in 1870 in Amatitán, Jalisco. The distillery operates as NOM 1119 and is owned by Brown-Forman.',
+      timeline:[['1870','Casa Herradura founded in Amatitán, Jalisco'],['Today','Operates as NOM 1119 under Brown-Forman ownership']],
+      sources:[
+        {url:'https://www.herradura.com/blog/product/reposado/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
+        {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'The producer page headlines an 11-month barrel age but a secondary section on the same page says nine months. Eleven months is recorded because it is the figure the product spec states; the discrepancy is unresolved.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'herradura-anejo', brand:'Herradura', expression:'Añejo', displayName:'Herradura Añejo',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Anejo - 100% Blue Weber Agave - 25 Months',
+      proofN:80, ageText:'25 months', minYears:2, maxYears:2,
+      priceUsd:14.25, toastItemGuid:'7ed22215-7910-4753-b7f7-498c5dab4dba',
+      topNotes:['Toasted oak','Nutty caramel','Warm baking spice'],
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Anejo',true],
+        ['Maturation','25 months in oak - roughly double the one-year anejo minimum',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','25 Months Oak','NOM 1119','Category Originator'],
+      why:'Herradura Anejo is a 100% blue Weber agave tequila aged 25 months and bottled at 40% ABV - about double the one-year minimum the anejo class requires. Launched in 1962, it is widely credited with establishing the anejo category. The producer lists intense agave, toasted oak, candied nuts and cinnamon on the nose, deep nutty caramel with pineapple and orange on the palate, and a finish of warm baking spice.',
+      whyShort:'The bottle credited with creating the anejo category, still aged double the minimum.',
+      history:'Casa Herradura was founded in 1870 in Amatitán, Jalisco. Its anejo, launched in 1962, is widely credited with establishing the anejo category. The distillery operates as NOM 1119 and is owned by Brown-Forman.',
+      timeline:[
+        ['1870','Casa Herradura founded in Amatitán, Jalisco'],
+        ['1962','Herradura Anejo launches - credited with establishing the anejo category'],
+        ['Today','Operates as NOM 1119 under Brown-Forman ownership']
+      ],
+      sources:[
+        {url:'https://www.herradura.com/blog/product/anejo/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1120/herradura-anejo-tequila',sourceType:'reference',coversFields:['strength','age','cask','history']}
+      ],
+      sourcingLimitations:[
+        'The producer states 25 months without naming the cask. Difford\'s Guide gives 24-25 months in ex-American whiskey casks; cask type is recorded as unconfirmed by the producer.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'el-jimador-silver', brand:'el Jimador', expression:'Silver', displayName:'El Jimador Silver',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Blanco - 100% Blue Weber Agave',
+      proofN:80, ageText:'Unaged',
+      priceUsd:7, toastItemGuid:'db98792a-6c60-459b-bd41-6e4fa3767225',
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Blanco - bottled after double distillation, unaged',true],
+        ['Bottling Proof','80 (40% ABV) in the US market',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','Unaged Blanco','NOM 1119'],
+      why:'el Jimador Silver is a 100% blue Weber agave blanco, bottled straight after double distillation with no barrel time. It is made by Casa Herradura at NOM 1119 in Amatitán, Jalisco, and launched in 1994 as a sister brand to Herradura. The name refers to the jimadores - the harvesters who cut and select the agave.',
+      whyShort:'Casa Herradura unaged sister label, named for the agave harvesters.',
+      history:'el Jimador launched in 1994 as a sister brand to Herradura, produced at the same Amatitán distillery (NOM 1119). Briefly reformulated away from 100% agave during the early-2000s agave shortage, it has been 100% agave again since 2009.',
+      timeline:[
+        ['1994','el Jimador launches as a sister brand to Herradura'],
+        ['Early 2000s','Temporarily reformulated during the agave shortage'],
+        ['2009','Restored to 100% agave']
+      ],
+      sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/560/el-jimador-reposado',sourceType:'reference',coversFields:['producer','history','identity']},
+        {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'Difford\'s Guide lists el Jimador at 38% ABV for its market; the US bottling and the Toast/shelf record are 40% ABV (80 proof). The US figure is recorded and the market difference is flagged.',
+        'No producer-published tasting descriptors were found for this expression, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'el-jimador-reposado', brand:'el Jimador', expression:'Reposado', displayName:'El Jimador Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Reposado - 100% Blue Weber Agave - 2 Months',
+      proofN:80, ageText:'2 months',
+      priceUsd:7.5, toastItemGuid:'b3fe0d50-9b6a-4672-8bf2-183675aadf44',
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Maturation','2 months in ex-American whiskey casks',true],
+        ['Bottling Proof','80 (40% ABV) in the US market',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','2 Months Oak','NOM 1119'],
+      why:'el Jimador Reposado is a 100% blue Weber agave tequila aged two months in ex-American whiskey casks. It accounts for the majority of el Jimador production and is one of the best-selling tequilas in Mexico, made by Casa Herradura at NOM 1119 in Amatitán, Jalisco.',
+      whyShort:'Two months in ex-whiskey casks, and the bulk of what el Jimador makes.',
+      history:'el Jimador launched in 1994 as a sister brand to Herradura, produced at the same Amatitán distillery (NOM 1119). Briefly reformulated away from 100% agave during the early-2000s agave shortage, it has been 100% agave again since 2009.',
+      timeline:[
+        ['1994','el Jimador launches as a sister brand to Herradura'],
+        ['Early 2000s','Temporarily reformulated during the agave shortage'],
+        ['2009','Restored to 100% agave']
+      ],
+      sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/560/el-jimador-reposado',sourceType:'reference',coversFields:['identity','production','age','cask','history']},
+        {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'Difford\'s Guide lists this at 38% ABV for its market; the US bottling and the Toast/shelf record are 40% ABV (80 proof). The US figure is recorded and the market difference is flagged.',
+        'No producer-published tasting descriptors were found for this expression, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'el-jimador-anejo', brand:'el Jimador', expression:'Añejo', displayName:'El Jimador Añejo',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Anejo - 100% Blue Weber Agave - 12 Months',
+      proofN:80, ageText:'12 months', minYears:1, maxYears:1,
+      priceUsd:8.5, toastItemGuid:'2e8b7064-2d84-44c3-9ffe-c468c88473ba',
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Anejo',true],
+        ['Maturation','12 months in ex-Jack Daniel\'s charred oak casks',true],
+        ['Bottling Proof','80 (40% ABV) in the US market',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['100% Agave','12 Months Oak','Ex-Tennessee Whiskey Casks','NOM 1119'],
+      why:'el Jimador Anejo is a 100% blue Weber agave tequila matured 12 months in charred oak that previously held Tennessee whiskey. Both Casa Herradura and Jack Daniel\'s are Brown-Forman houses, which is how the casks travel. Difford\'s Guide notes the barrel gives caramel and oak over the agave base.',
+      whyShort:'Twelve months in ex-Jack Daniel\'s casks - caramel and oak over agave.',
+      history:'el Jimador launched in 1994 as a sister brand to Herradura, produced at the same Amatitán distillery (NOM 1119). Briefly reformulated away from 100% agave during the early-2000s agave shortage, it has been 100% agave again since 2009.',
+      timeline:[
+        ['1994','el Jimador launches as a sister brand to Herradura'],
+        ['Early 2000s','Temporarily reformulated during the agave shortage'],
+        ['2009','Restored to 100% agave']
+      ],
+      sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1543/el-jimador-anejo',sourceType:'reference',coversFields:['identity','production','age','cask']},
+        {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'Difford\'s Guide lists this at 38% ABV for its market; the US bottling and the Toast/shelf record are 40% ABV (80 proof). The US figure is recorded and the market difference is flagged.',
+        'The source gives caramel and oak as barrel character but not a full three-note tasting profile, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'casa-amigos-80pf', brand:'Casamigos', expression:'Blanco', displayName:'Casamigos Blanco',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco',
+      producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
+      style:'Tequila Blanco - Highland Agave - Rested 2 Months in Steel',
+      proofN:80, ageText:'Rested 2 months in stainless steel',
+      priceUsd:10.25, toastItemGuid:'51b46ef9-a4da-4347-b087-75b303494975',
+      productionRows:[
+        ['Class','Tequila Blanco',true],
+        ['Agave','Highland Jalisco agave',true],
+        ['Rest','2 months in stainless steel - no oak contact',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Productos Finos de Agave (NOM 1416)',true]
+      ],
+      prodTags:['Steel-Rested Blanco','Highland Agave','NOM 1416'],
+      why:'Casamigos Blanco rests two months in stainless steel before bottling at 40% ABV. The steel rest softens the spirit without adding any oak character, which is what separates it from both straight-to-bottle blancos and rested-in-wood ones. It is made from highland Jalisco agave at Productos Finos de Agave, NOM 1416.',
+      whyShort:'Two months in steel, not wood - softened without picking up any oak.',
+      history:'Casamigos was founded in 2013 by George Clooney, Rande Gerber and Mike Meldman, and was acquired by Diageo in 2017 for 700 million dollars plus up to 300 million more tied to performance.',
+      timeline:[
+        ['2013','Founded by George Clooney, Rande Gerber and Mike Meldman'],
+        ['2017','Acquired by Diageo']
+      ],
+      sources:[
+        {url:'https://distiller.com/spirits/casamigos-blanco-tequila',sourceType:'reference',coversFields:['identity','production','strength','origin']},
+        {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'The two-month steel rest, the NOM 1416 attribution and the highland agave sourcing come from secondary references, not a producer spec sheet; the Casamigos site is age-gated and was not retrievable.',
+        'Record id is kept as casa-amigos-80pf - the slug the importer already carries from the original Toast label - so an apply updates in place rather than inserting a duplicate.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'casamigos-reposado', brand:'Casamigos', expression:'Reposado', displayName:'Casamigos Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco',
+      producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
+      style:'Tequila Reposado - 7 Months - Reconditioned American Oak',
+      proofN:80, ageText:'7 months',
+      priceUsd:11.75, toastItemGuid:'e088dc2f-8b1e-4e71-b81f-bedb477c2faa',
+      productionRows:[
+        ['Class','Tequila Reposado',true],
+        ['Maturation','7 months in American white oak casks reconditioned from premium aged whiskey',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Productos Finos de Agave (NOM 1416)',true]
+      ],
+      prodTags:['7 Months Oak','Ex-Whiskey Casks','NOM 1416'],
+      why:'Casamigos Reposado is aged seven months in American white oak casks reconditioned after holding premium aged whiskey, and bottled at 40% ABV. Seven months sits well past the two-month reposado minimum without crossing into anejo territory.',
+      whyShort:'Seven months in reconditioned ex-whiskey American oak.',
+      history:'Casamigos was founded in 2013 by George Clooney, Rande Gerber and Mike Meldman, and was acquired by Diageo in 2017 for 700 million dollars plus up to 300 million more tied to performance.',
+      timeline:[
+        ['2013','Founded by George Clooney, Rande Gerber and Mike Meldman'],
+        ['2017','Acquired by Diageo']
+      ],
+      sources:[
+        {url:'https://www.oldtowntequila.com/casamigos-reposado-tequila/',sourceType:'retailer',coversFields:['age','cask','strength']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/4536-casamigos-tequila-reposado',sourceType:'reference',coversFields:['identity','producer']},
+        {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'Aging duration and cask treatment come from retailer and reference listings, not a producer spec sheet; the Casamigos site is age-gated and was not retrievable.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'casamigos-anejo', brand:'Casamigos', expression:'Añejo', displayName:'Casamigos Anejo',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco',
+      producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
+      style:'Tequila Anejo - 14 Months',
+      proofN:80, ageText:'14 months', minYears:1, maxYears:1,
+      priceUsd:14, toastItemGuid:'d578c965-47f4-42ae-9ae7-b73d8244f900',
+      productionRows:[
+        ['Class','Tequila Anejo',true],
+        ['Maturation','14 months in oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Productos Finos de Agave (NOM 1416)',true]
+      ],
+      prodTags:['14 Months Oak','NOM 1416'],
+      why:'Casamigos Anejo is aged 14 months and bottled at 40% ABV, two months past the one-year minimum the anejo class requires.',
+      whyShort:'Fourteen months in oak - just past the anejo line.',
+      history:'Casamigos was founded in 2013 by George Clooney, Rande Gerber and Mike Meldman, and was acquired by Diageo in 2017 for 700 million dollars plus up to 300 million more tied to performance.',
+      timeline:[
+        ['2013','Founded by George Clooney, Rande Gerber and Mike Meldman'],
+        ['2017','Acquired by Diageo']
+      ],
+      sources:[
+        {url:'https://spiritsreview.com/reviews/casamigos-anejo-tequila/',sourceType:'review',coversFields:['age','strength']},
+        {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'Aging duration comes from a review listing, not a producer spec sheet; cask type is not stated by any source found and is left unrecorded.',
+        'Venue display name is kept as Casamigos Anejo without the tilde, matching the shelf/Toast label; the product name is Añejo.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'patron-silver', brand:'Patrón', expression:'Silver', displayName:'Patrón Silver',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Atotonilco el Alto',
+      producer:'Hacienda Patrón (NOM 1492)', distilleryName:'Hacienda Patrón',
+      style:'Tequila Blanco - Tahona and Roller-Mill Blend - Triple Distilled',
+      proofN:80, ageText:'Unaged',
+      priceUsd:10.75, toastItemGuid:'d7ecb6ae-4fdf-4cca-a390-2f3b22188a35',
+      topNotes:['Black pepper','Pine and citrus','Warming charcoal finish'],
+      productionRows:[
+        ['Class','Tequila Blanco',true],
+        ['Extraction','Blend of two tequilas - one from a traditional tahona stone mill fermented with the agave fibres, one from a modern roller shredder',true],
+        ['Distillation','Triple distilled',true],
+        ['Cooking','Agave slow-roasted in traditional brick ovens for more than three days',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Hacienda Patrón, Atotonilco el Alto, Jalisco (NOM 1492)',true]
+      ],
+      prodTags:['Tahona Blend','Triple Distilled','Highland Agave','NOM 1492'],
+      why:'Patrón Silver is a blend of two differently made triple-distilled tequilas - one produced with a traditional tahona stone mill and fermented with the agave fibres still in the must, the other from a modern roller shredder. Agave is slow-roasted in brick ovens for over three days at Hacienda Patrón in the Jalisco highlands. Bottled at 40% ABV.',
+      whyShort:'Tahona and roller-mill tequila blended together, triple distilled.',
+      history:'Patrón was founded in 1989 and is owned by Bacardi. Hacienda Patrón was built in the Jalisco highlands for its agave supply and its deep-well water.',
+      timeline:[['1989','Patron founded'],['2002','Production moves to a new facility'],['Today','Owned by Bacardi']],
+      sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/204/patron-silver-tequila',sourceType:'reference',coversFields:['identity','production','strength','tasting']},
+        {url:'https://www.diffordsguide.com/producer/1118/hacienda-patrn-nom-1492/production',sourceType:'reference',coversFields:['production','origin']},
+        {url:'https://en.wikipedia.org/wiki/Patr%C3%B3n',sourceType:'reference',coversFields:['history','ownership','strength']}
+      ],
+      sourcingLimitations:[
+        'The tahona/roller-mill blend ratio is not published.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'don-fulano-reposado', brand:'Don Fulano', expression:'Reposado', displayName:'Don Fulano Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'La Tequileña (NOM 1146)', distilleryName:'La Tequileña',
+      style:'Tequila Reposado - Highland Estate Agave - French Oak',
+      proofN:80, ageText:'8-11 months',
+      priceUsd:12.25, toastItemGuid:'9560c0c8-dcde-4b8b-9df6-8e49ab589a91',
+      productionRows:[
+        ['Agave','100% estate-grown highland (Los Altos) blue agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Maturation','8-11 months in French Limousin and Nevers oak',true],
+        ['Fermentation','Open tanks, wild and cultivated yeast',true],
+        ['Distillation','Roughly 80% copper pot still, 20% copper double-column',true],
+        ['Additives','No sugar, colour or glycerin; not charcoal filtered',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','La Tequileña, town of Tequila, Jalisco (NOM 1146)',true]
+      ],
+      prodTags:['Additive Free','French Oak','Highland Estate Agave','NOM 1146'],
+      why:'Don Fulano Reposado is a 100% blue agave tequila from estate-grown highland agave, aged 8 to 11 months in French Limousin and Nevers oak rather than the ex-bourbon barrels most reposados use. It is fermented in open tanks with wild and cultivated yeast, distilled roughly 80 percent in copper pot stills and 20 percent in a copper double-column still, and bottled at 40% ABV with no additives and no charcoal filtration.',
+      whyShort:'Highland estate agave rested in French oak, additive-free, from La Tequileña.',
+      history:'Don Fulano is made by the Fonseca family at La Tequileña (NOM 1146) in the town of Tequila. Enrique Fonseca and Sergio Mendoza are fourth- and fifth-generation agave growers who have run the distillery since the 1980s.',
+      timeline:[
+        ['1980s','Enrique Fonseca and Sergio Mendoza take over operations at La Tequileña'],
+        ['Early 2000s','Fonseca begins experimenting with extended French and American oak maturation']
+      ],
+      sources:[
+        {url:'https://siptequila.com/products/don-fulano-reposado',sourceType:'retailer',coversFields:['identity','production','age','cask','strength']},
+        {url:'https://www.agavematchmaker.com/brands/1113-don-fulano',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://raretequilas.com/collections/nom-1146',sourceType:'reference',coversFields:['producer','origin']}
+      ],
+      sourcingLimitations:[
+        'Production detail comes from specialist retailer and reference listings; the Don Fulano producer site was not retrievable.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'don-fulano-anejo', brand:'Don Fulano', expression:'Añejo', displayName:'Don Fulano Anejo',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'La Tequileña (NOM 1146)', distilleryName:'La Tequileña',
+      style:'Tequila Anejo - Highland Estate Agave - 30 Months French Oak',
+      proofN:80, ageText:'30 months', minYears:2, maxYears:3,
+      priceUsd:18, toastItemGuid:'b9fc5d52-c111-443c-a814-5258de3c6808',
+      productionRows:[
+        ['Agave','100% estate-grown highland (Los Altos) blue agave',true],
+        ['Class','Tequila Anejo',true],
+        ['Maturation','30 months in French Limousin and Nevers casks that previously held wine',true],
+        ['Additives','No sugar, colour or glycerin',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','La Tequileña, town of Tequila, Jalisco (NOM 1146)',true]
+      ],
+      prodTags:['Additive Free','French Oak','30 Months','NOM 1146'],
+      why:'Don Fulano Anejo is aged 30 months exclusively in French Limousin and Nevers casks that previously held wine - two and a half years, against a one-year legal minimum, and in a wood tradition borrowed from Cognac rather than from bourbon. Bottled at 40% ABV, additive-free.',
+      whyShort:'Thirty months in ex-wine French oak - Cognac wood, not bourbon wood.',
+      history:'Don Fulano is made by the Fonseca family at La Tequileña (NOM 1146) in the town of Tequila. Enrique Fonseca and Sergio Mendoza are fourth- and fifth-generation agave growers who have run the distillery since the 1980s.',
+      timeline:[
+        ['1980s','Enrique Fonseca and Sergio Mendoza take over operations at La Tequileña'],
+        ['Early 2000s','Fonseca begins experimenting with extended French and American oak maturation']
+      ],
+      sources:[
+        {url:'https://www.oldtowntequila.com/brands/Don-Fulano.html',sourceType:'retailer',coversFields:['identity','age','cask']},
+        {url:'https://siptequila.com/collections/don-fulano',sourceType:'retailer',coversFields:['identity','strength','production']},
+        {url:'https://raretequilas.com/collections/nom-1146',sourceType:'reference',coversFields:['producer','origin']}
+      ],
+      sourcingLimitations:[
+        'The 30-month figure and the ex-wine French cask detail come from specialist retailer listings; the Don Fulano producer site was not retrievable.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+
+    // ───────────── Rum ─────────────
+    sourcedDraftSpirit({
+      id:'bacardi-white', brand:'Bacardi', expression:'Superior', displayName:'Bacardi White',
+      cat:'Rum', subcategory:'white-and-silver',
+      country:'Puerto Rico',
+      producer:'Bacardi Limited', distilleryName:'Bacardi',
+      style:'White Rum - Oak Aged, Charcoal Filtered',
+      proofN:80, ageText:'1-2 years', minYears:1, maxYears:2,
+      priceUsd:7, toastItemGuid:'329389fa-73be-4dcc-ae93-7abf1506b7f2',
+      topNotes:['Almond','Lime','Vanilla'],
+      productionRows:[
+        ['Base','Molasses, yeast and water - fermented, distilled, aged, filtered and blended',true],
+        ['Maturation','American white oak barrels',true],
+        ['Filtration','Proprietary charcoal filtration, which strips the colour picked up in oak',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Oak Aged','Charcoal Filtered','Est. 1862'],
+      why:'BACARDI Superior is a white rum that is aged in American white oak and then charcoal-filtered back to clear - so the barrel character is in the spirit even though the colour is not. The producer describes almond and lime with hints of vanilla and a dry, crisp finish. Bottled at 40% ABV. Introduced in 1862 by Don Facundo Bacardí Massó.',
+      whyShort:'Aged in oak, then filtered clear - barrel character without the colour.',
+      history:'BACARDI Superior was introduced in 1862 by Don Facundo Bacardí Massó. It is produced in Puerto Rico.',
+      timeline:[['1862','Introduced by Don Facundo Bacardí Massó']],
+      sources:[
+        {url:'https://www.bacardi.com/us/en/our-rums/superior-rum/',sourceType:'producer',coversFields:['identity','strength','production','tasting','history']},
+        {url:'https://www.tastings.com/Spirits-Review/Bacardi-Superior-White-Rum-Puerto-Rico-05-01-2024.aspx',sourceType:'review',coversFields:['origin','identity']}
+      ],
+      sourcingLimitations:[
+        'The shelf and Toast label read Bacardi White; the product is BACARDI Superior. Display name is left as the venue label and the real product identity is recorded in brand/expression.',
+        'The producer confirms oak aging but does not state a duration; the one-to-two-year range comes from secondary listings.',
+        'The producer does not name a specific distillery or town; distillery and city are left unset.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'captain-morgan-original-spiced', brand:'Captain Morgan', expression:'Original Spiced', displayName:'Captain Morgan Original Spiced',
+      cat:'Rum', subcategory:'spiced-and-flavored',
+      country:'USA', region:'U.S. Virgin Islands', city:'St. Croix',
+      producer:'Diageo', distilleryName:'Diageo USVI',
+      style:'Spiced Rum - Caribbean Rum with Natural Flavours',
+      proofN:70, ageText:'Up to 1 year',
+      priceUsd:6, toastItemGuid:'d0c2815e-2734-425e-97c3-a475cb3f8d18',
+      topNotes:['Vanilla','Caramel','Baking spice'],
+      productionRows:[
+        ['Class','Spiced rum - at 35% ABV it sits below the US threshold to be labelled simply rum',true],
+        ['Base','Molasses-derived rum, column distilled',true],
+        ['Maturation','Up to one year in oak before blending',true],
+        ['Flavouring','Blended with natural spices - vanilla, cinnamon, nutmeg and clove',true],
+        ['Bottling Proof','70 (35% ABV)',true]
+      ],
+      prodTags:['Spiced','35% ABV','Column Still'],
+      why:'Captain Morgan Original Spiced is a Caribbean rum blended with natural spices and bottled at 35% ABV (70 proof). The base is molasses rum distilled in column stills at Diageo\'s facility in St. Croix, aged up to a year in oak, then blended with vanilla, cinnamon, nutmeg and clove. At 35% it sits below the 40% floor for a straight rum label in the US and is classified as a flavoured spirit.',
+      whyShort:'Column-still Caribbean rum blended with vanilla, cinnamon and clove at 35% ABV.',
+      history:'Captain Morgan is a Diageo brand. The Original Spiced expression was reformulated in 2023 to use real Madagascar vanilla.',
+      timeline:[['2023','Reformulated to use real Madagascar vanilla']],
+      sources:[
+        {url:'https://www.walmart.com/ip/Captain-Morgan-Original-Spiced-Rum-750-mL-35-ABV/12167177',sourceType:'retailer',coversFields:['strength','identity']},
+        {url:'https://www.ohlq.com/liquor/rum/spiced/captain-morgan-original-spiced-rum',sourceType:'retailer',coversFields:['identity','strength']}
+      ],
+      sourcingLimitations:[
+        'The 35% ABV figure is confirmed by multiple retail listings. The St. Croix distillation location, the up-to-one-year oak rest and the specific spice list come from secondary sources, not a Diageo spec sheet.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'malibu', brand:'Malibu', expression:'Original Coconut', displayName:'Malibu',
+      cat:'Rum', subcategory:'spiced-and-flavored',
+      country:'Barbados',
+      producer:'Pernod Ricard', distilleryName:'West Indies Rum Distillery Ltd.',
+      style:'Coconut Flavoured Rum Liqueur - Barbados',
+      proofN:42, ageText:'NAS',
+      priceUsd:7, toastItemGuid:'59bc0ace-9834-4c9b-ba06-80d09b24c40a',
+      topNotes:['Coconut'],
+      productionRows:[
+        ['Class','Coconut-flavoured liqueur made with white rum',true],
+        ['Base','Caribbean rum (molasses/sugarcane distillate), water, sugar and coconut flavouring',true],
+        ['Distillery','West Indies Rum Distillery Ltd., Barbados',true],
+        ['Bottling Proof','42 (21% ABV)',true]
+      ],
+      prodTags:['Coconut','21% ABV','Barbados'],
+      why:'Malibu is a coconut-flavoured liqueur made with white rum, bottled at 21% ABV (42 proof). The rum is made by West Indies Rum Distillery Ltd. in Barbados. It was created in 1978 by Tom Jago at International Distillers and Vintners - originally produced in Curaçao from fruit spirits before production moved to Barbados - and has been owned by Pernod Ricard since 2005.',
+      whyShort:'The original coconut rum - 21% ABV, made in Barbados since production moved from Curaçao.',
+      history:'Malibu was created in 1978 by Tom Jago of International Distillers and Vintners, originally made in Curaçao. Production later moved to Barbados, where the rum is made by West Indies Rum Distillery Ltd. Pernod Ricard has owned the brand since 2005.',
+      timeline:[
+        ['1978','Created by Tom Jago at International Distillers and Vintners'],
+        ['2005','Acquired by Pernod Ricard']
+      ],
+      sources:[
+        {url:'https://en.wikipedia.org/wiki/Malibu_(rum)',sourceType:'reference',coversFields:['identity','strength','production','history','ownership']},
+        {url:'https://www.pernod-ricard.com/en/brands/malibu',sourceType:'producer',coversFields:['identity','origin','ownership']}
+      ],
+      sourcingLimitations:[
+        'Only one tasting descriptor (coconut) is supportable from the sources; topNotes is intentionally short and must reach three sourced or Sean-tasted notes before publication.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'gosling-s-black-seal', brand:"Gosling's", expression:'Black Seal', displayName:"Gosling's Black Seal",
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Bermuda',
+      producer:'Gosling Brothers Limited', distilleryName:"Gosling Brothers (blender)",
+      style:'Bermuda Black Rum - Blended, Re-Charred Ex-Bourbon Oak',
+      proofN:80, ageText:'3-6 years', minYears:3, maxYears:6,
+      priceUsd:7, toastItemGuid:'e66d8156-6271-4d37-aa60-90b1b211130a',
+      productionRows:[
+        ['Class','Bermuda black rum - blended, not distilled by the brand',true],
+        ['Blend','Three pot-distilled rums from undisclosed Caribbean distilleries',true],
+        ['Maturation','3 to 6 years in re-charred American oak ex-bourbon barrels',true],
+        ['Colour','A small amount of molasses is added for batch-to-batch colour consistency',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Bermuda','Blended','Re-Charred Oak','Est. 1806'],
+      why:'Gosling\'s Black Seal is a Bermuda black rum blended from three pot-distilled rums sourced from undisclosed Caribbean distilleries and matured three to six years in re-charred American oak ex-bourbon barrels. The re-char deepens both the colour and the caramelised sugar the wood gives up. A small amount of molasses is added for colour consistency between batches. Bottled at 40% ABV. It is the rum that defines the Dark n Stormy.',
+      whyShort:'Bermuda black rum from three pot-still Caribbean rums, matured in re-charred oak.',
+      history:'Gosling Brothers Limited was established in 1806 and is one of the oldest family-run spirits businesses in the Western Hemisphere.',
+      timeline:[['1806','Gosling Brothers Limited established in Bermuda']],
+      sources:[
+        {url:'https://goslings.com/newProduct/goslings-black-seal-rum/',sourceType:'producer',coversFields:['identity','production','history']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/6256/goslings-gold-seal',sourceType:'reference',coversFields:['strength','producer']}
+      ],
+      sourcingLimitations:[
+        'The three-to-six-year maturation range, the re-charred ex-bourbon cask detail and the added-molasses note come from retailer and reference listings rather than a producer spec sheet.',
+        'Gosling\'s blends rather than distils; the source distilleries are deliberately undisclosed, so distilleryName records the blender.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'myers-s-dark', brand:"Myers's", expression:'Original Dark', displayName:"Myers's Dark",
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Jamaica',
+      producer:'Sazerac Company', distilleryName:"Myers's Rum",
+      style:'Jamaican Black Rum - Pot and Column Still Blend',
+      proofN:80, ageText:'4 years', minYears:4, maxYears:4,
+      priceUsd:6, toastItemGuid:'28c8ae0c-27ec-40d9-babc-91b23f63c77a',
+      topNotes:['Dark caramel','Toasted coconut husk'],
+      productionRows:[
+        ['Class','Jamaican black rum',true],
+        ['Base','Jamaican sugarcane molasses',true],
+        ['Distillation','Continuous and pot still',true],
+        ['Maturation','Four years in white oak barrels',true],
+        ['Blend','A blend of nine different rums',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Jamaica','Pot Still Component','Nine-Rum Blend'],
+      why:'Myers\'s Original Dark is a Jamaican black rum made from Jamaican sugarcane molasses, distilled using both continuous and pot stills, aged four years in white oak and blended from nine different rums. Bottled at 40% ABV. It is mildly sweet and moderately full-bodied, with dark caramel and toasted coconut husk.',
+      whyShort:'A four-year Jamaican black rum blended from nine different rums.',
+      history:'Myers\'s Rum is a Jamaican black rum brand now produced by Sazerac.',
+      timeline:[['Today','Produced by the Sazerac Company']],
+      sources:[
+        {url:'https://en.wikipedia.org/wiki/Myers%27s_Rum',sourceType:'reference',coversFields:['identity','origin','strength','ownership']},
+        {url:'https://www.gotoliquorstore.com/p/myerss-original-dark-rum/664',sourceType:'retailer',coversFields:['production','age','tasting']}
+      ],
+      sourcingLimitations:[
+        'The shelf and Toast label read Myerss Dark; the product is Myers\'s Original Dark. Display name is left as the venue label and the real product identity is recorded in brand/expression.',
+        'The four-year age and the nine-rum blend come from retailer listings, not a producer spec sheet.',
+        'Only two tasting descriptors are supportable from the sources; topNotes is intentionally short and must reach three before publication.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'don-q-151', brand:'Don Q', expression:'151', displayName:'Don Q 151',
+      cat:'Rum', subcategory:'specialty',
+      country:'Puerto Rico', city:'Ponce',
+      producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
+      style:'Overproof Rum - Puerto Rico - 151 Proof',
+      proofN:151, ageText:'Up to 3 years', minYears:0, maxYears:3,
+      priceUsd:7, toastItemGuid:'8360e46b-eef1-4c21-8e4f-32051d5b2974',
+      topNotes:['Vanilla','Oak','Smoke and tobacco'],
+      productionRows:[
+        ['Class','Overproof rum',true],
+        ['Base','Molasses',true],
+        ['Distillation','Five-column still',true],
+        ['Maturation','Blend of light and dark rums, each aged up to three years in American white oak',true],
+        ['Bottling Proof','151 (75.5% ABV)',true],
+        ['Distillery','Destilería Serrallés, Puerto Rico',true]
+      ],
+      prodTags:['Overproof','151 Proof','Puerto Rico','Column Still'],
+      why:'Don Q 151 is an overproof Puerto Rican rum bottled at 75.5% ABV (151 proof). It is distilled from molasses in a five-column still and blended from light and dark rums each aged up to three years in American white oak - barrel time that is unusual at this strength. Vanilla, oak, smoke and tobacco carry through the heat. With Bacardi 151 discontinued, it has become the reference overproof rum from the Caribbean.',
+      whyShort:'The reference Caribbean overproof - 151 proof, and still barrel-aged.',
+      history:'Don Q is produced by Destilería Serrallés in Puerto Rico.',
+      timeline:[['Today','Produced by Destilería Serrallés, Puerto Rico']],
+      sources:[
+        {url:'https://www.rum-x.com/rums/1376/destileria-serralles-don-q-151-overproof/',sourceType:'reference',coversFields:['identity','strength','age','producer']},
+        {url:'https://www.excellencerhum.com/en/puerto-rico/5375-rum-don-q-151-755.html',sourceType:'retailer',coversFields:['strength','origin']},
+        {url:'https://en.wikipedia.org/wiki/Destiler%C3%ADa_Serrall%C3%A9s',sourceType:'reference',coversFields:['producer','origin']}
+      ],
+      sourcingLimitations:[
+        'The five-column still and the up-to-three-year aging come from reference and retailer listings, not a Serrallés spec sheet.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'zaya-gran-reserva-16-year', brand:'Zaya', expression:'Gran Reserva 16 Year', displayName:'Zaya Gran Reserva 16 Year',
+      cat:'Rum', subcategory:'premium-and-aged',
+      country:'Trinidad and Tobago',
+      producer:'Trinidad Distillers Ltd. (Angostura)', distilleryName:'Trinidad Distillers Ltd.',
+      style:'Solera Aged Rum - Trinidad - Up to 16 Years',
+      proofN:80, ageText:'Solera, up to 16 years', maxYears:16,
+      priceUsd:11, toastItemGuid:'c0fd2578-3715-494e-acb9-4a796e5c69fd',
+      productionRows:[
+        ['Class','Solera-aged rum',true],
+        ['Blend','Rums aged up to 16 years',true],
+        ['Distillery','Trinidad Distillers Ltd. - Angostura, Trinidad',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Solera','Up to 16 Years','Trinidad'],
+      why:'Zaya Gran Reserva is a solera-aged rum blended from rums aged up to 16 years and bottled at 40% ABV. It was originally produced in Guatemala; after Infinium Spirits acquired the brand in 2008 production moved to Trinidad, where it is distilled by Angostura at Trinidad Distillers Ltd.',
+      whyShort:'A solera blend of rums up to sixteen years old, now made in Trinidad.',
+      history:'Zaya was originally produced in Guatemala. The brand was acquired by Infinium Spirits in 2008 and production moved to Trinidad and Tobago, where it is distilled by Angostura.',
+      timeline:[
+        ['Originally','Produced in Guatemala'],
+        ['2008','Acquired by Infinium Spirits'],
+        ['Today','Distilled by Angostura at Trinidad Distillers Ltd.']
+      ],
+      sources:[
+        {url:'https://www.rum-x.com/rums/526/tdl-zaya-rum-gran-reserva/',sourceType:'reference',coversFields:['identity','strength','producer','age']},
+        {url:'https://www.excellencerhum.com/en/trinidad-and-tobago/5635-rum-zaya-gran-reserva-16-years-old.html',sourceType:'retailer',coversFields:['origin','age']},
+        {url:'https://www.caskers.com/zaya-gran-reserva-16-year-old-rum/',sourceType:'retailer',coversFields:['identity','history']}
+      ],
+      sourcingLimitations:[
+        'This is a solera blend, so 16 years describes the oldest component, not the age of everything in the bottle.',
+        'Cask type is not published by any source found and is left unrecorded.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'diplomatico-mantuano-dark', brand:'Diplomatico', expression:'Mantuano', displayName:'Diplomatico Mantuano Dark',
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Venezuela',
+      producer:'Destilerías Unidas S.A.', distilleryName:'Destilerías Unidas S.A.',
+      style:'Venezuelan Aged Rum - Up to 8 Years - Column, Batch Kettle and Pot Still',
+      proofN:80, ageText:'Up to 8 years', maxYears:8,
+      priceUsd:9, toastItemGuid:'185450cb-9afb-4f5a-a710-a96d20f67027',
+      topNotes:['Dried plum','Oak','Vanilla'],
+      productionRows:[
+        ['Class','Venezuelan aged rum',true],
+        ['Base','Sugarcane molasses and honeys',true],
+        ['Distillation','Blend of column, batch kettle and pot still distillates',true],
+        ['Maturation','Up to eight years in white oak casks that previously held bourbon and malt whisky',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Destilerías Unidas S.A., Venezuela',true]
+      ],
+      prodTags:['Venezuela','Three-Still Blend','Up to 8 Years'],
+      why:'Diplomatico Mantuano is a Venezuelan rum blended from column, batch kettle and pot still distillates made from sugarcane molasses and honeys, aged up to eight years in white oak that previously held bourbon and malt whisky. Bottled at 40% ABV. Dried plum, oak and vanilla, balanced rather than sweet-heavy.',
+      whyShort:'Three still types blended and aged up to eight years in ex-whisky oak.',
+      history:'Diplomatico is produced by Destilerías Unidas S.A. in Venezuela.',
+      timeline:[['Today','Produced by Destilerías Unidas S.A., Venezuela']],
+      sources:[
+        {url:'https://rumx.com/en/rums/29/diplomatico-mantuano/',sourceType:'reference',coversFields:['identity','strength','producer','age']},
+        {url:'https://www.bienmanger.com/2F29243_Mantuano_Diplomatico_Rum_From_Venezuela.html',sourceType:'retailer',coversFields:['origin','strength','producer']},
+        {url:'https://www.caskers.com/diplomatico-mantuano-rum/',sourceType:'retailer',coversFields:['production','cask','tasting']}
+      ],
+      sourcingLimitations:[
+        'The shelf and Toast label append Dark; the product name is Diplomatico Mantuano. Display name is left as the venue label.',
+        'Production and cask detail come from reference and retailer listings, not a producer spec sheet.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+
+    // ───────────── Vodka ─────────────
+    sourcedDraftSpirit({
+      id:'absolut-vodka', brand:'Absolut', expression:'Original', displayName:'Absolut Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'Sweden', region:'Skåne', city:'Åhus',
+      producer:'The Absolut Company (Pernod Ricard)', distilleryName:'Absolut Distillery, Åhus',
+      style:'Swedish Wheat Vodka - Continuous Distillation - Single Source',
+      proofN:80, ageText:'Unaged',
+      priceUsd:7, toastItemGuid:'2edc670b-2371-45a5-8548-40a7e57c0182',
+      productionRows:[
+        ['Base','Winter wheat grown in southern Sweden',true],
+        ['Water','Deep wells at Åhus',true],
+        ['Distillation','Continuous distillation - the uninterrupted method Lars Olsson Smith introduced in 1879',true],
+        ['Production','Entirely single-source: grain, distillation and bottling all happen in and around Åhus',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Swedish Winter Wheat','Continuous Distillation','Single Source'],
+      why:'Absolut is made entirely in and around Åhus, a village in Skane in southern Sweden - grain, water, distillation and bottling all in one place. It uses local winter wheat and water from deep wells, and the continuous distillation method Lars Olsson Smith introduced in 1879. Bottled at 40% ABV.',
+      whyShort:'One Swedish village does all of it - grain, water, distillation, bottling.',
+      history:'Absolut traces to 1879, when Lars Olsson Smith introduced uninterrupted (continuous) distillation. Production has remained centred on Åhus in southern Sweden.',
+      timeline:[['1879','Lars Olsson Smith introduces continuous distillation']],
+      sources:[
+        {url:'https://www.absolut.com/en-us/products/absolut-vodka/',sourceType:'producer',coversFields:['identity','strength','production','origin']}
+      ],
+      sourcingLimitations:[
+        'No producer-published tasting descriptors were found beyond general smoothness language, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'grey-goose-vodka', brand:'Grey Goose', expression:'Original', displayName:'Grey Goose Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'France', region:'Picardie and Cognac',
+      producer:'Bacardi Limited', distilleryName:'Grey Goose',
+      style:'French Wheat Vodka - Single Distillation - Gensac Spring Water',
+      proofN:80, ageText:'Unaged',
+      priceUsd:9, toastItemGuid:'ac130009-b8ee-4a7b-aa2a-80814b34a910',
+      productionRows:[
+        ['Base','French soft winter wheat from Picardie, grown on limestone soil',true],
+        ['Water','Spring water from Gensac in the Cognac region, naturally filtered through limestone',true],
+        ['Distillation','Distilled once, to keep the wheat character',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['French Winter Wheat','Single Distillation','Gensac Spring Water'],
+      why:'Grey Goose is made from French soft winter wheat grown in Picardie and spring water from Gensac in the Cognac region, filtered naturally through limestone. It is distilled only once - a deliberate choice to keep the wheat character rather than strip it toward neutrality. Bottled at 40% ABV. Created in 1997 by Sidney Frank; now owned by Bacardi.',
+      whyShort:'Distilled once on purpose - French winter wheat kept, not stripped.',
+      history:'Grey Goose was created in 1997 by Sidney Frank and is now owned by Bacardi Limited.',
+      timeline:[['1997','Created by Sidney Frank'],['Today','Owned by Bacardi Limited']],
+      sources:[
+        {url:'https://www.greygoose.com/products/grey-goose-vodka.html',sourceType:'producer',coversFields:['identity','production','origin']},
+        {url:'https://www.greygoose.com/faqs/what-is-the-alcohol-content-of-grey-goose-vodka.html',sourceType:'producer',coversFields:['strength']}
+      ],
+      sourcingLimitations:[
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'tito-s-vodka', brand:"Tito's", expression:'Handmade Vodka', displayName:"Tito's Vodka",
+      cat:'Vodka', subcategory:'vodka',
+      country:'USA', region:'Texas', city:'Austin',
+      producer:'Fifth Generation, Inc.', distilleryName:'Tito\'s Handmade Vodka',
+      style:'Corn Vodka - Pot Distilled - Austin, Texas',
+      proofN:80, ageText:'Unaged',
+      priceUsd:8, toastItemGuid:'c0fbdedb-63cd-43f2-bdbd-2983a35152ff',
+      productionRows:[
+        ['Base','Corn - naturally gluten free',true],
+        ['Distillation','Batch distilled in old-fashioned pot stills',true],
+        ['Producer','Fifth Generation, Inc., Austin, Texas',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Corn','Pot Distilled','Texas','Gluten Free'],
+      why:'Tito\'s Handmade Vodka is distilled from corn in old-fashioned pot stills at the oldest legal distillery in Texas, in Austin. Bert "Tito" Beveridge obtained the first legal permit to distil in Texas in 1995. Bottled at 40% ABV, distilled and bottled by Fifth Generation, Inc.',
+      whyShort:'Pot-distilled corn vodka from the first legal distillery in Texas.',
+      history:'In 1995 Bert "Tito" Beveridge obtained the first legal permit to distil in Texas and created Tito\'s Handmade Vodka. It is distilled and bottled by Fifth Generation, Inc. in Austin.',
+      timeline:[['1995','First legal distilling permit in Texas; Tito\'s Handmade Vodka created']],
+      sources:[
+        {url:'https://www.titosvodka.com/',sourceType:'producer',coversFields:['identity','production','origin']},
+        {url:'https://en.wikipedia.org/wiki/Tito%27s_Vodka',sourceType:'reference',coversFields:['history','production','strength']}
+      ],
+      sourcingLimitations:[
+        'Brand name is rendered without the possessive apostrophe in these fields for slug and encoding safety; the product is Tito\'s Handmade Vodka.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'belvidere-vodka', brand:'Belvedere', expression:'Original', displayName:'Belvedere Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'Poland', city:'Żyrardów',
+      producer:'Polmos Żyrardów', distilleryName:'Polmos Żyrardów',
+      style:'Polish Rye Vodka - 100% Dankowskie Rye - Quadruple Distilled',
+      proofN:80, ageText:'Unaged',
+      priceUsd:10, toastItemGuid:'24b60efe-dc1d-41c5-9379-0bc207912b6c',
+      topNotes:['White pepper','Faint vanilla','Clean finish'],
+      productionRows:[
+        ['Base','100% Polish Dankowskie rye',true],
+        ['Distillation','Quadruple distilled - once at an agricultural distillery, three more times on a four-column continuous still',true],
+        ['Certification','Polska Wódka - Polish grain and Polish water only, no artificial additives',true],
+        ['Additives','No glycerin, citric acid or sugar',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Polish Rye','Quadruple Distilled','Polska Wódka','Additive Free'],
+      why:'Belvedere is a quadruple-distilled Polish vodka made from 100% Dankowskie rye at Polmos Żyrardów, bottled at 40% ABV. It carries the Polska Wódka designation, which legally requires Polish grain and Polish water and forbids artificial additives - no glycerin, citric acid or sugar. The four passes purify without stripping the rye out; pepper and a faint vanilla stay in.',
+      whyShort:'Four distillations of Polish Dankowskie rye - purified, not neutralised.',
+      history:'Belvedere is produced at the Polmos Żyrardów distillery in Żyrardów, Poland.',
+      timeline:[['Today','Produced at Polmos Żyrardów, Poland']],
+      sources:[
+        {url:'https://en.wikipedia.org/wiki/Belvedere_Vodka',sourceType:'reference',coversFields:['identity','origin','production','strength']},
+        {url:'https://www.drinklab.org/belvedere-vodka/',sourceType:'review',coversFields:['production','tasting']}
+      ],
+      sourcingLimitations:[
+        'Record id is kept as belvidere-vodka - the misspelled slug the importer already carries - so an apply updates in place rather than inserting a duplicate.',
+        'The seven-farm rye sourcing claim and the tasting descriptors come from secondary sources, not a producer spec sheet.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'chopin-potato-vodka', brand:'Chopin', expression:'Potato Vodka', displayName:'Chopin Potato Vodka',
+      cat:'Vodka', subcategory:'potato-vodka',
+      country:'Poland', region:'Podlasie', city:'Krzesk',
+      producer:'Chopin Distillery (Polmos Siedlce)', distilleryName:'Chopin Distillery',
+      style:'Polish Potato Vodka - Four Distillations - Single Ingredient',
+      proofN:80, ageText:'Unaged',
+      priceUsd:8.5, toastItemGuid:'37a467d2-b15a-4ee5-9bd7-39da78a729e6',
+      productionRows:[
+        ['Base','Locally grown Polish potatoes - roughly seven pounds per bottle',true],
+        ['Distillation','Distilled four times through copper column stills',true],
+        ['Distillery','Chopin Distillery (Polmos Siedlce), Krzesk, Podlasie',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Potato','Four Distillations','Poland','Single Ingredient'],
+      why:'Chopin Potato Vodka is made at the Chopin Distillery in Krzesk, in Poland\'s eastern Podlasie region - potato country. It takes roughly seven pounds of locally grown potatoes to fill one bottle, and the spirit is distilled four times through copper column stills. Bottled at 40% ABV.',
+      whyShort:'Seven pounds of Polish potatoes per bottle, distilled four times.',
+      history:'Chopin is produced at the Chopin Distillery (Polmos Siedlce) in Krzesk, in the Podlasie region of eastern Poland, an agricultural area known for potato farming.',
+      timeline:[['Today','Produced at the Chopin Distillery, Krzesk, Podlasie']],
+      sources:[
+        {url:'https://en.wikipedia.org/wiki/Chopin_(vodka)',sourceType:'reference',coversFields:['identity','origin','production','strength']},
+        {url:'https://www.caskers.com/chopin-potato-vodka/',sourceType:'retailer',coversFields:['production','strength']}
+      ],
+      sourcingLimitations:[
+        'A retailer listing describes a two-year rest before bottling; no producer source confirms it, so no resting claim is recorded here.',
+        'No producer-published tasting descriptors were found, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'haku-vodka', brand:'Haku', expression:'Japanese Craft Vodka', displayName:'Haku Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'Japan', region:'Kagoshima', city:'Osumi',
+      producer:'Suntory', distilleryName:'Osumi Distillery',
+      style:'Japanese Rice Vodka - Koji Fermented - Bamboo Charcoal Filtered',
+      proofN:80, ageText:'Unaged',
+      priceUsd:9.5, toastItemGuid:'d39d8ced-c990-475d-87d5-d6ea4506f1b8',
+      productionRows:[
+        ['Base','100% Japanese white rice',true],
+        ['Fermentation','Traditional rice koji',true],
+        ['Distillation','Copper pot stills at the Osumi Distillery, Kagoshima; distilled three times',true],
+        ['Filtration','Bamboo charcoal, at the Liquor Atelier in Osaka',true],
+        ['Bottling Proof','80 (40% ABV)',true]
+      ],
+      prodTags:['Japanese White Rice','Koji Fermented','Bamboo Charcoal Filtered'],
+      why:'Haku is distilled entirely from Japanese white rice, fermented with traditional rice koji and distilled in copper pot stills at the Osumi Distillery in Kagoshima, then blended and filtered through bamboo charcoal at Suntory\'s Liquor Atelier in Osaka. Haku means both brilliance and white. Bottled at 40% ABV. The bamboo charcoal step is drawn from a Japanese practice of using charcoal to sweeten water for tea.',
+      whyShort:'Rice, koji and bamboo charcoal - a vodka built out of Japanese sake technique.',
+      history:'Haku is made by Suntory, with distillation at the Osumi Distillery in Kagoshima on Kyushu and blending and filtration at the Liquor Atelier in Osaka.',
+      timeline:[['Today','Distilled at Osumi, Kagoshima; blended and filtered at the Liquor Atelier, Osaka']],
+      sources:[
+        {url:'https://house.suntory.com/haku-vodka',sourceType:'producer',coversFields:['identity','production','origin','strength']},
+        {url:'https://house.suntory.com/craft-philosophy/haku-vodka',sourceType:'producer',coversFields:['production']}
+      ],
+      sourcingLimitations:[
+        'The producer emphasises texture (soft, silky) rather than publishing discrete tasting notes, so topNotes stay pending.',
+        PENDING_VENUE_COPY_NOTE
+      ]
+    }),
+  ];
+
   // ── Agave / Rum / Vodka draft inventory setup.
   //    These records are intentionally unpublished and unverified. They seed the
   //    review queue from the current Stone Grille shelf and Toast pull without
@@ -709,15 +1589,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','mezcal','Fosforo Mezcal',9,'47a5826e-3e75-40ea-866a-9a092694a260','Fosforo Mezcal','Stone Grille website shelf','Mezcal - Artisanal / 100% Maguey',null],
     ['Agave','mezcal','Granja Nómada',6,'9c29c317-3566-40fc-90b8-166e989a6aad','Granja 100% Maguey','Stone Grille website shelf','Mezcal - 100% Maguey / Traditional Production',null],
     ['Agave','blanco-silver','Aman Tequila Blanco',15,'b657bc99-ede3-42e4-8a48-6be15136ded7','Aman Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / 100% Blue Weber Agave',80],
-    ['Agave','blanco-silver','Casamigos Blanco',10.25,'51b46ef9-a4da-4347-b087-75b303494975','Casamigos Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80,'casa-amigos-80pf'],
     ['Agave','blanco-silver','El Jimador Cristalino',7,'2564383e-dfe8-4b43-9e7c-865077b6f32a','El Jimador, Cristalino','Stone Grille website shelf','Blanco / Silver - 80 Proof / Filtered Añejo',80],
-    ['Agave','blanco-silver','El Jimador Silver',7,'db98792a-6c60-459b-bd41-6e4fa3767225','El Jimador, Silver','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','El Luchador Blanco',9.25,'85945271-026a-42dc-a584-b9ff00fcb4ef','El Luchador Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 110 Proof / High-Proof Blanco',110],
     ['Agave','blanco-silver','Herradura Ultra Blanco',13.5,'3554205e-72c8-48b4-bcd7-91254a104184','Herradura Ultra Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Cristalino',80],
-    ['Agave','blanco-silver','Herradura Silver',9,'0ff5a853-aec0-4ee2-8b20-5235c5245740','Herradura, Silver','Stone Grille website shelf','Blanco / Silver - 80 Proof / Estate Grown',80],
     ['Agave','blanco-silver','Mi Campo Blanco',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','Milagro Silver',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
-    ['Agave','blanco-silver','Patrón Silver',10.75,'d7ecb6ae-4fdf-4cca-a390-2f3b22188a35','Patron Silver Tequila','Stone Grille website shelf','Blanco / Silver - 80 Proof / Ultra-Premium Blanco',80],
     ['Agave','blanco-silver','Rey Supremo Rosa',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Red Wine Barrel Finish',80],
     ['Agave','blanco-silver','Santaleza Blanco',9.25,'a62216ff-3e9d-4642-9043-2aabd645d01e','Santaleza Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','Tres Agaves Organic Blanco',7,'8d4a2ff0-9fa2-4860-9147-eeccf229b755','Tres agaves "organic" blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Certified Organic',80],
@@ -726,59 +1602,40 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','reposado','Adictivo Reposado',12.5,'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9','Adictivo Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / French Oak',80],
     ['Agave','reposado','Agavales Reposado',7,'b0e9ad5a-04c8-4fc7-9747-23e464602a1c','Agavales Respasado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Don Ramón Reposado Punta Diamante',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Diamond Edition',80,'don-ramon-reposado-punta-diamante'],
-    ['Agave','reposado','El Jimador Reposado',7.5,'b3fe0d50-9b6a-4672-8bf2-183675aadf44','El Jimador Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / 2 Months Oak',80],
     ['Agave','reposado','El Luchador Reposado',10.25,'6b7368fd-086c-42a3-a2fe-a30cb80ca148','El Luchador Reposado','Stone Grille website shelf','Reposado - 110 Proof / High-Proof Reposado',110],
-    ['Agave','reposado','Herradura Reposado',10,'aa401cdb-3902-4183-95d3-33b25246446b','Herradura, Repo','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / Estate Grown',80],
     ['Agave','reposado','1800 Reposado',11,'68345cbb-1da9-4f56-ad43-78e6687f9680','Jose 1800 Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80,'jose-1800-reposado'],
     ['Agave','reposado','Mi Campo Reposado',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Wine Barrel Finish',80],
     ['Agave','reposado','Milagro Reposado',8,'02b44e5b-bd59-4ea3-a917-ec6019f8e915','Milagro Resposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Skelly Reposado',19.5,'e599647b-ee8e-4182-b2e4-8f2fcb4a8033','Skelly Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Terralta Reposado',12,'145112ea-d187-4d80-90f3-e723bf0d9b0b','Terralta Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Highlands',80],
     ['Agave','reposado','Tita Doña Celia Reposado',16,'eb2f5d2b-7775-4f11-b2e5-b1b05adf0415','Tita Dona Celia Reposado','Stone Grille website shelf','Reposado - 80 Proof / Woman-Owned / Jalisco',80],
-    ['Agave','anejo-and-specialty','El Jimador Añejo',8.5,'2e8b7064-2d84-44c3-9ffe-c468c88473ba','El Jimador, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 14 Months Oak',80],
-    ['Agave','anejo-and-specialty','Herradura Añejo',14.25,'7ed22215-7910-4753-b7f7-498c5dab4dba','Herradura, Anejo','Stone Grille website shelf','Añejo & Specialty - 80 Proof / 25 Months / Estate Grown',80],
     ['Agave','anejo-and-specialty','Zumbador Añejo',null,null,null,'Stone Grille website shelf',"Añejo & Specialty - 80 Proof / 14 Months / Ex-Jack Daniel's Barrels",80],
     ['Agave','reposado','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
     ['Agave','flavored-infused','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
-    ['Agave','anejo-and-specialty','Casamigos Anejo',14,'d578c965-47f4-42ae-9ae7-b73d8244f900','Cas Amigos Anejo','Toast menu pull','Tequila category',null],
-    ['Agave','reposado','Casamigos Reposado',11.75,'e088dc2f-8b1e-4e71-b81f-bedb477c2faa','Casamigos Repo','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Jose Cuervo Tequila',6,'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90','Jose Cuervo Tequila','Toast menu pull','Tequila category',null],
-    ['Agave','reposado','Don Fulano Reposado',12.25,'9560c0c8-dcde-4b8b-9df6-8e49ab589a91','Don Fulano Repo','Toast menu pull','Tequila category',null],
-    ['Agave','anejo-and-specialty','Don Fulano Anejo',18,'b9fc5d52-c111-443c-a814-5258de3c6808','Don Fulano Añejo','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Apostoles Rosa',9,'b363b248-9670-4002-ae3a-19fd5b6aaa8a','Apostoles Rosa','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','Don Ramón Añejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null,'don-roman-anejo-punta-diamante'],
 
     ['Rum','white-and-silver','Angostura White Oak',6,'806c5186-02d9-460c-91d8-8184489a6a18','Angostura White Oak Rum','Stone Grille website shelf','White & Silver - 80 Proof / Trinidad / Column Still',80],
-    ['Rum','white-and-silver','Bacardi White',7,'329389fa-73be-4dcc-ae93-7abf1506b7f2','Bacardi  Rum','Stone Grille website shelf','White & Silver - 80 Proof / Column Still / Charcoal Filtered',80],
     ['Rum','spiced-and-flavored','Bacardi Dragonberry',7,'6f2146b9-f9dd-4130-a475-9347afdbd86c','Bacardi Dragonberry  Rum','Stone Grille website shelf','Spiced & Flavored - 70 Proof / Flavored / Dragon Fruit',70],
-    ['Rum','spiced-and-flavored','Captain Morgan Original Spiced',6,'d0c2815e-2734-425e-97c3-a475cb3f8d18','Captain Morgan  Rum','Stone Grille website shelf','Spiced & Flavored - 70 Proof / Spiced',70],
     ['Rum','spiced-and-flavored','Captain Morgan Private Stock',6.5,'7a8c1dfd-e561-46d0-a164-be3a15497049','Captain Morgan Private Stock','Stone Grille website shelf','Spiced & Flavored - 80 Proof / Premium Spiced',80],
     ['Rum','spiced-and-flavored','Hidden Still Spiced',7,'a7c28066-95f0-456d-9349-fabbbfda1add','Hidden Still Rum','Stone Grille website shelf','Spiced & Flavored - Spiced / Craft',null],
-    ['Rum','spiced-and-flavored','Malibu',7,'59bc0ace-9834-4c9b-ba06-80d09b24c40a','Malibu Coconut Rum','Stone Grille website shelf','Spiced & Flavored - 42 Proof / Coconut Flavored',42],
     ['Rum','dark-and-aged','Bumbu Dark',9,'81953ac0-d66e-4c20-9661-753a95be4b1e','Bumbu Rum','Stone Grille website shelf','Dark & Aged - 85 Proof / Barbados / Spiced & Aged',85],
-    ['Rum','dark-and-aged',"Gosling's Black Seal",7,'e66d8156-6271-4d37-aa60-90b1b211130a','Goslings Rum','Stone Grille website shelf','Dark & Aged - 80 Proof / Bermuda / Dark Blend',80],
     ['Rum','dark-and-aged','Kasama Small Batch 7 Year',6.5,'0fb40a27-2699-41fa-86ac-5ce4da3dea80','Kasama Small Batch 7 yr','Stone Grille website shelf','Dark & Aged - 7 Yr / 80 Proof / Philippine',80],
     ['Rum','dark-and-aged','Maison Ferrand Plantation Moko Dark',10,'7255317b-1c75-4f49-a4b6-751650e93793','Maison Peryat Moko Dark','Stone Grille website shelf','Dark & Aged - 80 Proof / Martinique / Agricole',80],
-    ['Rum','dark-and-aged',"Myers's Dark",6,'28c8ae0c-27ec-40d9-babc-91b23f63c77a','Meyers Dark  Rum','Stone Grille website shelf','Dark & Aged - 80 Proof / Jamaica / Pot Still Blend',80],
     ['Rum','dark-and-aged',"Papa's Pilar Blonde",6.5,'74f10a76-9858-482f-9968-73903acf365f','Papas Pillar Blonde Rum','Stone Grille website shelf','Dark & Aged - 84 Proof / Solera Aged',84],
     ['Rum','dark-and-aged',"Papa's Pilar Dark Rye Barrel",7.75,'883091ed-10cd-42a5-8a4b-5bee9caccfd8',"Papa's Pilar Rum Dark Rye barrel",'Stone Grille website shelf','Dark & Aged - 86 Proof / Rye Whiskey Cask Finish',86],
     ['Rum','premium-and-aged','Don Q 2x Aged Cognac Cask',19,'cc170791-4ab7-454c-8621-76d5c9cfe481','Don Q 2x aged Congnac cask','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / Cognac Finish',80],
     ['Rum','premium-and-aged','Don Q Gran Reserva Añejo XO',9.25,'3e684b36-cec2-4550-a325-41e4d03e3076','Don Q Gran Reserva Anejo XO','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / XO Solera',80],
     ['Rum','premium-and-aged',"Papa's Pilar Sherry Cask",8,'df28cc66-510b-4561-a995-d9ffb4b25c17',"Papa's Pilar Rum Sherry Cask",'Stone Grille website shelf','Premium & Aged - 86 Proof / Sherry Cask Finish',86],
-    ['Rum','premium-and-aged','Zaya Gran Reserva 16 Year',11,'c0fd2578-3715-494e-acb9-4a796e5c69fd','Zaya Rum','Stone Grille website shelf','Premium & Aged - 16 Yr / 80 Proof / Guatemala / Solera',80],
-    ['Rum','specialty','Don Q 151',7,'8360e46b-eef1-4c21-8e4f-32051d5b2974','Don Q 151 Rum','Stone Grille website shelf','Specialty - 151 Proof / Overproof / Puerto Rico',151],
     ['Rum','dark-and-aged','Ron Botran Reserva #12',9,'0da69595-de07-452a-b3fe-aac3d351e623','Ron Batran #12 Res. Seperior','Stone Grille website shelf','Specialty - Reserva Superior',null,'ron-batran-12-reserva-superior'],
     ['Rum','specialty','Ron Barceló Imperial',null,null,null,'Stone Grille website shelf','Specialty - 80 Proof / Dominican Republic / 10 Yr',80],
     ['Rum','spiced-and-flavored','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
-    ['Rum','dark-and-aged','Diplomatico Mantuano Dark',9,'185450cb-9afb-4f5a-a710-a96d20f67027','Diplomatico Mantuano Dark','Toast menu pull','Rum category',null],
     ['Rum','white-and-silver','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
 
     ['Vodka','vodka','House Vodka',6.5,'73985435-c504-46b8-8e81-c736c8ab5369','House Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Absolut Vodka',7,'2edc670b-2371-45a5-8548-40a7e57c0182','Absolut Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','potato-vodka','Chopin Potato Vodka',8.5,'37a467d2-b15a-4ee5-9bd7-39da78a729e6','Chopin Potato Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Grey Goose Vodka',9,'ac130009-b8ee-4a7b-aa2a-80814b34a910','Grey Goose Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Strawberry Vodka',6,'6b34648c-9761-4edc-8865-7575b140bb7e','Vodka Strawberry','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Stoli Vodka',7,'5089405f-f571-403a-8da9-e946401bde5c','Stoli Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Double Cross Vodka',9,'4d76da46-c944-4b68-8aee-1f81aa8246bb','Double Cross Vodka','Toast menu pull','Vodka category',null],
@@ -789,13 +1646,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Vodka','flavored-vodka','Whipped Vodka',6.5,'31369476-51dc-4931-9e6a-c5fd3e06bc97','Whipped Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Vodka Caramel',6.5,'88a213b8-4b22-4211-9fa6-e9496a6e5558','Vodka Caramel','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Vodka Orange',6.5,'a1839375-ad6d-45d0-83d2-98f069899bdd','Vodka Orange','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka',"Tito's Vodka",8,'c0fbdedb-63cd-43f2-bdbd-2983a35152ff',"Tito's Vodka",'Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Raspberry Vodka',6.5,'a381bc86-6d97-43b5-a7de-65c7b51db268','Vodka Raspberry','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Apple Holla Vodka',6.5,'38dfd08e-bbb5-4d72-8e39-9fcde27c77e4','Vodka Apple Holla','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Ketle Vodka',8,'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7','Kettle One Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Haku Vodka',9.5,'d39d8ced-c990-475d-87d5-d6ea4506f1b8','Haku Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Holla Vodka',6.5,'80fc8cb0-ea4e-4aa3-8896-ae0e237ce7ab','Holla Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Belvedere Vodka',10,'24b60efe-dc1d-41c5-9379-0bc207912b6c','Belvidere Vodka','Toast menu pull','Vodka category',null,'belvidere-vodka'],
     ['Vodka','potato-vodka','Boyd & Blair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null,'boyd-bair-potato-vodka'],
     ['Vodka','vodka','Vodka Grey Whale',8,'9af54e37-36bc-4268-842d-c271d14585e4','Vodka Grey Whale','Toast menu pull','Vodka category',null],
   ];
@@ -816,5 +1670,5 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     });
   });
 
-  return LEGACY.concat(BATCH,DRAFT_INVENTORY);
+  return LEGACY.concat(BATCH,SOURCED_DRAFTS,DRAFT_INVENTORY);
 };

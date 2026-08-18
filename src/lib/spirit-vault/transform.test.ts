@@ -100,10 +100,11 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
     );
 
-    // 64 of the original 90 scaffold rows remain; the other 26 were promoted to
-    // source-reviewed drafts in Batch 2 (see sourced-drafts.test.ts). They are
-    // still drafts — only their verification status and content depth changed.
-    expect(draftInventory).toHaveLength(64);
+    // 52 of the original 90 scaffold rows remain untouched. The other 38 moved
+    // into three states, none of which changes publication: 26 promoted to
+    // source-reviewed drafts in Batch 2, 4 given a confirmed identity, and 8
+    // declared shelf-only (all 2026-08-18 — see sourced-drafts.test.ts).
+    expect(draftInventory).toHaveLength(52);
     expect(draftInventory.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.definition.verificationStatus === "UNSOURCED")).toBe(true);
@@ -114,7 +115,27 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     );
     expect(sourcedDrafts).toHaveLength(26);
     expect(sourcedDrafts.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
-    expect(draftInventory.length + sourcedDrafts.length).toBe(90);
+
+    const identityConfirmed = ROWS.filter((r) =>
+      String(r.venueSpirit.notes ?? "").startsWith("Identity confirmed by Sean"),
+    );
+    const shelfOnly = ROWS.filter((r) =>
+      String(r.venueSpirit.notes ?? "").startsWith("Shelf-only by Sean"),
+    );
+    expect(identityConfirmed).toHaveLength(4);
+    expect(shelfOnly).toHaveLength(8);
+    // Neither new state is a step toward publication — both stay unsourced drafts.
+    for (const r of [...identityConfirmed, ...shelfOnly]) {
+      expect(r.venueSpirit.recordStatus).toBe("DRAFT");
+      expect(r.venueSpirit.publicationStatus).toBe("DRAFT");
+      expect(r.definition.verificationStatus).toBe("UNSOURCED");
+    }
+
+    // The real invariant: the 90 draft-inventory rows are all still accounted
+    // for, whichever state they moved into.
+    expect(
+      draftInventory.length + sourcedDrafts.length + identityConfirmed.length + shelfOnly.length,
+    ).toBe(90);
 
     const slugs = new Set(draftInventory.map((r) => r.definition.slug));
     expect(slugs).toContain("milagro-silver");
@@ -122,8 +143,10 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     expect(slugs).toContain("zumbador-blanco");
     expect(slugs).toContain("zumbador-anejo");
     expect(slugs).toContain("zumbador-reposado");
-    expect(slugs).toContain("ketle-vodka");
     expect(slugs).toContain("vodka-grey-whale");
+    // ketle-vodka is no longer a plain scaffold row — Sean confirmed it as Ketel
+    // One on 2026-08-18, so it moved to the identity-confirmed set above.
+    expect(slugs).not.toContain("ketle-vodka");
   });
 
   it("applies clear draft identity cleanup without changing prior import slugs", () => {
@@ -146,18 +169,22 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
     );
   });
 
-  it("removes clear Toast catch-all subcategories while leaving unresolved holds draft-only", () => {
-    const draftInventory = ROWS.filter(
-      (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
-    );
-    const catchAll = draftInventory.filter((r) => r.definition.subcategory?.startsWith("toast-"));
+  it("empties the Toast catch-all now that both holds are resolved", () => {
+    // The catch-all existed to park rows whose SKU nobody could name. Sean named
+    // both on 2026-08-18 (Cuervo Especial Gold; Apostoles is the Argentine gin),
+    // so nothing should be sitting in it — and no future row should quietly
+    // re-enter it without a decision.
+    const catchAll = ROWS.filter((r) => r.definition.subcategory?.startsWith("toast-"));
+    expect(catchAll.map((r) => r.definition.displayName).sort()).toEqual([]);
 
-    expect(catchAll.map((r) => r.definition.displayName).sort()).toEqual([
-      "Apostoles Rosa",
-      "Jose Cuervo Tequila",
-    ]);
-    expect(catchAll.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
-    expect(catchAll.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
+    const resolved = ROWS.filter((r) =>
+      ["jose-cuervo-tequila", "apostoles-rosa"].includes(String(r.definition.slug)),
+    );
+    expect(resolved).toHaveLength(2);
+    // Resolving an identity is not a step toward publication.
+    expect(resolved.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
+    expect(resolved.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
+    expect(resolved.every((r) => r.definition.verificationStatus === "UNSOURCED")).toBe(true);
   });
 
   it("never imports the bourbon silhouette (silo stays null until the mapper exists)", () => {

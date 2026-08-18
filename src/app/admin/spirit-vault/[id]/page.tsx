@@ -2,8 +2,8 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { OPERATOR_ROLES } from "@/lib/access/roles";
 import { SpiritEditForm } from "@/components/spirit-vault/SpiritEditForm";
+import { vaultOperatorRoleWhere } from "@/lib/spirit-vault/admin-access";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +24,7 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...OPERATOR_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    where: vaultOperatorRoleWhere(userId),
     select: { restaurantId: true },
   });
   if (!role) redirect("/admin/spirit-vault");

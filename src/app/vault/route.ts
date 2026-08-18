@@ -21,22 +21,28 @@ export async function GET() {
     return new Response("Spirit Vault restaurant is not configured.", { status: 503 });
   }
 
-  const listings = await prisma.venueSpirit.findMany({
-    where: {
-      restaurantId: VAULT_RESTAURANT_ID,
-      recordStatus: "PUBLISHED",
-      publicationStatus: "PUBLISHED",
-    },
-    include: {
-      definition: true,
-      offers: {
-        where: { isPrimary: true },
-        orderBy: { updatedAt: "desc" },
-        take: 1,
+  let listings;
+  try {
+    listings = await prisma.venueSpirit.findMany({
+      where: {
+        restaurantId: VAULT_RESTAURANT_ID,
+        recordStatus: "PUBLISHED",
+        publicationStatus: "PUBLISHED",
       },
-    },
-    orderBy: { slug: "asc" },
-  });
+      include: {
+        definition: true,
+        offers: {
+          where: { isPrimary: true },
+          orderBy: { updatedAt: "desc" },
+          take: 1,
+        },
+      },
+      orderBy: { slug: "asc" },
+    });
+  } catch (error) {
+    console.error("Spirit Vault database read failed", error);
+    return new Response("Spirit Vault is temporarily unavailable.", { status: 503 });
+  }
 
   const payload = buildVaultPayloadScript(listings);
   const engine = readFileSync(ENGINE_PATH, "utf8");

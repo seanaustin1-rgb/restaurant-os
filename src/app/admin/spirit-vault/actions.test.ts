@@ -42,6 +42,7 @@ const baseInput: SpiritEditInput = {
 };
 
 beforeEach(() => {
+  vi.unstubAllEnvs();
   vi.clearAllMocks();
   h.authMock.mockResolvedValue({ userId: "user_1" });
   h.roleFindFirst.mockResolvedValue({ restaurantId: "rest_1" });
@@ -70,6 +71,21 @@ describe("updateSpirit — sensory edits are venue-local overrides", () => {
       flavor: { Sweet: 8, Oak: 2, Spice: 1, Fruit: 9, Smoke: 0, Earth: 1, Herbal: 2 },
       topNotes: ["Note A", "Note B", "Note C"],
       pairings: ["Dark chocolate"],
+    });
+  });
+
+  it("requires operator access on the configured Spirit Vault restaurant", async () => {
+    vi.stubEnv("SPIRIT_VAULT_RESTAURANT_ID", "rest_vault");
+
+    await updateSpirit(baseInput);
+
+    expect(h.roleFindFirst).toHaveBeenCalledWith({
+      where: {
+        clerkUserId: "user_1",
+        role: { in: ["OWNER"] },
+        restaurant: { businessType: "RESTAURANT", id: "rest_vault" },
+      },
+      select: { restaurantId: true },
     });
   });
 

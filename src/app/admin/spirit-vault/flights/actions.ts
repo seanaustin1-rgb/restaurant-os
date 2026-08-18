@@ -131,10 +131,12 @@ async function resolvePricingForItems(
   return calculateFlightPricing(orderedPours);
 }
 
-/** Build the nested `items.create` payload for a flight (order = array index). */
-function flightItemCreateData(restaurantId: string, items: CreateSpiritFlightItemInput[]) {
+/** Build the nested `items.create` payload for a flight (order = array index).
+ *  restaurantId is intentionally omitted — it is part of the item's composite FK to
+ *  the parent flight, so Prisma sets it from the parent on nested create (passing it
+ *  explicitly is rejected as an unknown argument). */
+function flightItemCreateData(items: CreateSpiritFlightItemInput[]) {
   return items.map((item, index) => ({
-    restaurantId,
     venueSpiritId: item.venueSpiritId,
     spiritPourId: item.spiritPourId,
     pourSizeOz: new Prisma.Decimal(1),
@@ -165,7 +167,7 @@ export async function createSpiritFlight(input: CreateSpiritFlightInput): Promis
         suggestedPriceUsd: new Prisma.Decimal(pricing.totalPriceUsd),
         pricingFormulaVersion: pricing.formulaVersion,
         pricingSnapshot: pricing as unknown as Prisma.InputJsonValue,
-        items: { create: flightItemCreateData(restaurantId, items) },
+        items: { create: flightItemCreateData(items) },
       },
       select: { id: true },
     });
@@ -210,7 +212,7 @@ export async function updateSpiritFlight(input: UpdateSpiritFlightInput): Promis
         suggestedPriceUsd: new Prisma.Decimal(pricing.totalPriceUsd),
         pricingFormulaVersion: pricing.formulaVersion,
         pricingSnapshot: pricing as unknown as Prisma.InputJsonValue,
-        items: { create: flightItemCreateData(restaurantId, items) },
+        items: { create: flightItemCreateData(items) },
       },
     });
 

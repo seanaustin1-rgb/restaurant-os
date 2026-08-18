@@ -28,6 +28,12 @@ data-spine lane — do not build blind).
 - Placemat header was restructured to a fixed-height band (through-line under the
   flight name) so the QR can't steal column height; overflow re-verified 0 at print
   width with worst-case content.
+- **Codex review fixes (applied):** the placemat route now enforces a staff-role
+  check in-handler (it prints today's code → must not be publicly fetchable);
+  `sv_day` cookie scoped to `/vault`; QR base guard rejects all loopback hosts
+  (incl. `[::1]`, `*.localhost`, unparseable); middleware public matcher narrowed
+  from `/vault(.*)` to `/vault` + `/vault/flights(.*)` so future `/vault/account`
+  style guest-account routes stay Clerk-protected by default.
 
 ## Current State
 

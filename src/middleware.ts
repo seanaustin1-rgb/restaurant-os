@@ -12,9 +12,13 @@ const isPublicRoute = createRouteMatcher([
   "/demo(.*)",
   // Public "Live Heartbeat" marketing landing (no login).
   "/heartbeat(.*)",
-  // Public guest Spirit Vault, served dynamically from the DB. The day-code gate is
-  // enforced inside the vault routes (physical-presence), not by Clerk auth.
-  "/vault(.*)",
+  // Public guest Spirit Vault surfaces only. The day-code gate is enforced inside
+  // these routes (physical-presence), not by Clerk. Kept deliberately NARROW — do
+  // NOT broaden to /vault(.*): future authenticated guest-account/member routes
+  // (e.g. /vault/account) must stay Clerk-protected by default. The staff placemat
+  // (/vault/flights/[id]/placemat) additionally enforces its own staff-role check.
+  "/vault",
+  "/vault/flights(.*)",
   // Day-code entry point that unlocks the vault for the day.
   "/v/(.*)",
   // Inngest authenticates via its signing key, not Clerk.

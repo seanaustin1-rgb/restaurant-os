@@ -80,7 +80,14 @@ export function isValidDayCode(provided: string | null | undefined, now: Date = 
   return timingSafeEqual(a, b);
 }
 
-/** Seconds until the next venue-local midnight — used for the access cookie's lifetime. */
+/**
+ * Seconds until the next venue-local midnight — the access cookie's lifetime.
+ * Note: on the two DST-transition days this can be off by ~1h (the local day isn't
+ * 86400s). That's cosmetic, not a security hole: resolveVaultAccess re-derives and
+ * compares today's code on every request, so a cookie that outlives midnight is
+ * still rejected once the date rolls. Precise handling would need a TZ-aware date
+ * library; not worth the dependency for a cookie lifetime.
+ */
 export function secondsUntilVenueMidnight(now: Date = new Date(), tz: string = venueTimeZone()): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
@@ -107,7 +114,18 @@ const CANONICAL_BASE_URL = "https://www.outfrontdata.com";
  */
 export function appBaseUrl(): string {
   const raw = (process.env.NEXT_PUBLIC_APP_URL?.trim() || CANONICAL_BASE_URL).replace(/\/+$/, "");
-  if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/i.test(raw)) return CANONICAL_BASE_URL;
+  try {
+    const host = new URL(raw).hostname.toLowerCase().replace(/^\[|\]$/g, ""); // strip IPv6 brackets
+    const isLoopback =
+      host === "localhost" ||
+      host.endsWith(".localhost") ||
+      host === "0.0.0.0" ||
+      host === "::1" ||
+      /^127\./.test(host);
+    if (isLoopback) return CANONICAL_BASE_URL;
+  } catch {
+    return CANONICAL_BASE_URL; // unparseable → never print a broken QR base
+  }
   return raw;
 }
 

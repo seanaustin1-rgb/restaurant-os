@@ -136,8 +136,15 @@ describe("qrTargetUrl", () => {
     expect(qrTargetUrl("/vault")).toBe("https://staging.example.com/vault");
   });
 
-  it("never emits a localhost base for a QR (falls back to canonical)", () => {
-    for (const v of ["http://localhost:3000", "http://127.0.0.1:3000/", "http://0.0.0.0"]) {
+  it("never emits a loopback base for a QR (falls back to canonical)", () => {
+    for (const v of [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000/",
+      "http://0.0.0.0",
+      "http://[::1]:3000",
+      "http://app.localhost:3000",
+      "not-a-url",
+    ]) {
       process.env.NEXT_PUBLIC_APP_URL = v;
       expect(appBaseUrl()).toBe("https://www.outfrontdata.com");
     }

@@ -28,7 +28,9 @@ export function GET(req: NextRequest, { params }: { params: { code: string } }) 
     httpOnly: true,
     sameSite: "lax",
     secure: true,
-    path: "/",
+    // Scope to the vault subtree only — this is a same-day bearer credential and has
+    // no business being sent to app/admin/API routes.
+    path: "/vault",
     maxAge: secondsUntilVenueMidnight(),
   });
   return res;

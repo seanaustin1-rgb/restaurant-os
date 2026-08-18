@@ -1,16 +1,19 @@
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightPourView, type FlightView } from "@/lib/spirit-vault/flight-view";
 import { dayGateEnabled, qrTargetUrl, todayCode } from "@/lib/spirit-vault/day-code";
 import { qrSvg } from "@/lib/spirit-vault/qr";
 
-// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. Public,
-// single-tenant via SPIRIT_VAULT_RESTAURANT_ID, PUBLISHED flights only. Its own
-// HTML document (no app chrome). Rich per pour from the vault dossier; flavor as a
-// bar chart. The @page margins are asymmetric to compensate for the venue printer's
-// offset (measured: shifts content ~3/16in left, ~1/8in down at Actual Size) so it
-// prints centered with the bottom Production line clear of the clip zone.
+// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. STAFF ONLY:
+// this print artifact renders today's vault code + a QR containing it, so it must
+// never be publicly fetchable (that would leak the day's access code and defeat the
+// physical-presence gate). Guests use the digital flight page, not this route. Rich
+// per pour from the vault dossier; flavor as a bar chart. The @page margins are
+// asymmetric to compensate for the venue printer's offset (measured: shifts content
+// ~3/16in left, ~1/8in down at Actual Size) so it prints centered with the bottom
+// Production line clear of the clip zone.
 // TODO(multi-venue): move the printer-offset margins to a per-venue setting.
-
-const TENANT = process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
 const AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
 
 function esc(s: string | null | undefined): string {
@@ -156,10 +159,19 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  if (!TENANT) return new Response("Spirit Vault is not configured", { status: 503 });
-  // Any status — the placemat is a staff print artifact (previewed before publish),
-  // reached by an unguessable flight id. The guest digital page stays published-only.
-  const view = await loadFlightView(TENANT, params.id);
+  // Staff-only: the placemat prints today's access code, so gate it like the prep
+  // sheet. Do NOT rely on middleware — /vault is Clerk-public — enforce here.
+  const { userId } = await auth();
+  if (!userId) return new Response("Unauthorized", { status: 401 });
+  const role = await prisma.userRestaurantRole.findFirst({
+    where: { clerkUserId: userId, role: { in: [...SPIRIT_VAULT_STAFF_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    select: { restaurantId: true },
+  });
+  if (!role) return new Response("Forbidden", { status: 403 });
+
+  // Any status — the placemat is a staff print artifact (previewed before publish).
+  // The guest digital page stays published-only.
+  const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
   const qr = {
     svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),

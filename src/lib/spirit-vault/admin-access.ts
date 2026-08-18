@@ -1,7 +1,14 @@
 import type { Prisma } from "@prisma/client";
 import { OPERATOR_ROLES } from "@/lib/access/roles";
 
-export function configuredSpiritVaultRestaurantId(env: NodeJS.ProcessEnv = process.env): string | null {
+type SpiritVaultEnv = {
+  [key: string]: string | undefined;
+  SPIRIT_VAULT_RESTAURANT_ID?: string;
+};
+
+export function configuredSpiritVaultRestaurantId(
+  env: SpiritVaultEnv = process.env,
+): string | null {
   const value = env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
   return value ? value : null;
 }

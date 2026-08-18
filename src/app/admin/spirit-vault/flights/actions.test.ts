@@ -97,7 +97,6 @@ describe("createSpiritFlight", () => {
     expect(data.pricingFormulaVersion).toBe("component_1oz_sum_v1");
     expect(data.items.create).toEqual([
       {
-        restaurantId: "rest_1",
         venueSpiritId: "venue_1",
         spiritPourId: "pour_1",
         pourSizeOz: expect.anything(),
@@ -106,7 +105,6 @@ describe("createSpiritFlight", () => {
         pairingBites: [],
       },
       {
-        restaurantId: "rest_1",
         venueSpiritId: "venue_2",
         spiritPourId: "pour_2",
         pourSizeOz: expect.anything(),

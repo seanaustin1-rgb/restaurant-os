@@ -20,9 +20,16 @@ afterEach(() => {
 describe("membership-code", () => {
   it("generates a grouped RSRV code and a matching hash", () => {
     const g = generateMembershipCode();
-    expect(g.plaintext).toMatch(/^RSRV-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{4}-[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{4}$/);
+    const grp = "[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{4}";
+    expect(g.plaintext).toMatch(new RegExp(`^RSRV-${grp}-${grp}-${grp}$`));
     expect(g.codeHash).toBe(hashMembershipCode(g.plaintext));
     expect(g.codeHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("requires the pepper — refuses to hash or generate without it (fail-closed)", () => {
+    delete process.env.SPIRIT_VAULT_MEMBERSHIP_PEPPER;
+    expect(() => hashMembershipCode("RSRV-7K2Q-9M4X-3PQ2")).toThrow(/PEPPER/i);
+    expect(() => generateMembershipCode()).toThrow(/PEPPER/i);
   });
 
   it("hint reveals no usable code material", () => {

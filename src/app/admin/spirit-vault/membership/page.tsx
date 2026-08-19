@@ -25,7 +25,7 @@ export default async function MembershipCodesPage() {
     );
   }
 
-  const [codesRaw, redemptionsRaw] = await Promise.all([
+  const [codesRaw, redemptionsRaw, memberCount, optedCount] = await Promise.all([
     prisma.membershipCode.findMany({
       where: { restaurantId: role.restaurantId },
       orderBy: { createdAt: "desc" },
@@ -47,6 +47,8 @@ export default async function MembershipCodesPage() {
       take: 25,
       select: { id: true, redeemedAt: true, guest: { select: { email: true } }, code: { select: { hint: true } } },
     }),
+    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId } }),
+    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId, guest: { marketingOptIn: true } } }),
   ]);
 
   const codes: CodeRow[] = codesRaw.map((c) => ({
@@ -79,6 +81,21 @@ export default async function MembershipCodesPage() {
           shown once when you generate it, then stored hashed; you can revoke it but never re-display it.
         </p>
       </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-line bg-surface px-4 py-3 text-sm">
+        <span className="text-ink-text">
+          {memberCount} member{memberCount === 1 ? "" : "s"}
+        </span>
+        <span className="text-muted">· {optedCount} opted in for marketing</span>
+        <span className="ml-auto flex gap-4">
+          <a href="/admin/spirit-vault/membership/export?opted=1" className="text-copper-soft hover:text-copper">
+            Export opted-in (CSV)
+          </a>
+          <a href="/admin/spirit-vault/membership/export" className="text-muted hover:text-ink-text">
+            Export all
+          </a>
+        </span>
+      </div>
+
       <MembershipCodesManager codes={codes} redemptions={redemptions} />
     </main>
   );

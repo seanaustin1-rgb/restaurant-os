@@ -21,6 +21,7 @@ function fmt(iso: string): string {
 
 export function RedeemMembershipForm() {
   const [code, setCode] = useState("");
+  const [optIn, setOptIn] = useState(true);
   const [pending, startTransition] = useTransition();
   const [done, setDone] = useState<{ until: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ export function RedeemMembershipForm() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const res: RedeemActionResult = await redeemMembershipCodeAction(clean);
+      const res: RedeemActionResult = await redeemMembershipCodeAction(clean, optIn);
       if (res.ok) setDone({ until: res.currentPeriodEnd });
       else setError(MESSAGES[res.reason] ?? "Something went wrong. Try again.");
     });
@@ -71,6 +72,10 @@ export function RedeemMembershipForm() {
         placeholder="RSRV-XXXX-XXXX"
         className="mt-2 w-full rounded-md border border-line bg-transparent px-4 py-3 text-center font-mono text-lg tracking-[0.16em] text-ink-text outline-none focus:border-copper"
       />
+      <label className="mt-4 flex items-start gap-2 text-left text-xs text-ink-text-soft">
+        <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} className="mt-0.5" />
+        <span>Keep me posted on new pours, flights &amp; member events.</span>
+      </label>
       <button
         type="submit"
         disabled={pending || clean.length < 4}

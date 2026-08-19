@@ -96,6 +96,19 @@ describe("listingToCandidatePours", () => {
     expect(c.name).toBe("BT Single Barrel Select");
   });
 
+  it("falls back to style then category when displayName and brand/expression are empty", () => {
+    const listing = makeListing();
+    listing.definition.displayName = null;
+    listing.definition.brand = "";
+    listing.definition.expression = null;
+    const [c] = listingToCandidatePours(listing);
+    expect(c.name).toBe("Kentucky Straight");
+
+    listing.definition.style = null;
+    const [c2] = listingToCandidatePours(listing);
+    expect(c2.name).toBe("Bourbon");
+  });
+
   it("sets hasVenueVoice when whyWeCarry is present", () => {
     const listing = makeListing({ whyWeCarry: "This is a cornerstone." });
     const [c] = listingToCandidatePours(listing);

@@ -103,7 +103,7 @@ function present(v: string | null | undefined): boolean {
 }
 
 function displayName(d: CandidateListingRow["definition"]): string {
-  return d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" ");
+  return (d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" ")) || d.style || d.category;
 }
 
 /** Flatten the `production` Json (productionRows: [{ k, v }]) to its string values.

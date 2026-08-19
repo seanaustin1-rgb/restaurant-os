@@ -6,6 +6,7 @@ import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { calculateFlightPricing, type FlightPricingResult } from "@/lib/spirit-vault/flight-pricing";
+import { isFlightPourUnavailable } from "@/lib/spirit-vault/flight-template-candidates";
 
 const FLIGHTS_PATH = "/admin/spirit-vault/flights";
 const STATUS_RANK: Record<SpiritLifecycleStatus, number> = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 };
@@ -110,9 +111,11 @@ async function resolvePricingForItems(
       restaurantId,
       id: { in: items.map((item) => item.spiritPourId) },
       venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
+      priceUsd: { not: null },
+      pourSizeOz: { not: null },
       venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
     },
-    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true },
+    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true, availability: true },
   });
 
   const pourById = new Map(selectedPours.map((pour) => [pour.id, pour]));
@@ -124,6 +127,9 @@ async function resolvePricingForItems(
     const pour = pourById.get(item.spiritPourId);
     if (!pour || pour.venueSpiritId !== item.venueSpiritId) {
       throw new Error("Flight item pour does not belong to the selected spirit");
+    }
+    if (isFlightPourUnavailable(pour.availability)) {
+      throw new Error("Flight item pour is not currently available");
     }
     return pour;
   });

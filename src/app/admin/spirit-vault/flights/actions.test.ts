@@ -51,8 +51,8 @@ beforeEach(() => {
   h.authMock.mockResolvedValue({ userId: "user_1" });
   h.roleFindFirst.mockResolvedValue({ restaurantId: "rest_1" });
   h.pourFindMany.mockResolvedValue([
-    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 },
-    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5 },
+    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "In stock" },
+    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
   ]);
   h.flightCreate.mockResolvedValue({ id: "flight_1" });
   h.flightFindFirst.mockResolvedValue({ id: "flight_1" });
@@ -80,6 +80,8 @@ describe("createSpiritFlight", () => {
         restaurantId: "rest_1",
         id: { in: ["pour_1", "pour_2"] },
         venueSpiritId: { in: ["venue_1", "venue_2"] },
+        priceUsd: { not: null },
+        pourSizeOz: { not: null },
         venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
       },
       select: {
@@ -87,6 +89,7 @@ describe("createSpiritFlight", () => {
         venueSpiritId: true,
         priceUsd: true,
         pourSizeOz: true,
+        availability: true,
       },
     });
 
@@ -143,9 +146,19 @@ describe("createSpiritFlight", () => {
   });
 
   it("rejects missing or unpublished source pours", async () => {
-    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 }]);
+    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: null }]);
 
     await expect(createSpiritFlight(baseInput)).rejects.toThrow(/published vault spirit/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects source pours that are no longer available", async () => {
+    h.pourFindMany.mockResolvedValue([
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "In stock" },
+      { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: "Sold out" },
+    ]);
+
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/not currently available/i);
     expect(h.flightCreate).not.toHaveBeenCalled();
   });
 });

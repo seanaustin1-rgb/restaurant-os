@@ -44,6 +44,24 @@ export function TemplatedFlightBuilder({
     [pours],
   );
 
+  const template = choice !== null && choice !== "blank" ? choice : null;
+
+  // Compute per-slot candidate grouping when a template is active.
+  const grouped = useMemo(
+    () => (template ? groupCandidatesByTemplateSlot(template, pours) : null),
+    [template, pours],
+  );
+
+  // Build a map of slot key → item note for the template preset.
+  const slotNoteMap = useMemo(() => {
+    if (!template) return null;
+    const map = new Map<string, string>();
+    for (const slot of template.slots) {
+      if (slot.itemNote) map.set(slot.key, slot.itemNote);
+    }
+    return map;
+  }, [template]);
+
   if (choice === null) {
     const launch = templates.filter((t) => t.launch);
     const more = templates.filter((t) => !t.launch);
@@ -74,24 +92,6 @@ export function TemplatedFlightBuilder({
       </div>
     );
   }
-
-  const template = choice === "blank" ? null : choice;
-
-  // Compute per-slot candidate grouping when a template is active.
-  const grouped = useMemo(
-    () => (template ? groupCandidatesByTemplateSlot(template, pours) : null),
-    [template, pours],
-  );
-
-  // Build a map of slot key → item note for the template preset.
-  const slotNoteMap = useMemo(() => {
-    if (!template) return null;
-    const map = new Map<string, string>();
-    for (const slot of template.slots) {
-      if (slot.itemNote) map.set(slot.key, slot.itemNote);
-    }
-    return map;
-  }, [template]);
 
   return (
     <div className="space-y-5">

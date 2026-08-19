@@ -1603,6 +1603,7 @@ model MembershipCode {
   redemptions MembershipRedemption[]
 
   @@unique([restaurantId, codeHash])
+  @@unique([id, restaurantId]) // composite target so a redemption's tenant must match the code's
   @@index([restaurantId, status])
 }
 
@@ -1615,7 +1616,9 @@ model MembershipRedemption {
   membershipId     String?
   redeemedAt       DateTime @default(now())
 
-  code  MembershipCode @relation(fields: [membershipCodeId], references: [id], onDelete: Cascade)
+  // Composite tenant-agreement FK: a redemption can only reference a code in the SAME
+  // restaurant, DB-enforced (matches the SpiritPour / SpiritFlightItem pattern).
+  code  MembershipCode @relation(fields: [membershipCodeId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
   guest GuestProfile   @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   @@unique([membershipCodeId, guestId])

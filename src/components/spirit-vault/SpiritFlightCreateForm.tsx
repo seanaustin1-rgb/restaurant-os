@@ -10,6 +10,7 @@ import {
   deleteSpiritFlight,
   type CreateSpiritFlightResult,
 } from "@/app/admin/spirit-vault/flights/actions";
+import type { FlightTemplateSlotCandidates } from "@/lib/spirit-vault/flight-template-candidates";
 
 export interface FlightPourOption {
   venueSpiritId: string;
@@ -59,10 +60,16 @@ export function SpiritFlightCreateForm({
   pours,
   flightId,
   initial,
+  slotGroups,
+  slotNoteMap,
 }: {
   pours: FlightPourOption[];
   flightId?: string;
   initial?: FlightFormInitial;
+  /** When a template is active, pours grouped by slot (rule-filtered, Toast-ranked). */
+  slotGroups?: FlightTemplateSlotCandidates[];
+  /** Map from slot key → preset item note to pre-fill when adding from a slot. */
+  slotNoteMap?: Map<string, string> | null;
 }) {
   const router = useRouter();
   const isEdit = Boolean(flightId);
@@ -79,13 +86,25 @@ export function SpiritFlightCreateForm({
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.spiritPourId)), [selected]);
   const total = selected.reduce((sum, item) => sum + (pourById.get(item.spiritPourId)?.oneOzPriceUsd ?? 0), 0);
 
+  /** Find which slot (if any) this pour belongs to, so we can preset the note. */
+  function slotNoteForPour(pour: FlightPourOption): string {
+    if (!slotGroups || !slotNoteMap) return "";
+    for (const group of slotGroups) {
+      if (group.candidates.some((c) => c.spiritPourId === pour.spiritPourId)) {
+        return slotNoteMap.get(group.slot.key) ?? "";
+      }
+    }
+    return "";
+  }
+
   function add(pour: FlightPourOption) {
     if (selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId)) return;
     if (selected.length >= 4) return;
     setSaved(null);
+    const itemNote = slotNoteForPour(pour);
     setSelected((items) => [
       ...items,
-      { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote: "", bites: (pour.suggestedBites ?? []).join(", ") },
+      { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote, bites: (pour.suggestedBites ?? []).join(", ") },
     ]);
   }
 
@@ -222,46 +241,27 @@ export function SpiritFlightCreateForm({
             <h2 className="text-sm font-medium text-ink-text">Vault pours</h2>
             <p className="mt-1 text-xs text-muted">Each selected spirit contributes a 1 oz flight pour.</p>
           </div>
-          <div className="overflow-hidden rounded-lg border border-line">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
-                  <th className="px-3 py-2 font-medium">Spirit</th>
-                  <th className="px-3 py-2 font-medium">Source pour</th>
-                  <th className="px-3 py-2 font-medium">1 oz</th>
-                  <th className="px-3 py-2 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {pours.map((pour) => {
-                  const disabled = selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId) || selected.length >= 4;
-                  return (
-                    <tr key={pour.spiritPourId} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
-                      <td className="px-3 py-2">
-                        <div className="text-ink-text">{pour.name}</div>
-                        <div className="text-xs text-muted">{pour.category}</div>
-                      </td>
-                      <td className="px-3 py-2 text-muted">
-                        {pour.pourLabel} - {money(pour.priceUsd)}
-                      </td>
-                      <td className="tnum px-3 py-2 text-muted">{money(pour.oneOzPriceUsd)}</td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => add(pour)}
-                          disabled={disabled}
-                          title="Add to flight"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted hover:border-copper-soft hover:text-copper-soft disabled:opacity-40"
-                        >
-                          <Plus size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+
+          {slotGroups && slotGroups.length > 0 ? (
+            <div className="space-y-4">
+              {slotGroups.map((group) => (
+                <div key={group.slot.key}>
+                  <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-copper-soft">
+                    {group.slot.label}
+                  </p>
+                  {group.candidates.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-line p-3 text-center text-xs text-amber-400/60">
+                      No eligible pours for this slot
+                    </p>
+                  ) : (
+                    <PourTable pours={group.candidates} selectedIds={selectedIds} selected={selected} add={add} />
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <PourTable pours={pours} selectedIds={selectedIds} selected={selected} add={add} />
+          )}
         </section>
 
         <aside className="space-y-3">
@@ -343,6 +343,66 @@ export function SpiritFlightCreateForm({
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** Reusable pour table — used both for the flat list (scratch mode) and
+ *  inside each slot group (template mode). */
+function PourTable({
+  pours: tablePours,
+  selectedIds,
+  selected,
+  add,
+}: {
+  pours: readonly FlightPourOption[];
+  selectedIds: ReadonlySet<string>;
+  selected: readonly { venueSpiritId: string }[];
+  add: (pour: FlightPourOption) => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-line">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
+            <th className="px-3 py-2 font-medium">Spirit</th>
+            <th className="px-3 py-2 font-medium">Source pour</th>
+            <th className="px-3 py-2 font-medium">1 oz</th>
+            <th className="px-3 py-2 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {tablePours.map((pour) => {
+            const disabled =
+              selectedIds.has(pour.spiritPourId) ||
+              selected.some((item) => item.venueSpiritId === pour.venueSpiritId) ||
+              selected.length >= 4;
+            return (
+              <tr key={pour.spiritPourId} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
+                <td className="px-3 py-2">
+                  <div className="text-ink-text">{pour.name}</div>
+                  <div className="text-xs text-muted">{pour.category}</div>
+                </td>
+                <td className="px-3 py-2 text-muted">
+                  {pour.pourLabel} - {money(pour.priceUsd)}
+                </td>
+                <td className="tnum px-3 py-2 text-muted">{money(pour.oneOzPriceUsd)}</td>
+                <td className="px-3 py-2 text-right">
+                  <button
+                    type="button"
+                    onClick={() => add(pour)}
+                    disabled={disabled}
+                    title="Add to flight"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted hover:border-copper-soft hover:text-copper-soft disabled:opacity-40"
+                  >
+                    <Plus size={15} />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

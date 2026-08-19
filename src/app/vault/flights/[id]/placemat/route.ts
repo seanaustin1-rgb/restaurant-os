@@ -46,6 +46,7 @@ function glass(p: FlightPourView): string {
   const tex = `${barRow("Body", p.body, true)}${barRow("Finish", p.finish, true)}`;
   const notes = p.topNotes.length ? `<div class="notes"><div class="k-lab">Top notes</div><div class="v">${p.topNotes.map(esc).join(" · ")}</div></div>` : "";
   const taste = p.taste ? `<div class="taste">${esc(p.taste)}</div>` : "";
+  const notice = p.itemNote ? `<div class="notice"><div class="k-lab">What to notice</div><div class="v">${esc(p.itemNote)}</div></div>` : "";
   const prod =
     p.mash || p.cask
       ? `<div class="prod"><div class="prod-head">Production</div>${prodRow("Mash", p.mash)}${prodRow("Cask", p.cask)}</div>`
@@ -58,6 +59,7 @@ function glass(p: FlightPourView): string {
     <div class="chart"><div class="clab"><span>Flavor</span><span>0–10</span></div>${flavorBars}<div class="tex-wrap">${tex}</div></div>
     ${notes}
     ${taste}
+    ${notice}
     ${prod}
   </div>`;
 }
@@ -127,6 +129,8 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .k-lab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
   .notes .v{font-size:11.5px;color:var(--ink);margin-top:2px;line-height:1.26}
   .taste{margin-top:.06in;font-size:10.5px;color:var(--ink-soft);line-height:1.3;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .notice{margin-top:.06in}
+  .notice .v{font-family:var(--display);font-style:italic;font-size:10.5px;line-height:1.3;color:var(--ink);margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .prod{margin-top:auto;padding-top:.09in}
   .prod-head{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:5px;margin-bottom:4px}
   .prow{margin-bottom:4px}

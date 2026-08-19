@@ -3,24 +3,11 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
-import { type FlightPourOption } from "@/components/spirit-vault/SpiritFlightCreateForm";
 import { TemplatedFlightBuilder } from "@/components/spirit-vault/TemplatedFlightBuilder";
 import { FLIGHT_TEMPLATES } from "@/lib/spirit-vault/flight-templates";
-import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
+import { loadFlightCandidatePours } from "@/lib/spirit-vault/flight-template-candidates";
 
 export const dynamic = "force-dynamic";
-
-function spiritName(item: {
-  definition: { displayName: string | null; brand: string; expression: string | null };
-}): string {
-  return item.definition.displayName ?? [item.definition.brand, item.definition.expression].filter(Boolean).join(" ");
-}
-
-function decimalToNumber(v: { toString(): string } | number | string | null): number | null {
-  if (v == null) return null;
-  const n = typeof v === "number" ? v : Number(v.toString());
-  return Number.isFinite(n) ? n : null;
-}
 
 export default async function NewSpiritFlightPage() {
   const { userId } = await auth();
@@ -32,69 +19,7 @@ export default async function NewSpiritFlightPage() {
   });
   if (!role) redirect("/admin/spirit-vault/flights");
 
-  const listings = await prisma.venueSpirit.findMany({
-    where: {
-      restaurantId: role.restaurantId,
-      recordStatus: "PUBLISHED",
-      publicationStatus: "PUBLISHED",
-      offers: {
-        some: {
-          priceUsd: { not: null },
-          pourSizeOz: { not: null },
-        },
-      },
-    },
-    orderBy: [{ definition: { category: "asc" } }, { slug: "asc" }],
-    select: {
-      id: true,
-      overrides: true,
-      definition: {
-        select: {
-          brand: true,
-          expression: true,
-          displayName: true,
-          category: true,
-          flavor: true,
-        },
-      },
-      offers: {
-        where: {
-          priceUsd: { not: null },
-          pourSizeOz: { not: null },
-        },
-        orderBy: [{ isPrimary: "desc" }, { pourSizeOz: "asc" }],
-        select: {
-          id: true,
-          pourLabel: true,
-          pourSizeOz: true,
-          priceUsd: true,
-        },
-      },
-    },
-  });
-
-  const pours: FlightPourOption[] = listings.flatMap((listing) => {
-    const ov = listing.overrides && typeof listing.overrides === "object" ? (listing.overrides as { flavor?: unknown }) : null;
-    const suggestedBites = suggestBites(ov?.flavor ?? listing.definition.flavor);
-    return listing.offers.flatMap((offer) => {
-      const priceUsd = decimalToNumber(offer.priceUsd);
-      const pourSizeOz = decimalToNumber(offer.pourSizeOz);
-      if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
-      return [
-        {
-          venueSpiritId: listing.id,
-          spiritPourId: offer.id,
-          name: spiritName(listing),
-          category: listing.definition.category,
-          pourLabel: offer.pourLabel ?? `${pourSizeOz} oz`,
-          pourSizeOz,
-          priceUsd,
-          oneOzPriceUsd: Math.round((priceUsd / pourSizeOz) * 100) / 100,
-          suggestedBites,
-        },
-      ];
-    });
-  });
+  const pours = await loadFlightCandidatePours(role.restaurantId);
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-6 py-10">

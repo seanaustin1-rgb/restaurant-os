@@ -1245,7 +1245,8 @@ function tickSession(){
 setInterval(tickSession,1000);
 
 /* INIT */
-renderDetail(0);
+renderDetail(0); // pre-render the first dossier so navigation is instant
+showVault();      // ...but open on the browse landing, not a single bottle
 </script>
 </body>
 </html>

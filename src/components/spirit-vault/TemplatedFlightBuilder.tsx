@@ -117,7 +117,7 @@ export function TemplatedFlightBuilder({
         slotNoteMap={slotNoteMap}
         initial={
           template
-            ? { name: "", description: template.throughLine, status: "DRAFT", items: [] }
+            ? { name: template.name, description: template.throughLine, status: "DRAFT", items: [] }
             : undefined
         }
       />

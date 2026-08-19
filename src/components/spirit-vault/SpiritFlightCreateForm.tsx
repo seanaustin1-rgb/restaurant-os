@@ -81,7 +81,7 @@ export function SpiritFlightCreateForm({
 
   function add(pour: FlightPourOption) {
     if (selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId)) return;
-    if (selected.length >= 6) return;
+    if (selected.length >= 4) return;
     setSaved(null);
     setSelected((items) => [
       ...items,
@@ -127,8 +127,8 @@ export function SpiritFlightCreateForm({
       setError("Flight name must be 120 characters or fewer.");
       return;
     }
-    if (selected.length < 2 || selected.length > 6) {
-      setError("A flight needs 2–6 spirits.");
+    if (selected.length < 2 || selected.length > 4) {
+      setError("A flight needs 2–4 spirits.");
       return;
     }
     const payloadItems = selected.map((item) => ({
@@ -234,7 +234,7 @@ export function SpiritFlightCreateForm({
               </thead>
               <tbody>
                 {pours.map((pour) => {
-                  const disabled = selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId) || selected.length >= 6;
+                  const disabled = selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId) || selected.length >= 4;
                   return (
                     <tr key={pour.spiritPourId} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
                       <td className="px-3 py-2">
@@ -278,7 +278,7 @@ export function SpiritFlightCreateForm({
             </div>
 
             <div className="mt-4 space-y-3">
-              {selected.length === 0 && <p className="text-sm text-muted">Add 2-6 spirits from the vault.</p>}
+              {selected.length === 0 && <p className="text-sm text-muted">Add 2-4 spirits from the vault.</p>}
               {selected.map((item, index) => {
                 const pour = pourById.get(item.spiritPourId);
                 if (!pour) return null;

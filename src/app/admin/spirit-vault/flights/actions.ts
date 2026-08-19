@@ -76,8 +76,8 @@ function normalizeFlightItems(items: CreateSpiritFlightItemInput[]): CreateSpiri
     }))
     .filter((item) => item.venueSpiritId && item.spiritPourId);
 
-  if (normalized.length < 2 || normalized.length > 6) {
-    throw new Error("Flights need 2-6 spirits");
+  if (normalized.length < 2 || normalized.length > 4) {
+    throw new Error("Flights need 2-4 spirits");
   }
 
   const seenVenueSpirits = new Set<string>();

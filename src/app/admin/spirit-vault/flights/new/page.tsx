@@ -3,7 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
-import { SpiritFlightCreateForm, type FlightPourOption } from "@/components/spirit-vault/SpiritFlightCreateForm";
+import { type FlightPourOption } from "@/components/spirit-vault/SpiritFlightCreateForm";
+import { TemplatedFlightBuilder } from "@/components/spirit-vault/TemplatedFlightBuilder";
+import { FLIGHT_TEMPLATES } from "@/lib/spirit-vault/flight-templates";
 import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
 
 export const dynamic = "force-dynamic";
@@ -102,7 +104,7 @@ export default async function NewSpiritFlightPage() {
         </Link>
         <h1 className="mt-2 font-display text-2xl text-copper-soft">New Flight</h1>
         <p className="mt-1 text-sm text-muted">
-          Select published vault spirits. The tool prices each component as a 1 oz pour from the selected source pour.
+          Start from a template or build from scratch. Up to 4 pours, priced as 1 oz components from the selected source pour.
         </p>
       </div>
 
@@ -111,7 +113,7 @@ export default async function NewSpiritFlightPage() {
           No priced published vault pours are available yet.
         </p>
       ) : (
-        <SpiritFlightCreateForm pours={pours} />
+        <TemplatedFlightBuilder pours={pours} templates={FLIGHT_TEMPLATES} />
       )}
     </main>
   );

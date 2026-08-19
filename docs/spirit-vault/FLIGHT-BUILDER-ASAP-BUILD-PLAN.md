@@ -33,6 +33,27 @@ The end-of-week MVP is complete when a staff user can:
 Do not block launch on guest ratings, owner-wide reports, distillery uploads,
 or perfect metadata normalization.
 
+## Backlog Order After Claude Review
+
+Claude's backlog confirms the MVP order with one sequencing change after launch:
+Passport/tasting journal should come before serious recommendations or owner-wide
+reporting because it creates the member behavior data those features need.
+
+Build order:
+
+1. Flight Builder MVP by Friday, 2026-08-21.
+2. Tasting journal / Passport / Curator-vs-you.
+3. What-to-try-next recommendations from in-stock pours plus member ratings.
+4. Monthly owner reports using flight usage and Passport data.
+5. Pay-to-join automation through Clerk Billing.
+6. Per-member bulk single-use code generation.
+7. Stone site to hosted Vault entry block / QR.
+8. Distillery verified content layer.
+9. White-label / custom-domain tenant routing, parked until the core product works.
+
+This keeps the immediate launch focused on staff workflow while preserving the
+larger retention and intelligence path.
+
 ## Hard Technical Constraints
 
 - Hosted `restaurant-os` Vault is the secure membership/access layer.
@@ -314,12 +335,26 @@ Add after the first two launch templates:
 
 After guest ratings/passport data exists:
 
+- Build tasting journal / Passport first: member 1-5 star ratings, notes,
+  tried/untried progress, favorites, and curator-vs-you comparisons.
+- Use Passport data before making personalized recommendations.
 - Track template usage.
 - Track bottle inclusion in flights.
 - Track guest ratings by flight/template.
 - Suggest owner monthly reports.
 - Recommend inventory gaps from anonymized aggregate trends.
 - Add distillery "From the Distiller" content as labeled, owner-approved data.
+
+### Revenue / Platform Upgrades
+
+After the manual membership-code flow and Passport are stable:
+
+- Add Clerk Billing for self-serve pay-to-join.
+- Add per-member bulk codes for owner operations.
+- Add venue-facing monthly Vault reports.
+- Add distillery verified profiles / one-sheets as a labeled, approval-gated layer.
+- Park white-label domains and embeds until core membership, Passport, flights, and
+  reporting are working across the hosted `restaurant-os` Vault.
 
 ## Lane Split
 

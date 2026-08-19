@@ -1569,6 +1569,10 @@ model GuestProfile {
   clerkUserId String   @unique
   email       String?
   displayName String?
+  // Marketing consent, captured explicitly at redemption. A verified email is stored
+  // regardless (transactional); only opted-in members are exported for marketing.
+  marketingOptIn   Boolean   @default(false)
+  marketingOptInAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

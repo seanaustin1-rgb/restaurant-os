@@ -19,7 +19,10 @@ export type RedeemActionResult =
   | { ok: true; currentPeriodEnd: string; extended: boolean }
   | { ok: false; reason: RedeemFailure | "unauthenticated" | "unconfigured" | "empty" };
 
-export async function redeemMembershipCodeAction(plaintextCode: string): Promise<RedeemActionResult> {
+export async function redeemMembershipCodeAction(
+  plaintextCode: string,
+  marketingOptIn = false,
+): Promise<RedeemActionResult> {
   if (!TENANT) return { ok: false, reason: "unconfigured" };
   if (!plaintextCode?.trim()) return { ok: false, reason: "empty" };
 
@@ -31,6 +34,14 @@ export async function redeemMembershipCodeAction(plaintextCode: string): Promise
   const email = user?.primaryEmailAddress?.emailAddress ?? user?.emailAddresses?.[0]?.emailAddress ?? null;
 
   const guestId = await upsertGuestProfile(prisma, userId, email);
+  // Record marketing consent (transactional email is always stored; only opted-in
+  // members are exported for marketing). We only ever set the flag on, never revoke here.
+  if (marketingOptIn) {
+    await prisma.guestProfile.update({
+      where: { id: guestId },
+      data: { marketingOptIn: true, marketingOptInAt: new Date() },
+    });
+  }
   const store = createPrismaMembershipStore(prisma);
   const res = await redeemMembershipCode(store, { restaurantId: TENANT, guestId, plaintextCode });
   if (!res.ok) return { ok: false, reason: res.reason };

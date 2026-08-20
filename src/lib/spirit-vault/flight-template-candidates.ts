@@ -15,7 +15,6 @@
 // actually order beats alphabetical — with deterministic tiebreaks so the same
 // vault always renders the same list.
 
-import { prisma } from "@/lib/prisma";
 import type { FlightTemplate, FlightTemplateRules, FlightTemplateSlot } from "@/lib/spirit-vault/flight-templates";
 import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
 
@@ -251,95 +250,3 @@ export function groupCandidatesByTemplateSlot(
   };
 }
 
-// ── Loading (the only Prisma-aware layer) ──
-
-export interface LoadFlightCandidatesOptions {
-  /** Toast ranking window; defaults to TOAST_RANK_WINDOW_DAYS. */
-  windowDays?: number;
-  /** Window anchor — injectable so callers (and tests) control "now". */
-  now?: Date;
-}
-
-function windowStart({ windowDays = TOAST_RANK_WINDOW_DAYS, now = new Date() }: LoadFlightCandidatesOptions): Date {
-  const since = new Date(now);
-  since.setUTCDate(since.getUTCDate() - windowDays);
-  return since;
-}
-
-/** Every flight-eligible pour for one restaurant, ranked. The where-clause is the
- *  eligibility contract: this tenant, published listing, priced and sized offer. */
-export async function loadFlightCandidatePours(
-  restaurantId: string,
-  options: LoadFlightCandidatesOptions = {},
-): Promise<FlightCandidatePour[]> {
-  const pricedOffer = { priceUsd: { not: null }, pourSizeOz: { not: null } } as const;
-
-  const listings = await prisma.venueSpirit.findMany({
-    where: {
-      restaurantId,
-      recordStatus: "PUBLISHED",
-      publicationStatus: "PUBLISHED",
-      offers: { some: pricedOffer },
-    },
-    orderBy: [{ definition: { category: "asc" } }, { slug: "asc" }],
-    select: {
-      id: true,
-      whyWeCarry: true,
-      seanShort: true,
-      notes: true,
-      overrides: true,
-      definition: {
-        select: {
-          brand: true,
-          expression: true,
-          displayName: true,
-          subcategory: true,
-          category: true,
-          style: true,
-          proofN: true,
-          prodTags: true,
-          production: true,
-          flavor: true,
-        },
-      },
-      offers: {
-        where: pricedOffer,
-        orderBy: [{ isPrimary: "desc" }, { pourSizeOz: "asc" }],
-        select: { id: true, toastItemGuid: true, pourLabel: true, pourSizeOz: true, priceUsd: true },
-      },
-    },
-  });
-
-  const guids = listings.flatMap((listing) =>
-    listing.offers.map((offer) => offer.toastItemGuid).filter((guid): guid is string => !!guid),
-  );
-
-  // No Toast-linked pours → no sales query at all; every candidate ranks at 0 and
-  // falls through to the deterministic tiebreaks.
-  const toastUnitsByGuid = guids.length === 0 ? new Map<string, number>() : await loadToastUnits(restaurantId, guids, options);
-
-  return rankFlightCandidates(listings.flatMap((listing) => listingToCandidatePours(listing, toastUnitsByGuid)));
-}
-
-async function loadToastUnits(
-  restaurantId: string,
-  guids: string[],
-  options: LoadFlightCandidatesOptions,
-): Promise<Map<string, number>> {
-  const rows = await prisma.menuItemSales.groupBy({
-    by: ["menuItemGuid"],
-    where: { restaurantId, menuItemGuid: { in: guids }, date: { gte: windowStart(options) } },
-    _sum: { quantitySold: true },
-  });
-  return new Map(rows.map((row) => [row.menuItemGuid, row._sum.quantitySold ?? 0]));
-}
-
-/** The resolver the builder calls: this restaurant's eligible pours, grouped and
- *  ranked for one template. */
-export async function resolveFlightTemplateCandidates(
-  template: FlightTemplate,
-  restaurantId: string,
-  options: LoadFlightCandidatesOptions = {},
-): Promise<FlightTemplateCandidates> {
-  return groupCandidatesByTemplateSlot(template, await loadFlightCandidatePours(restaurantId, options));
-}

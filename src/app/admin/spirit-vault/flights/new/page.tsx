@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { TemplatedFlightBuilder } from "@/components/spirit-vault/TemplatedFlightBuilder";
 import { FLIGHT_TEMPLATES } from "@/lib/spirit-vault/flight-templates";
-import { loadFlightCandidatePours } from "@/lib/spirit-vault/flight-template-candidates";
+import { loadFlightCandidatePours } from "@/lib/spirit-vault/flight-template-candidates.server";
 
 export const dynamic = "force-dynamic";
 

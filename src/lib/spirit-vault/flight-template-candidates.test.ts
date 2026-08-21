@@ -109,6 +109,15 @@ describe("listingToCandidatePours", () => {
     expect(c2.name).toBe("Bourbon");
   });
 
+  it("falls back to style when brand is whitespace-only", () => {
+    const listing = makeListing();
+    listing.definition.displayName = null;
+    listing.definition.brand = " ";
+    listing.definition.expression = null;
+    const [c] = listingToCandidatePours(listing);
+    expect(c.name).toBe("Kentucky Straight");
+  });
+
   it("sets hasVenueVoice when whyWeCarry is present", () => {
     const listing = makeListing({ whyWeCarry: "This is a cornerstone." });
     const [c] = listingToCandidatePours(listing);

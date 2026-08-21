@@ -140,7 +140,7 @@ export async function loadFlightView(
     return {
       order: index + 1,
       slug: item.venueSpirit.slug,
-      name: (d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" ")) || d.style || d.category,
+      name: (d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" ")).trim() || d.style || d.category,
       category: d.category,
       style: d.style ?? null,
       proof: proofN != null ? `${proofN} proof` : d.proofDisplay ?? null,

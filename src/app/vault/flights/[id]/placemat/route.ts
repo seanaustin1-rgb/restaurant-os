@@ -52,8 +52,7 @@ function glass(p: FlightPourView): string {
       ? `<div class="prod"><div class="prod-head">Production</div>${prodRow("Mash", p.mash)}${prodRow("Cask", p.cask)}</div>`
       : "";
   return `<div class="glass">
-    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="oz">1 oz</span></div>
-    <div class="gname">${esc(p.name)}</div>
+    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="rname">${esc(p.name)}</span><span class="oz">1 oz</span></div>
     ${p.style ? `<div class="gstyle">${esc(p.style)}</div>` : ""}
     ${stats ? `<div class="stats">${stats}</div>` : ""}
     <div class="chart"><div class="clab"><span>Flavor</span><span>0–10</span></div>${flavorBars}<div class="tex-wrap">${tex}</div></div>
@@ -67,7 +66,7 @@ function glass(p: FlightPourView): string {
 function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): string {
   const cols = Math.min(Math.max(v.pours.length, 1), 6);
   const through = v.description
-    ? `<div class="through"><span class="l">The through-line</span><p>${esc(v.description)}</p></div>`
+    ? `<div class="through"><p>${esc(v.description)}</p></div>`
     : "";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -85,32 +84,23 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   /* Fixed-height band so the header can never steal column height, no matter how
      long the name/through-line/QR payload is. The left stack (venue → name →
      through-line) and the right stack (price → QR) are each bounded and clipped. */
-  .band{background:var(--band);color:var(--band-text);padding:.12in .5in;height:1.08in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.4in;overflow:hidden}
+  .band{background:var(--band);color:var(--band-text);padding:.1in .5in;height:.72in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.4in;overflow:hidden}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
   .head-l{min-width:0;flex:1}
-  .venue{font-family:var(--mono);font-size:8px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold-light)}
-  .fname{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.02;color:var(--band-text);margin-top:2px;-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .through{margin-top:4px}
-  .through .l{font-family:var(--mono);font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.85}
-  .through p{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.2;color:#cdbf9f;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .pricebox{display:flex;flex-direction:column;align-items:flex-end;gap:.07in;flex:none}
+  .fname{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.02;color:var(--band-text);-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .through{margin-top:2px}
+  .through p{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.2;color:#cdbf9f;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .pricebox{display:flex;align-items:center;flex:none}
   .pricestack{text-align:right}
   .price{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--gold-light);line-height:1}
-  .qrrow{display:flex;align-items:center;gap:8px}
-  .qrmeta{text-align:right;max-width:.95in}
-  .qrcap{font-family:var(--mono);font-size:6.5px;letter-spacing:.08em;text-transform:uppercase;color:#9c876a;line-height:1.25}
-  .qrcode{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--gold-light);margin-top:2px}
-  .qrbox{width:.5in;height:.5in;background:#fff;border-radius:5px;padding:3px;flex:none}
-  .qrbox svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
   .glass{display:flex;flex-direction:column;padding:.18in .34in .14in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
-  .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
-  .ring .n{font-family:var(--display);font-size:40px;color:rgba(154,107,47,.34)}
-  .ring .oz{position:absolute;bottom:15px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .gname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.05;color:var(--ink);text-align:center;margin-top:8px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.15in;text-align:center}
+  .ring .n{font-family:var(--display);font-size:28px;color:rgba(154,107,47,.34);line-height:1}
+  .ring .rname{font-family:var(--display);font-weight:600;font-size:13px;line-height:1.15;color:var(--ink);margin-top:3px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .ring .oz{position:absolute;bottom:12px;font-family:var(--mono);font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:4px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .stats{display:flex;margin-top:.09in;padding:.06in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
@@ -144,20 +134,15 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   <div class="sheet">
     <div class="band">
       <div class="head-l">
-        <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
         <div class="fname">${esc(v.name)}</div>
         ${through}
       </div>
       <div class="pricebox">
         <div class="pricestack"><div class="price">${money(v.totalPriceUsd)}</div></div>
-        <div class="qrrow">
-          <div class="qrmeta"><div class="qrcap">Scan for<br/>today’s dossier</div>${qr.code ? `<div class="qrcode">${esc(qr.code)}</div>` : ""}</div>
-          <div class="qrbox">${qr.svg}</div>
-        </div>
       </div>
     </div>
     <div class="flight">${v.pours.map(glass).join("")}</div>
-    <div class="foot"><span class="l">${esc(v.venueName ?? "Spirit Vault")} · ${v.pours.length} pours · 1 oz each</span><span class="l">${qr.code ? "Scan or enter today’s code for every pour’s dossier" : "Scan for every pour’s full dossier"}</span></div>
+    <div class="foot"><span class="l">${v.pours.length} pours · 1 oz each</span></div>
   </div>
 </body></html>`;
 }

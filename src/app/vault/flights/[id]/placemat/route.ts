@@ -46,18 +46,19 @@ function glass(p: FlightPourView): string {
   const tex = `${barRow("Body", p.body, true)}${barRow("Finish", p.finish, true)}`;
   const notes = p.topNotes.length ? `<div class="notes"><div class="k-lab">Top notes</div><div class="v">${p.topNotes.map(esc).join(" · ")}</div></div>` : "";
   const taste = p.taste ? `<div class="taste">${esc(p.taste)}</div>` : "";
+  const notice = p.itemNote ? `<div class="notice"><div class="k-lab">What to notice</div><div class="v">${esc(p.itemNote)}</div></div>` : "";
   const prod =
     p.mash || p.cask
       ? `<div class="prod"><div class="prod-head">Production</div>${prodRow("Mash", p.mash)}${prodRow("Cask", p.cask)}</div>`
       : "";
   return `<div class="glass">
-    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="oz">1 oz</span></div>
-    <div class="gname">${esc(p.name)}</div>
+    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="rname">${esc(p.name)}</span><span class="oz">1 oz</span></div>
     ${p.style ? `<div class="gstyle">${esc(p.style)}</div>` : ""}
     ${stats ? `<div class="stats">${stats}</div>` : ""}
     <div class="chart"><div class="clab"><span>Flavor</span><span>0–10</span></div>${flavorBars}<div class="tex-wrap">${tex}</div></div>
     ${notes}
     ${taste}
+    ${notice}
     ${prod}
   </div>`;
 }
@@ -65,7 +66,7 @@ function glass(p: FlightPourView): string {
 function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): string {
   const cols = Math.min(Math.max(v.pours.length, 1), 6);
   const through = v.description
-    ? `<div class="through"><span class="l">The through-line</span><p>${esc(v.description)}</p></div>`
+    ? `<div class="through"><p>${esc(v.description)}</p></div>`
     : "";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -80,80 +81,65 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .bar-print{max-width:14in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
   .sheet{width:100%;max-width:14in;height:7.5in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
-  /* Fixed-height band so the header can never steal column height, no matter how
-     long the name/through-line/QR payload is. The left stack (venue → name →
-     through-line) and the right stack (price → QR) are each bounded and clipped. */
-  .band{background:var(--band);color:var(--band-text);padding:.12in .5in;height:1.08in;position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:.4in;overflow:hidden}
+  .band{background:var(--band);color:var(--band-text);padding:.14in .5in;height:.78in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.4in;overflow:hidden}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
   .head-l{min-width:0;flex:1}
-  .venue{font-family:var(--mono);font-size:8px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold-light)}
-  .fname{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.02;color:var(--band-text);margin-top:2px;-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .through{margin-top:4px}
-  .through .l{font-family:var(--mono);font-size:6.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);opacity:.85}
-  .through p{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.2;color:#cdbf9f;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .pricebox{display:flex;flex-direction:column;align-items:flex-end;gap:.07in;flex:none}
+  .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.02;color:var(--band-text);-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .through{margin-top:3px}
+  .through p{font-family:var(--display);font-style:italic;font-size:13px;line-height:1.25;color:#cdbf9f;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .pricebox{display:flex;align-items:center;flex:none}
   .pricestack{text-align:right}
-  .price{font-family:var(--mono);font-weight:700;font-size:26px;color:var(--gold-light);line-height:1}
-  .qrrow{display:flex;align-items:center;gap:8px}
-  .qrmeta{text-align:right;max-width:.95in}
-  .qrcap{font-family:var(--mono);font-size:6.5px;letter-spacing:.08em;text-transform:uppercase;color:#9c876a;line-height:1.25}
-  .qrcode{font-family:var(--mono);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--gold-light);margin-top:2px}
-  .qrbox{width:.5in;height:.5in;background:#fff;border-radius:5px;padding:3px;flex:none}
-  .qrbox svg{width:100%;height:100%;display:block;shape-rendering:crispEdges}
+  .price{font-family:var(--mono);font-weight:700;font-size:28px;color:var(--gold-light);line-height:1}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
-  .glass{display:flex;flex-direction:column;padding:.18in .34in .14in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
+  .glass{display:flex;flex-direction:column;padding:.18in .38in .16in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
-  .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;align-items:center;justify-content:center;position:relative;flex:none}
-  .ring .n{font-family:var(--display);font-size:40px;color:rgba(154,107,47,.34)}
-  .ring .oz{position:absolute;bottom:15px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .clamp{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .gname{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.05;color:var(--ink);text-align:center;margin-top:8px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:13.5px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .stats{display:flex;margin-top:.09in;padding:.06in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
+  .ring{width:1.7in;height:1.7in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.18in;text-align:center}
+  .ring .n{font-family:var(--display);font-size:30px;color:rgba(154,107,47,.34);line-height:1}
+  .ring .rname{font-family:var(--display);font-weight:600;font-size:14px;line-height:1.15;color:var(--ink);margin-top:4px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .ring .oz{position:absolute;bottom:13px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .stats{display:flex;margin-top:.1in;padding:.07in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
-  .stat .k{font-family:var(--mono);font-size:6px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
-  .stat .v{font-family:var(--mono);font-size:10.5px;line-height:1.15;color:var(--ink);margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .chart{margin-top:.09in}
-  .clab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:3px;display:flex;justify-content:space-between}
-  .row{display:flex;align-items:center;gap:7px;margin-bottom:2px}
-  .row .k{font-family:var(--mono);font-size:7px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);width:.48in;flex:none}
-  .row .bar{flex:1;height:5px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
+  .stat .k{font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
+  .stat .v{font-family:var(--mono);font-size:11.5px;line-height:1.2;color:var(--ink);margin-top:3px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .chart{margin-top:.1in}
+  .clab{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:4px;display:flex;justify-content:space-between}
+  .row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .row .k{font-family:var(--mono);font-size:8px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);width:.52in;flex:none}
+  .row .bar{flex:1;height:7px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
   .row .bar i{display:block;height:100%;background:var(--gold)}
   .row.tex .bar i{background:var(--copper-deep)}
-  .row .num{font-family:var(--mono);font-size:8.5px;color:var(--ink-soft);width:11px;text-align:right;flex:none}
-  .tex-wrap{margin-top:4px;padding-top:4px;border-top:1px solid rgba(122,85,38,.14)}
-  .notes{margin-top:.09in}
-  .k-lab{font-family:var(--mono);font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
-  .notes .v{font-size:11.5px;color:var(--ink);margin-top:2px;line-height:1.26}
-  .taste{margin-top:.06in;font-size:10.5px;color:var(--ink-soft);line-height:1.3;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .prod{margin-top:auto;padding-top:.09in}
-  .prod-head{font-family:var(--mono);font-size:6.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:5px;margin-bottom:4px}
-  .prow{margin-bottom:4px}
-  .prow .k{font-family:var(--mono);font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
-  .prow .v{font-family:var(--display);font-size:13.5px;color:var(--ink);line-height:1.16;margin-top:1px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .foot{background:var(--band);height:.22in;display:flex;align-items:center;justify-content:space-between;padding:0 .5in;color:#9c876a;flex:none}
-  .foot .l{font-family:var(--mono);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase}
+  .row .num{font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);width:13px;text-align:right;flex:none}
+  .tex-wrap{margin-top:5px;padding-top:5px;border-top:1px solid rgba(122,85,38,.14)}
+  .notes{margin-top:.1in}
+  .k-lab{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
+  .notes .v{font-size:12.5px;color:var(--ink);margin-top:3px;line-height:1.3}
+  .taste{margin-top:.08in;font-size:12px;color:var(--ink-soft);line-height:1.35;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .notice{margin-top:.08in}
+  .notice .v{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.35;color:var(--ink);margin-top:3px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .prod{margin-top:auto;padding-top:.1in}
+  .prod-head{font-family:var(--mono);font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:6px;margin-bottom:5px}
+  .prow{margin-bottom:5px}
+  .prow .k{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
+  .prow .v{font-family:var(--display);font-size:14.5px;color:var(--ink);line-height:1.2;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .foot{background:var(--band);height:.24in;display:flex;align-items:center;justify-content:center;padding:0 .5in;color:#9c876a;flex:none}
+  .foot .l{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase}
   @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.5in;box-shadow:none}@page{size:14in 8.5in;margin:0.35in 0.11in 0.65in 0.49in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">
     <div class="band">
       <div class="head-l">
-        <div class="venue">${esc(v.venueName ?? "Spirit Vault")}</div>
         <div class="fname">${esc(v.name)}</div>
         ${through}
       </div>
       <div class="pricebox">
         <div class="pricestack"><div class="price">${money(v.totalPriceUsd)}</div></div>
-        <div class="qrrow">
-          <div class="qrmeta"><div class="qrcap">Scan for<br/>today’s dossier</div>${qr.code ? `<div class="qrcode">${esc(qr.code)}</div>` : ""}</div>
-          <div class="qrbox">${qr.svg}</div>
-        </div>
       </div>
     </div>
     <div class="flight">${v.pours.map(glass).join("")}</div>
-    <div class="foot"><span class="l">${esc(v.venueName ?? "Spirit Vault")} · ${v.pours.length} pours · 1 oz each</span><span class="l">${qr.code ? "Scan or enter today’s code for every pour’s dossier" : "Scan for every pour’s full dossier"}</span></div>
+    <div class="foot"><span class="l">${v.pours.length} pours · 1 oz each</span></div>
   </div>
 </body></html>`;
 }

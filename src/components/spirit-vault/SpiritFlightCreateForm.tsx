@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Check, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Plus, Search, Trash2, X } from "lucide-react";
 import type { SpiritLifecycleStatus } from "@prisma/client";
 import {
   createSpiritFlight,
@@ -10,6 +10,7 @@ import {
   deleteSpiritFlight,
   type CreateSpiritFlightResult,
 } from "@/app/admin/spirit-vault/flights/actions";
+import type { FlightTemplateSlotCandidates } from "@/lib/spirit-vault/flight-template-candidates";
 
 export interface FlightPourOption {
   venueSpiritId: string;
@@ -59,10 +60,16 @@ export function SpiritFlightCreateForm({
   pours,
   flightId,
   initial,
+  slotGroups,
+  slotNoteMap,
 }: {
   pours: FlightPourOption[];
   flightId?: string;
   initial?: FlightFormInitial;
+  /** When a template is active, pours grouped by slot (rule-filtered, Toast-ranked). */
+  slotGroups?: FlightTemplateSlotCandidates[];
+  /** Map from slot key → preset item note to pre-fill when adding from a slot. */
+  slotNoteMap?: Map<string, string> | null;
 }) {
   const router = useRouter();
   const isEdit = Boolean(flightId);
@@ -79,13 +86,25 @@ export function SpiritFlightCreateForm({
   const selectedIds = useMemo(() => new Set(selected.map((item) => item.spiritPourId)), [selected]);
   const total = selected.reduce((sum, item) => sum + (pourById.get(item.spiritPourId)?.oneOzPriceUsd ?? 0), 0);
 
+  /** Find which slot (if any) this pour belongs to, so we can preset the note. */
+  function slotNoteForPour(pour: FlightPourOption): string {
+    if (!slotGroups || !slotNoteMap) return "";
+    for (const group of slotGroups) {
+      if (group.candidates.some((c) => c.spiritPourId === pour.spiritPourId)) {
+        return slotNoteMap.get(group.slot.key) ?? "";
+      }
+    }
+    return "";
+  }
+
   function add(pour: FlightPourOption) {
     if (selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId)) return;
     if (selected.length >= 4) return;
     setSaved(null);
+    const itemNote = slotNoteForPour(pour);
     setSelected((items) => [
       ...items,
-      { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote: "", bites: (pour.suggestedBites ?? []).join(", ") },
+      { venueSpiritId: pour.venueSpiritId, spiritPourId: pour.spiritPourId, itemNote, bites: (pour.suggestedBites ?? []).join(", ") },
     ]);
   }
 
@@ -183,11 +202,16 @@ export function SpiritFlightCreateForm({
 
       <div className="grid gap-4 rounded-lg border border-line bg-surface p-4 sm:grid-cols-[1fr_160px]">
         <label className="block">
-          <span className="block text-[11px] uppercase tracking-wider text-muted">Flight name</span>
+          <span className="block text-[11px] uppercase tracking-wider text-muted">
+            Flight name <span className="text-copper-soft">*</span>
+          </span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 w-full rounded-md border border-line bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft"
+            placeholder="Name this flight"
+            className={`mt-1 w-full rounded-md border bg-ink px-2 py-1.5 text-sm text-ink-text outline-none focus:border-copper-soft ${
+              !name.trim() && selected.length >= 2 ? "border-amber-400/60" : "border-line"
+            }`}
           />
         </label>
         <label className="block">
@@ -222,46 +246,27 @@ export function SpiritFlightCreateForm({
             <h2 className="text-sm font-medium text-ink-text">Vault pours</h2>
             <p className="mt-1 text-xs text-muted">Each selected spirit contributes a 1 oz flight pour.</p>
           </div>
-          <div className="overflow-hidden rounded-lg border border-line">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
-                  <th className="px-3 py-2 font-medium">Spirit</th>
-                  <th className="px-3 py-2 font-medium">Source pour</th>
-                  <th className="px-3 py-2 font-medium">1 oz</th>
-                  <th className="px-3 py-2 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {pours.map((pour) => {
-                  const disabled = selectedIds.has(pour.spiritPourId) || selected.some((item) => item.venueSpiritId === pour.venueSpiritId) || selected.length >= 4;
-                  return (
-                    <tr key={pour.spiritPourId} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
-                      <td className="px-3 py-2">
-                        <div className="text-ink-text">{pour.name}</div>
-                        <div className="text-xs text-muted">{pour.category}</div>
-                      </td>
-                      <td className="px-3 py-2 text-muted">
-                        {pour.pourLabel} - {money(pour.priceUsd)}
-                      </td>
-                      <td className="tnum px-3 py-2 text-muted">{money(pour.oneOzPriceUsd)}</td>
-                      <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => add(pour)}
-                          disabled={disabled}
-                          title="Add to flight"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted hover:border-copper-soft hover:text-copper-soft disabled:opacity-40"
-                        >
-                          <Plus size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+
+          {slotGroups && slotGroups.length > 0 ? (
+            <div className="space-y-4">
+              {slotGroups.map((group) => (
+                <div key={group.slot.key}>
+                  <p className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-copper-soft">
+                    {group.slot.label}
+                  </p>
+                  {group.candidates.length === 0 ? (
+                    <p className="rounded-lg border border-dashed border-line p-3 text-center text-xs text-amber-400/60">
+                      No eligible pours for this slot
+                    </p>
+                  ) : (
+                    <PourTable pours={group.candidates} selectedIds={selectedIds} selected={selected} add={add} />
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <PourTable pours={pours} selectedIds={selectedIds} selected={selected} add={add} />
+          )}
         </section>
 
         <aside className="space-y-3">
@@ -328,6 +333,9 @@ export function SpiritFlightCreateForm({
               {pending ? "Saving..." : isEdit ? "Save changes" : "Create flight"}
               {!pending && <Check size={14} />}
             </button>
+            {!name.trim() && selected.length >= 2 && (
+              <p className="mt-1.5 text-center text-xs text-amber-400/80">Enter a flight name above to enable save.</p>
+            )}
 
             {isEdit && (
               <button
@@ -343,6 +351,101 @@ export function SpiritFlightCreateForm({
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** Reusable pour table — used both for the flat list (scratch mode) and
+ *  inside each slot group (template mode). */
+const POUR_TABLE_FILTER_THRESHOLD = 8;
+
+function PourTable({
+  pours: tablePours,
+  selectedIds,
+  selected,
+  add,
+}: {
+  pours: readonly FlightPourOption[];
+  selectedIds: ReadonlySet<string>;
+  selected: readonly { venueSpiritId: string }[];
+  add: (pour: FlightPourOption) => void;
+}) {
+  const [filter, setFilter] = useState("");
+  const showFilter = tablePours.length > POUR_TABLE_FILTER_THRESHOLD;
+  const needle = filter.trim().toLowerCase();
+  const filtered = needle
+    ? tablePours.filter(
+        (p) => p.name.toLowerCase().includes(needle) || p.category.toLowerCase().includes(needle),
+      )
+    : tablePours;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-line">
+      {showFilter && (
+        <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-1.5">
+          <Search size={13} className="shrink-0 text-muted" />
+          <input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter by name or category"
+            className="w-full bg-transparent text-xs text-ink-text outline-none placeholder:text-muted/70"
+          />
+          {filter && (
+            <button type="button" onClick={() => setFilter("")} className="shrink-0 text-muted hover:text-ink-text">
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      )}
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
+            <th className="px-3 py-2 font-medium">Spirit</th>
+            <th className="px-3 py-2 font-medium">Source pour</th>
+            <th className="px-3 py-2 font-medium">1 oz</th>
+            <th className="px-3 py-2 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {filtered.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-3 py-4 text-center text-xs text-muted">
+                No pours match "{filter}"
+              </td>
+            </tr>
+          ) : (
+            filtered.map((pour) => {
+              const disabled =
+                selectedIds.has(pour.spiritPourId) ||
+                selected.some((item) => item.venueSpiritId === pour.venueSpiritId) ||
+                selected.length >= 4;
+              return (
+                <tr key={pour.spiritPourId} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
+                  <td className="px-3 py-2">
+                    <div className="text-ink-text">{pour.name}</div>
+                    <div className="text-xs text-muted">{pour.category}</div>
+                  </td>
+                  <td className="px-3 py-2 text-muted">
+                    {pour.pourLabel} - {money(pour.priceUsd)}
+                  </td>
+                  <td className="tnum px-3 py-2 text-muted">{money(pour.oneOzPriceUsd)}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => add(pour)}
+                      disabled={disabled}
+                      title="Add to flight"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-line text-muted hover:border-copper-soft hover:text-copper-soft disabled:opacity-40"
+                    >
+                      <Plus size={15} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

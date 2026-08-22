@@ -68,27 +68,39 @@ export function TemplatedFlightBuilder({
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-display text-lg text-ink-text">Start from a template</h2>
+          <h2 className="font-display text-lg text-ink-text">New flight</h2>
           <p className="mt-1 text-sm text-muted">
-            A template sets the through-line and the shape of the flight. You still pick the pours and can edit every word
-            before publishing.
+            Build from scratch or pick a template for guided building.
           </p>
         </div>
 
-        {launch.length > 0 && <TemplateGrid templates={launch} pours={pours} onPick={setChoice} />}
+        <button
+          onClick={() => setChoice("blank")}
+          className="w-full rounded-lg border border-copper-dim bg-copper/5 p-4 text-left transition-colors hover:bg-copper/10"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-display text-lg text-ink-text">Build from scratch</div>
+              <div className="mt-1 text-sm text-muted">
+                Full pour list — you pick the pours, name, and through-line.
+              </div>
+            </div>
+            <span className="shrink-0 font-mono text-sm text-copper-soft">→</span>
+          </div>
+        </button>
+
+        {launch.length > 0 && (
+          <div>
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Templates</p>
+            <TemplateGrid templates={launch} pours={pours} onPick={setChoice} />
+          </div>
+        )}
         {more.length > 0 && (
           <div>
             <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">More templates</p>
             <TemplateGrid templates={more} pours={pours} onPick={setChoice} />
           </div>
         )}
-
-        <button
-          onClick={() => setChoice("blank")}
-          className="w-full rounded-lg border border-dashed border-line px-4 py-3 text-sm text-muted hover:border-copper-dim hover:text-copper-soft"
-        >
-          Or build from scratch →
-        </button>
       </div>
     );
   }

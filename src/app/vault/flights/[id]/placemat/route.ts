@@ -80,9 +80,9 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   body{background:#3a3730;font-family:var(--body);color:var(--ink);padding:24px}
   .bar-print{max-width:14in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
-  .sheet{width:100%;max-width:14in;height:7.5in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+  .sheet{width:100%;max-width:14in;height:7.6in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4);border-radius:6px}
   .band{background:var(--band);color:var(--band-text);padding:.14in .5in;height:.78in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.4in;overflow:hidden}
-  .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
   .head-l{min-width:0;flex:1}
   .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.02;color:var(--band-text);-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .through{margin-top:3px}
@@ -123,9 +123,9 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .prow{margin-bottom:5px}
   .prow .k{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}
   .prow .v{font-family:var(--display);font-size:14.5px;color:var(--ink);line-height:1.2;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .foot{background:var(--band);height:.24in;display:flex;align-items:center;justify-content:center;padding:0 .5in;color:#9c876a;flex:none}
+  .foot{background:var(--band);height:.28in;display:flex;align-items:center;justify-content:center;padding:0 .5in;color:#9c876a;flex:none;border-top:1.5px solid rgba(200,135,58,.45)}
   .foot .l{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase}
-  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.5in;box-shadow:none}@page{size:14in 8.5in;margin:0.35in 0.11in 0.65in 0.49in}}
+  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.6in;box-shadow:none;border-radius:0}@page{size:14in 8.5in;margin:0.3in 0.3in 0.45in 0.3in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">

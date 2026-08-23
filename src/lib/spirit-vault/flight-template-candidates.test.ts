@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   listingToCandidatePours,
+  isFlightPourUnavailable,
   matchesFlightTemplateRules,
   rankFlightCandidates,
   groupCandidatesByTemplateSlot,
@@ -74,6 +75,17 @@ const proofAscender: FlightTemplate = {
 // ── listingToCandidatePours ──
 
 describe("listingToCandidatePours", () => {
+  it("interprets unavailable availability labels conservatively", () => {
+    expect(isFlightPourUnavailable(null)).toBe(false);
+    expect(isFlightPourUnavailable("In stock")).toBe(false);
+    expect(isFlightPourUnavailable("Available")).toBe(false);
+    expect(isFlightPourUnavailable("Out of stock")).toBe(true);
+    expect(isFlightPourUnavailable("Sold out")).toBe(true);
+    expect(isFlightPourUnavailable("Temporarily unavailable")).toBe(true);
+    expect(isFlightPourUnavailable("Hidden from menu")).toBe(true);
+    expect(isFlightPourUnavailable("86'd")).toBe(true);
+  });
+
   it("converts a listing with a priced offer into a candidate", () => {
     const candidates = listingToCandidatePours(makeListing());
     expect(candidates).toHaveLength(1);
@@ -151,12 +163,15 @@ describe("listingToCandidatePours", () => {
     expect(listingToCandidatePours(listing)).toHaveLength(0);
   });
 
-  it("excludes out-of-stock offers", () => {
+  it("excludes unavailable offers", () => {
     const listing = makeListing({
       offers: [
         { id: "sp_1", toastItemGuid: "GUID_1", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "12.00" }, availability: "Out of stock" },
         { id: "sp_2", toastItemGuid: "GUID_2", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "8.00" }, availability: "In stock" },
         { id: "sp_3", toastItemGuid: "GUID_3", pourLabel: "neat", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "14.00" }, availability: null },
+        { id: "sp_4", toastItemGuid: "GUID_4", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "16.00" }, availability: "Sold out" },
+        { id: "sp_5", toastItemGuid: "GUID_5", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "18.00" }, availability: "Hidden" },
+        { id: "sp_6", toastItemGuid: "GUID_6", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "20.00" }, availability: "86'd" },
       ],
     });
     const candidates = listingToCandidatePours(listing);

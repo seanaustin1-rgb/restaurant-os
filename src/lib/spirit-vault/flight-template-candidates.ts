@@ -102,6 +102,23 @@ function present(v: string | null | undefined): boolean {
   return typeof v === "string" && v.trim() !== "";
 }
 
+const UNAVAILABLE_AVAILABILITY_PATTERNS = [
+  /\bout\s+of\s+stock\b/,
+  /\bsold\s+out\b/,
+  /\bunavailable\b/,
+  /\bnot\s+available\b/,
+  /\binactive\b/,
+  /\bdisabled\b/,
+  /\bhidden\b/,
+  /\b86(?:'d|ed)?\b/,
+];
+
+export function isFlightPourUnavailable(availability: string | null | undefined): boolean {
+  const value = availability?.trim().toLowerCase();
+  if (!value) return false;
+  return UNAVAILABLE_AVAILABILITY_PATTERNS.some((pattern) => pattern.test(value));
+}
+
 function displayName(d: CandidateListingRow["definition"]): string {
   return (d.displayName ?? [d.brand, d.expression].filter(Boolean).join(" ")).trim() || d.style || d.category;
 }
@@ -158,7 +175,7 @@ export function listingToCandidatePours(
     const priceUsd = decimalToNumber(offer.priceUsd);
     const pourSizeOz = decimalToNumber(offer.pourSizeOz);
     if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
-    if (offer.availability?.toLowerCase() === "out of stock") return [];
+    if (isFlightPourUnavailable(offer.availability)) return [];
     return [
       {
         venueSpiritId: listing.id,

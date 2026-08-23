@@ -80,6 +80,8 @@ describe("createSpiritFlight", () => {
         restaurantId: "rest_1",
         id: { in: ["pour_1", "pour_2"] },
         venueSpiritId: { in: ["venue_1", "venue_2"] },
+        priceUsd: { not: null },
+        pourSizeOz: { not: null },
         venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
       },
       select: {
@@ -195,12 +197,12 @@ describe("createSpiritFlight", () => {
     expect(h.flightCreate).toHaveBeenCalled();
   });
 
-  it("rejects an out-of-stock pour", async () => {
+  it("rejects a pour that is not currently available", async () => {
     h.pourFindMany.mockResolvedValue([
-      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Out of stock" },
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Sold out" },
       { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
     ]);
-    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/out-of-stock/i);
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/not currently available/i);
     expect(h.flightCreate).not.toHaveBeenCalled();
   });
 

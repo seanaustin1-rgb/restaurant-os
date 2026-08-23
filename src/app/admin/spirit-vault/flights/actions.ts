@@ -6,6 +6,7 @@ import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { calculateFlightPricing, type FlightPricingResult } from "@/lib/spirit-vault/flight-pricing";
+import { isFlightPourUnavailable } from "@/lib/spirit-vault/flight-template-candidates";
 
 const FLIGHTS_PATH = "/admin/spirit-vault/flights";
 const STATUS_RANK: Record<SpiritLifecycleStatus, number> = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 };
@@ -124,6 +125,8 @@ async function resolvePricingForItems(
       restaurantId,
       id: { in: items.map((item) => item.spiritPourId) },
       venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
+      priceUsd: { not: null },
+      pourSizeOz: { not: null },
       venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
     },
     select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true, availability: true },
@@ -134,8 +137,8 @@ async function resolvePricingForItems(
     throw new Error("Every flight item must reference a published vault spirit and priced pour");
   }
   for (const pour of selectedPours) {
-    if (pour.availability?.toLowerCase() === "out of stock") {
-      throw new Error("A flight cannot include an out-of-stock pour");
+    if (isFlightPourUnavailable(pour.availability)) {
+      throw new Error("A flight cannot include a pour that is not currently available");
     }
   }
 

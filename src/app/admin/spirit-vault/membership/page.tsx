@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -72,10 +71,7 @@ export default async function MembershipCodesPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div>
-        <Link href="/admin/spirit-vault" className="text-xs text-muted hover:text-copper-soft">
-          Back to Spirit Vault
-        </Link>
-        <h1 className="mt-2 font-display text-2xl text-copper-soft">Membership codes</h1>
+        <h1 className="font-display text-2xl text-copper-soft">Membership Codes</h1>
         <p className="mt-1 text-sm text-muted">
           {role.restaurant?.name ?? "Your bar"} — issue codes that grant a member a year of full vault access. A code is
           shown once when you generate it, then stored hashed; you can revoke it but never re-display it.

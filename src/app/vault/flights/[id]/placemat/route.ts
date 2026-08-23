@@ -52,8 +52,7 @@ function glass(p: FlightPourView): string {
       ? `<div class="prod"><div class="prod-head">Production</div>${prodRow("Mash", p.mash)}${prodRow("Cask", p.cask)}</div>`
       : "";
   return `<div class="glass">
-    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="rname">${esc(p.name)}</span><span class="oz">1 oz</span></div>
-    ${p.style ? `<div class="gstyle">${esc(p.style)}</div>` : ""}
+    <div class="ring"><span class="n">${String(p.order).padStart(2, "0")}</span><span class="rname">${esc(p.name)}</span>${p.style ? `<span class="rstyle">${esc(p.style)}</span>` : ""}<span class="oz">1 oz</span></div>
     ${stats ? `<div class="stats">${stats}</div>` : ""}
     <div class="chart"><div class="clab"><span>Flavor</span><span>0–10</span></div>${flavorBars}<div class="tex-wrap">${tex}</div></div>
     ${notes}
@@ -80,7 +79,7 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   body{background:#3a3730;font-family:var(--body);color:var(--ink);padding:24px}
   .bar-print{max-width:14in;margin:0 auto 12px;display:flex;justify-content:flex-end}
   .bar-print button{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:#efe6d2;background:#17130c;border:1px solid #4a3f28;border-radius:6px;padding:8px 14px;cursor:pointer}
-  .sheet{width:100%;max-width:14in;height:7.6in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4);border-radius:6px}
+  .sheet{width:100%;max-width:14in;height:7.9in;margin:0 auto;background:var(--parchment);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.4);border-radius:6px}
   .band{background:var(--band);color:var(--band-text);padding:.14in .5in;height:.78in;position:relative;display:flex;align-items:center;justify-content:space-between;gap:.4in;overflow:hidden}
   .band::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
   .head-l{min-width:0;flex:1}
@@ -93,12 +92,12 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
   .glass{display:flex;flex-direction:column;padding:.14in .34in .12in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
-  .ring{width:1.55in;height:1.55in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.18in;text-align:center}
+  .ring{width:1.6in;height:1.6in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.18in;text-align:center}
   .ring .n{font-family:var(--display);font-size:26px;color:rgba(154,107,47,.34);line-height:1}
   .ring .rname{font-family:var(--display);font-weight:600;font-size:14px;line-height:1.15;color:var(--ink);margin-top:4px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .ring .rstyle{font-family:var(--display);font-style:italic;font-size:9.5px;line-height:1.15;color:var(--copper-deep);margin-top:2px;-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .ring .oz{position:absolute;bottom:10px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:3px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .stats{display:flex;margin-top:.06in;padding:.05in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
+    .stats{display:flex;margin-top:.06in;padding:.05in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
   .stat .k{font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
@@ -125,7 +124,7 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .prow .v{font-family:var(--display);font-size:14.5px;color:var(--ink);line-height:1.2;margin-top:2px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .foot{background:var(--band);height:.28in;display:flex;align-items:center;justify-content:center;padding:0 .5in;color:#9c876a;flex:none;border-top:1.5px solid rgba(200,135,58,.45)}
   .foot .l{font-family:var(--mono);font-size:8px;letter-spacing:.22em;text-transform:uppercase}
-  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.6in;box-shadow:none;border-radius:0}@page{size:14in 8.5in;margin:0.3in 0.3in 0.45in 0.3in}}
+  @media print{body{background:#fff;padding:0}.bar-print{display:none}.sheet{max-width:none;width:100%;height:7.9in;box-shadow:none;border-radius:0}@page{size:14in 8.5in;margin:0.3in 0.3in 0.25in 0.3in}}
 </style></head><body>
   <div class="bar-print"><button onclick="window.print()">Print placemat</button></div>
   <div class="sheet">

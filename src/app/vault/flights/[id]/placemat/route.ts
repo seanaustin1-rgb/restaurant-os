@@ -117,7 +117,7 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .taste{margin-top:.03in;font-size:12px;color:var(--ink-soft);line-height:1.35;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .notice{margin-top:.03in}
   .notice .v{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.35;color:var(--ink);margin-top:3px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .prod{margin-top:auto;padding-top:.04in}
+  .prod{margin-top:.04in;padding-top:.04in}
   .prod-head{font-family:var(--mono);font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:4px;margin-bottom:3px}
   .prow{margin-bottom:3px}
   .prow .k{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}

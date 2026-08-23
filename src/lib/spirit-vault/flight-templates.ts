@@ -87,7 +87,7 @@ export const FLIGHT_TEMPLATES: FlightTemplate[] = [
       "This flight follows how secondary barrels add fruit, sweetness, spice, smoke, or darker texture after primary maturation.",
     maxPours: 4,
     autoOrder: "slot-order",
-    slots: [{ key: "finished", label: "Cask-finished", rules: { categories: WHISKEY_CATEGORIES, searchTerms: ["port", "sherry", "oloroso", "px", "madeira", "rum", "wine", "toast", "double oak"] }, itemNote: "Name the finishing cask — track what it added over the base whiskey." }],
+    slots: [{ key: "finished", label: "Cask-finished", rules: { categories: WHISKEY_CATEGORIES, searchTerms: ["port", "sherry", "oloroso", "px", "madeira", "rum", "wine", "toast", "double oak"] }, itemNote: "The finishing cask adds fruit, sweetness, or spice over the base whiskey." }],
   },
   {
     key: "rye-progression",

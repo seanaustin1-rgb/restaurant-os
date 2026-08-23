@@ -91,34 +91,34 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .pricestack{text-align:right}
   .price{font-family:var(--mono);font-weight:700;font-size:28px;color:var(--gold-light);line-height:1}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
-  .glass{display:flex;flex-direction:column;padding:.18in .38in .16in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
+  .glass{display:flex;flex-direction:column;padding:.14in .34in .12in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
-  .ring{width:1.7in;height:1.7in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.18in;text-align:center}
-  .ring .n{font-family:var(--display);font-size:30px;color:rgba(154,107,47,.34);line-height:1}
+  .ring{width:1.55in;height:1.55in;margin:0 auto;border-radius:50%;border:1.8px solid var(--gold);box-shadow:inset 0 0 0 6px var(--parchment),inset 0 0 0 7px rgba(200,135,58,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;padding:.18in;text-align:center}
+  .ring .n{font-family:var(--display);font-size:26px;color:rgba(154,107,47,.34);line-height:1}
   .ring .rname{font-family:var(--display);font-weight:600;font-size:14px;line-height:1.15;color:var(--ink);margin-top:4px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .ring .oz{position:absolute;bottom:13px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
-  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:5px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .stats{display:flex;margin-top:.1in;padding:.07in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
+  .ring .oz{position:absolute;bottom:10px;font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(122,85,38,.5)}
+  .gstyle{font-family:var(--display);font-style:italic;font-size:14px;line-height:1.2;color:var(--copper-deep);text-align:center;margin-top:3px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .stats{display:flex;margin-top:.06in;padding:.05in 0;border-top:1px solid rgba(122,85,38,.22);border-bottom:1px solid rgba(122,85,38,.22)}
   .stat{flex:1;text-align:center;border-right:1px solid rgba(122,85,38,.14)}
   .stat:last-child{border-right:0}
   .stat .k{font-family:var(--mono);font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--copper)}
   .stat .v{font-family:var(--mono);font-size:11.5px;line-height:1.2;color:var(--ink);margin-top:3px;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .chart{margin-top:.1in}
+  .chart{margin-top:.06in}
   .clab{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper);margin-bottom:4px;display:flex;justify-content:space-between}
-  .row{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
   .row .k{font-family:var(--mono);font-size:8px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);width:.52in;flex:none}
   .row .bar{flex:1;height:7px;background:rgba(122,85,38,.14);border-radius:3px;overflow:hidden}
   .row .bar i{display:block;height:100%;background:var(--gold)}
   .row.tex .bar i{background:var(--copper-deep)}
   .row .num{font-family:var(--mono);font-size:9.5px;color:var(--ink-soft);width:13px;text-align:right;flex:none}
-  .tex-wrap{margin-top:5px;padding-top:5px;border-top:1px solid rgba(122,85,38,.14)}
-  .notes{margin-top:.1in}
+  .tex-wrap{margin-top:3px;padding-top:3px;border-top:1px solid rgba(122,85,38,.14)}
+  .notes{margin-top:.06in}
   .k-lab{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--copper)}
   .notes .v{font-size:12.5px;color:var(--ink);margin-top:3px;line-height:1.3}
-  .taste{margin-top:.08in;font-size:12px;color:var(--ink-soft);line-height:1.35;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .notice{margin-top:.08in}
+  .taste{margin-top:.05in;font-size:12px;color:var(--ink-soft);line-height:1.35;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+  .notice{margin-top:.05in}
   .notice .v{font-family:var(--display);font-style:italic;font-size:12px;line-height:1.35;color:var(--ink);margin-top:3px;-webkit-line-clamp:3;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .prod{margin-top:auto;padding-top:.1in}
+  .prod{margin-top:auto;padding-top:.06in}
   .prod-head{font-family:var(--mono);font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);border-top:1.5px solid rgba(122,85,38,.4);padding-top:6px;margin-bottom:5px}
   .prow{margin-bottom:5px}
   .prow .k{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--copper-deep);font-weight:700}

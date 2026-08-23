@@ -61,7 +61,7 @@ export async function loadFlightCandidatePours(
       offers: {
         where: pricedOffer,
         orderBy: [{ isPrimary: "desc" }, { pourSizeOz: "asc" }],
-        select: { id: true, toastItemGuid: true, pourLabel: true, pourSizeOz: true, priceUsd: true },
+        select: { id: true, toastItemGuid: true, pourLabel: true, pourSizeOz: true, priceUsd: true, availability: true },
       },
     },
   });

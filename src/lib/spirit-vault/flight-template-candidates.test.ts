@@ -50,7 +50,7 @@ function makeListing(overrides: Partial<CandidateListingRow> = {}): CandidateLis
       flavor: { Sweet: 6, Oak: 5, Spice: 4 },
     },
     offers: [
-      { id: "sp_1", toastItemGuid: "GUID_1", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "12.00" } },
+      { id: "sp_1", toastItemGuid: "GUID_1", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "12.00" }, availability: null },
     ],
     ...overrides,
   };
@@ -143,12 +143,25 @@ describe("listingToCandidatePours", () => {
   it("drops offers that lack priceUsd or pourSizeOz", () => {
     const listing = makeListing({
       offers: [
-        { id: "sp_1", toastItemGuid: null, pourLabel: "2 oz", pourSizeOz: null, priceUsd: { toString: () => "12" } },
-        { id: "sp_2", toastItemGuid: null, pourLabel: "1 oz", pourSizeOz: { toString: () => "1" }, priceUsd: null },
-        { id: "sp_3", toastItemGuid: null, pourLabel: "taste", pourSizeOz: { toString: () => "0" }, priceUsd: { toString: () => "5" } },
+        { id: "sp_1", toastItemGuid: null, pourLabel: "2 oz", pourSizeOz: null, priceUsd: { toString: () => "12" }, availability: null },
+        { id: "sp_2", toastItemGuid: null, pourLabel: "1 oz", pourSizeOz: { toString: () => "1" }, priceUsd: null, availability: null },
+        { id: "sp_3", toastItemGuid: null, pourLabel: "taste", pourSizeOz: { toString: () => "0" }, priceUsd: { toString: () => "5" }, availability: null },
       ],
     });
     expect(listingToCandidatePours(listing)).toHaveLength(0);
+  });
+
+  it("excludes out-of-stock offers", () => {
+    const listing = makeListing({
+      offers: [
+        { id: "sp_1", toastItemGuid: "GUID_1", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "12.00" }, availability: "Out of stock" },
+        { id: "sp_2", toastItemGuid: "GUID_2", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "8.00" }, availability: "In stock" },
+        { id: "sp_3", toastItemGuid: "GUID_3", pourLabel: "neat", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "14.00" }, availability: null },
+      ],
+    });
+    const candidates = listingToCandidatePours(listing);
+    expect(candidates).toHaveLength(2);
+    expect(candidates.map((c) => c.spiritPourId)).toEqual(["sp_2", "sp_3"]);
   });
 
   it("builds search text from identity and production fields", () => {

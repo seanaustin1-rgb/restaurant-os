@@ -126,12 +126,17 @@ async function resolvePricingForItems(
       venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
       venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
     },
-    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true },
+    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true, availability: true },
   });
 
   const pourById = new Map(selectedPours.map((pour) => [pour.id, pour]));
   if (pourById.size !== items.length) {
     throw new Error("Every flight item must reference a published vault spirit and priced pour");
+  }
+  for (const pour of selectedPours) {
+    if (pour.availability?.toLowerCase() === "out of stock") {
+      throw new Error("A flight cannot include an out-of-stock pour");
+    }
   }
 
   const orderedPours = items.map((item) => {

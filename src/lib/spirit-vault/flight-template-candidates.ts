@@ -68,6 +68,7 @@ export interface CandidateOfferRow {
   pourLabel: string | null;
   pourSizeOz: unknown;
   priceUsd: unknown;
+  availability: string | null;
 }
 
 export interface CandidateListingRow {
@@ -157,6 +158,7 @@ export function listingToCandidatePours(
     const priceUsd = decimalToNumber(offer.priceUsd);
     const pourSizeOz = decimalToNumber(offer.pourSizeOz);
     if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
+    if (offer.availability?.toLowerCase() === "out of stock") return [];
     return [
       {
         venueSpiritId: listing.id,

@@ -51,8 +51,8 @@ beforeEach(() => {
   h.authMock.mockResolvedValue({ userId: "user_1" });
   h.roleFindFirst.mockResolvedValue({ restaurantId: "rest_1" });
   h.pourFindMany.mockResolvedValue([
-    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 },
-    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5 },
+    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: null },
+    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
   ]);
   h.flightCreate.mockResolvedValue({ id: "flight_1" });
   h.flightFindFirst.mockResolvedValue({ id: "flight_1" });
@@ -87,6 +87,7 @@ describe("createSpiritFlight", () => {
         venueSpiritId: true,
         priceUsd: true,
         pourSizeOz: true,
+        availability: true,
       },
     });
 
@@ -143,7 +144,7 @@ describe("createSpiritFlight", () => {
   });
 
   it("rejects missing or unpublished source pours", async () => {
-    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 }]);
+    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: null }]);
 
     await expect(createSpiritFlight(baseInput)).rejects.toThrow(/published vault spirit/i);
     expect(h.flightCreate).not.toHaveBeenCalled();
@@ -192,6 +193,15 @@ describe("createSpiritFlight", () => {
       ],
     });
     expect(h.flightCreate).toHaveBeenCalled();
+  });
+
+  it("rejects an out-of-stock pour", async () => {
+    h.pourFindMany.mockResolvedValue([
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Out of stock" },
+      { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
+    ]);
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/out-of-stock/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
   });
 
   it("rejects duplicate pours in the same flight", async () => {

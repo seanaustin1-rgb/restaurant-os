@@ -151,12 +151,15 @@ describe("listingToCandidatePours", () => {
     expect(listingToCandidatePours(listing)).toHaveLength(0);
   });
 
-  it("excludes out-of-stock offers", () => {
+  it("excludes unavailable offers (Out of stock, Sold out, 86'd, etc.)", () => {
     const listing = makeListing({
       offers: [
         { id: "sp_1", toastItemGuid: "GUID_1", pourLabel: "2 oz", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "12.00" }, availability: "Out of stock" },
         { id: "sp_2", toastItemGuid: "GUID_2", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "8.00" }, availability: "In stock" },
         { id: "sp_3", toastItemGuid: "GUID_3", pourLabel: "neat", pourSizeOz: { toString: () => "2.0" }, priceUsd: { toString: () => "14.00" }, availability: null },
+        { id: "sp_4", toastItemGuid: "GUID_4", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "9.00" }, availability: "Sold out" },
+        { id: "sp_5", toastItemGuid: "GUID_5", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "10.00" }, availability: "86'd" },
+        { id: "sp_6", toastItemGuid: "GUID_6", pourLabel: "1 oz", pourSizeOz: { toString: () => "1.0" }, priceUsd: { toString: () => "11.00" }, availability: "Unavailable" },
       ],
     });
     const candidates = listingToCandidatePours(listing);

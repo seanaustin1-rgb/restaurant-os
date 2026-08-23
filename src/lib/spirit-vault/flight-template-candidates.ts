@@ -17,6 +17,7 @@
 
 import type { FlightTemplate, FlightTemplateRules, FlightTemplateSlot } from "@/lib/spirit-vault/flight-templates";
 import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
+import { pourIsAvailable } from "@/lib/spirit-vault/availability";
 
 /** Days of Toast history that decide candidate rank. A season of sales — long
  *  enough to be stable, short enough to follow a menu that moved. */
@@ -158,7 +159,7 @@ export function listingToCandidatePours(
     const priceUsd = decimalToNumber(offer.priceUsd);
     const pourSizeOz = decimalToNumber(offer.pourSizeOz);
     if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
-    if (offer.availability?.toLowerCase() === "out of stock") return [];
+    if (!pourIsAvailable(offer.availability)) return [];
     return [
       {
         venueSpiritId: listing.id,
@@ -251,4 +252,3 @@ export function groupCandidatesByTemplateSlot(
     emptySlotKeys: slots.filter((group) => group.candidates.length === 0).map((group) => group.slot.key),
   };
 }
-

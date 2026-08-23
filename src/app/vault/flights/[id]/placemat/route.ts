@@ -86,9 +86,13 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.02;color:var(--band-text);-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .through{margin-top:3px}
   .through p{font-family:var(--display);font-style:italic;font-size:13px;line-height:1.25;color:#cdbf9f;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .pricebox{display:flex;align-items:center;flex:none}
+  .pricebox{display:flex;align-items:center;gap:.2in;flex:none}
   .pricestack{text-align:right}
   .price{font-family:var(--mono);font-weight:700;font-size:28px;color:var(--gold-light);line-height:1}
+  .qr-block{display:flex;align-items:center;gap:.12in;flex:none}
+  .qr-block svg{width:.52in;height:.52in}
+  .qr-code{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--gold-light);text-align:center;line-height:1.3}
+  .qr-label{font-family:var(--mono);font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:#9c876a}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
   .glass{display:flex;flex-direction:column;padding:.10in .30in .08in;border-right:1px solid rgba(122,85,38,.18);min-height:0}
   .glass:last-child{border-right:0}
@@ -135,6 +139,10 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
       </div>
       <div class="pricebox">
         <div class="pricestack"><div class="price">${money(v.totalPriceUsd)}</div></div>
+        <div class="qr-block">
+          <div>${qr.svg}</div>
+          ${qr.code ? `<div><div class="qr-code">${esc(qr.code)}</div><div class="qr-label">scan or enter code</div></div>` : ""}
+        </div>
       </div>
     </div>
     <div class="flight">${v.pours.map(glass).join("")}</div>

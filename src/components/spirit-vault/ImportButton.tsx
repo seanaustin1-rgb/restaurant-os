@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 
+const CHUNK_SIZE = 20;
+
 export function ImportButton() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -24,13 +26,14 @@ export function ImportButton() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      const spirits = Array.isArray(data) ? data : data.spirits ?? data;
+      const spirits: unknown[] = Array.isArray(data) ? data : data.spirits ?? data;
 
-      setStatus(`Dry run: ${spirits.length} spirits...`);
+      // Dry-run the first chunk to validate auth + schema
+      setStatus(`Validating ${spirits.length} spirits...`);
       const dryRun = await safeFetch("/admin/spirit-vault/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(spirits),
+        body: JSON.stringify(spirits.slice(0, CHUNK_SIZE)),
       });
 
       if (!dryRun.ok) {
@@ -40,25 +43,40 @@ export function ImportButton() {
       }
 
       if (dryRun.data.skipped === dryRun.data.total) {
-        setStatus(`All ${dryRun.data.total} spirits skipped (not found in DB)`);
+        setStatus(`First ${CHUNK_SIZE} spirits not found in DB — wrong environment?`);
         setBusy(false);
         return;
       }
 
-      setStatus(`Committing ${dryRun.data.updated} spirits...`);
-      const commitRun = await safeFetch("/admin/spirit-vault/import?commit=true", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(spirits),
-      });
+      // Commit in chunks
+      let totalUpdated = 0;
+      let totalDefUpdated = 0;
+      let totalSkipped = 0;
+      const chunks = Math.ceil(spirits.length / CHUNK_SIZE);
 
-      if (!commitRun.ok) {
-        setStatus(`Error: ${commitRun.data.error}`);
-      } else {
-        setStatus(
-          `Done: ${commitRun.data.updated} updated, ${commitRun.data.defUpdated} definitions, ${commitRun.data.skipped} skipped`
-        );
+      for (let i = 0; i < spirits.length; i += CHUNK_SIZE) {
+        const chunk = spirits.slice(i, i + CHUNK_SIZE);
+        const chunkNum = Math.floor(i / CHUNK_SIZE) + 1;
+        setStatus(`Committing chunk ${chunkNum}/${chunks} (${i + 1}–${Math.min(i + CHUNK_SIZE, spirits.length)} of ${spirits.length})...`);
+
+        const res = await safeFetch("/admin/spirit-vault/import?commit=true", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(chunk),
+        });
+
+        if (!res.ok) {
+          setStatus(`Error on chunk ${chunkNum}: ${res.data.error}`);
+          setBusy(false);
+          return;
+        }
+
+        totalUpdated += res.data.updated ?? 0;
+        totalDefUpdated += res.data.defUpdated ?? 0;
+        totalSkipped += res.data.skipped ?? 0;
       }
+
+      setStatus(`Done: ${totalUpdated} updated, ${totalDefUpdated} definitions, ${totalSkipped} skipped`);
     } catch (e) {
       setStatus(`Error: ${e instanceof Error ? e.message : "Unknown error"}`);
     } finally {

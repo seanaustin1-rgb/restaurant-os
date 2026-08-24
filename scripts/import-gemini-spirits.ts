@@ -66,6 +66,11 @@ function validate(s: GeminiSpirit, idx: number): string[] {
   return errors;
 }
 
+const PLACEHOLDER_RE = /^(pending\s+sean\s+review|draft\s+inventory\s+setup)/i;
+function isRealContent(v: string | null | undefined): boolean {
+  return !!v && !PLACEHOLDER_RE.test(v.trim());
+}
+
 async function main() {
   const filePath = resolve(__dirname, "..", "spirits-import.json");
   const raw = JSON.parse(readFileSync(filePath, "utf-8"));
@@ -134,11 +139,11 @@ async function main() {
         continue;
       }
 
-      // Don't overwrite voice fields Sean already wrote
+      // Don't overwrite voice fields Sean already wrote (skip placeholders)
       const finalData = { ...venueData };
-      if (existing.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
-      if (existing.seanShort) finalData.seanShort = existing.seanShort;
-      if (existing.notes) finalData.notes = existing.notes;
+      if (isRealContent(existing.whyWeCarry)) finalData.whyWeCarry = existing.whyWeCarry;
+      if (isRealContent(existing.seanShort)) finalData.seanShort = existing.seanShort;
+      if (isRealContent(existing.notes)) finalData.notes = existing.notes;
 
       // Merge overrides — keep existing sensory if already customized
       const existingOverrides = (existing.overrides ?? {}) as Record<string, unknown>;

@@ -55,6 +55,11 @@ function validate(s: GeminiSpirit, idx: number): string[] {
   return errors;
 }
 
+const PLACEHOLDER_RE = /^(pending\s+sean\s+review|draft\s+inventory\s+setup)/i;
+function isRealContent(v: string | null | undefined): boolean {
+  return !!v && !PLACEHOLDER_RE.test(v.trim());
+}
+
 async function processSpirit(
   s: GeminiSpirit,
   commit: boolean
@@ -93,9 +98,9 @@ async function processSpirit(
   }
 
   const finalData = { ...venueData };
-  if (existing.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
-  if (existing.seanShort) finalData.seanShort = existing.seanShort;
-  if (existing.notes) finalData.notes = existing.notes;
+  if (isRealContent(existing.whyWeCarry)) finalData.whyWeCarry = existing.whyWeCarry;
+  if (isRealContent(existing.seanShort)) finalData.seanShort = existing.seanShort;
+  if (isRealContent(existing.notes)) finalData.notes = existing.notes;
 
   const existingOverrides = (existing.overrides ?? {}) as Record<string, unknown>;
   if (existingOverrides.body != null || existingOverrides.finish != null) {

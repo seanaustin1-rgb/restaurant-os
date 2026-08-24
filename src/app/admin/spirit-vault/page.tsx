@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OPERATOR_ROLES } from "@/lib/access/roles";
 import { SpiritListTable, type SpiritRow } from "@/components/spirit-vault/SpiritListTable";
+import { ImportButton } from "@/components/spirit-vault/ImportButton";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,7 @@ export default async function SpiritVaultAdminPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h1 className="font-display text-2xl text-copper-soft">Spirits</h1>
           <div className="flex gap-2">
+            <ImportButton />
             <a
               href="/admin/spirit-vault/export"
               className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-muted hover:text-ink-text"

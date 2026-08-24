@@ -6,6 +6,8 @@ import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { TemplatedFlightBuilder } from "@/components/spirit-vault/TemplatedFlightBuilder";
 import { FLIGHT_TEMPLATES } from "@/lib/spirit-vault/flight-templates";
 import { loadFlightCandidatePours } from "@/lib/spirit-vault/flight-template-candidates.server";
+import { generateDynamicGroupings } from "@/lib/spirit-vault/dynamic-flight-groups";
+import { loadCustomTemplates } from "@/lib/spirit-vault/custom-templates.server";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +21,10 @@ export default async function NewSpiritFlightPage() {
   });
   if (!role) redirect("/admin/spirit-vault/flights");
 
-  const pours = await loadFlightCandidatePours(role.restaurantId);
+  const [pours, customTemplates] = await Promise.all([
+    loadFlightCandidatePours(role.restaurantId),
+    loadCustomTemplates(role.restaurantId),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-6 py-10">
@@ -38,7 +43,12 @@ export default async function NewSpiritFlightPage() {
           No priced published vault pours are available yet.
         </p>
       ) : (
-        <TemplatedFlightBuilder pours={pours} templates={FLIGHT_TEMPLATES} />
+        <TemplatedFlightBuilder
+          pours={pours}
+          templates={FLIGHT_TEMPLATES}
+          dynamicTemplates={generateDynamicGroupings(pours, FLIGHT_TEMPLATES)}
+          customTemplates={customTemplates}
+        />
       )}
     </main>
   );

@@ -37,6 +37,11 @@ const baseInput: SpiritEditInput = {
   flavor: { Sweet: 8, Oak: 2, Spice: 1, Fruit: 9, Smoke: 0, Earth: 1, Herbal: 2 },
   topNotes: ["Note A", "Note B", "Note C"],
   pairings: ["Dark chocolate"],
+  mashBill: null,
+  caskDetails: null,
+  productionMethod: null,
+  servingSuggestion: null,
+  suggestedCocktails: [],
   recordStatus: "DRAFT",
   publicationStatus: "DRAFT",
 };
@@ -70,6 +75,11 @@ describe("updateSpirit — sensory edits are venue-local overrides", () => {
       flavor: { Sweet: 8, Oak: 2, Spice: 1, Fruit: 9, Smoke: 0, Earth: 1, Herbal: 2 },
       topNotes: ["Note A", "Note B", "Note C"],
       pairings: ["Dark chocolate"],
+      mashBill: null,
+      caskDetails: null,
+      productionMethod: null,
+      servingSuggestion: null,
+      suggestedCocktails: [],
     });
   });
 

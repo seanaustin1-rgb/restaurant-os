@@ -87,6 +87,12 @@ export async function GET() {
 
       whyShort: d.whyShort,
 
+      mashBill: (overrides.mashBill as string | null) ?? null,
+      caskDetails: (overrides.caskDetails as string | null) ?? null,
+      productionMethod: (overrides.productionMethod as string | null) ?? null,
+      servingSuggestion: (overrides.servingSuggestion as string | null) ?? null,
+      suggestedCocktails: (overrides.suggestedCocktails as string[] | null) ?? [],
+
       whyWeCarry: vs.whyWeCarry,
       seanShort: vs.seanShort,
       notes: vs.notes,

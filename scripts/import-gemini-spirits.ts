@@ -33,6 +33,11 @@ interface GeminiSpirit {
   whyWeCarry: string | null;
   seanShort: string | null;
   notes: string | null;
+  mashBill: string | null;
+  caskDetails: string | null;
+  productionMethod: string | null;
+  servingSuggestion: string | null;
+  suggestedCocktails: string[] | null;
 }
 
 function validate(s: GeminiSpirit, idx: number): string[] {
@@ -102,6 +107,11 @@ async function main() {
       flavor: Object.fromEntries(FLAVOR_AXES.map((a) => [a, s.flavor[a]])),
       topNotes: s.topNotes,
       pairings: s.pairings,
+      mashBill: s.mashBill?.trim() || null,
+      caskDetails: s.caskDetails?.trim() || null,
+      productionMethod: s.productionMethod?.trim() || null,
+      servingSuggestion: s.servingSuggestion?.trim() || null,
+      suggestedCocktails: (s.suggestedCocktails ?? []).map((c) => c.trim()).filter(Boolean),
     };
 
     const venueData = {

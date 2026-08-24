@@ -133,7 +133,7 @@ export async function loadFlightView(
   const pours: FlightPourView[] = flight.items.map((item, index) => {
     const d = item.venueSpirit.definition;
     const ov = item.venueSpirit.overrides && typeof item.venueSpirit.overrides === "object"
-      ? (item.venueSpirit.overrides as { flavor?: unknown; topNotes?: unknown })
+      ? (item.venueSpirit.overrides as { flavor?: unknown; topNotes?: unknown; mashBill?: string | null; caskDetails?: string | null })
       : null;
     const proofN = num(d.proofN);
     const ovTop = asStrings(ov?.topNotes);
@@ -151,8 +151,8 @@ export async function loadFlightView(
       finish: num(d.finish),
       topNotes: (ovTop.length ? ovTop : asStrings(d.topNotes)).slice(0, 3),
       taste: d.whyShort ?? null,
-      mash: prodRow(d.production, /mash/i),
-      cask: prodRow(d.production, /matur|cask|barrel|wood|cooper/i),
+      mash: ov?.mashBill?.trim() || prodRow(d.production, /mash/i),
+      cask: ov?.caskDetails?.trim() || prodRow(d.production, /matur|cask|barrel|wood|cooper/i),
       itemNote: item.itemNote,
       bites: asStrings(item.pairingBites),
     };

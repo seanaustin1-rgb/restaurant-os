@@ -34,6 +34,11 @@ export interface SpiritEditInput {
   flavor: Record<string, number>;
   topNotes: string[];
   pairings: string[];
+  mashBill: string | null;
+  caskDetails: string | null;
+  productionMethod: string | null;
+  servingSuggestion: string | null;
+  suggestedCocktails: string[];
   recordStatus: SpiritLifecycleStatus;
   publicationStatus: SpiritLifecycleStatus;
 }
@@ -104,6 +109,11 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
       flavor,
       topNotes,
       pairings,
+      mashBill: cleanText(input.mashBill),
+      caskDetails: cleanText(input.caskDetails),
+      productionMethod: cleanText(input.productionMethod),
+      servingSuggestion: cleanText(input.servingSuggestion),
+      suggestedCocktails: (input.suggestedCocktails ?? []).map((s) => s.trim()).filter(Boolean),
     };
     // Effective (merged) sensory values = venue override when set, else the
     // shared definition. This is what the guest sees, so it's what we validate.

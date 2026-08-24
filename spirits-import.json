@@ -12448,5 +12448,659 @@
     "whyWeCarry": "We carry Prairie Organic Cucumber Vodka for guests seeking natural, refreshing garden botanicals. Made from organic Minnesota corn and infused with real cucumber, it delivers cooling green melon and crisp mint notes with zero artificial aftertaste. It is unmatched in a summer spritz or mule.",
     "seanShort": "Certified organic corn vodka infused with real fresh-cut cucumber.",
     "notes": "I get fresh cucumber peel and garden mint right away. It is crisp, cooling, and completely natural without synthetic sweetness."
+  },
+  {
+    "venueSpirit_id": "cmsxsts4z00fnr3zu9ad7v716",
+    "definition_slug": "raspberry-vodka",
+    "venue_slug": "raspberry-vodka",
+    "brand": "Raspberry",
+    "expression": "Vodka",
+    "displayName": "Raspberry Vodka",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Raspberry",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 4,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 8,
+      "Oak": 0,
+      "Spice": 1,
+      "Fruit": 9,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 1
+    },
+    "topNotes": [
+      "Ripe Raspberry",
+      "Tart Berry Jam",
+      "Sweet Sugar"
+    ],
+    "pairings": [
+      "Dark chocolate brownie",
+      "Lemon tart",
+      "Cheesecake"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural raspberry flavor added",
+    "servingSuggestion": "Chilled, with lemonade or soda",
+    "suggestedCocktails": [
+      "Cosmopolitan",
+      "Raspberry Lemonade",
+      "Vodka Soda"
+    ],
+    "whyWeCarry": "We carry Raspberry Vodka to provide a bright, fruit-forward staple for modern martinis and highball drinks. Packed with juicy raspberry and tart berry notes, it mixes effortlessly with lemonade, lemon-lime soda, or Champagne.",
+    "seanShort": "Sweet, vibrant raspberry built for bright berry cocktails.",
+    "notes": "I taste candied raspberry and tart berry jam up front. It is bright, sweet, and finishes clean in citrus drinks."
+  },
+  {
+    "venueSpirit_id": "cmsxsti7k00dpr3zue8tof68n",
+    "definition_slug": "stoli-vodka",
+    "venue_slug": "stoli-vodka",
+    "brand": "Stoli",
+    "expression": "Vodka",
+    "displayName": "Stoli Vodka",
+    "category": "Vodka",
+    "subcategory": "vodka",
+    "style": "Vodka - vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Stoli",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 7,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 5,
+    "finish": 4,
+    "flavor": {
+      "Sweet": 3,
+      "Oak": 0,
+      "Spice": 4,
+      "Fruit": 3,
+      "Smoke": 0,
+      "Earth": 3,
+      "Herbal": 3
+    },
+    "topNotes": [
+      "Wheat & Rye Grain",
+      "Marshmallow",
+      "White Pepper"
+    ],
+    "pairings": [
+      "Smoked salmon",
+      "Pickled vegetables",
+      "Caviar"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Wheat and rye blend",
+    "caskDetails": null,
+    "productionMethod": "Triple-distilled, filtered through quartz sand and activated charcoal",
+    "servingSuggestion": "Chilled neat or in a classic Martini",
+    "suggestedCocktails": [
+      "Vodka Martini",
+      "Moscow Mule",
+      "Bloody Mary",
+      "Vodka Tonic"
+    ],
+    "whyWeCarry": "We carry Stolichnaya (Stoli) Vodka because it is a historic European benchmark combining wheat and rye. Triple-distilled and filtered through birch charcoal and quartz sands in Riga, Latvia, it delivers marshmallow sweetness and a distinct peppery rye backbone. It is a reliable classic for martinis and mules.",
+    "seanShort": "Wheat and rye blend with classic peppery backbone\u2014built for Moscow Mules.",
+    "notes": "I get soft marshmallow sweetness and grain on the nose, followed by a crisp white pepper bite from the rye. Sturdy and classic."
+  },
+  {
+    "venueSpirit_id": "cmsxsthcg00dir3zu286wcgz0",
+    "definition_slug": "strawberry-vodka",
+    "venue_slug": "strawberry-vodka",
+    "brand": "Strawberry",
+    "expression": "Vodka",
+    "displayName": "Strawberry Vodka",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Strawberry",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 4,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 8,
+      "Oak": 0,
+      "Spice": 1,
+      "Fruit": 9,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 2
+    },
+    "topNotes": [
+      "Ripe Strawberry",
+      "Sugared Berry",
+      "Clean Finish"
+    ],
+    "pairings": [
+      "Strawberry shortcake",
+      "Lemon bars",
+      "Goat cheese salad"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural strawberry flavor added",
+    "servingSuggestion": "Chilled, with lemonade or soda",
+    "suggestedCocktails": [
+      "Strawberry Lemonade",
+      "Strawberry Mule",
+      "Vodka Soda"
+    ],
+    "whyWeCarry": "We carry Strawberry Vodka for guests who want fun, fruit-driven cocktails and shooters. Packed with ripe strawberry aroma and sweet berry flavor, it mixes effortlessly into lemonade, club soda, or frozen drinks.",
+    "seanShort": "Sweet ripe strawberry essence built for refreshing lemonade drinks.",
+    "notes": "I taste fresh strawberry jam and sweet sugar right away. It drinks smooth and adds bright berry fruit to highballs."
+  },
+  {
+    "venueSpirit_id": "cmsxstqz900fgr3zu4x57xk2w",
+    "definition_slug": "tito-s-vodka",
+    "venue_slug": "tito-s-vodka",
+    "brand": "Tito's",
+    "expression": "Vodka",
+    "displayName": "Tito's Vodka",
+    "category": "Vodka",
+    "subcategory": "vodka",
+    "style": "Vodka - vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Tito's",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 8,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 5,
+    "finish": 4,
+    "flavor": {
+      "Sweet": 4,
+      "Oak": 0,
+      "Spice": 3,
+      "Fruit": 2,
+      "Smoke": 0,
+      "Earth": 2,
+      "Herbal": 2
+    },
+    "topNotes": [
+      "Sweet Yellow Corn",
+      "Clean Mineral",
+      "Soft Peppery Finish"
+    ],
+    "pairings": [
+      "Grilled burgers",
+      "Fish tacos",
+      "Loaded nachos",
+      "Chips and salsa"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "100% Corn",
+    "caskDetails": null,
+    "productionMethod": "Pot-distilled six times in old-fashioned copper pot stills",
+    "servingSuggestion": "Chilled neat, on the rocks, or in a Vodka Soda",
+    "suggestedCocktails": [
+      "Vodka Soda",
+      "Moscow Mule",
+      "Vodka Martini",
+      "Greyhound"
+    ],
+    "whyWeCarry": "We carry Tito's Handmade Vodka because it is the most requested spirit in America and the undisputed leader in pot-distilled corn vodka. Distilled six times in old-fashioned pot stills, it is naturally gluten-free and offers a soft corn sweetness with a clean, smooth finish. It is our most versatile well and call pour.",
+    "seanShort": "America's favorite copper pot-distilled corn vodka\u2014clean, smooth, and dependable.",
+    "notes": "I find sweet corn grain and clean minerality upfront, finishing with a light peppery warmth. Completely smooth and goes with everything."
+  },
+  {
+    "venueSpirit_id": "cmsxstz4300h0r3zuhel5ioqo",
+    "definition_slug": "vodka-grey-whale",
+    "venue_slug": "vodka-grey-whale",
+    "brand": "Vodka",
+    "expression": "Grey Whale",
+    "displayName": "Vodka Grey Whale",
+    "category": "Vodka",
+    "subcategory": "vodka",
+    "style": "Vodka - vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Vodka",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 8,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 5,
+    "finish": 5,
+    "flavor": {
+      "Sweet": 4,
+      "Oak": 0,
+      "Spice": 2,
+      "Fruit": 4,
+      "Smoke": 0,
+      "Earth": 3,
+      "Herbal": 5
+    },
+    "topNotes": [
+      "Pacific Sea Kelp",
+      "Meyer Lemon",
+      "Clean Corn Sweetness"
+    ],
+    "pairings": [
+      "Fresh oysters",
+      "Tuna tartare",
+      "Citrus ceviche"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "100% California winter wheat",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled from non-GMO California wheat, filtered through crushed volcanic rock from the Big Island of Hawaii",
+    "servingSuggestion": "Chilled neat or in a Vodka Tonic with citrus",
+    "suggestedCocktails": [
+      "Vodka Martini",
+      "Vodka Tonic",
+      "Greyhound",
+      "Sea Breeze"
+    ],
+    "whyWeCarry": "We carry Grey Whale Vodka for its celebration of California coastal terroir and marine conservation. Distilled from non-GMO corn and filtered through Hawaiian coconut husks, limestone, and Pacific sea kelp, it offers clean citrus and gentle saline minerality. It makes an exceptional ocean-fresh martini.",
+    "seanShort": "Filtered through Pacific sea kelp and limestone for a crisp saline finish.",
+    "notes": "I get clean Meyer lemon peel, subtle sea kelp saline, and sweet corn on the palate. Refreshing, smooth, and uniquely coastal."
+  },
+  {
+    "venueSpirit_id": "cmsxstl7w00ear3zuwh4sy2fn",
+    "definition_slug": "vodka-blueberry",
+    "venue_slug": "vodka-blueberry",
+    "brand": "Vodka",
+    "expression": "Blueberry",
+    "displayName": "Vodka Blueberry",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Vodka",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 4,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 8,
+      "Oak": 0,
+      "Spice": 1,
+      "Fruit": 9,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 1
+    },
+    "topNotes": [
+      "Wild Blueberry",
+      "Candied Berry",
+      "Clean Grain"
+    ],
+    "pairings": [
+      "Lemon blueberry tart",
+      "Goat cheese crostini",
+      "Pound cake"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural blueberry flavor added",
+    "servingSuggestion": "Chilled, with lemonade or soda",
+    "suggestedCocktails": [
+      "Blueberry Lemonade",
+      "Vodka Soda",
+      "Blue Lagoon"
+    ],
+    "whyWeCarry": "We carry Blueberry Vodka to offer a juicy, berry-rich option for lemonades and spritz cocktails. Infused with wild blueberry essence, it delivers candied fruit notes that pair wonderfully with fresh lemon and club soda.",
+    "seanShort": "Juicy wild blueberry essence built for lemonades and spritzes.",
+    "notes": "I taste sweet wild blueberry jam and a touch of citrus on the finish. It is bright, sweet, and great in summer drinks."
+  },
+  {
+    "venueSpirit_id": "cmsxstm7000ehr3zux2dgant9",
+    "definition_slug": "vodka-peach",
+    "venue_slug": "vodka-peach",
+    "brand": "Vodka",
+    "expression": "Peach",
+    "displayName": "Vodka Peach",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Vodka",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 4,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 8,
+      "Oak": 0,
+      "Spice": 1,
+      "Fruit": 9,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 1
+    },
+    "topNotes": [
+      "Juicy White Peach",
+      "Candied Nectarine",
+      "Clean Spirit"
+    ],
+    "pairings": [
+      "Peach cobbler",
+      "Prosciutto-wrapped melon",
+      "Grilled chicken skewers"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural peach flavor added",
+    "servingSuggestion": "Chilled, with iced tea or lemonade",
+    "suggestedCocktails": [
+      "Peach Bellini",
+      "Fuzzy Navel",
+      "Peach Lemonade"
+    ],
+    "whyWeCarry": "We carry Peach Vodka for guests looking for a fragrant, sweet stone fruit mixer. Bursting with ripe white peach and nectarine flavors, it blends seamlessly into iced teas, lemonades, and sparkling wine punches.",
+    "seanShort": "Juicy, fragrant white peach built for iced teas and punches.",
+    "notes": "I get sweet white peach and candied nectarine right away. It is lush, fruity, and finishes clean over ice with tea."
+  },
+  {
+    "venueSpirit_id": "cmsxstp4100f2r3zubsghuxy8",
+    "definition_slug": "vodka-caramel",
+    "venue_slug": "vodka-caramel",
+    "brand": "Vodka",
+    "expression": "Caramel",
+    "displayName": "Vodka Caramel",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Vodka",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 5,
+    "finish": 4,
+    "flavor": {
+      "Sweet": 9,
+      "Oak": 1,
+      "Spice": 1,
+      "Fruit": 1,
+      "Smoke": 0,
+      "Earth": 1,
+      "Herbal": 0
+    },
+    "topNotes": [
+      "Salted Caramel",
+      "Buttery Toffee",
+      "Vanilla Bean"
+    ],
+    "pairings": [
+      "Apple pie",
+      "Vanilla ice cream",
+      "Espresso brownie"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural caramel flavor added",
+    "servingSuggestion": "Chilled neat or with apple cider",
+    "suggestedCocktails": [
+      "Caramel Apple Martini",
+      "Salted Caramel White Russian"
+    ],
+    "whyWeCarry": "We carry Caramel Vodka as an indulgent dessert mixer for specialty coffee cocktails and seasonal autumn pours. It pairs rich salted caramel and toffee notes with a clean spirit base, making it an ideal companion for apple cider, hot chocolate, or espresso martinis.",
+    "seanShort": "Rich salted caramel and buttery toffee\u2014perfect for dessert cocktails.",
+    "notes": "I taste buttery toffee, spun sugar, and salted caramel on the palate. Decadently sweet and wonderful stirred into warm apple cider."
+  },
+  {
+    "venueSpirit_id": "cmsxstq1r00f9r3zuy6087ffq",
+    "definition_slug": "vodka-orange",
+    "venue_slug": "vodka-orange",
+    "brand": "Vodka",
+    "expression": "Orange",
+    "displayName": "Vodka Orange",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Vodka",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 4,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 7,
+      "Oak": 0,
+      "Spice": 2,
+      "Fruit": 8,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 2
+    },
+    "topNotes": [
+      "Mandarin Orange",
+      "Candied Citrus Peel",
+      "Clean Spirit"
+    ],
+    "pairings": [
+      "Dark chocolate",
+      "Fish tacos",
+      "Grilled chicken salad"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, natural orange flavor added",
+    "servingSuggestion": "Chilled, with orange juice or soda",
+    "suggestedCocktails": [
+      "Screwdriver",
+      "Creamsicle Martini",
+      "Orange Crush",
+      "Harvey Wallbanger"
+    ],
+    "whyWeCarry": "We carry Orange Vodka for guests who want a zesty, citrus-forward foundation for Cosmopolitans, Orange Crushes, and highballs. It provides sweet mandarin orange and candied zest without harsh artificial bite.",
+    "seanShort": "Zesty mandarin orange built for classic crushes and Cosmopolitans.",
+    "notes": "I get bright mandarin orange and candied peel upfront. It is zesty, refreshing, and lifts any drink with fresh citrus juice."
+  },
+  {
+    "venueSpirit_id": "cmsxsto4b00evr3zu662ct9is",
+    "definition_slug": "whipped-vodka",
+    "venue_slug": "whipped-vodka",
+    "brand": "Whipped",
+    "expression": "Vodka",
+    "displayName": "Whipped Vodka",
+    "category": "Vodka",
+    "subcategory": "flavored-vodka",
+    "style": "Vodka - flavored vodka",
+    "country": null,
+    "region": null,
+    "distilleryName": "Whipped",
+    "producerName": null,
+    "proofN": null,
+    "proofDisplay": "Pending",
+    "ageText": "Pending",
+    "minYears": null,
+    "maxYears": null,
+    "recordStatus": "DRAFT",
+    "publicationStatus": "DRAFT",
+    "pours": [
+      {
+        "sizeOz": 1.5,
+        "priceUsd": 6.5,
+        "label": "1.5 oz pour",
+        "isPrimary": true,
+        "availability": null
+      }
+    ],
+    "body": 5,
+    "finish": 3,
+    "flavor": {
+      "Sweet": 9,
+      "Oak": 0,
+      "Spice": 0,
+      "Fruit": 1,
+      "Smoke": 0,
+      "Earth": 0,
+      "Herbal": 0
+    },
+    "topNotes": [
+      "Whipped Cream",
+      "Marshmallow",
+      "Sweet Vanilla"
+    ],
+    "pairings": [
+      "Hot chocolate",
+      "Espresso brownie",
+      "Key lime pie"
+    ],
+    "whyShort": "Draft inventory record pending source review.",
+    "mashBill": "Grain neutral spirit",
+    "caskDetails": null,
+    "productionMethod": "Column-distilled, charcoal-filtered, whipped cream flavor added",
+    "servingSuggestion": "Chilled, with orange juice or root beer",
+    "suggestedCocktails": [
+      "Creamsicle",
+      "Orange Dreamsicle",
+      "Root Beer Float"
+    ],
+    "whyWeCarry": "We carry Whipped Cream Vodka for playful party shots and sweet dessert cocktails. It delivers fluffy marshmallow, vanilla cream, and confectioner's sugar notes that blend smoothly into root beer, orange soda, or hot chocolate.",
+    "seanShort": "Fluffy marshmallow and sweet whipped cream for dessert pours.",
+    "notes": "I taste sweet marshmallow and whipped vanilla cream right away. It is unmistakably sweet and works great in dessert drinks."
   }
 ]

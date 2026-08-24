@@ -7,6 +7,16 @@ export function ImportButton() {
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  async function safeFetch(url: string, init: RequestInit) {
+    const res = await fetch(url, init);
+    const text = await res.text();
+    try {
+      return { ok: res.ok, data: JSON.parse(text) };
+    } catch {
+      return { ok: false, data: { error: `Server error (${res.status}): ${text.slice(0, 120)}` } };
+    }
+  }
+
   async function handleFile(file: File) {
     setBusy(true);
     setStatus("Validating...");
@@ -16,41 +26,37 @@ export function ImportButton() {
       const data = JSON.parse(text);
       const spirits = Array.isArray(data) ? data : data.spirits ?? data;
 
-      // Dry run first
       setStatus(`Dry run: ${spirits.length} spirits...`);
-      const dryRes = await fetch("/admin/spirit-vault/import", {
+      const dryRun = await safeFetch("/admin/spirit-vault/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(spirits),
       });
-      const dryResult = await dryRes.json();
 
-      if (!dryRes.ok) {
-        setStatus(`Validation failed: ${dryResult.errors?.length ?? 0} errors`);
+      if (!dryRun.ok) {
+        setStatus(`Validation failed: ${dryRun.data.errors?.length ?? 0} errors — ${dryRun.data.error ?? ""}`);
         setBusy(false);
         return;
       }
 
-      if (dryResult.skipped === dryResult.total) {
-        setStatus(`All ${dryResult.total} spirits skipped (not found in DB)`);
+      if (dryRun.data.skipped === dryRun.data.total) {
+        setStatus(`All ${dryRun.data.total} spirits skipped (not found in DB)`);
         setBusy(false);
         return;
       }
 
-      // Commit
-      setStatus(`Committing ${dryResult.updated} spirits...`);
-      const commitRes = await fetch("/admin/spirit-vault/import?commit=true", {
+      setStatus(`Committing ${dryRun.data.updated} spirits...`);
+      const commitRun = await safeFetch("/admin/spirit-vault/import?commit=true", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(spirits),
       });
-      const commitResult = await commitRes.json();
 
-      if (!commitRes.ok) {
-        setStatus(`Error: ${commitResult.error}`);
+      if (!commitRun.ok) {
+        setStatus(`Error: ${commitRun.data.error}`);
       } else {
         setStatus(
-          `Done: ${commitResult.updated} updated, ${commitResult.defUpdated} definitions, ${commitResult.skipped} skipped`
+          `Done: ${commitRun.data.updated} updated, ${commitRun.data.defUpdated} definitions, ${commitRun.data.skipped} skipped`
         );
       }
     } catch (e) {

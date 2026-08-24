@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const FLAVOR_AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
+const BATCH_SIZE = 10;
 
 interface GeminiSpirit {
   venueSpirit_id: string;
@@ -49,6 +50,73 @@ function validate(s: GeminiSpirit, idx: number): string[] {
   return errors;
 }
 
+async function processSpirit(
+  s: GeminiSpirit,
+  commit: boolean
+): Promise<{ status: "updated" | "skipped" | "would_update"; defUpdated: boolean; note: string }> {
+  const overrides: Record<string, unknown> = {
+    body: s.body,
+    finish: s.finish,
+    flavor: Object.fromEntries(FLAVOR_AXES.map((a) => [a, s.flavor[a]])),
+    topNotes: s.topNotes,
+    pairings: s.pairings,
+  };
+
+  const venueData = {
+    whyWeCarry: s.whyWeCarry?.trim() || null,
+    seanShort: s.seanShort?.trim() || null,
+    notes: s.notes?.trim() || null,
+    overrides: overrides as Prisma.InputJsonValue,
+  };
+
+  const existing = await prisma.venueSpirit.findUnique({
+    where: { id: s.venueSpirit_id },
+    select: { whyWeCarry: true, seanShort: true, notes: true, overrides: true },
+  });
+
+  if (!existing) {
+    return { status: "skipped", defUpdated: false, note: `skip: ${s.definition_slug} (not found)` };
+  }
+
+  if (!commit) {
+    return { status: "would_update", defUpdated: false, note: `would update: ${s.definition_slug}` };
+  }
+
+  const finalData = { ...venueData };
+  if (existing.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
+  if (existing.seanShort) finalData.seanShort = existing.seanShort;
+  if (existing.notes) finalData.notes = existing.notes;
+
+  const existingOverrides = (existing.overrides ?? {}) as Record<string, unknown>;
+  if (existingOverrides.body != null || existingOverrides.finish != null) {
+    // preserve existing sensory overrides
+  } else {
+    finalData.overrides = overrides as Prisma.InputJsonValue;
+  }
+
+  await prisma.venueSpirit.update({
+    where: { id: s.venueSpirit_id },
+    data: finalData,
+  });
+
+  let defUpdated = false;
+  if (s.whyShort) {
+    const def = await prisma.spiritDefinition.findFirst({
+      where: { slug: s.definition_slug },
+      select: { id: true, whyShort: true },
+    });
+    if (def && !def.whyShort) {
+      await prisma.spiritDefinition.update({
+        where: { id: def.id },
+        data: { whyShort: s.whyShort.trim() },
+      });
+      defUpdated = true;
+    }
+  }
+
+  return { status: "updated", defUpdated, note: `updated: ${s.definition_slug}` };
+}
+
 export async function POST(req: Request) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -78,69 +146,14 @@ export async function POST(req: Request) {
   let skipped = 0;
   const log: string[] = [];
 
-  for (const s of spirits) {
-    const overrides: Record<string, unknown> = {
-      body: s.body,
-      finish: s.finish,
-      flavor: Object.fromEntries(FLAVOR_AXES.map((a) => [a, s.flavor[a]])),
-      topNotes: s.topNotes,
-      pairings: s.pairings,
-    };
-
-    const venueData = {
-      whyWeCarry: s.whyWeCarry?.trim() || null,
-      seanShort: s.seanShort?.trim() || null,
-      notes: s.notes?.trim() || null,
-      overrides: overrides as Prisma.InputJsonValue,
-    };
-
-    const existing = await prisma.venueSpirit.findUnique({
-      where: { id: s.venueSpirit_id },
-      select: { whyWeCarry: true, seanShort: true, notes: true, overrides: true },
-    });
-
-    if (!existing) {
-      log.push(`skip: ${s.definition_slug} (not found)`);
-      skipped++;
-      continue;
-    }
-
-    if (!commit) {
-      log.push(`would update: ${s.definition_slug}`);
-      updated++;
-      continue;
-    }
-
-    const finalData = { ...venueData };
-    if (existing.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
-    if (existing.seanShort) finalData.seanShort = existing.seanShort;
-    if (existing.notes) finalData.notes = existing.notes;
-
-    const existingOverrides = (existing.overrides ?? {}) as Record<string, unknown>;
-    if (existingOverrides.body != null || existingOverrides.finish != null) {
-      log.push(`preserve sensory: ${s.definition_slug}`);
-    } else {
-      finalData.overrides = overrides as Prisma.InputJsonValue;
-    }
-
-    await prisma.venueSpirit.update({
-      where: { id: s.venueSpirit_id },
-      data: finalData,
-    });
-    updated++;
-
-    if (s.whyShort) {
-      const def = await prisma.spiritDefinition.findFirst({
-        where: { slug: s.definition_slug },
-        select: { id: true, whyShort: true },
-      });
-      if (def && !def.whyShort) {
-        await prisma.spiritDefinition.update({
-          where: { id: def.id },
-          data: { whyShort: s.whyShort.trim() },
-        });
-        defUpdated++;
-      }
+  for (let i = 0; i < spirits.length; i += BATCH_SIZE) {
+    const batch = spirits.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(batch.map((s) => processSpirit(s, commit)));
+    for (const r of results) {
+      log.push(r.note);
+      if (r.status === "updated" || r.status === "would_update") updated++;
+      if (r.status === "skipped") skipped++;
+      if (r.defUpdated) defUpdated++;
     }
   }
 

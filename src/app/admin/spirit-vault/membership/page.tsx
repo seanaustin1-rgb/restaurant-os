@@ -24,31 +24,44 @@ export default async function MembershipCodesPage() {
     );
   }
 
-  const [codesRaw, redemptionsRaw, memberCount, optedCount] = await Promise.all([
-    prisma.membershipCode.findMany({
-      where: { restaurantId: role.restaurantId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        hint: true,
-        label: true,
-        status: true,
-        grantDays: true,
-        maxRedemptions: true,
-        redemptionCount: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-    }),
-    prisma.membershipRedemption.findMany({
-      where: { restaurantId: role.restaurantId },
-      orderBy: { redeemedAt: "desc" },
-      take: 25,
-      select: { id: true, redeemedAt: true, guest: { select: { email: true } }, code: { select: { hint: true } } },
-    }),
-    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId } }),
-    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId, guest: { marketingOptIn: true } } }),
-  ]);
+  let codesRaw, redemptionsRaw, memberCount, optedCount;
+  try {
+    [codesRaw, redemptionsRaw, memberCount, optedCount] = await Promise.all([
+      prisma.membershipCode.findMany({
+        where: { restaurantId: role.restaurantId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          hint: true,
+          label: true,
+          status: true,
+          grantDays: true,
+          maxRedemptions: true,
+          redemptionCount: true,
+          expiresAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.membershipRedemption.findMany({
+        where: { restaurantId: role.restaurantId },
+        orderBy: { redeemedAt: "desc" },
+        take: 25,
+        select: { id: true, redeemedAt: true, guest: { select: { email: true } }, code: { select: { hint: true } } },
+      }),
+      prisma.guestMembership.count({ where: { restaurantId: role.restaurantId } }),
+      prisma.guestMembership.count({ where: { restaurantId: role.restaurantId, guest: { marketingOptIn: true } } }),
+    ]);
+  } catch {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <h1 className="font-display text-2xl text-copper-soft">Membership Codes</h1>
+        <p className="mt-4 rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
+          Membership tables have not been migrated to this database yet.
+          Run <code className="rounded bg-surface px-1.5 py-0.5 text-xs">prisma migrate deploy</code> to set them up.
+        </p>
+      </main>
+    );
+  }
 
   const codes: CodeRow[] = codesRaw.map((c) => ({
     id: c.id,

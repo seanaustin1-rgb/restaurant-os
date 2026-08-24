@@ -74,12 +74,20 @@ export default async function SpiritVaultAdminPage() {
       <div>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <h1 className="font-display text-2xl text-copper-soft">Spirits</h1>
-          <Link
-            href="/admin/spirit-vault/flights/new"
-            className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20"
-          >
-            Create a Flight
-          </Link>
+          <div className="flex gap-2">
+            <a
+              href="/admin/spirit-vault/export"
+              className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-muted hover:text-ink-text"
+            >
+              Export JSON
+            </a>
+            <Link
+              href="/admin/spirit-vault/flights/new"
+              className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20"
+            >
+              Create a Flight
+            </Link>
+          </div>
         </div>
         <p className="mt-1 text-sm text-muted">
           {role.restaurant?.name ?? "Your bar"} — edit dossiers, add your voice, and publish. Published records go live

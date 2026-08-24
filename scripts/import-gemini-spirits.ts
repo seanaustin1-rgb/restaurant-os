@@ -93,6 +93,7 @@ async function main() {
 
   let updated = 0;
   let defUpdated = 0;
+  let skipped = 0;
 
   for (const s of spirits) {
     const overrides: Record<string, unknown> = {
@@ -117,14 +118,20 @@ async function main() {
         select: { whyWeCarry: true, seanShort: true, notes: true, overrides: true },
       });
 
+      if (!existing) {
+        console.log(`  ⤳ ${s.definition_slug}: VenueSpirit not found (id=${s.venueSpirit_id}), skipping`);
+        skipped++;
+        continue;
+      }
+
       // Don't overwrite voice fields Sean already wrote
       const finalData = { ...venueData };
-      if (existing?.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
-      if (existing?.seanShort) finalData.seanShort = existing.seanShort;
-      if (existing?.notes) finalData.notes = existing.notes;
+      if (existing.whyWeCarry) finalData.whyWeCarry = existing.whyWeCarry;
+      if (existing.seanShort) finalData.seanShort = existing.seanShort;
+      if (existing.notes) finalData.notes = existing.notes;
 
       // Merge overrides — keep existing sensory if already customized
-      const existingOverrides = (existing?.overrides ?? {}) as Record<string, unknown>;
+      const existingOverrides = (existing.overrides ?? {}) as Record<string, unknown>;
       if (existingOverrides.body != null || existingOverrides.finish != null) {
         // Existing sensory overrides exist — skip (Sean already scored this one)
         console.log(`  ⤳ ${s.definition_slug}: preserving existing sensory overrides`);
@@ -168,6 +175,7 @@ async function main() {
 
   if (commit) {
     console.log(`\nCommitted: ${updated} VenueSpirit rows, ${defUpdated} SpiritDefinition rows updated.`);
+    if (skipped) console.log(`Skipped: ${skipped} spirits not found in database.`);
   } else {
     console.log(`\nDRY RUN: ${updated} spirits would be updated. Re-run with --commit to write.`);
   }

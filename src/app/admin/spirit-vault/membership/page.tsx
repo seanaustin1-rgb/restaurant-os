@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -25,31 +24,44 @@ export default async function MembershipCodesPage() {
     );
   }
 
-  const [codesRaw, redemptionsRaw, memberCount, optedCount] = await Promise.all([
-    prisma.membershipCode.findMany({
-      where: { restaurantId: role.restaurantId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        hint: true,
-        label: true,
-        status: true,
-        grantDays: true,
-        maxRedemptions: true,
-        redemptionCount: true,
-        expiresAt: true,
-        createdAt: true,
-      },
-    }),
-    prisma.membershipRedemption.findMany({
-      where: { restaurantId: role.restaurantId },
-      orderBy: { redeemedAt: "desc" },
-      take: 25,
-      select: { id: true, redeemedAt: true, guest: { select: { email: true } }, code: { select: { hint: true } } },
-    }),
-    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId } }),
-    prisma.guestMembership.count({ where: { restaurantId: role.restaurantId, guest: { marketingOptIn: true } } }),
-  ]);
+  let codesRaw, redemptionsRaw, memberCount, optedCount;
+  try {
+    [codesRaw, redemptionsRaw, memberCount, optedCount] = await Promise.all([
+      prisma.membershipCode.findMany({
+        where: { restaurantId: role.restaurantId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          hint: true,
+          label: true,
+          status: true,
+          grantDays: true,
+          maxRedemptions: true,
+          redemptionCount: true,
+          expiresAt: true,
+          createdAt: true,
+        },
+      }),
+      prisma.membershipRedemption.findMany({
+        where: { restaurantId: role.restaurantId },
+        orderBy: { redeemedAt: "desc" },
+        take: 25,
+        select: { id: true, redeemedAt: true, guest: { select: { email: true } }, code: { select: { hint: true } } },
+      }),
+      prisma.guestMembership.count({ where: { restaurantId: role.restaurantId } }),
+      prisma.guestMembership.count({ where: { restaurantId: role.restaurantId, guest: { marketingOptIn: true } } }),
+    ]);
+  } catch {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <h1 className="font-display text-2xl text-copper-soft">Membership Codes</h1>
+        <p className="mt-4 rounded-lg border border-dashed border-line p-8 text-center text-sm text-muted">
+          Membership tables have not been migrated to this database yet.
+          Run <code className="rounded bg-surface px-1.5 py-0.5 text-xs">prisma migrate deploy</code> to set them up.
+        </p>
+      </main>
+    );
+  }
 
   const codes: CodeRow[] = codesRaw.map((c) => ({
     id: c.id,
@@ -72,10 +84,7 @@ export default async function MembershipCodesPage() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div>
-        <Link href="/admin/spirit-vault" className="text-xs text-muted hover:text-copper-soft">
-          Back to Spirit Vault
-        </Link>
-        <h1 className="mt-2 font-display text-2xl text-copper-soft">Membership codes</h1>
+        <h1 className="font-display text-2xl text-copper-soft">Membership Codes</h1>
         <p className="mt-1 text-sm text-muted">
           {role.restaurant?.name ?? "Your bar"} — issue codes that grant a member a year of full vault access. A code is
           shown once when you generate it, then stored hashed; you can revoke it but never re-display it.

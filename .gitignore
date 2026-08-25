@@ -35,3 +35,5 @@ next-env.d.ts
 # local dev artifacts holding real financial data — never commit
 /scripts/.cache-txns.json
 /scripts/*.cache.json
+/spirits-export.json
+# /spirits-import.json — un-gitignored; contains catalog data only, no financials

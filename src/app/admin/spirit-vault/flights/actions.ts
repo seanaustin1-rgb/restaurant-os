@@ -6,6 +6,7 @@ import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { calculateFlightPricing, type FlightPricingResult } from "@/lib/spirit-vault/flight-pricing";
+import { pourIsAvailable } from "@/lib/spirit-vault/availability";
 
 const FLIGHTS_PATH = "/admin/spirit-vault/flights";
 const STATUS_RANK: Record<SpiritLifecycleStatus, number> = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 };
@@ -46,12 +47,23 @@ async function requireSpiritVaultStaff(): Promise<string> {
   return role.restaurantId;
 }
 
-function cleanText(v: string | null | undefined): string | null {
+/** Length caps: a through-line lives on the placemat; an item note sits under a
+ *  pour on the guest page. Bites are 1-2 word internal labels. Caps here match what
+ *  the surfaces can render without overflow or truncation. */
+const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_ITEM_NOTE_LENGTH = 200;
+const MAX_BITE_LENGTH = 80;
+
+function cleanText(v: string | null | undefined, maxLength?: number): string | null {
   const t = (v ?? "").trim();
-  return t === "" ? null : t;
+  if (t === "") return null;
+  if (maxLength != null && t.length > maxLength) {
+    throw new Error(`Text exceeds the ${maxLength}-character limit`);
+  }
+  return t;
 }
 
-// At most 2 bites, trimmed, de-duped, no blanks.
+// At most 2 bites, trimmed, de-duped, no blanks, length-capped.
 function cleanBites(bites: string[] | null | undefined): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -59,6 +71,9 @@ function cleanBites(bites: string[] | null | undefined): string[] {
     const t = (raw ?? "").trim();
     const key = t.toLowerCase();
     if (!t || seen.has(key)) continue;
+    if (t.length > MAX_BITE_LENGTH) {
+      throw new Error(`Bite text exceeds the ${MAX_BITE_LENGTH}-character limit`);
+    }
     seen.add(key);
     out.push(t);
     if (out.length >= 2) break;
@@ -71,7 +86,7 @@ function normalizeFlightItems(items: CreateSpiritFlightItemInput[]): CreateSpiri
     .map((item) => ({
       venueSpiritId: item.venueSpiritId?.trim(),
       spiritPourId: item.spiritPourId?.trim(),
-      itemNote: cleanText(item.itemNote),
+      itemNote: cleanText(item.itemNote, MAX_ITEM_NOTE_LENGTH),
       pairingBites: cleanBites(item.pairingBites),
     }))
     .filter((item) => item.venueSpiritId && item.spiritPourId);
@@ -112,12 +127,17 @@ async function resolvePricingForItems(
       venueSpiritId: { in: items.map((item) => item.venueSpiritId) },
       venueSpirit: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
     },
-    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true },
+    select: { id: true, venueSpiritId: true, priceUsd: true, pourSizeOz: true, availability: true },
   });
 
   const pourById = new Map(selectedPours.map((pour) => [pour.id, pour]));
   if (pourById.size !== items.length) {
     throw new Error("Every flight item must reference a published vault spirit and priced pour");
+  }
+  for (const pour of selectedPours) {
+    if (!pourIsAvailable(pour.availability)) {
+      throw new Error("A flight cannot include an out-of-stock pour");
+    }
   }
 
   const orderedPours = items.map((item) => {
@@ -151,7 +171,7 @@ export async function createSpiritFlight(input: CreateSpiritFlightInput): Promis
   const name = cleanText(input.name);
   if (!name) throw new Error("Flight name is required");
   if (name.length > 120) throw new Error("Flight name must be 120 characters or fewer");
-  const description = cleanText(input.description);
+  const description = cleanText(input.description, MAX_DESCRIPTION_LENGTH);
   const status = validateStatus(input.status ?? "DRAFT");
   const items = normalizeFlightItems(input.items);
 
@@ -190,7 +210,7 @@ export async function updateSpiritFlight(input: UpdateSpiritFlightInput): Promis
   const name = cleanText(input.name);
   if (!name) throw new Error("Flight name is required");
   if (name.length > 120) throw new Error("Flight name must be 120 characters or fewer");
-  const description = cleanText(input.description);
+  const description = cleanText(input.description, MAX_DESCRIPTION_LENGTH);
   const status = validateStatus(input.status ?? "DRAFT");
   const items = normalizeFlightItems(input.items);
 

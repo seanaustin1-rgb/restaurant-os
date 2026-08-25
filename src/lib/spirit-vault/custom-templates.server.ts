@@ -23,11 +23,16 @@ function toAutoOrder(v: string): FlightTemplate["autoOrder"] {
 }
 
 export async function loadCustomTemplates(restaurantId: string): Promise<FlightTemplate[]> {
-  const rows = await prisma.customFlightTemplate.findMany({
-    where: { restaurantId },
-    orderBy: { createdAt: "asc" },
-    select: { id: true, name: true, description: true, throughLine: true, autoOrder: true, slots: true },
-  });
+  let rows;
+  try {
+    rows = await prisma.customFlightTemplate.findMany({
+      where: { restaurantId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true, name: true, description: true, throughLine: true, autoOrder: true, slots: true },
+    });
+  } catch {
+    return [];
+  }
 
   return rows.map((row) => ({
     key: `custom-${row.id}`,

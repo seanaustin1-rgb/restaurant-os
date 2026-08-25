@@ -36,4 +36,4 @@ next-env.d.ts
 /scripts/.cache-txns.json
 /scripts/*.cache.json
 /spirits-export.json
-/spirits-import.json
+# /spirits-import.json — un-gitignored; contains catalog data only, no financials

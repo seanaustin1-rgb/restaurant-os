@@ -51,6 +51,7 @@ export function ImportButton() {
       // Commit in chunks
       let totalUpdated = 0;
       let totalDefUpdated = 0;
+      let totalPoursCreated = 0;
       let totalSkipped = 0;
       const chunks = Math.ceil(spirits.length / CHUNK_SIZE);
 
@@ -73,10 +74,12 @@ export function ImportButton() {
 
         totalUpdated += res.data.updated ?? 0;
         totalDefUpdated += res.data.defUpdated ?? 0;
+        totalPoursCreated += res.data.poursCreated ?? 0;
         totalSkipped += res.data.skipped ?? 0;
       }
 
-      setStatus(`Done: ${totalUpdated} updated, ${totalDefUpdated} definitions, ${totalSkipped} skipped`);
+      const pourNote = totalPoursCreated > 0 ? `, ${totalPoursCreated} pours created + published` : "";
+      setStatus(`Done: ${totalUpdated} updated, ${totalDefUpdated} definitions, ${totalSkipped} skipped${pourNote}`);
     } catch (e) {
       setStatus(`Error: ${e instanceof Error ? e.message : "Unknown error"}`);
     } finally {

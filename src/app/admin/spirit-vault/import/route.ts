@@ -27,6 +27,7 @@ interface GeminiSpirit {
   productionMethod: string | null;
   servingSuggestion: string | null;
   suggestedCocktails: string[] | null;
+  pours?: { sizeOz: number; priceUsd: number | null; label: string; isPrimary: boolean; availability: string | null }[];
 }
 
 function validate(s: GeminiSpirit, idx: number): string[] {
@@ -63,7 +64,7 @@ function isRealContent(v: string | null | undefined): boolean {
 async function processSpirit(
   s: GeminiSpirit,
   commit: boolean
-): Promise<{ status: "updated" | "skipped" | "would_update"; defUpdated: boolean; note: string }> {
+): Promise<{ status: "updated" | "skipped" | "would_update"; defUpdated: boolean; pourCreated: boolean; note: string }> {
   const overrides: Record<string, unknown> = {
     body: s.body,
     finish: s.finish,
@@ -86,15 +87,31 @@ async function processSpirit(
 
   const existing = await prisma.venueSpirit.findUnique({
     where: { id: s.venueSpirit_id },
-    select: { whyWeCarry: true, seanShort: true, notes: true, overrides: true },
+    select: {
+      id: true,
+      restaurantId: true,
+      recordStatus: true,
+      publicationStatus: true,
+      whyWeCarry: true,
+      seanShort: true,
+      notes: true,
+      overrides: true,
+      offers: { select: { id: true, priceUsd: true, pourSizeOz: true } },
+    },
   });
 
   if (!existing) {
-    return { status: "skipped", defUpdated: false, note: `skip: ${s.definition_slug} (not found)` };
+    return { status: "skipped", defUpdated: false, pourCreated: false, note: `skip: ${s.definition_slug} (not found)` };
   }
 
+  const isDraft = existing.recordStatus === "DRAFT" || existing.publicationStatus === "DRAFT";
+  const hasPricedOffer = existing.offers.some((o) => o.priceUsd != null && o.pourSizeOz != null);
+  const pour = s.pours?.[0];
+  const canCreatePour = isDraft && !hasPricedOffer && pour && pour.priceUsd != null && pour.sizeOz != null;
+
   if (!commit) {
-    return { status: "would_update", defUpdated: false, note: `would update: ${s.definition_slug}` };
+    const pourNote = canCreatePour ? ` + would create pour $${pour!.priceUsd}/${pour!.sizeOz}oz + publish` : "";
+    return { status: "would_update", defUpdated: false, pourCreated: !!canCreatePour, note: `would update: ${s.definition_slug}${pourNote}` };
   }
 
   const finalData = { ...venueData };
@@ -129,7 +146,30 @@ async function processSpirit(
     }
   }
 
-  return { status: "updated", defUpdated, note: `updated: ${s.definition_slug}` };
+  let pourCreated = false;
+  if (canCreatePour) {
+    await prisma.spiritPour.create({
+      data: {
+        restaurantId: existing.restaurantId,
+        venueSpiritId: existing.id,
+        pourSizeOz: pour!.sizeOz,
+        pourLabel: pour!.label || "1.5 oz pour",
+        priceUsd: pour!.priceUsd!,
+        isPrimary: pour!.isPrimary ?? true,
+        availability: pour!.availability,
+        priceIsTemporary: true,
+        priceProvenance: "Price from spirits-import.json (Sean-authored catalog). Pour size is Echo's standard 1.5 oz.",
+        commerceSource: "MANUAL",
+      },
+    });
+    await prisma.venueSpirit.update({
+      where: { id: existing.id },
+      data: { recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
+    });
+    pourCreated = true;
+  }
+
+  return { status: "updated", defUpdated, pourCreated, note: `updated: ${s.definition_slug}${pourCreated ? " + pour + published" : ""}` };
 }
 
 export async function POST(req: Request) {
@@ -158,6 +198,7 @@ export async function POST(req: Request) {
 
   let updated = 0;
   let defUpdated = 0;
+  let poursCreated = 0;
   let skipped = 0;
   const log: string[] = [];
 
@@ -169,6 +210,7 @@ export async function POST(req: Request) {
       if (r.status === "updated" || r.status === "would_update") updated++;
       if (r.status === "skipped") skipped++;
       if (r.defUpdated) defUpdated++;
+      if (r.pourCreated) poursCreated++;
     }
   }
 
@@ -177,6 +219,7 @@ export async function POST(req: Request) {
     total: spirits.length,
     updated,
     defUpdated,
+    poursCreated,
     skipped,
     log,
   });

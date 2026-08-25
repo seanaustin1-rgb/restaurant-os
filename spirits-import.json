@@ -1964,7 +1964,7 @@
     "pours": [
       {
         "sizeOz": 1.5,
-        "priceUsd": null,
+        "priceUsd": 9,
         "label": "1.5 oz pour",
         "isPrimary": true,
         "availability": null
@@ -2029,7 +2029,7 @@
     "pours": [
       {
         "sizeOz": 1.5,
-        "priceUsd": null,
+        "priceUsd": 8,
         "label": "1.5 oz pour",
         "isPrimary": true,
         "availability": null
@@ -2159,7 +2159,7 @@
     "pours": [
       {
         "sizeOz": 1.5,
-        "priceUsd": null,
+        "priceUsd": 12.75,
         "label": "1.5 oz pour",
         "isPrimary": true,
         "availability": null
@@ -2289,7 +2289,7 @@
     "pours": [
       {
         "sizeOz": 1.5,
-        "priceUsd": null,
+        "priceUsd": 9,
         "label": "1.5 oz pour",
         "isPrimary": true,
         "availability": null
@@ -2806,7 +2806,7 @@
     "pours": [
       {
         "sizeOz": 1.5,
-        "priceUsd": null,
+        "priceUsd": 10,
         "label": "1.5 oz pour",
         "isPrimary": true,
         "availability": null

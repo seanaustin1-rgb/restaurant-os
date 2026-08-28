@@ -1,5 +1,6 @@
 name: Codex Review
-
+- name: Run Gemini CLI
+  uses: google-github-actions/run-gemini-cli@v0.1.22
 # Advisory AI code review on pull requests, using OpenAI Codex.
 # It runs the project's check commands and reviews the PR diff, then posts its
 # findings as a single PR comment. It is intentionally NON-blocking: it never

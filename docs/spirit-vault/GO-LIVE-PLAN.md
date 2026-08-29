@@ -458,3 +458,122 @@ records are currently drawn on a bourbon silo.
    (`toast-pull.ts` remains referenced by nothing, on both branches), and price
    refresh still does not exist.
 6. **Then** scope the tasting passport.
+
+---
+
+# Update — accolades, distilleries, and the voice fields (2026-08-29)
+
+Sean settled the content question from the editorial gate above and added a new
+requirement: **awards and accolades must be recorded — for spirits *and* for the
+distilleries themselves.** The forward reason matters for the design: eventually an
+agent will scout spirits-industry news for the bottles we carry and the distilleries
+we represent, and surface it for social posts. That is not being built now, but the
+data model laid down now decides whether it is cheap or expensive later.
+
+## The voice fields — settled
+
+| Field | Renders as | Decision |
+|---|---|---|
+| `whyWeCarry` | "Why We Carry It" — venue voice, unsigned | **Keep the drafted text as written.** It publishes as-is. |
+| `notes` | "Sean's Notes" drawer, **signed `— Sean · Echo's Reserve · Curator`** | **Sean-authored only.** Never imported. Empty until he writes it; the drawer stays hidden. |
+| `seanShort` | Unsigned pull-quote in the cue card | *Open — see the question at the end.* |
+
+The distinction that drives this is attribution, and it is already in the renderer:
+`notes` is printed above an explicit signature block (`spirit-vault-prototype.html`
+around the `notes-sig` div), so machine-written text there would sign Sean's name to
+words he did not write. `whyWeCarry` and `seanShort` carry no attribution.
+
+**Implementation:** the import must not write generated `notes`. The guest engine
+already hides the drawer correctly (`hasSeanNotes` gates
+`drawer('notes', "Sean's Notes", …)`), and the admin editor already treats an empty
+value as "hide it" — so this is an importer rule, not a renderer change. PR #162's
+import route currently writes `notes: s.notes?.trim() || null` straight from the
+payload; it needs to stop importing that field, or the payload needs it nulled.
+
+## What the catalog records today
+
+Almost nothing. Across all 110 live records there are **5 press entries total** —
+3 awards, 1 score, 1 venue-event — and **every one of them is `verified: false` with
+`sourceUrl: null`**, i.e. placeholders explicitly held back from publication. The 91
+drafts on PR #162 carry no award, press, source or verification fields at all.
+
+So this is effectively greenfield, which is the good news: it can be modelled
+properly the first time rather than migrated later.
+
+## Where accolades can live now, and why that isn't enough
+
+`SpiritDefinition.press` is a `Json?` column ("verified professional
+ratings/medals/media"), alongside `sources Json?`, `sourcingLimitations String[]`
+and a `verificationStatus` enum. That is fine for *rendering* a dossier and is what
+the guest engine reads.
+
+It is the wrong shape for what Sean is describing, for two reasons:
+
+1. **A JSON blob is not queryable.** "Every Gold medal since 2026", "which of our
+   bottles have been scored above 92", "what has this distillery won" — none of
+   those are reasonable queries against a JSON column, and all of them are exactly
+   what a social-scouting agent needs.
+2. **There is no distillery entity at all.** `distilleryName` is a nullable *string*
+   on `SpiritDefinition`. There is no `Distillery` model anywhere in the schema. So
+   "the distilleries we represent" cannot be answered except by string-matching, and
+   a distillery-level award has nowhere to attach.
+
+## Proposed model — two new tables
+
+Deliberately additive and shaped like the existing canonical split (shared,
+objective knowledge carries no `restaurantId`).
+
+**`Distillery`** — canonical and shared, the same tier as `SpiritDefinition`:
+`slug`, `name`, `country`, `region`, `city`, `founded`, `website`, `story`. Then
+`SpiritDefinition.distilleryId` as a nullable FK, with the existing
+`distilleryName` string retained through the migration and backfilled from it.
+This is the piece that turns "distilleries represented" into a real query, and it
+is a prerequisite for distillery-level accolades — not optional sugar.
+
+**`Accolade`** — one row per award, score, or press mention, attached to *exactly
+one* subject:
+
+- `spiritDefinitionId` **or** `distilleryId` — exactly one non-null (DB CHECK).
+- `type` — `AWARD` | `SCORE` | `PRESS` | `CERTIFICATION`.
+- `source` — the awarding body or publication ("San Francisco World Spirits
+  Competition", "Whisky Advocate").
+- `title` — "Double Gold", "93 Points".
+- `scoreValue` / `scoreScale` — nullable, so scores sort and filter numerically.
+- `awardedOn` — date, nullable (some accolades are year-only).
+- `sourceUrl`, `summary`.
+- `verified` — boolean, **default false**.
+- `discoveredBy` — `HUMAN` | `AGENT`, and `discoveredAt`.
+
+Two rules carried over from the existing content gate, promoted from prose in
+`HANDOFF.md` into enforced constraints — because an agent will eventually be
+writing these rows:
+
+- **`verified: true` requires a `sourceUrl`** (the existing exception for
+  `type: venue-event` still applies). Enforce in the validator, and as a DB CHECK if
+  it is expressible.
+- **Anything an agent writes lands `verified: false`.** Machine discovery is a
+  queue, never a publication. A human flips `verified`.
+
+The guest engine keeps reading its existing `press` shape — build it as a
+*projection* of `Accolade` rows in `vault-payload.ts`, so nothing in the renderer
+changes and the 5 existing placeholder entries migrate in as unverified rows.
+
+## The scouting agent — not now, but don't preclude it
+
+Recorded as direction, not scope. The model above is what makes it cheap: a
+scouting agent needs to ask "which distilleries do we represent, and what is new for
+them", write candidates with a source and a date, and never publish on its own.
+`Distillery` + `Accolade.discoveredBy` + `verified` default-false give it all three.
+Anything beyond that — the scouting schedule, the social-post drafting, an approval
+queue UI — is a separate build, and should be scoped after the vault is live.
+
+## Sequencing
+
+This does **not** belong in the go-live path. The vault can launch with the
+accolade data it has (almost none), and the Recognition drawer already hides itself
+when empty. Slot it after Phase 3, alongside or just before the tasting passport —
+both are "reasons to come back" rather than "reasons it works".
+
+The one thing worth doing *before* the 91 drafts publish: decide whether they need
+any accolades at all. They currently have none, the drawer hides cleanly, and
+nothing about that blocks publication.

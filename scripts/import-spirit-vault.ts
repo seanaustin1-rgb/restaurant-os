@@ -7,20 +7,42 @@
  *   (reads existing rows to show would-insert/would-update; falls back to PLANNED
  *    counts with existence unverified if the DB is unreachable)
  *
- * Run (APPLY — writes to the DB DATABASE_URL points at; NON-PROD only):
+ * Run (APPLY to a NON-PROD database — the everyday path):
  *   SPIRIT_VAULT_ALLOWED_TARGETS=<outfront-demo-ref> \
  *   npx dotenv -e .env.local -o -- node scripts/demo-db.cjs \
- *     "npx tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId> --apply --confirm-target=<outfront-demo-ref>"
+ *     "npx tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId> --apply \
+ *      --confirm-target=<outfront-demo-ref> --expect-records=<N> --expect-published=<N>"
+ *
+ * Run (SEED AN EMPTY PRODUCTION TENANT — one-shot, see --production-seed below):
+ *   SPIRIT_VAULT_PROD_TARGET=<prod-ref> \
+ *   npx dotenv -e .env.production.local -o -- \
+ *     npx tsx scripts/import-spirit-vault.ts --restaurant=<restaurantId> --apply \
+ *       --production-seed --confirm-target=<prod-ref> --expect-records=<N> --expect-published=<N>
  *
  * Guards (all must hold before a single row is written):
  *   • --apply is required to write; default is a dry run with ZERO writes.
  *   • --restaurant=<id> is required and must resolve to an existing Restaurant —
  *     the tenant is NEVER guessed.
- *   • SPIRIT_VAULT_ALLOWED_TARGETS (env) is the approved non-prod allowlist,
- *     sourced INDEPENDENTLY of DATABASE_URL. The DATABASE_URL-derived ref must be
- *     on it, so a production URL cannot authorize itself by echoing its own ref.
+ *   • --expect-records / --expect-published state the baseline you believe you are
+ *     importing, and the plan must match exactly. Required for every --apply, so a
+ *     record set nobody looked at can never be written. (These replaced a hardcoded
+ *     110/109, which wedged --apply on every content change.)
+ *   • The approving value is always sourced INDEPENDENTLY of DATABASE_URL, so a
+ *     database can never authorize itself by echoing its own ref:
+ *       – default mode: SPIRIT_VAULT_ALLOWED_TARGETS, the approved NON-PROD allowlist.
+ *       – --production-seed: SPIRIT_VAULT_PROD_TARGET, a deliberately DIFFERENT
+ *         variable naming exactly ONE database, so a production ref pasted onto the
+ *         everyday allowlist grants nothing.
  *   • --confirm-target must ALSO equal that ref (a conscious, typed acknowledgement).
- *   • Refuses when NODE_ENV=production (belt-and-suspenders; not the primary guard).
+ *   • Default mode refuses when NODE_ENV=production. --production-seed does not consult
+ *     NODE_ENV — it describes the process, never the database, and a seed is legitimately
+ *     run from an operator machine — and instead requires the tenant to hold ZERO
+ *     VenueSpirit rows. It can therefore only ever seed an empty vault, never overwrite
+ *     curated production data. After the seed, production content is edited in the admin
+ *     (/admin/spirit-vault), not re-imported.
+ *
+ * The guard decisions themselves are pure and unit-tested in
+ * src/lib/spirit-vault/import-guards.ts — this script only reads env and the DB.
  *
  * Idempotent, transactional, seed-first price history — see src/lib/spirit-vault/
  * import-spirits.ts. Reuses the merged transform + validate + loader (#137).
@@ -34,6 +56,12 @@ import {
   type ImportPlan,
   type ImportReport,
 } from "../src/lib/spirit-vault/import-spirits";
+import {
+  checkApplyGuards,
+  checkPlanBaseline,
+  requiresEmptyTenant,
+  type ApplyMode,
+} from "../src/lib/spirit-vault/import-guards";
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a === `--${name}` || a.startsWith(`--${name}=`));
@@ -43,6 +71,13 @@ function arg(name: string): string | undefined {
 }
 function flag(name: string): boolean {
   return process.argv.includes(`--${name}`);
+}
+/** Numeric flag value; undefined when absent, NaN when present but not a number. */
+function numArg(name: string): number | undefined {
+  const raw = arg(name);
+  if (raw === undefined) return undefined;
+  // `--expect-records` with no value must not read as 0.
+  return raw.trim() === "" ? Number.NaN : Number(raw);
 }
 
 /** Best-effort identity of the DB DATABASE_URL points at, for the confirm gate. */
@@ -114,20 +149,18 @@ function printPlannedFallback(plan: ImportPlan, restaurantId: string) {
   console.log("──────────────────────────────────────────────────────────\n");
 }
 
-function assertPlanMatchesExpectation(plan: ImportPlan) {
-  const problems: string[] = [];
-  if (plan.totals.records !== 110) problems.push(`expected 110 records, got ${plan.totals.records}`);
-  if (plan.totals.published !== 109) problems.push(`expected 109 published, got ${plan.totals.published}`);
-  if (plan.validationFailures.length)
-    problems.push(`expected 0 validation failures, got ${plan.validationFailures.length}`);
-  if (plan.duplicateKeys.length)
-    problems.push(`expected 0 duplicate keys, got ${plan.duplicateKeys.length}`);
-  if (problems.length) {
-    console.error("\n✗ Plan does not match the known-good baseline — refusing to apply:");
-    for (const p of problems) console.error(`  • ${p}`);
-    console.error(
-      "\n(Dry-run only prints; --apply is blocked until the vault plans to 110/109 cleanly.)",
-    );
+/** The baseline flags this plan would satisfy — an --apply is refused without them. */
+function printExpectHint(plan: ImportPlan) {
+  console.log(
+    `\nTo apply this exact plan, state its baseline:\n` +
+      `  --expect-records=${plan.totals.records} --expect-published=${plan.totals.published}`,
+  );
+}
+
+function reportBaseline(plan: ImportPlan, expected: { records?: number; published?: number }): boolean {
+  const verdict = checkPlanBaseline(plan, expected);
+  if (!verdict.ok) {
+    console.error(`\n\u2717 ${verdict.reason}`);
     return false;
   }
   return true;
@@ -138,16 +171,27 @@ async function main() {
   const apply = flag("apply");
   const requireDb = flag("require-db");
   const confirmTarget = arg("confirm-target");
+  const productionSeed = flag("production-seed");
+  const mode: ApplyMode = productionSeed ? "production-seed" : "non-prod";
+  const expected = { records: numArg("expect-records"), published: numArg("expect-published") };
 
   if (!restaurantId) {
     console.error("Missing --restaurant=<restaurantId>. The tenant is never guessed.");
     process.exit(1);
   }
+  for (const [flagName, value] of [
+    ["expect-records", expected.records],
+    ["expect-published", expected.published],
+  ] as const) {
+    if (value !== undefined && !Number.isInteger(value)) {
+      console.error(`--${flagName} must be a whole number.`);
+      process.exit(1);
+    }
+  }
 
   // ── Pure planning stage (no DB) ──
   const records = loadGuestRecords();
   const plan = planImport(records);
-  const planOk = assertPlanMatchesExpectation(plan);
 
   // ── DRY RUN (default): project the planned DB effect, write nothing ──
   if (!apply) {
@@ -170,6 +214,7 @@ async function main() {
           "DRY RUN complete — no database writes. Counts are the projected effect against this DB.\n" +
             "Re-run with --apply (and the target guards) to write.",
         );
+        printExpectHint(plan);
       }
     } catch (dbErr) {
       // DB-free fallback: the database was unreachable (e.g. tables not migrated
@@ -177,6 +222,7 @@ async function main() {
       console.warn(`\n⚠ Could not read the database (${(dbErr as Error).message}).`);
       console.warn("Falling back to PLANNED counts — tenant/target existence NOT verified.\n");
       printPlannedFallback(plan, restaurantId);
+      printExpectHint(plan);
       if (requireDb) {
         console.error("--require-db was passed, so this dry-run is not acceptable for operator apply.");
         await prisma.$disconnect();
@@ -188,59 +234,26 @@ async function main() {
   }
 
   // ── APPLY: every guard must pass ──
-  if (!planOk) {
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-
-  if (process.env.NODE_ENV === "production") {
-    console.error("Refusing to apply with NODE_ENV=production.");
+  if (!reportBaseline(plan, expected)) {
     await prisma.$disconnect();
     process.exit(1);
   }
 
   const target = targetIdentity(process.env.DATABASE_URL);
-  if (!target.token) {
-    console.error("Cannot determine the DATABASE_URL target — refusing to write to an unverifiable database.");
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-
-  // The non-production allowlist is the authority — sourced INDEPENDENTLY of
-  // DATABASE_URL (env SPIRIT_VAULT_ALLOWED_TARGETS), so a production URL cannot
-  // authorize itself just by echoing its own ref. NODE_ENV describes the process,
-  // never the database, so it is not trusted for this.
-  const allowlist = (process.env.SPIRIT_VAULT_ALLOWED_TARGETS ?? "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-
-  console.log(`\nDATABASE_URL target host: ${target.host}`);
+  console.log(`\nmode:                     ${mode === "production-seed" ? "PRODUCTION SEED (empty tenant only)" : "non-prod apply"}`);
+  console.log(`DATABASE_URL target host: ${target.host}`);
   console.log(`DATABASE_URL target ref:  ${target.token}`);
 
-  if (allowlist.length === 0) {
-    console.error(
-      "\nRefusing to apply: no approved non-production targets configured.\n" +
-        "Set SPIRIT_VAULT_ALLOWED_TARGETS to the approved non-prod project ref(s) — the #137\n" +
-        "migration was applied to `outfront-demo`, so set it to that project's ref (comma-separated\n" +
-        "for multiple). This allowlist is deliberately NOT derived from DATABASE_URL.",
-    );
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-  if (!allowlist.includes(target.token)) {
-    console.error(
-      `\nRefusing to apply: DATABASE_URL target "${target.token}" is NOT in the approved\n` +
-        `non-production allowlist [${allowlist.join(", ")}]. Point at an approved DB or fix the allowlist.`,
-    );
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-  // Second, conscious acknowledgement: the operator must type the ref too.
-  if (confirmTarget == null || confirmTarget.toLowerCase() !== target.token) {
-    console.error(
-      `\nRefusing to apply: also pass --confirm-target=${target.token} to acknowledge THIS database.`,
-    );
+  const guard = checkApplyGuards({
+    mode,
+    targetToken: target.token,
+    confirmTarget: confirmTarget ?? null,
+    nodeEnv: process.env.NODE_ENV,
+    allowedTargets: process.env.SPIRIT_VAULT_ALLOWED_TARGETS,
+    prodTarget: process.env.SPIRIT_VAULT_PROD_TARGET,
+  });
+  if (!guard.ok) {
+    console.error(`\n${guard.reason}`);
     await prisma.$disconnect();
     process.exit(1);
   }
@@ -257,12 +270,30 @@ async function main() {
   }
   console.log(`Applying to restaurant: ${restaurant.name} (${restaurant.id})`);
 
+  // A production seed may only ever SEED. If the tenant already holds listings, the
+  // vault is live and its records are curated in the admin — importing over them
+  // would silently revert operator edits, so refuse rather than merge.
+  if (requiresEmptyTenant(mode)) {
+    const existing = await prisma.venueSpirit.count({ where: { restaurantId } });
+    if (existing > 0) {
+      console.error(
+        `\nRefusing to seed: restaurant ${restaurant.name} already has ${existing} VenueSpirit ` +
+          `row${existing === 1 ? "" : "s"}.\n` +
+          "--production-seed is a one-shot seed of an EMPTY tenant and will not overwrite curated\n" +
+          "records. Edit published content in the admin (/admin/spirit-vault) instead.",
+      );
+      await prisma.$disconnect();
+      process.exit(1);
+    }
+    console.log("Tenant holds 0 VenueSpirit rows \u2014 seed precondition satisfied.");
+  }
+
   const report = await executeImport(createPrismaSpiritStore(prisma), plan, {
     restaurantId,
     apply: true,
   });
   printReport(report);
-  console.log("APPLY complete.");
+  console.log(mode === "production-seed" ? "PRODUCTION SEED complete." : "APPLY complete.");
   await prisma.$disconnect();
 }
 

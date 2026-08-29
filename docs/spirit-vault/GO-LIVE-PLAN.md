@@ -277,3 +277,184 @@ Confirm `NEXT_PUBLIC_APP_URL` is the real public origin before the first print r
 - **The importer's 110/109 baseline** blocks `--apply` on any content change.
 - **The day cookie is scoped to `/vault`** and re-validated per request, so a
   cookie surviving midnight is still rejected. This is correct — don't "fix" it.
+
+---
+
+# Update — 2026-08-29, later the same day
+
+Sean answered all four open decisions, and answering them surfaced a large piece
+of unmerged work the original assessment above did not account for. **Read this
+section as amending the plan above**, not replacing it.
+
+## Decisions, recorded
+
+| # | Decision | Sean's call |
+|---|---|---|
+| 1 | Production seed path | **Option A** — a guarded seed mode in the existing importer. *Implemented, see below.* |
+| 2 | GitHub Pages prototype | **Retire and redirect** to `/vault`. |
+| 3 | Membership billing | **No paid tier.** The account exists to track and reward what a guest tastes. |
+| 4 | Shelf scope | **Everything** — the full back bar, not a whiskey program. Drafts for the rest already exist. |
+
+## 1 · Option A is built
+
+`--production-seed` is implemented in `scripts/import-spirit-vault.ts`, with the
+guard decisions extracted into pure, unit-tested functions
+(`src/lib/spirit-vault/import-guards.ts`, 25 tests). The mode is refused unless
+**all** hold:
+
+- `SPIRIT_VAULT_PROD_TARGET` is set and names **exactly one** database ref —
+  deliberately a *different* variable from the non-prod allowlist, so a production
+  ref pasted onto the everyday allowlist grants nothing;
+- that ref matches the one derived from `DATABASE_URL`;
+- `--confirm-target` matches it too;
+- the tenant holds **zero `VenueSpirit` rows**, so the mode can only ever seed an
+  empty vault and can never overwrite curated production records.
+
+`NODE_ENV` is deliberately *not* consulted in this mode — it describes the process,
+never the database, and a seed is legitimately run from an operator machine.
+
+Two related changes shipped with it:
+
+- **1.3 done.** The hardcoded `110 / 109` baseline is replaced by required
+  `--expect-records` / `--expect-published` flags. The safety it provided (you
+  cannot apply a plan nobody looked at) is preserved by *requiring* both numbers;
+  the brittleness is gone. Dry runs now print the exact flags the apply will need.
+  Decision 4 makes this immediately load-bearing: the shelf is about to grow.
+- **1.1 done.** All six `SPIRIT_VAULT_*` variables are documented in
+  `.env.example`, each with what breaks when it is missing.
+
+## 2 · Retiring Pages has one non-obvious catch
+
+The file Coal's link points at — `docs/spirit-vault/spirit-vault-prototype.html` —
+is **the same file `/vault` reads from disk at runtime** as its rendering engine.
+So "retire the Pages site" cannot mean replacing that file with a redirect stub;
+that would break the production vault.
+
+Retire it one of these ways instead:
+
+- **Move the engine out of `docs/`** (say to `src/engine/spirit-vault-engine.html`),
+  update `ENGINE_PATH` in `src/app/vault/route.ts` and the
+  `outputFileTracingIncludes` entry in `next.config.mjs`, and leave a redirect stub
+  at the old Pages path. Cleanest — the engine is app source, not a published doc —
+  and it ends the two-guest-surfaces drift permanently.
+- **Or** simply disable Pages in repo settings and send Coal the new URL. The old
+  link then 404s rather than redirecting.
+
+Either way this belongs in Phase 2, after the deploy is verified — a redirect to a
+`/vault` that isn't serving yet is worse than the current preview.
+
+## 3 · Membership is a tasting passport, and it is not built
+
+Sean's answer removes a scope question and opens a real gap. The membership
+account is meant to **track the pours a guest tastes and reward that usage**.
+Checked against the schema: there is **no model for any of it**. No
+`GuestTasting`, no favourites, no rewards, no visit or pour log. `SpiritPour` is a
+*menu offer* (a sellable size and price), not a record that someone drank
+something.
+
+What exists today is the access half only: `GuestProfile`, `GuestMembership`,
+`MembershipCode`, `MembershipRedemption` — enough to sign a member in and unlock
+the vault off-premise, and nothing more. The billing fields
+(`source: "billing"`, `clerkSubscriptionId`) can stay dormant; they aren't the gap.
+
+**This is new scope, not a loose end.** A minimum tasting passport needs a
+`GuestTasting` model (guest × venue spirit × when, optionally the flight it came
+from and a rating), a way to record a pour — the flight placemat QR is the natural
+capture point, since the guest already scans it — and a guest-facing "what I've
+tasted" view. Sizing that is its own conversation; it should not be smuggled into
+the go-live sequence. **Recommendation: launch the vault without it.** Access and
+comp codes work today; the passport is the reason to come back, and it is better
+designed against a live vault than guessed at before one.
+
+## 4 · The rest of the shelf exists — in an open PR, with caveats
+
+The drafts Sean is referring to are real and I found them: **`spirits-import.json`
+on `claude/spirit-vault-flight-builder-x71qai` — PR #162, open, 37 commits ahead
+of `main` and 0 behind.** 200 records: the 109 already published, plus **91
+drafts** — Agave 43, Rum 24, Vodka 23, Bourbon 1. Every draft is fully populated,
+including `whyWeCarry`, `seanShort` and `notes`, which closes most of the content
+gap the table in Phase 4 above describes.
+
+PR #162 is much larger than the catalog, and the plan above is out of date about
+several things because of it. It also adds: a web-based import route and button, a
+matching export route, custom flight templates (with a migration), dynamic flight
+groupings, availability filtering, a spirit list table with filters, and an admin
+shell layout.
+
+### ⚠ Blocker on PR #162 — cross-tenant write in the import route
+
+`src/app/admin/spirit-vault/import/route.ts` authenticates the caller and looks up
+their `role.restaurantId` — **and then never uses it.** `processSpirit()` resolves
+records by `prisma.venueSpirit.findUnique({ where: { id: s.venueSpirit_id } })`
+with no tenant filter, using the *target record's own* `restaurantId` for
+downstream writes. The caller's tenant is never compared to the target's.
+
+So an operator of any `RESTAURANT` tenant can POST a payload carrying another
+tenant's `venueSpirit_id` values and overwrite that tenant's `whyWeCarry`,
+`seanShort`, `notes` and sensory overrides, create a `SpiritPour`, and flip records
+to `PUBLISHED`. The sibling export route in the same PR scopes correctly
+(`where: { restaurantId: role.restaurantId }`), which is what makes this read as an
+oversight rather than a decision.
+
+**Fix before merge:** scope the lookup to the caller's tenant —
+`findFirst({ where: { id: s.venueSpirit_id, restaurantId: role.restaurantId } })` —
+and treat a non-match as `skipped`, exactly as a missing record is treated now.
+
+Two smaller things to settle in the same review:
+
+- The route **auto-publishes**: creating a priced pour writes
+  `recordStatus/publicationStatus = "PUBLISHED"` directly, bypassing the
+  `updateSpirit` action's publish rules (publication may not exceed record status;
+  a published record needs at least one pairing). Decide whether an import may
+  publish at all, or should only ever land content as `DRAFT` for a human to
+  publish.
+- It is a **second write path** into the spirit tables, with different guards from
+  the CLI importer this plan just hardened. That is defensible — one is a seed, one
+  is an operator tool — but it should be a stated decision, and the CLI importer's
+  header should stop implying it is the only way in.
+
+### Editorial gate on the 91 drafts
+
+The catalog commit describes the content as merged Gemini output; the pour prices
+came from Sean. Before these drafts go guest-visible, two things need a human call
+— they are exactly what `HANDOFF.md`'s audit gate was written for:
+
+- **No sources.** The records carry no `sourceUrl`, verification status, awards or
+  press fields at all, while asserting hard facts — proof, mash bill, production
+  method, and specifics like "double-filtration through coconut shell charcoal" or
+  "eighteen months in repurposed white oak". The binding rule in `HANDOFF.md` is
+  real sources on every claim before publishing.
+- **The curator voice is generated.** `notes` and `seanShort` are written in Sean's
+  first person ("I love how the agave doesn't hide behind the oak here") on all 91
+  drafts. That is the owner's voice, machine-authored, on a page whose whole premise
+  is personal curation — and it cuts against the recorded 2026-07-27 deferral, where
+  Sean asked to fill these himself through the admin tool. This is Sean's call, not
+  a technical one, but it should be a *conscious* call before publish, not a
+  side-effect of an import.
+
+A reasonable middle path: import all 91 as `DRAFT` with the factual fields, treat
+the generated `notes`/`seanShort` as a first draft Sean edits in
+`/admin/spirit-vault/[id]`, and publish per bottle rather than in bulk.
+
+### Still missing from "everything"
+
+The 91 drafts cover agave, rum and vodka. **There is no gin in the catalog at
+all** (0 records), and no liqueurs, cordials or brandy. Worth a Toast pull to size
+what is left before calling the shelf complete. Note also that gin and vodka have
+no bottle silhouette — `silo()` in `vault-payload.ts` maps tequila, rum and the
+whisky families and falls through to `bourbon` for everything else, so vodka
+records are currently drawn on a bourbon silo.
+
+## Revised sequence
+
+1. **Fix and merge PR #162** — the cross-tenant write first. It carries the
+   catalog, the admin shell and the flight work, so almost everything else sits
+   behind it.
+2. **Phase 0** verification (unchanged, and now also: confirm the
+   `20260824230000_add_custom_flight_templates` migration).
+3. **Phase 2** cutover, using `--production-seed`, followed by retiring Pages.
+4. **Publish the 91 drafts** per the editorial gate above — not in bulk.
+5. **Phase 3** operability: the Toast add-a-bottle checklist is still unbuilt
+   (`toast-pull.ts` remains referenced by nothing, on both branches), and price
+   refresh still does not exist.
+6. **Then** scope the tasting passport.

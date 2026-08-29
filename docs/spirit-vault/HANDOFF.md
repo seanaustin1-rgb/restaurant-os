@@ -1,5 +1,12 @@
 # Spirit Vault — Handoff
 
+> **▶ GO-LIVE PLAN (2026-08-29):** see **`GO-LIVE-PLAN.md`** in this folder for the
+> current path from "built" to "usable in production". Short version: the feature is
+> largely built, but there is **no sanctioned production data path** (the importer
+> refuses prod by design) and the five `SPIRIT_VAULT_*` env vars are undocumented.
+> Those two items block everything else. The "NEXT SESSION — START HERE (2026-07-30)"
+> block below is **stale** — PRs #138/#139/#140 have all landed.
+
 ## ▶ NEXT SESSION — START HERE (2026-07-30)
 
 Read the **⚖️ BINDING ARCHITECTURE DECISION** block below first (it's authoritative;

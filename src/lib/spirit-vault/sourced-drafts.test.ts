@@ -45,11 +45,53 @@ const SOURCED_DRAFT_IDS = [
   "belvidere-vodka",
   "chopin-potato-vodka",
   "haku-vodka",
+
+  // ── Batch 3 (2026-09-04) — the rest of Tier A from DRAFT-CONTENT-AUDIT.md ──
+  // agave
+  "el-jimador-cristalino",
+  "el-luchador-blanco",
+  "mi-campo-blanco",
+  "milagro-silver",
+  "tres-agaves-organic-blanco",
+  "1800-silver",
+  "adictivo-reposado",
+  "agavales-reposado",
+  "el-luchador-reposado",
+  "jose-1800-reposado",
+  "mi-campo-reposado",
+  "milagro-reposado",
+  "terralta-reposado",
+  "1800-anejo-tequila",
+  "21-seeds-cucumber-jalapeno",
+  "123-organic-anejo",
+  // rum
+  "angostura-white-oak",
+  "bacardi-dragonberry",
+  "captain-morgan-private-stock",
+  "bumbu-dark",
+  "kasama-small-batch-7-year",
+  "papa-s-pilar-blonde",
+  "don-q-2x-aged-cognac-cask",
+  "don-q-gran-reserva-anejo-xo",
+  "ron-batran-12-reserva-superior",
+  "ron-barcelo-imperial",
+  "planteray-3-star",
+  // vodka
+  "stoli-vodka",
+  "double-cross-vodka",
+  "boyd-bair-potato-vodka",
+  "vodka-grey-whale",
 ];
 
-/** The importer already knows these two slugs under their original (wrong-looking)
+/** The importer already knows these slugs under their original (wrong-looking)
  *  spelling. Renaming them would insert duplicates instead of updating in place. */
-const PRESERVED_IMPORT_SLUGS = ["casa-amigos-80pf", "belvidere-vodka"];
+const PRESERVED_IMPORT_SLUGS = [
+  "casa-amigos-80pf",
+  "belvidere-vodka",
+  "jose-1800-reposado",
+  "boyd-bair-potato-vodka",
+  "ron-batran-12-reserva-superior",
+];
 
 /** Tier C in DRAFT-CONTENT-AUDIT.md — house / generic flavored pours. Sean has not
  *  decided whether these get dossiers at all, so they must stay untouched. */
@@ -82,7 +124,7 @@ describe("spirit vault corpus is unchanged in shape", () => {
 });
 
 describe("Batch 2 sourced drafts", () => {
-  it("promotes exactly the 26 recorded ids", () => {
+  it("promotes exactly the recorded ids", () => {
     expect(sourced.map((r) => String(r.id)).sort()).toEqual([...SOURCED_DRAFT_IDS].sort());
   });
 

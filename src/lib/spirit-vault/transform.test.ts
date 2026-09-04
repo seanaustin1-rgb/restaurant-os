@@ -100,10 +100,12 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       (r) => r.venueSpirit.notes === "Draft inventory setup. Do not publish until source review is complete.",
     );
 
-    // 64 of the original 90 scaffold rows remain; the other 26 were promoted to
-    // source-reviewed drafts in Batch 2 (see sourced-drafts.test.ts). They are
-    // still drafts — only their verification status and content depth changed.
-    expect(draftInventory).toHaveLength(64);
+    // 33 of the original 90 scaffold rows remain; the other 57 were promoted to
+    // source-reviewed drafts across Batch 2 and Batch 3 (see sourced-drafts.test.ts).
+    // They are still drafts — only their verification status and content depth changed.
+    // The 33 that remain are Tier B (identity unconfirmed) and Tier C (house pours),
+    // both of which are blocked on Sean, not on research.
+    expect(draftInventory).toHaveLength(33);
     expect(draftInventory.every((r) => r.venueSpirit.recordStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
     expect(draftInventory.every((r) => r.definition.verificationStatus === "UNSOURCED")).toBe(true);
@@ -112,18 +114,21 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       (r) =>
         r.venueSpirit.recordStatus === "DRAFT" && r.definition.verificationStatus === "SOURCED",
     );
-    expect(sourcedDrafts).toHaveLength(26);
+    expect(sourcedDrafts).toHaveLength(57);
     expect(sourcedDrafts.every((r) => r.venueSpirit.publicationStatus === "DRAFT")).toBe(true);
     expect(draftInventory.length + sourcedDrafts.length).toBe(90);
 
     const slugs = new Set(draftInventory.map((r) => r.definition.slug));
-    expect(slugs).toContain("milagro-silver");
-    expect(slugs).toContain("milagro-reposado");
+    // Still scaffold: Sean's own venue spellings and the unsourced Zumbador range,
+    // all blocked on him confirming identity rather than on research.
     expect(slugs).toContain("zumbador-blanco");
     expect(slugs).toContain("zumbador-anejo");
     expect(slugs).toContain("zumbador-reposado");
     expect(slugs).toContain("ketle-vodka");
-    expect(slugs).toContain("vodka-grey-whale");
+    // Promoted out of the scaffold in Batch 3 — they must NOT be here any more.
+    expect(slugs).not.toContain("milagro-silver");
+    expect(slugs).not.toContain("milagro-reposado");
+    expect(slugs).not.toContain("vodka-grey-whale");
   });
 
   it("applies clear draft identity cleanup without changing prior import slugs", () => {
@@ -173,11 +178,11 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
   });
 
   // SOURCED counts sourced FACTS, not publication: 56 published dossiers plus the
-  // 26 Batch 2 drafts whose facts are cited but which stay hidden pending Sean.
-  it("maps verification labels to the real distribution (82 SOURCED / 49 PARTIALLY / 69 UNSOURCED)", () => {
+  // 57 Batch 2 + Batch 3 drafts whose facts are cited but which stay hidden pending Sean.
+  it("maps verification labels to the real distribution (113 SOURCED / 49 PARTIALLY / 38 UNSOURCED)", () => {
     const counts = { SOURCED: 0, PARTIALLY_SOURCED: 0, UNSOURCED: 0 } as Record<string, number>;
     for (const { definition } of ROWS) counts[definition.verificationStatus]++;
-    expect(counts).toEqual({ SOURCED: 82, PARTIALLY_SOURCED: 49, UNSOURCED: 69 });
+    expect(counts).toEqual({ SOURCED: 113, PARTIALLY_SOURCED: 49, UNSOURCED: 38 });
   });
 
   it("retains the source's own provenance, appends the 1.5oz correction, and never mislabels a manual price as Toast", () => {
@@ -207,9 +212,9 @@ describe("guestRecordToRows — review data-boundary fixes", () => {
       expect(venueSpirit.reviewedAt).toBeNull();
     }
     // Every source record carries reviewedAt, so every definition gets it.
-    // 110 before Batch 2; +26 sourced drafts, each carrying its own knowledge-review date.
+    // 110 before Batch 2; +57 sourced drafts, each carrying its own knowledge-review date.
     const withKnowledgeReview = ROWS.filter((r) => r.definition.knowledgeReviewedAt != null);
-    expect(withKnowledgeReview.length).toBe(136);
+    expect(withKnowledgeReview.length).toBe(167);
   });
 });
 

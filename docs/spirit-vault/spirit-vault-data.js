@@ -718,6 +718,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       publicationStatus:'draft',
       verificationStatus:'source-reviewed',
       topNotes:config.topNotes || ['Pending source review','Pending source review','Pending source review'],
+      history:config.history || 'Brand history is pending source review - no dated history could be sourced for this bottle.',
       sourcingLimitations:(config.sourcingLimitations || []).concat([UNSOURCED_RADAR_NOTE])
     }));
     record.status = [{k:'draft',t:'Draft - Source Reviewed'}];
@@ -1579,6 +1580,1164 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         PENDING_VENUE_COPY_NOTE
       ]
     }),
+    // ───────────── Batch 3 · Agave — blanco / silver ─────────────
+    sourcedDraftSpirit({
+      id:'el-jimador-cristalino', brand:'el Jimador', expression:'Cristalino', displayName:'El Jimador Cristalino',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Brown-Forman Tequila México (NOM 1119)', distilleryName:'Casa Herradura',
+      style:'Tequila Cristalino - 100% Blue Weber Agave - Reposado Base, Charcoal Filtered',
+      proofN:80, ageText:'2 months',
+      priceUsd:7, toastItemGuid:'2564383e-dfe8-4b43-9e7c-865077b6f32a',
+      topNotes:['Citrus and herbs','Flowers','Vanilla and caramel'],
+      productionRows:[
+        ['Agave','100% blue Weber agave, hand harvested',true],
+        ['Class','Cristalino - a filtered reposado, not a filtered anejo',true],
+        ['Extraction','Diffuser, then autoclave',true],
+        ['Distillation','Double distilled, column still'],
+        ['Maturation','2 months in deeply charred American oak',true],
+        ['Filtration','Charcoal filtered to strip the colour the barrel gave it',true],
+        ['Bottling Proof','80 (40% ABV), US bottling',true],
+        ['Distillery','Casa Herradura, Amatitán, Jalisco (NOM 1119)',true]
+      ],
+      prodTags:['Cristalino','Reposado Base','Charcoal Filtered','Diffuser','NOM 1119'],
+      why:'A cristalino built from a young reposado rather than an anejo. Brown-Forman states the tequila is double distilled, rested two months in deeply charred American oak, then charcoal filtered to strip the colour the barrel gave it. Agave Matchmaker catalogues the SKU under its full name, El Jimador Reposado Cristalino, and files it under reposado - two months is reposado aging, where anejo requires twelve.',
+      whyShort:'A two-month reposado from NOM 1119, filtered back to clear.',
+      history:'el Jimador was introduced in 1994 as a sister brand to Herradura and named for the agave harvesters. Brown-Forman acquired the Herradura assets, including el Jimador, in 2007. The Cristalino began a US rollout in 2025.',
+      timeline:[
+        ['1994','el Jimador introduced as a sister brand to Herradura'],
+        ['2007','Brown-Forman completes its acquisition of the Herradura assets'],
+        ['2025','Cristalino rolled out in the United States']
+      ],
+      sources:[
+        {url:'https://www.eljimador.com/product/cristalino/',sourceType:'producer',coversFields:['identity','production','age','tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/6438-el-jimador-reposado-cristalino',sourceType:'reference',coversFields:['identity','producer','origin','production']},
+        {url:'https://www.agavematchmaker.com/distilleries/160-brown-forman-tequila-mexico-s-de-r-l-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://winebarrel.com/products/el-jimador-cristalino-750ml-80-proof',sourceType:'retailer',coversFields:['strength']}
+      ],
+      sourcingLimitations:[
+        'The shelf style line called this a filtered anejo. That is wrong: the producer states two months of barrel time and Agave Matchmaker files the SKU as a Reposado Cristalino. Subcategory is left at blanco-silver pending Sean - a cristalino pours clear, so how it is merchandised is his call, not a fact.',
+        'The 80 proof figure rests on US retailer listings; eljimador.com publishes no ABV and Agave Matchmaker records a 35-39% band for the Mexican bottling. Verify against the bottle.',
+        'One retailer listing that confirms 80 proof also claims 12 months of aging and calls it an anejo cristalino. That conflicts with the producer and was not used.',
+        'No additive-free certification found for this SKU.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'el-luchador-blanco', brand:'El Luchador', expression:'Blanco', displayName:'El Luchador Blanco',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Arandas',
+      producer:'Tequila Galindo (NOM 1517)', distilleryName:'Tequila Galindo',
+      style:'Tequila Blanco - 100% Blue Weber Agave - Highland, Unaged',
+      proofN:80, ageText:'Unaged',
+      priceUsd:9.25, toastItemGuid:'85945271-026a-42dc-a584-b9ff00fcb4ef',
+      productionRows:[
+        ['Agave','100% blue Weber agave, estate grown in Los Altos (highlands)',true],
+        ['Class','Tequila Blanco (unaged)',true],
+        ['Fermentation','Open-air stainless tanks, native yeast, without fibres'],
+        ['Bottling Proof','80 (40% ABV) - the standard Blanco, confirmed off the bottle by Sean 2026-09-04',true],
+        ['Distillery','Tequila Galindo, Arandas, Jalisco (NOM 1517)',true]
+      ],
+      prodTags:['Highlands','Native Yeast','Open-Air Fermentation','NOM 1517'],
+      why:'El Luchador is a highlands tequila made at Tequila Galindo in Arandas, Jalisco, from estate-grown blue Weber agave, with slow open-air fermentation on native yeast. The line was created by David Ravandi, who founded 123 Organic Tequila, and was relaunched in March 2022 in four expressions. This is the standard Blanco at 40% ABV, not the 55% Still Strength bottling the brand sells alongside it.',
+      whyShort:'A highland blanco from NOM 1517, fermented open-air on native yeast.',
+      history:'David Ravandi launched El Luchador in 2013 as an overproof organic blanco, named for the masked wrestlers of lucha libre. He relaunched the brand in March 2022 with four expressions, the aged ones resting in French oak that had held Puligny-Montrachet.',
+      timeline:[
+        ['2013','El Luchador Overproof Organic Blanco introduced'],
+        ['2022','Relaunched in March with four expressions, including a 55% ABV Still Strength Blanco']
+      ],
+      sources:[
+        {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['identity','lineup','strength']},
+        {url:'https://www.agavematchmaker.com/distilleries/255-tequila-galindo-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin','production']},
+        {url:'https://www.fredminnick.com/2022/03/01/el-luchador-tequila-relaunches-with-four-new-expressions/',sourceType:'review',coversFields:['lineup','strength','history']},
+        {url:'https://www.besttastingspirits.com/review-el-luchador-tequila-blanco/',sourceType:'review',coversFields:['producer','origin','strength']}
+      ],
+      sourcingLimitations:[
+        'PROOF RESOLVED - the shelf line asserting 110 proof was WRONG. Sean read the bottle on 2026-09-04: it is 80 proof, the standard Blanco. The 110-proof bottle is a separately named SKU (Still Strength Blanco, formerly Distill-Proof) that the venue does not pour. The old shelf style line should be corrected.',
+        'NOM conflict, tied to the same question. The 2022 relaunch is NOM 1517 (Tequila Galindo, Arandas, highlands, ~6,500 ft); the earlier 123-era organic overproof was NOM 1480 (lowlands, ~4,200 ft). Which applies depends on the bottle vintage. Read the NOM printed on the label.',
+        'Organic status is unconfirmed for current production. Retailers still title the 110-proof SKU "Organic" and the 2013 predecessor was explicitly organic, but neither the producer site nor the relaunch coverage states a certification for the relaunched line.',
+        'Cooking, extraction, still type and water source are distillery-level specs recorded for NOM 1517 as a whole, not published for this product, so they are omitted rather than presented as confirmed.',
+        'No producer tasting descriptors were retrievable for the standard Blanco, so topNotes stay pending.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'mi-campo-blanco', brand:'Mi Campo', expression:'Blanco', displayName:'Mi Campo Blanco',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco',
+      producer:'Tequilera Don Roberto (NOM 1437)', distilleryName:'Tequilera Don Roberto',
+      style:'Tequila Blanco - 100% Blue Weber Agave - Rested in White Wine Barrels',
+      proofN:80, ageText:'Up to 1 month',
+      priceUsd:null, toastItemGuid:null,
+      topNotes:['Fresh coconut and almond','Sweet orange and green apple','Orange blossom and white pepper'],
+      productionRows:[
+        ['Agave','100% blue Weber agave, matured seven years before harvest',true],
+        ['Class','Tequila Blanco, barrel rested',true],
+        ['Cooking','Cooked 38 hours; the pinas are squeezed rather than crushed'],
+        ['Fermentation','Three to five days in open-air stainless tanks'],
+        ['Distillation','Double distilled'],
+        ['Maturation','Rested up to one month in Chardonnay / white wine barrels',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Tequilera Don Roberto (NOM 1437)',true]
+      ],
+      prodTags:['Wine-Barrel Rested','Chardonnay Cask','Open-Air Fermentation','NOM 1437'],
+      why:'A blanco given a short rest in white wine barrels rather than being bottled straight off the still. Constellation describes agave matured seven years, a 38-hour cook, three to five days of open-tank fermentation, double distillation, then three weeks in Chardonnay barrels; the brand site describes the rest as up to one month. Bottled at 40% ABV.',
+      whyShort:'A blanco rested up to a month in Chardonnay barrels rather than bottled straight.',
+      history:'Mi Campo was introduced to the US market by Constellation Brands on 1 November 2018, blended by master blender Juan José Diaz Nieves.',
+      timeline:[['2018','Launched in the US by Constellation Brands']],
+      sources:[
+        {url:'https://tequilamicampo.com/products/blanco',sourceType:'producer',coversFields:['identity','production','tasting']},
+        {url:'https://www.cbrands.com/blogs/press-releases/driving-innovation-in-the-fastest-growing-spirits-category-tequila-mi-campo-launches-in-the-u-s',sourceType:'producer',coversFields:['strength','production','history','tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/6445-tequila-mi-campo-blanco',sourceType:'reference',coversFields:['producer','origin']}
+      ],
+      sourcingLimitations:[
+        'Do NOT print "highlands". Retail copy widely calls Mi Campo a highlands tequila, but Agave Matchmaker files NOM 1437 under Los Valles and neither the producer nor Constellation names a district.',
+        'Barrel-rest duration is inconsistent between producer sources: three weeks in the 2018 launch release, up to one month on the current brand site.',
+        'The NOM changed from 1137 (La Cofradía) to 1437, so older bottles may carry a different NOM. Read the bottle.',
+        'The 38-hour cook comes from the 2018 launch release and may not describe current production.',
+        'No Toast match for this row, so no price is recorded.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'milagro-silver', brand:'Milagro', expression:'Silver', displayName:'Milagro Silver',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Tepatitlán de Morelos',
+      producer:'Tequilera Milagro (NOM 1559)', distilleryName:'Tequilera Milagro',
+      style:'Tequila Blanco - 100% Blue Weber Agave - Highland, Unaged',
+      proofN:80, ageText:'Unaged',
+      priceUsd:null, toastItemGuid:null,
+      productionRows:[
+        ['Agave','100% blue Weber agave, highland grown',true],
+        ['Class','Tequila Blanco (unaged)',true],
+        ['Cooking','Stone / brick ovens',true],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Stainless tanks, 100% agave'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Tequilera Milagro, Tepatitlán de Morelos, Jalisco (NOM 1559)',true]
+      ],
+      prodTags:['Highlands','Brick Oven','Unaged','NOM 1559'],
+      why:'Milagro Silver is made at Tequilera Milagro in Tepatitlán de Morelos, in the southern Los Altos highlands. Agave Matchmaker records brick-oven cooking, roller-mill extraction and stainless-tank fermentation on 100% agave, and lists the Silver at 40% ABV with no barrel time. The brand was founded in 1997 and is now owned by William Grant & Sons.',
+      whyShort:'A highland blanco from NOM 1559, cooked in brick ovens and bottled unaged.',
+      history:'Milagro was founded in 1997 by Daniel Schneeweiss and Moises Guindi, and is now owned by William Grant & Sons.',
+      timeline:[['1997','Founded by Daniel Schneeweiss and Moises Guindi']],
+      sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/2624-milagro-silver',sourceType:'reference',coversFields:['identity','producer','origin','strength','production']},
+        {url:'https://www.agavematchmaker.com/distilleries/287-tequilera-milagro-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/2270/milagro-silver',sourceType:'reference',coversFields:['strength','origin','ownership','history']}
+      ],
+      sourcingLimitations:[
+        'Distillation count is contradicted between sources - Difford\'s Guide says triple, Agave Matchmaker says double - so no count is published here. The Milagro brand site was not reachable to break the tie.',
+        'The brand is associated with two further NOMs (1173, 1420) besides its primary 1559, so not every Milagro SKU is distilled at 1559. Read the NOM on the bottle.',
+        'No producer tasting descriptors were obtainable, so topNotes are deliberately empty rather than filled from retailer marketing copy.',
+        '"Estate-grown" is widespread in retail copy but was not confirmed by the producer or a reference source.',
+        'No Toast match for this row, so no price is recorded.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'tres-agaves-organic-blanco', brand:'Tres Agaves', expression:'Organic Blanco', displayName:'Tres Agaves Organic Blanco',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:"Tequilera TAP's (NOM 1614)", distilleryName:"Tequilera TAP's",
+      style:'Tequila Blanco - 100% Blue Weber Agave - Certified Organic, Unaged',
+      proofN:80, ageText:'Unaged', minYears:0, maxYears:0,
+      priceUsd:7, toastItemGuid:'8d4a2ff0-9fa2-4860-9147-eeccf229b755',
+      topNotes:['Citrus','Herbal','Bright, clean agave'],
+      productionRows:[
+        ['Agave','100% blue Weber agave, single-source certified organic',true],
+        ['Class','Tequila Blanco (unaged), USDA Organic',true],
+        ['Cooking','Autoclave'],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Stainless tanks, 100% agave, without fibres'],
+        ['Distillation','Double distilled, stainless pot still',true],
+        ['Water','Deep well water'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ["Distillery","Tequilera TAP's, Amatitán, Jalisco (NOM 1614)",true]
+      ],
+      prodTags:['Certified Organic','Amatitán','Pot Still','Unaged','NOM 1614'],
+      why:'A certified-organic blanco made at the brand\'s own distillery in Amatitán, in the Tequila Valley. Agave Matchmaker records autoclave cooking, roller-mill extraction, fibre-free stainless fermentation on 100% agave, double distillation in a stainless pot still and deep well water, bottled at 40% ABV with no barrel time. Tres Agaves built the Amatitán distillery in 2016 on land bought from the Partida family, and named Iliana Partida master distiller in 2018.',
+      whyShort:'A USDA-organic Amatitán blanco, pot distilled and bottled unaged.',
+      history:'Tres Agaves Products LLC was founded in 2008 by Barry Augus, shipping its first US case in 2010. Production originally ran at the El Llano distillery; the company built its own facility in Amatitán in 2016 and appointed Iliana Partida master distiller in 2018.',
+      timeline:[
+        ['2008','Tres Agaves Products LLC founded'],
+        ['2010','First case shipped to the United States'],
+        ['2016','Builds its own distillery in Amatitán on land bought from the Partida family'],
+        ['2018','Iliana Partida appointed master distiller']
+      ],
+      sources:[
+        {url:'https://www.tresagaves.com/tequila/',sourceType:'producer',coversFields:['identity','origin','organic','tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/6613-tres-agaves-blanco-organic',sourceType:'reference',coversFields:['producer','origin','strength','production']},
+        {url:'https://en.wikipedia.org/wiki/Tres_Agaves',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'tresagaves.com publishes no ABV; the 40% figure comes from Agave Matchmaker and retailer listings.',
+        'The specific organic certifier could not be confirmed from a retrieved page. USDA Organic is supported; a named certifier appeared only in an unretrieved search snippet and is not asserted.',
+        'Agave Matchmaker carries two distinct Tres Agaves Blanco entries, both NOM 1614 at 40%. Which matches the shelf bottle is unresolved.',
+        'A ~20-hour slow roast and shallow fermentation tanks appear only in a retailer listing and are omitted here.',
+        'No additive-free certification found.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'1800-silver', brand:'1800', expression:'Silver', displayName:'1800 Silver',
+      cat:'Agave', subcategory:'blanco-silver',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
+      style:'Tequila Blanco - 100% Blue Weber Agave - Unaged',
+      proofN:80, ageText:'Unaged', minYears:0, maxYears:0,
+      priceUsd:8, toastItemGuid:'62a16d10-23d7-4892-85d1-f289841381ab',
+      topNotes:['Fruit and black peppercorn','Sweet prune','Roasted pepper'],
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Blanco',true],
+        ['Cooking','Autoclave'],
+        ['Extraction','Roller mill'],
+        ['Distillation','Double distilled, column still'],
+        ['Maturation','None, per the producer'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','La Rojeña, Tequila, Jalisco (NOM 1122)',true]
+      ],
+      prodTags:['NOM 1122','La Rojeña','Column Still','Unaged'],
+      why:'1800\'s blanco is produced at La Rojeña, Casa Cuervo\'s distillery in Tequila, Jalisco. The producer describes it as double distilled from three ingredients - blue Weber agave, yeast and water - and bottled without oak aging at 40% ABV. The 1800 name refers to the year commonly cited as the first successful aging of tequila in wood.',
+      whyShort:'A La Rojeña blanco, double distilled and bottled without oak.',
+      history:'1800 launched in 1967 as Cuervo 1800, a premium sipping tequila whose first expression was an anejo. Silver and Reposado followed in 2004. The brand is owned by the Beckmann family and has been distributed in the US by Proximo Spirits since 2008.',
+      timeline:[
+        ['1967','Launched as Cuervo 1800, debuting with an anejo'],
+        ['2004','Silver and Reposado expressions introduced'],
+        ['2008','Proximo Spirits takes over US distribution']
+      ],
+      sources:[
+        {url:'https://www.1800tequila.com/products/blanco',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2450-1800-silver',sourceType:'reference',coversFields:['producer','origin','strength','production']},
+        {url:'https://en.wikipedia.org/wiki/1800_Tequila',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'The producer now sells the unaged expression as "1800 Blanco"; retailers and Agave Matchmaker still list "1800 Silver". They appear to be the same product under two names, but no producer statement confirming a rename was retrieved. Venue display name left unchanged.',
+        'Oak-resting conflict, left unresolved: the producer says the tequila is bottled without oak aging, while Agave Matchmaker community notes describe a ~15-day rest in American and French oak before blending. No resting claim is published here.',
+        'Several Agave Matchmaker reviewers assert additives are present. That is community opinion, not a lab result, and is recorded only as a caution against calling this bottle additive-free.',
+        'Cooking, milling and still type are Agave Matchmaker records rather than producer disclosures.'
+      ]
+    }),
+    // ───────────── Batch 3 · Agave — reposado ─────────────
+    sourcedDraftSpirit({
+      id:'adictivo-reposado', brand:'Adictivo', expression:'Reposado', displayName:'Adictivo Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'El Arenal',
+      producer:'Gildardo Partida Hermosillo (NOM 1653)', distilleryName:'Gildardo Partida Hermosillo',
+      style:'Tequila Reposado - 100% Blue Weber Agave - French Oak',
+      proofN:80, ageText:'8 months',
+      priceUsd:12.5, toastItemGuid:'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9',
+      topNotes:['Cooked agave','Vanilla bean','Butterscotch'],
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Cooking','Traditional brick ovens'],
+        ['Extraction','Stone roller mill'],
+        ['Distillation','Double distilled'],
+        ['Maturation','8 months in French oak, not the more usual ex-bourbon American oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','El Arenal, Jalisco - Los Valles (NOM 1653)',true]
+      ],
+      prodTags:['French Oak','Los Valles','El Arenal','NOM 1653'],
+      why:'Adictivo is produced in El Arenal in the Los Valles lowlands of Jalisco from 100% blue Weber agave, under master distiller Gildardo Partida. The reposado is matured in French oak rather than the more common ex-bourbon American oak, which retailer listings put at roughly eight months. Agave Matchmaker records the brand moving across three distillery registrations over its life - NOM 1477, then 1560, then 1653 - so the NOM can differ bottle to bottle.',
+      whyShort:'A French-oak reposado from El Arenal, in the Jalisco lowlands.',
+      sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/5755-adictivo-tequila-reposado',sourceType:'reference',coversFields:['producer','origin','identity']},
+        {url:'https://www.agavematchmaker.com/brands/1952-adictivo-tequila',sourceType:'reference',coversFields:['producer']},
+        {url:'https://theliquorbarn.com/products/adictivo-reposado-750ml',sourceType:'retailer',coversFields:['strength','age','tasting']},
+        {url:'https://woodencork.com/products/adictivo-tequila-reposado',sourceType:'retailer',coversFields:['age','production']}
+      ],
+      sourcingLimitations:[
+        'CORRECTION to the shelf line, which asserted 11 months. Two independent retailers state 8 months in French oak and nothing found supports 11. Confirm against the bottle.',
+        'The producer site adictivotequila.com could not be fetched - its TLS certificate has expired - so all aging and production detail rests on retailer listings rather than the producer.',
+        'NOM is genuinely ambiguous: Agave Matchmaker says 1653 current with 1477 prior, and several retailers still print 1477. Read the bottle.',
+        'One retailer describes a double-barrel four-plus-four regimen. That is documented elsewhere as the separate Adictivo Doble Reposado SKU and is not applied here.',
+        'Tasting notes come from a retailer listing, not the producer.',
+        'No founding date or brand history could be sourced.',
+        'No additive-free certification found; Agave Matchmaker reviewers widely report additive character.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'agavales-reposado', brand:'Agavales', expression:'Reposado', displayName:'Agavales Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'Destiladora del Valle de Tequila / Casa Maestri (NOM 1438)', distilleryName:'Destiladora del Valle de Tequila',
+      style:'Tequila Reposado - 100% Blue Weber Agave - Ex-Bourbon Oak',
+      proofN:80, ageText:'6 months',
+      priceUsd:7, toastItemGuid:'b0e9ad5a-04c8-4fc7-9747-23e464602a1c',
+      productionRows:[
+        ['Agave','100% blue Weber agave, from both Los Altos and the Tequila Valley',true],
+        ['Class','Tequila Reposado - 100% agave, not a mixto',true],
+        ['Cooking','Brick ovens and autoclave'],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Stainless tanks, 100% agave'],
+        ['Maturation','About 6 months in ex-bourbon Kentucky oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Destiladora del Valle de Tequila, Tequila, Jalisco (NOM 1438)',true]
+      ],
+      prodTags:['NOM 1438','Casa Maestri','Ex-Bourbon','100% Agave'],
+      why:'Agavales is bottled at NOM 1438, Destiladora del Valle de Tequila - the Casa Maestri contract distillery in the town of Tequila. The agave is blended from both Los Altos and Tequila Valley plantings, cooked in a mix of masonry ovens and autoclaves, milled on a roller mill, fermented in stainless steel and double distilled, then rested about six months in ex-bourbon Kentucky oak. Despite its value price it is a 100% agave tequila rather than a mixto.',
+      whyShort:'A 100% agave value reposado from Casa Maestri, rested in ex-bourbon oak.',
+      sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/2528-agavales-reposado-tequila',sourceType:'reference',coversFields:['producer','origin','strength','production']},
+        {url:'https://www.tequila.net/tequila-reviews/reposados/agavales-tequila-reposado.html',sourceType:'reference',coversFields:['age','cask','production']}
+      ],
+      sourcingLimitations:[
+        'The 6-month age and the ex-bourbon cask come from TEQUILA.net alone; Agave Matchmaker lists no aging data for this expression, and no producer website for Agavales could be located.',
+        'Sources conflict on still material - Agave Matchmaker says a stainless pot still, TEQUILA.net says copper - so no still material is published here.',
+        'topNotes are omitted. The only descriptors available were Agave Matchmaker aggregated community data, which is not a producer- or critic-published tasting note.',
+        'No additive-free certification found.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'el-luchador-reposado', brand:'El Luchador', expression:'Reposado', displayName:'El Luchador Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco',
+      producer:'David Ravandi / 123 Spirits', distilleryName:'Pending source review',
+      style:'Tequila Reposado - 100% Agave - White Oak, 4 to 6 Months',
+      proofN:80, ageText:'4-6 months',
+      priceUsd:10.25, toastItemGuid:'6b7368fd-086c-42a3-a2fe-a30cb80ca148',
+      topNotes:['Roasted agave','Bright citrus','Vanilla'],
+      productionRows:[
+        ['Agave','100% agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Maturation','4 to 6 months in white oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Pending source review - see limitations',true]
+      ],
+      prodTags:['White Oak','123 Spirits','David Ravandi'],
+      why:'El Luchador is a tequila range from David Ravandi, the founder behind 123 Organic Tequila, named for the masked wrestlers of lucha libre. The producer lists four expressions - a Still Strength Blanco at 110 proof, a standard Blanco, a Reposado and an Anejo - and describes the Reposado as aged four to six months in white oak. The high-proof bottling in this range is the Blanco, not the Reposado.',
+      whyShort:'A white-oak reposado from the founder of 123 Organic Tequila.',
+      sources:[
+        {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['identity','age','cask','tasting']},
+        {url:'https://www.oldtowntequila.com/el-luchador-reposado-tequila/',sourceType:'retailer',coversFields:['strength','age']},
+        {url:'https://www.agavematchmaker.com/brands/926-123-organic-tequila',sourceType:'reference',coversFields:['producer','origin']}
+      ],
+      sourcingLimitations:[
+        'CORRECTION to the shelf line, which asserted 110 proof. The producer lists 110 proof as the Still Strength BLANCO, a different expression; the Reposado is 40% ABV / 80 proof per retailer listings. The shelf line appears to have carried the Blanco spec across. Verify against the bottle.',
+        'NOM unresolved. One retailer lists NOM 1517 for the Reposado; the sibling 123 Organic brand is NOM 1480. Neither was confirmed by the producer, so no NOM is recorded.',
+        'Highlands versus lowlands is disputed and is not asserted here: retailer copy says highlands, Agave Matchmaker places the related 123 Organic brand in Los Valles.',
+        'The producer site root fetched but its deeper spec pages 404, so no agave source, oven, mill or still detail was obtainable.',
+        'Do not print "USDA Organic" for this bottle. Organic certification is described for the 123 Spirits portfolio in secondary coverage, not confirmed on a producer page for this expression.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'jose-1800-reposado', brand:'1800', expression:'Reposado', displayName:'1800 Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
+      style:'Tequila Reposado - 100% Blue Weber Agave - American and French Oak',
+      proofN:80, ageText:'Pending source review',
+      priceUsd:11, toastItemGuid:'68345cbb-1da9-4f56-ad43-78e6687f9680',
+      productionRows:[
+        ['Agave','100% blue Weber agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Cooking','Autoclave; La Rojeña also runs ten masonry ovens at distillery level'],
+        ['Extraction','Roller mill'],
+        ['Distillation','Double distilled'],
+        ['Maturation','American and French oak - La Rojeña ages predominantly in ex-American whiskey casks alongside French Limousin',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','La Rojeña, Tequila, Jalisco, established 1795 (NOM 1122)',true]
+      ],
+      prodTags:['NOM 1122','La Rojeña','American + French Oak','Est. 1795'],
+      why:'1800 is made at La Rojeña in the town of Tequila - the distillery Cuervo has operated since 1795, and the same site that produces Reserva de la Familia. The brand takes its name from the year the company cites for tequila first being successfully aged in oak. La Rojeña ages predominantly in ex-American whiskey casks alongside French Limousin oak.',
+      whyShort:'A reposado from the 1795 La Rojeña distillery, in American and French oak.',
+      history:'1800 launched in 1967 as Cuervo 1800, a premium sipping tequila whose first expression was the anejo. Silver and Reposado were added in 2004. The brand is owned by the Beckmann family and distributed in the US by Proximo Spirits.',
+      timeline:[
+        ['1795','La Rojeña distillery established in Tequila, Jalisco'],
+        ['1967','1800 launches; the anejo debuts first'],
+        ['2004','Silver and Reposado expressions added']
+      ],
+      sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/2449-1800-reposado',sourceType:'reference',coversFields:['producer','origin','strength','production']},
+        {url:'https://www.diffordsguide.com/producers/602/la-rojena-distillery-tequila-town-nom-1122',sourceType:'reference',coversFields:['producer','origin','production','cask']},
+        {url:'https://en.wikipedia.org/wiki/1800_(tequila)',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'Aging duration is NOT settled and is deliberately left pending. Figures in circulation - "minimum six months", "minimum eight months" - attach to the separate 1800 Reserva Reposado or could not be traced to a retrievable page for this SKU.',
+        'The slug jose-1800-reposado is a legacy import artifact preserved so the importer updates in place. The brand is 1800, not Jose 1800.',
+        'Oven, still and cask rows describe La Rojeña as a whole rather than this SKU, and partly conflict with the SKU-level record (autoclave versus masonry ovens; stainless pot with copper coil versus copper pot). Both are noted; neither is presented as settled.',
+        'No producer- or critic-published tasting notes were retrieved, so topNotes stay pending. Agave Matchmaker carries only aggregated community descriptors.',
+        'No additive-free certification; the Agave Matchmaker community score is low with repeated additive complaints.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'mi-campo-reposado', brand:'Mi Campo', expression:'Reposado', displayName:'Mi Campo Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco',
+      producer:'Tequilera Don Roberto (NOM 1437)', distilleryName:'Tequilera Don Roberto',
+      style:'Tequila Reposado - 100% Blue Weber Agave - Used Red Wine Barrels',
+      proofN:80, ageText:'Up to 1 year',
+      priceUsd:null, toastItemGuid:null,
+      topNotes:['Cooked agave and ripe banana','Honey maple','White chocolate'],
+      productionRows:[
+        ['Agave','100% blue Weber agave, matured seven years',true],
+        ['Class','Tequila Reposado',true],
+        ['Extraction','Cooked pinas gently pressed'],
+        ['Fermentation','Open-air tanks'],
+        ['Distillation','Double distilled'],
+        ['Maturation','Used red wine barrels - retailers identify them as California Cabernet Sauvignon and Pinot Noir',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Tequilera Don Roberto, Jalisco (NOM 1437)',true]
+      ],
+      prodTags:['Red Wine Barrels','Cabernet + Pinot Noir','Open-Air Fermentation','NOM 1437'],
+      why:'The wine-barrel claim on this bottle is confirmed by the producer: Mi Campo states the reposado rests in red wine barrels, and retailers identify those casks as former California Cabernet Sauvignon and Pinot Noir. The tequila is made from blue Weber agave the producer describes as seven years matured, with the cooked pinas gently pressed, fermented in open-air tanks and double distilled.',
+      whyShort:'A reposado rested in used California Cabernet and Pinot Noir barrels.',
+      history:'Mi Campo was introduced to the US market by Constellation Brands in 2018.',
+      timeline:[['2018','Launched in the US by Constellation Brands']],
+      sources:[
+        {url:'https://tequilamicampo.com/products/reposado',sourceType:'producer',coversFields:['identity','cask','production','tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/6446-tequila-mi-campo-reposado',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://woodencork.com/products/mi-campo-reposado',sourceType:'retailer',coversFields:['strength','cask']}
+      ],
+      sourcingLimitations:[
+        'Aging duration conflicts badly and no specific figure should be printed. The producer says "rested up to one year" - a ceiling, not a duration - while a retailer says 3 months.',
+        'Do NOT print "highlands". Agave Matchmaker places the brand in Los Valles; retailer copy calls the agave highland. Unresolved.',
+        'The producer page states no ABV; the 40% figure rests on a retailer listing.',
+        'The Cabernet and Pinot Noir varietals come from retailer copy. The producer says only "red wine barrels".',
+        'The NOM changed from 1137 (La Cofradía) to 1437, so older bottles may carry a different NOM.',
+        'No Toast match for this row, so no price is recorded.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'milagro-reposado', brand:'Milagro', expression:'Reposado', displayName:'Milagro Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Tepatitlán de Morelos',
+      producer:'Tequilera Milagro (NOM 1559)', distilleryName:'Tequilera Milagro',
+      style:'Tequila Reposado - 100% Blue Agave - 4 Months American Oak',
+      proofN:80, ageText:'4 months',
+      priceUsd:8, toastItemGuid:'02b44e5b-bd59-4ea3-a917-ec6019f8e915',
+      topNotes:['Vanilla','Caramel','Black pepper'],
+      productionRows:[
+        ['Agave','100% blue agave',true],
+        ['Class','Tequila Reposado',true],
+        ['Cooking','Stone / brick ovens'],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Stainless tanks, 100% agave'],
+        ['Maturation','4 months in American oak',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Tequilera Milagro, Tepatitlán de Morelos, Jalisco (NOM 1559)',true]
+      ],
+      prodTags:['NOM 1559','Los Altos','American Oak','Own Distillery'],
+      why:'Milagro is bottled at its own distillery, NOM 1559 in Tepatitlán de Morelos, in the southern Jalisco highlands. The producer states the reposado rests four months in American oak and bottles at 40% ABV. Agave Matchmaker records stone and brick ovens, roller-mill extraction, stainless fermentation, and distillation in stainless pot and column stills at that distillery.',
+      whyShort:'A highland reposado, four months in American oak, from its own distillery.',
+      sources:[
+        {url:'https://milagrotequila.com/our-tequilas/reposado',sourceType:'producer',coversFields:['identity','strength','age','cask','tasting']},
+        {url:'https://www.agavematchmaker.com/distilleries/287-tequilera-milagro-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin','production']}
+      ],
+      sourcingLimitations:[
+        'Retailers variously state 3, 4 and 6 months for this bottling, and a "10 months in new French oak" claim in circulation describes the separate Milagro Select Barrel Reserve Reposado. The producer\'s own 4-month figure is used; no other figure should be printed.',
+        'The oven, mill, fermentation and still rows are the distillery\'s registered methods, not SKU-specific producer confirmations.',
+        'No additive-free certification found.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'terralta-reposado', brand:'Terralta', expression:'Reposado', displayName:'Terralta Reposado',
+      cat:'Agave', subcategory:'reposado',
+      country:'Mexico', region:'Jalisco', city:'Jesús María',
+      producer:'Destilería El Pandillo (NOM 1579)', distilleryName:'Destilería El Pandillo',
+      style:'Tequila Reposado - 100% Blue Weber Agave - Tahona Milled, Highland',
+      proofN:80, ageText:'Pending source review',
+      priceUsd:12, toastItemGuid:'145112ea-d187-4d80-90f3-e723bf0d9b0b',
+      productionRows:[
+        ['Agave','100% blue Weber agave, highland grown, handpicked',true],
+        ['Class','Tequila Reposado',true],
+        ['Cooking','Stone / brick ovens'],
+        ['Extraction','Tahona',true],
+        ['Distillation','Double distilled in copper pot stills'],
+        ['Water','Deep well, roughly 150 metres down',true],
+        ['Maturation','Used American white oak; duration pending'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','El Pandillo, Jesús María, Jalisco - Los Altos Sur (NOM 1579)',true]
+      ],
+      prodTags:['NOM 1579','El Pandillo','Tahona','Los Altos','Deep-Well Water'],
+      why:'Terralta is made at Destilería El Pandillo in Jesús María, in the southern Jalisco highlands, under Felipe Camarena. The line is defined by its water: where El Pandillo\'s other brands blend rain and spring water, Terralta uses only the distillery\'s deep well, roughly 150 metres down. Agave Matchmaker records 100% blue Weber agave cooked in stone and brick ovens, milled on a tahona, double distilled in copper pot stills, and aged in used American white oak.',
+      whyShort:'A tahona-milled highland reposado from Felipe Camarena\'s El Pandillo.',
+      sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/5785-terralta-tequila-reposado',sourceType:'reference',coversFields:['producer','origin','production','cask']},
+        {url:'https://www.agavematchmaker.com/brands/1953-tequila-terralta',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://siptequila.com/collections/terralta-tequila',sourceType:'retailer',coversFields:['production','strength','water']}
+      ],
+      sourcingLimitations:[
+        'Aging duration is unconfirmed and left pending. No retrieved page states one, and the reference record says only "used American white oak".',
+        'Cask type conflicts mildly - used American white oak per the reference record, ex-bourbon specifically per an unretrieved snippet. Ex-bourbon is not asserted.',
+        'ADDITIVE-FREE IS UNVERIFIED. A retailer markets Terralta as additive-free, but no retrieved page displayed an actual verification. Do not print "additive-free verified" without checking the Matchmaker record directly.',
+        'Well depth conflicts between sources - 150 metres versus 140 metres.',
+        'No Terralta producer website was located; all detail is reference-site or retailer.',
+        'topNotes are omitted - the only descriptors available were aggregated community data, not producer- or critic-published notes.',
+        'The fuller Camarena family lineage (La Alteña, Tapatío, El Tesoro) appeared only in an unretrieved snippet and is not asserted.'
+      ]
+    }),
+    // ───────────── Batch 3 · Agave — añejo / specialty, and vodka ─────────────
+    sourcedDraftSpirit({
+      id:'1800-anejo-tequila', brand:'1800', expression:'Añejo', displayName:'1800 Anejo Tequila',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco', city:'Tequila',
+      producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
+      style:'Tequila Añejo - 100% Blue Weber Agave - 12 to 16 Months, American and French Oak',
+      proofN:80, ageText:'12-16 months', minYears:1, maxYears:1,
+      priceUsd:11, toastItemGuid:'2c8baacb-0214-48c9-b957-fbf6fe2c6501',
+      topNotes:['Oaky vanilla','Toffee','Peppery spice'],
+      productionRows:[
+        ['Agave','100% blue Weber agave from the Tequila Valley',true],
+        ['Agave Maturity','5.5 to 12 years before harvest, hand cut with a coa'],
+        ['Cooking','Masonry ovens, 36 to 40 hours per the producer'],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Closed stainless tanks, proprietary yeast, about 40 to 50 hours'],
+        ['Distillation','Twice distilled'],
+        ['Maturation','12 to 16 months in new American and French oak, high char and toast',true],
+        ['Bottling Proof','80 (40% ABV), US bottling',true],
+        ['Distillery','La Rojeña, Tequila, Jalisco (NOM 1122)',true]
+      ],
+      prodTags:['NOM 1122','La Rojeña','American + French Oak','Twice Distilled'],
+      why:'1800 is produced by Casa Cuervo at La Rojeña in the town of Tequila, from blue Weber agave grown in the Tequila Valley. The anejo is matured 12 to 16 months in new American and French oak with high char and toast, and bottled at 40% ABV in the United States. The producer states the agave is roasted in masonry ovens for 36 to 40 hours and the spirit twice distilled. The anejo, launched in 1967, was the brand\'s first expression.',
+      whyShort:'The expression 1800 launched with - 12 to 16 months in new American and French oak.',
+      history:'1800 was established in 1967 by the Beckmann family, who also control Jose Cuervo, and the anejo was the line\'s first release. The brand takes its name from the year the producer associates with tequila moving into oak casks. Proximo Spirits has distributed it in the United States since 2008.',
+      timeline:[
+        ['1967','Brand launched; the anejo is the first expression'],
+        ['2004','Silver and Reposado labels added'],
+        ['2008','Proximo Spirits begins US distribution']
+      ],
+      sources:[
+        {url:'https://www.1800tequila.com/products/anejo',sourceType:'producer',coversFields:['strength','age','cask','tasting']},
+        {url:'https://www.1800tequila.com/pages/tequila-facts',sourceType:'producer',coversFields:['origin','production','history']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2451-1800-anejo',sourceType:'reference',coversFields:['producer','origin','strength','production']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1517/1800-anejo-tequila-38',sourceType:'reference',coversFields:['producer','strength']}
+      ],
+      sourcingLimitations:[
+        'Market ABV difference: Difford\'s Guide lists a 38% ABV Mexican-market bottling. The 80 proof figure applies to the US bottling. Confirm the shelf label.',
+        'Cooking method conflicts and is left unresolved: the producer says masonry ovens for 36 to 40 hours, Agave Matchmaker records autoclave.',
+        'Cask description conflicts: the producer says new American and French oak, Difford\'s says small re-charred French oak. The producer is preferred here.',
+        'A "minimum 14 months" figure circulating at retail was not used; only the producer\'s own 12 to 16 months is recorded.',
+        'Agave Matchmaker lists additives as not disclosed for this bottle.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'21-seeds-cucumber-jalapeno', brand:'21Seeds', expression:'Cucumber Jalapeño', displayName:'21 Seeds Cucumber Jalapeno',
+      cat:'Agave', subcategory:'flavored-infused',
+      country:'Mexico', region:'Jalisco',
+      producer:'Destiladora del Valle de Tequila / Casa Maestri (NOM 1438)', distilleryName:'Destiladora del Valle de Tequila',
+      style:'Infused Blanco Tequila - Cucumber and Jalapeño - 35% ABV',
+      proofN:70, ageText:'Unaged',
+      priceUsd:8.75, toastItemGuid:'df3bee27-5831-4280-ad55-e30a98b07cc0',
+      topNotes:['Cucumber','Jalapeño spice'],
+      productionRows:[
+        ['Base','Blanco tequila',true],
+        ['Distillation','Double distilled'],
+        ['Filtration','Cold filtered'],
+        ['Infusion','Cucumber and jalapeño, infused with the juice of real fruit',true],
+        ['Bottling Proof','70 (35% ABV) - below the 40% of a standard tequila',true],
+        ['Distillery','Destiladora del Valle de Tequila / Casa Maestri, Jalisco (NOM 1438)',true]
+      ],
+      prodTags:['Infused Blanco','35% ABV','Cold Filtered','NOM 1438'],
+      why:'21Seeds Cucumber Jalapeño is a blanco tequila, double distilled and cold filtered, then infused with cucumber and jalapeño using real fruit juice. It is bottled at 35% ABV - below the 40% typical of unflavoured tequila, which is what the infused designation allows. Production is recorded at NOM 1438, Casa Maestri, in the Los Valles region of Jalisco. The brand was founded in 2019 and acquired by Diageo in 2022.',
+      whyShort:'An infused blanco at 35% ABV - cucumber and jalapeño, from real fruit.',
+      history:'21Seeds was founded in 2019 by Kat Hantas, Nicole Hantas-Emanuel and Sarika Singh, growing out of home tequila infusions. Diageo acquired the brand in March 2022.',
+      timeline:[
+        ['2019','Founded by Kat Hantas, Nicole Hantas-Emanuel and Sarika Singh'],
+        ['2022','Acquired by Diageo']
+      ],
+      sources:[
+        {url:'https://www.thebar.com/en-us/products/21seeds-cucumber-jalapeno-750-ml',sourceType:'producer',coversFields:['strength','identity','production','tasting']},
+        {url:'https://www.agavematchmaker.com/brands/2296-21seeds',sourceType:'reference',coversFields:['producer','origin','history']},
+        {url:'https://www.finewineandgoodspirits.com/21-seeds-cucumber-jalapeno-tequila-blanco/product/000098763',sourceType:'retailer',coversFields:['strength']}
+      ],
+      sourcingLimitations:[
+        'PROOF CORRECTED AND CONFIRMED. This is 70 proof / 35% ABV - published by the brand, corroborated by the Pennsylvania state store listing, and confirmed off the bottle by Sean on 2026-09-04. Do not present it as a standard-strength tequila.',
+        'Only two tasting descriptors are published, so topNotes is intentionally short and must reach three before publication.',
+        'Agave type and the highland/lowland blend claim appear only in retailer and aggregator copy and were deliberately excluded.',
+        'NOM 1438 rests on Agave Matchmaker rather than a producer statement or a CRT record.',
+        'The brand publishes no cooking, extraction, fermentation or maturation detail, and the exact town of the distillery was not confirmed.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'123-organic-anejo', brand:'123 Organic', expression:'Añejo (Tres)', displayName:'123 Organic Anejo',
+      cat:'Agave', subcategory:'anejo-and-specialty',
+      country:'Mexico', region:'Jalisco', city:'Amatitán',
+      producer:'Tequila Las Americas (NOM 1480)', distilleryName:'Tequila Las Americas',
+      style:'Tequila Añejo - Certified Organic - American White Oak',
+      proofN:80, ageText:'18 months', minYears:1, maxYears:1,
+      priceUsd:18.5, toastItemGuid:'0602b7a7-cd05-48d2-928f-4aae4012cee5',
+      topNotes:['Cooked agave','Toasted oak','Vanilla'],
+      productionRows:[
+        ['Agave','100% blue Weber agave from the Valley of Tequila',true],
+        ['Class','Tequila Añejo - the range runs Uno (blanco), Dos (reposado), Tres (añejo), Diablito (extra añejo)',true],
+        ['Cooking','Stone / brick ovens'],
+        ['Extraction','Roller mill'],
+        ['Fermentation','Open-air stainless tanks, 100% agave'],
+        ['Distillation','Twice distilled, stainless pot with copper coil'],
+        ['Maturation','American white oak; 18 months per retailer listings',true],
+        ['Certification','USDA and EU certified organic agave estates',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Tequila Las Americas, Amatitán, Jalisco (NOM 1480)',true]
+      ],
+      prodTags:['Certified Organic','NOM 1480','Amatitán','Brick Oven'],
+      why:'The 123 Organic anejo is the range\'s "Tres" bottling - the line runs Uno for the blanco, Dos for the reposado, Tres for the anejo and Diablito for the extra anejo. It is produced at Tequila Las Americas in Amatitán, in the Valley of Tequila, from agave grown on USDA- and EU-certified organic estates, with brick-oven cooking, roller-mill extraction, open-air fermentation, twice distillation and American white oak maturation. Bottles are hand-blown from recycled glass with soy-ink labels.',
+      whyShort:'The "Tres" - a USDA and EU organic anejo from Amatitán, in American white oak.',
+      history:'123 Organic Tequila was created by tequilero David Ravandi as an early certified-organic tequila. Bottles are hand-blown from recycled glass and labelled on recycled paper printed with soy ink.',
+      sources:[
+        {url:'https://123tequila.com/',sourceType:'producer',coversFields:['identity','range','organic']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2445-123-organic-tequila-anejo',sourceType:'reference',coversFields:['producer','origin','strength','production','cask']},
+        {url:'https://www.agavematchmaker.com/distilleries/257-tequila-las-americas-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
+        {url:'https://siptequila.com/products/123-organic-tequila-anejo',sourceType:'retailer',coversFields:['age','tasting']}
+      ],
+      sourcingLimitations:[
+        'The shelf label reads "123 Organic Anejo"; the SKU is marketed as 123 Organic Tequila Añejo "Tres". Display name left unchanged; the Tres designation is recorded in the dossier.',
+        'The 18-month aging figure is retailer-only. Agave Matchmaker confirms American white oak but states no duration, and the producer does not publish maturation times.',
+        'The 2010 launch year in circulation is retailer-only and was not found on the producer site, so no founding date is recorded.',
+        'Tasting notes are retailer-published rather than producer-published.',
+        'No additive-free certification was confirmed, and "biodynamic" claims appear only in retailer copy.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'stoli-vodka', brand:'Stoli', expression:'Vodka', displayName:'Stoli Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'Latvia', city:'Riga',
+      producer:'SPI Group', distilleryName:'Latvijas Balzams',
+      style:'Wheat and Rye Vodka - Latvia - Charcoal and Quartz Filtered',
+      proofN:80, ageText:'Unaged',
+      priceUsd:7, toastItemGuid:'5089405f-f571-403a-8da9-e946401bde5c',
+      productionRows:[
+        ['Base','Wheat and rye',true],
+        ['Filtration','Quartz sand and charcoal, then woven cloth',true],
+        ['Water','Artesian well water'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Latvijas Balzams, Riga, Latvia',true]
+      ],
+      prodTags:['Wheat + Rye','Latvia','Charcoal Filtered'],
+      why:'Stoli is distilled from a wheat-and-rye base and produced for international markets at the Latvijas Balzams distillery in Riga, Latvia - a main production site for the brand since 1948. It is filtered through quartz sand and charcoal and then woven cloth before being blended with artesian well water, and bottled at 40% ABV. The label changed from Stolichnaya to Stoli in 2022; a separate, Russian-produced Stolichnaya exists for the domestic Russian market and is a different product.',
+      whyShort:'Wheat-and-rye vodka made at Latvijas Balzams in Riga - not the Russian bottling.',
+      history:'The brand traces to the Moscow State Wine Warehouse No. 1 and a 1938 trademark registration. SPI Group acquired trademark rights in 1999. In 2022, following Russia\'s invasion of Ukraine, the owner rebranded the international product from Stolichnaya to Stoli.',
+      timeline:[
+        ['1938','Stolichnaya trademark registered'],
+        ['1948','Latvijas Balzams becomes a main production site'],
+        ['1999','SPI Group acquires trademark rights'],
+        ['2022','Rebranded from Stolichnaya to Stoli']
+      ],
+      sources:[
+        {url:'https://en.wikipedia.org/wiki/Stolichnaya',sourceType:'reference',coversFields:['ownership','origin','production','history']},
+        {url:'https://vinepair.com/articles/stolichnaya-vodka-elit-stoli-guide/',sourceType:'reference',coversFields:['origin','production','history']}
+      ],
+      sourcingLimitations:[
+        'PRODUCT CONFIRMED. Two different products share this name: the Latvian-produced Stoli sold internationally, and a Russian-market Stolichnaya produced in Kaliningrad by a different entity. Sean confirmed off the bottle on 2026-09-04 that the shelf bottle reads "Stoli Vodka" - the Latvian SPI product recorded here, not the Russian Stolichnaya.',
+        'The producer\'s own sites could not be fetched - stoli.com returned 404 and stoli-group.com refused the connection - so every fact here rests on reference-tier sources rather than the producer.',
+        'Distillation count is genuinely contested (three versus four) and is deliberately not recorded.',
+        'Raw-spirit grain origin is in flux - historically Russian, reported as Slovakian since 2022 - so no grain-origin country is printed.',
+        'No published tasting notes were retrievable, so topNotes are omitted rather than filled from marketing copy.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'double-cross-vodka', brand:'Double Cross', expression:'Vodka', displayName:'Double Cross Vodka',
+      cat:'Vodka', subcategory:'vodka',
+      country:'Slovakia', region:'Tatra Mountains', city:'Stará Ľubovňa',
+      producer:'DCV Investors', distilleryName:'Pending source review',
+      style:'Slovak Estate Winter Wheat Vodka - Seven Times Distilled and Filtered',
+      proofN:80, ageText:'Unaged',
+      priceUsd:9, toastItemGuid:'4d76da46-c944-4b68-8aee-1f81aa8246bb',
+      topNotes:['Citrus','White chocolate','Clean minerality'],
+      productionRows:[
+        ['Base','Estate-grown Slovak winter wheat',true],
+        ['Water','Aquifers roughly 200 feet beneath the Tatra Mountains',true],
+        ['Distillation','Seven times'],
+        ['Filtration','Seven times, including a diamond-dust stage',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Origin','Stará Ľubovňa, northeastern Slovakia',true]
+      ],
+      prodTags:['Slovak Wheat','Tatra Water','7x Distilled','Diamond Filtered'],
+      why:'Double Cross is made in Stará Ľubovňa, in the Tatra Mountains of northeastern Slovakia, from estate-grown winter wheat and water drawn from aquifers roughly 200 feet below the mountains. The producer states each batch is distilled seven times and filtered seven times, including a diamond-dust stage, and bottles at 40% ABV.',
+      whyShort:'Slovak estate winter wheat, seven times distilled, Tatra aquifer water.',
+      history:'Double Cross was introduced in 2008 and took gold medals at that year\'s San Francisco World Spirits Competition for both taste and package design.',
+      timeline:[['2008','Introduced; double gold at the San Francisco World Spirits Competition']],
+      sources:[
+        {url:'https://www.doublecrossvodka.com/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
+        {url:'https://en.wikipedia.org/wiki/Double_Cross_Vodka',sourceType:'reference',coversFields:['origin','production','history']}
+      ],
+      sourcingLimitations:[
+        'The seven-times distillation count rests on the reference source; the producer page fetched states the sevenfold diamond filtration but not a distillation count.',
+        'The distillery trading name was not confirmed - only the town and the brand owner.',
+        'Still type was not disclosed by any source fetched.',
+        'Founder names come from the reference entry rather than the producer site, so none are asserted here.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'boyd-bair-potato-vodka', brand:'Boyd & Blair', expression:'Potato Vodka', displayName:'Boyd & Blair Potato Vodka',
+      cat:'Vodka', subcategory:'potato-vodka',
+      country:'USA', region:'Pennsylvania', city:'Glenshaw',
+      producer:'Pennsylvania Pure Distilleries', distilleryName:'Boyd & Blair / Pennsylvania Pure Distilleries',
+      style:'Pennsylvania Potato Vodka - Copper Pot Still - Hearts Only',
+      proofN:80, ageText:'Unaged',
+      priceUsd:6.5, toastItemGuid:'bac26ec1-0f61-4f15-bdc7-30db4a988120',
+      topNotes:['Vanilla','Black pepper','Honey'],
+      productionRows:[
+        ['Base','Pennsylvania-grown potatoes from Somerset, Butler and Schuylkill Counties',true],
+        ['Fermentation','Champagne yeast'],
+        ['Still','1,200-litre copper pot still',true],
+        ['Cut','Hearts only - heads and tails are discarded rather than recycled for yield',true],
+        ['Bottling','Hand filled, corked and wax dipped; batch numbered and hand signed'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Glenshaw, Pennsylvania - the former Glenshaw Glass works',true]
+      ],
+      prodTags:['Pennsylvania Potato','Copper Pot Still','Hearts Only','Small Batch'],
+      why:'Boyd & Blair is distilled by Pennsylvania Pure Distilleries in Glenshaw, Pennsylvania, in the former Glenshaw Glass works, from potatoes grown in Somerset, Butler and Schuylkill Counties. It is fermented with champagne yeast and run through a 1,200-litre copper pot still, and the distillery bottles only the hearts of each run, discarding heads and tails rather than recycling them for yield. Hand filled, corked, wax dipped and batch numbered.',
+      whyShort:'A Pennsylvania potato vodka, copper pot distilled, hearts only.',
+      history:'Pennsylvania Pure Distilleries was conceived in 2005 by Prentiss Orr and Barry Young; the producer dates the distillery to 2008, and the vodka reached the US market in 2010. Spirit Journal named it the highest-ranked vodka and 22nd-ranked spirit overall in 2011.',
+      timeline:[
+        ['2005','Orr and Young begin planning the distillery'],
+        ['2008','Distillery founded, per the producer'],
+        ['2010','Boyd & Blair Potato Vodka introduced in the United States'],
+        ['2011','Ranked highest vodka and 22nd spirit overall by Spirit Journal']
+      ],
+      sources:[
+        {url:'https://www.boydandblair.com/potato-vodka',sourceType:'producer',coversFields:['base','production','strength','origin']},
+        {url:'https://en.wikipedia.org/wiki/Boyd_%26_Blair',sourceType:'reference',coversFields:['history','origin','strength']},
+        {url:'https://padistillersguild.com/profile/boyd-blair/',sourceType:'reference',coversFields:['producer','production']},
+        {url:'https://www.caskers.com/boyd-blair-potato-vodka/',sourceType:'retailer',coversFields:['production','tasting']}
+      ],
+      sourcingLimitations:[
+        'The slug boyd-bair-potato-vodka is a legacy import artifact preserved so the importer updates in place. The brand is Boyd & Blair.',
+        'Water source is unknown - no source fetched states where the distillery\'s water comes from.',
+        'Filtration method is unknown; the distillery emphasises the hearts cut rather than filtration.',
+        'Founding year conflicts: the producer says 2008, the reference entry describes planning from 2005 and a 2010 US introduction. Both are recorded.',
+        'Tasting notes are retailer-published; the producer publishes only texture language.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'vodka-grey-whale', brand:'Gray Whale', expression:'Vodka', displayName:'Vodka Grey Whale',
+      cat:'Vodka', subcategory:'vodka',
+      country:'USA', region:'California',
+      producer:'Gray Whale Spirits Co.', distilleryName:'Gray Whale Spirits Co.',
+      style:'California Vodka - Grain and Grape Base - No Additives',
+      proofN:80, ageText:'Unaged',
+      priceUsd:8, toastItemGuid:'9af54e37-36bc-4268-842d-c271d14585e4',
+      productionRows:[
+        ['Base','90% grain, 10% California grapes',true],
+        ['Additives','None - no additives and no added sugar, per the producer',true],
+        ['Dietary','Gluten free, per the producer'],
+        ['Bottling Proof','80 (40% ABV), per the producer FAQ',true],
+        ['Origin','California, USA',true]
+      ],
+      prodTags:['California','Grain + Grape','Additive Free','Ocean Conservation'],
+      why:'Gray Whale Vodka is made in California from a base the producer states is 90% grain and 10% California grapes, without additives or added sugar, and bottled at 40% ABV. The brand ties its identity to the California gray whale migration and states that every bottle sold supports ocean protection.',
+      whyShort:'A California vodka on a grain-and-grape base, made without additives.',
+      sources:[
+        {url:'https://graywhalespirits.com/pages/faqs-contact-us',sourceType:'producer',coversFields:['strength','base']},
+        {url:'https://graywhalespirits.com/pages/vodka',sourceType:'producer',coversFields:['base','additives']},
+        {url:'https://graywhalespirits.com/pages/about',sourceType:'producer',coversFields:['identity','positioning']}
+      ],
+      sourcingLimitations:[
+        'Label versus SKU: the venue label reads "Vodka Grey Whale"; the product is "Gray Whale Vodka" - the mismatch is both word order and spelling, since the brand uses the American "Gray". Display name kept per Sean.',
+        'ABV CONFLICTS ON THE PRODUCER\'S OWN SITE - the vodka page shows 43% in one place and 40% elsewhere, and the FAQ states 40%. 40% is recorded. Verify against the bottle.',
+        'Base ingredient conflicts on the producer\'s own site: the About page and all retail copy say "distilled Californian grapes", while the vodka page states 90% grain and 10% grape. The 90/10 figure is used.',
+        'The Golden State Distillery / Sebastopol attribution is retailer-only; the producer never names a distillery or town, so none is recorded.',
+        'Distillation count and filtration method are unknown. A "distilled 5 times" claim applies to the flavoured vodkas and a "seven times" claim to the gin; neither was applied here.',
+        'No founding year or founders could be confirmed, and no published tasting notes exist, so topNotes are omitted.'
+      ]
+    }),
+    // ───────────── Batch 3 · Rum — white, spiced, dark ─────────────
+    sourcedDraftSpirit({
+      id:'angostura-white-oak', brand:'Angostura', expression:'White Oak', displayName:'Angostura White Oak',
+      cat:'Rum', subcategory:'white-and-silver',
+      country:'Trinidad and Tobago',
+      producer:'Angostura Limited', distilleryName:'Angostura Limited',
+      style:'Trinidadian Light Rum - Molasses, Column Distilled',
+      proofN:80, ageText:'Pending source review',
+      priceUsd:6, toastItemGuid:'806c5186-02d9-460c-91d8-8184489a6a18',
+      topNotes:['Coconut','Molasses','Burnt sugar'],
+      productionRows:[
+        ['Base','Sugar cane molasses',true],
+        ['Fermentation','Proprietary yeast propagated from a 1940s culture, 24 to 36 hours'],
+        ['Distillation','Continuous column stills; spirit taken off at 80 to 95% ABV in heavy and light fractions',true],
+        ['Maturation','Once-used bourbon American white oak, at distillery level; age for this expression pending'],
+        ['Blending','A light, delicately flavoured blend of rums'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Angostura Limited, Trinidad - the last of the more than fifty that once operated there',true]
+      ],
+      prodTags:['Trinidad','Molasses','Column Still','Light Rum'],
+      why:'Angostura White Oak is made in Trinidad by Angostura Limited, which operates the country\'s only remaining rum distillery. The producer describes it as a light-bodied blend fermented and distilled from sugar cane molasses. Angostura\'s distillery-wide process is continuous column distillation using a house yeast culture dating to the 1940s, followed by maturation in once-used bourbon American white oak. Bottled at 40% ABV.',
+      whyShort:'Column-distilled Trinidadian molasses rum from the island\'s last distillery.',
+      sources:[
+        {url:'https://angostura.com/brands/rums/standard-rums/angostura-white-oak/',sourceType:'producer',coversFields:['identity','base']},
+        {url:'https://angostura.com/our-business/rum-making-process/',sourceType:'producer',coversFields:['production','cask']},
+        {url:'https://www.lcbo.com/en/angostura-white-oak-rum-30333',sourceType:'retailer',coversFields:['strength','origin','tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1777/angostura-reserva-light-rum',sourceType:'reference',coversFields:['identity']}
+      ],
+      sourcingLimitations:[
+        'The widely repeated line "aged a minimum of 3 years and twice charcoal filtered" could NOT be found on any Angostura page for White Oak. Angostura sells a separate SKU - Reserva 3 Year Old White at 37.5% ABV, charcoal filtered - and the two appear to be conflated in secondary sources. Age and filtration are left pending rather than asserted.',
+        'Column distillation is documented at distillery level for all Angostura rum, not on the White Oak product page, so it is an inference from house process rather than a label claim.',
+        'Tasting notes rest on provincial-retailer listings that share agent-supplied copy, not on a producer page.',
+        'angosturarum.com now redirects to an unrelated third-party domain and must not be cited. Use angostura.com.',
+        'No added-sugar measurement located for this expression.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'bacardi-dragonberry', brand:'Bacardi', expression:'Dragonberry', displayName:'Bacardi Dragonberry',
+      cat:'Rum', subcategory:'spiced-and-flavored',
+      country:'Puerto Rico',
+      producer:'Bacardi Limited', distilleryName:'Bacardi',
+      style:'Flavoured Rum - Strawberry and Dragon Fruit - 35% ABV',
+      proofN:70, ageText:'NAS',
+      priceUsd:7, toastItemGuid:'6f2146b9-f9dd-4130-a475-9347afdbd86c',
+      topNotes:['Dragon fruit','Strawberry'],
+      productionRows:[
+        ['Base','Sugar cane molasses, fermented with yeast and water',true],
+        ['Flavouring','Dragon fruit and strawberry; method not disclosed by the producer',true],
+        ['Class','At 35% ABV this sits below the US minimum for the rum class and falls under the flavoured-spirits standard, which requires at least 30% ABV',true],
+        ['Bottling Proof','70 (35% ABV), per retailer listings',true]
+      ],
+      prodTags:['Flavoured Rum','35% ABV','Strawberry','Dragon Fruit'],
+      why:'BACARDÍ Dragonberry is a flavoured rum combining dragon fruit with strawberry on a molasses base. US retail listings put it at 35% ABV, which is below the 40% the US standard of identity requires for the rum class - so it sits legally under the flavoured-spirits standard, designated by base spirit plus predominant flavours. Bacardi publishes no age or still detail for this expression.',
+      whyShort:'A 35% ABV flavoured rum - legally a flavoured spirit rather than straight rum.',
+      sources:[
+        {url:'https://www.bacardi.com/us/en/our-rums/dragonberry-rum/',sourceType:'producer',coversFields:['identity','flavour','base','tasting']},
+        {url:'https://www.bacardi.com/us/en/flavored-rums/',sourceType:'producer',coversFields:['identity']},
+        {url:'https://theliquorbarn.com/products/bacardi-dragon-berry-750ml',sourceType:'retailer',coversFields:['strength','origin']},
+        {url:'https://www.law.cornell.edu/cfr/text/27/5.151',sourceType:'reference',coversFields:['classification']}
+      ],
+      sourcingLimitations:[
+        'ABV rests ONLY on retailer listings. Bacardi publishes no SKU-level ABV for its flavoured range, and the "40% ALC. BY VOL." on its own pages is site-wide footer boilerplate, not this product\'s strength. Verify 70 proof against the bottle.',
+        'Only two tasting descriptors are published, so topNotes is intentionally short and must reach three before publication.',
+        'Attribution to the Cataño distillery is an inference from Bacardi\'s general US rum production, not a SKU-level statement, so no distillery town is recorded.',
+        'Retailer copy for this product includes unattributed production details - cold infusion, charcoal-blend filtration, proprietary yeast - that read as machine-generated and were not used.',
+        'Only the US bottling was researched; EU bottlings of Bacardi flavoured expressions differ in strength.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'captain-morgan-private-stock', brand:'Captain Morgan', expression:'Private Stock', displayName:'Captain Morgan Private Stock',
+      cat:'Rum', subcategory:'spiced-and-flavored',
+      country:'USA', region:'U.S. Virgin Islands',
+      producer:'Diageo', distilleryName:'Diageo USVI (brand-level attribution)',
+      style:'Spiced Rum - Caribbean Rum With Spice And Other Natural Flavors',
+      proofN:80, ageText:'Pending source review',
+      priceUsd:6.5, toastItemGuid:'7a8c1dfd-e561-46d0-a164-be3a15497049',
+      productionRows:[
+        ['Class','Caribbean Rum With Spice And Other Natural Flavors - the producer\'s own label statement',true],
+        ['Blending','A blend of Caribbean rums with added spice and other natural flavours',true],
+        ['Bottling Proof','80 (40% ABV), stated by the producer',true],
+        ['Distillery','Diageo USVI, St. Croix, supplies bulk rum for US-market Captain Morgan; not confirmed at SKU level']
+      ],
+      prodTags:['Spiced Rum','Diageo','Caribbean'],
+      why:'Captain Morgan Private Stock is a Diageo product whose label class is "Caribbean Rum With Spice And Other Natural Flavors", bottled at 40% ABV. Because it carries added spice and flavouring it is a spiced product rather than a straight rum. Diageo built its own distillery on St. Croix in 2010, and that facility supplies the bulk rum behind US-market Captain Morgan; before then the rum was produced by a third party in Puerto Rico. Diageo publishes no age, still type or cask detail for this expression.',
+      whyShort:'Diageo\'s premium spiced expression at 40% ABV, rum with spice and natural flavours.',
+      history:'Diageo acquired the Captain Morgan brand in 2001 and opened its own distillery on St. Croix in the US Virgin Islands in 2010.',
+      timeline:[
+        ['2001','Captain Morgan brand acquired by Diageo'],
+        ['2010','Diageo opens its own Captain Morgan distillery on St. Croix']
+      ],
+      sources:[
+        {url:'https://www.captainmorgan.com/en-us/products/captain-morgan-private-stock-rum',sourceType:'producer',coversFields:['strength','classification']},
+        {url:'https://en.wikipedia.org/wiki/Captain_Morgan',sourceType:'reference',coversFields:['ownership','history']},
+        {url:'https://clui.org/ludb/site/captain-morgan-rum-distillery-us-virgin-islands',sourceType:'reference',coversFields:['origin']}
+      ],
+      sourcingLimitations:[
+        'Age is unverified. The "minimum two years in charred American oak" claim appears only on retailer pages and on no Diageo page, so it is not asserted.',
+        'Origin conflicts: a retailer lists Private Stock as Puerto Rico, which contradicts documented post-2010 St. Croix production for the US market. Diageo publishes no SKU-level origin beyond "Caribbean Rum".',
+        'Diageo publishes no still type, cask, filtration or added-sugar information for this expression.',
+        'topNotes are omitted entirely. The producer publishes only "rich, dark and full-bodied", which is body language rather than flavour notes, and the detailed note lists found elsewhere appear only in machine-generated-looking retailer copy.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'bumbu-dark', brand:'Bumbu', expression:'The Original', displayName:'Bumbu Dark',
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Barbados',
+      producer:'Bumbu Rum Company / Sovereign Brands', distilleryName:'West Indies Rum Distillery (per Pernod Ricard)',
+      style:'Barbados Rum With Natural Flavours - Spiced and Sweetened',
+      proofN:null, ageText:'Pending source review',
+      priceUsd:9, toastItemGuid:'81953ac0-d66e-4c20-9661-753a95be4b1e',
+      topNotes:['Toffee','Dried apricot','Vanilla'],
+      productionRows:[
+        ['Class','Rum with Natural Flavors - the producer\'s own label wording. In the US the TTB classes it a rum specialty rather than rum',true],
+        ['Base','Blended from Barbados rum',true],
+        ['Blending','Distilled in small batches and blended by hand with hand-selected spices; the spices are not disclosed',true],
+        ['Added Sugar','Measured well above what the rum class permits - a state monopoly lists 47 g/l on the 40% bottling, other measurements range to roughly 51 g/l',true],
+        ['Bottling Proof','PENDING - the shelf line said 85, which matches no Bumbu product; see limitations',true],
+        ['Distillery','West Indies Rum Distillery, Barbados, established 1893, per Pernod Ricard',true]
+      ],
+      prodTags:['Barbados','Spiced','Sweetened','Rum Specialty'],
+      why:'Bumbu The Original is a Barbados rum blend to which natural flavours and spices are added; the producer\'s own label class is "Rum with Natural Flavors". Pernod Ricard identifies the West Indies Rum Distillery in Barbados, established 1893, as the source of the Original, so Bumbu is a blender and brand owner rather than a distiller. Because of the flavouring and sweetening, the US product is classed as a rum specialty rather than as rum. Measured sugar runs far above what the rum class permits.',
+      whyShort:'A sweetened, spiced Barbados blend - a rum specialty in the US, not rum.',
+      history:'Bumbu was launched by Sovereign Brands and takes its name from bumbo, a spiced rum drink of the colonial West Indies. The brand joined the Pernod Ricard France portfolio in 2024.',
+      timeline:[
+        ['1893','West Indies Rum Distillery, the Barbados source of the Original, established'],
+        ['2024','Bumbu joins the Pernod Ricard France portfolio']
+      ],
+      sources:[
+        {url:'https://bumbu.sovereignbrands.com/pages/the-original',sourceType:'producer',coversFields:['identity','classification','strength','production']},
+        {url:'https://www.pernod-ricard.com/en/brand/bumbu',sourceType:'producer',coversFields:['origin','ownership']},
+        {url:'https://www.rumwonk.com/p/is-bumbu-rum-it-depends',sourceType:'reference',coversFields:['classification','sugar']},
+        {url:'https://www.systembolaget.se/produkt/sprit/bumbu-8163701/',sourceType:'retailer',coversFields:['strength','sugar','tasting']}
+      ],
+      sourcingLimitations:[
+        'READ THE BOTTLE. "Bumbu Dark" is not a SKU the producer publishes. Bumbu lists exactly three products - The Original (35% ABV US, 40% outside North America), XO (40%) and Crème (15%). The shelf label most likely means The Original, which is merchandised in a dark bottle. Display name left unchanged.',
+        'THE ASSERTED 85 PROOF MATCHES NO BUMBU PRODUCT. proofN is left null rather than guess between a 70-proof US bottling and an 80-proof export one.',
+        'Bumbu never names a distillery. The West Indies Rum Distillery attribution comes from Pernod Ricard and is corroborated by an independent review. Bumbu XO, by contrast, is Panamanian - the range spans two origins, which is a common source of confusion.',
+        'Added-sugar figures disagree and come from different bottlings - 47 g/l and 51 g/l from a state monopoly, roughly 40 g/l from an independent hydrometer test - and none exists for the 35% US bottling, so no single number is stated.',
+        'Tasting notes describe the 40% European bottling via a state-monopoly listing, not the US product and not the producer.',
+        'No age, still type or cask information is published for the Original. Do not carry the XO 10-to-18-year ageing across.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'kasama-small-batch-7-year', brand:'Kasama', expression:'Small Batch 7 Year', displayName:'Kasama Small Batch 7 Year',
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Philippines',
+      producer:'Kasama Rum', distilleryName:'Blender - source distillery undisclosed',
+      style:'Philippine Cane-Juice Rum - 7 Years, Ex-Bourbon American Oak',
+      proofN:80, ageText:'7 years', minYears:7, maxYears:7,
+      priceUsd:6.5, toastItemGuid:'0fb40a27-2699-41fa-86ac-5ce4da3dea80',
+      topNotes:['Pineapple','Vanilla','Sea salt'],
+      productionRows:[
+        ['Base','Freshly pressed noble cane juice - a juice rum, not a molasses one',true],
+        ['Maturation','7 years in ex-bourbon American oak, in the Philippines',true],
+        ['Blending','Small batch; blended and bottled in Poland'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Undisclosed Philippine distillery',true]
+      ],
+      prodTags:['Philippines','Cane Juice','7 Years','Ex-Bourbon Oak'],
+      why:'Kasama is a seven-year-old rum distilled in the Philippines from freshly pressed noble cane juice - a juice-based rum rather than a molasses one - and aged seven years in ex-bourbon American oak. It was founded by Alexandra Dorda, a second-generation spirits producer from the Polish family behind Belvedere and Chopin, and the rum travels to Poland for blending and bottling. Neither the producer nor the reference record names the Philippine distillery, so the source is genuinely undisclosed. Kasama means "together" in Filipino.',
+      whyShort:'A seven-year Philippine cane-juice rum, ex-bourbon aged.',
+      history:'Kasama was launched in 2021 by Alexandra Dorda, who is of Filipino and Polish descent and whose family previously created Belvedere and Chopin vodkas.',
+      timeline:[['2021','Kasama launched by Alexandra Dorda']],
+      sources:[
+        {url:'https://www.kasamarum.com/products/kasama-rum',sourceType:'producer',coversFields:['identity','age','base','cask','tasting']},
+        {url:'https://rumx.com/en/rums/10538/kasama-small-batch-rum/',sourceType:'reference',coversFields:['strength','age','origin']},
+        {url:'https://uproxx.com/life/kasama-small-batch-rum-review/',sourceType:'review',coversFields:['strength','production','origin']}
+      ],
+      sourcingLimitations:[
+        'The source distillery is undisclosed. Kasama names no Philippine distillery and the reference record has none on file, so none is recorded.',
+        'Column-still distillation is reported by reviewers only; the producer makes no still claim, so none is recorded.',
+        'The Poland bottling step comes from an independent review rather than the producer.',
+        'ABV comes from the reference record; Kasama publishes no ABV on its own site.',
+        'The 2021 launch year is lightly sourced - surfaced through a press release that was not directly retrieved - though the founder identity is corroborated by a retrieved review.',
+        'Kasama is marketed as additive-free in some secondary coverage. No producer page retrieved makes that claim and no measured sugar figure was found, so it is not asserted.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'papa-s-pilar-blonde', brand:"Papa's Pilar", expression:'Blonde', displayName:"Papa's Pilar Blonde",
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'USA', region:'Florida', city:'Key West',
+      producer:'Hemingway Rum Company', distilleryName:"Papa's Pilar Distillery - blending and bottling only",
+      style:'Solera-Blended Light Rum - Bourbon Barrel and Oloroso Sherry Cask',
+      proofN:84, ageText:'Solera - no age statement',
+      priceUsd:6.5, toastItemGuid:'74f10a76-9858-482f-9968-73903acf365f',
+      topNotes:['Bright citrus','Almond','Butterscotch'],
+      productionRows:[
+        ['Base','Six hand-selected rums from the Dominican Republic, Panama, Venezuela and Florida',true],
+        ['Blending','A proprietary solera process',true],
+        ['Maturation','Time in bourbon barrels and Spanish Oloroso sherry casks',true],
+        ['Bottling Proof','84 (42% ABV) - above the usual strength for a light rum',true],
+        ['Distillery','Hemingway Rum Company, Key West, Florida - blending and bottling; source distilleries undisclosed',true]
+      ],
+      prodTags:['Solera','Multi-Origin Blend','Oloroso Sherry Cask','Key West'],
+      why:'Papa\'s Pilar Blonde blends six rums sourced from the Dominican Republic, Panama, Venezuela and Florida, married in the Hemingway Rum Company\'s proprietary solera and given time in bourbon barrels and Spanish Oloroso sherry casks. It is bottled at 84 proof, above the usual strength for a light rum. Because it is a solera blend no single age applies, and the producer publishes no age statement. The brand is named for Ernest Hemingway\'s boat, Pilar.',
+      whyShort:'A solera light rum from four countries, sherry- and bourbon-cask finished, at 84 proof.',
+      sources:[
+        {url:'https://www.papaspilar.com/pages/papas-rum',sourceType:'producer',coversFields:['strength','blend','cask','tasting']},
+        {url:'https://www.papaspilar.com/products/papas-pilar-blonde-rum',sourceType:'producer',coversFields:['strength','identity']},
+        {url:'https://www.shawross.com/portfolio-of-products/spirits/papas-pilar-blonde/',sourceType:'producer',coversFields:['blend','cask','tasting']}
+      ],
+      sourcingLimitations:[
+        'Solera, not a straight age. The producer publishes no age statement, and the 3, 5 and 7 year component figures come from a single review describing blend components rather than the rum in the bottle. Some retailers market this as "7 Year" - that is not a producer claim and should not be printed.',
+        'Source distilleries are undisclosed. Four countries of origin are named; no distillery is.',
+        'Cask conflict: the producer and importer both say bourbon barrels plus Spanish Oloroso sherry casks, while one review adds port barrels. Port is not asserted.',
+        'Two producer-side addresses appear - Key West and Palm Beach Gardens - likely distillery versus corporate office. Key West is used because the producer publishes it.',
+        'The column-still character of the components is review-sourced only.',
+        'No added-sugar measurement located.'
+      ]
+    }),
+    // ───────────── Batch 3 · Rum — premium, aged, specialty ─────────────
+    sourcedDraftSpirit({
+      id:'don-q-2x-aged-cognac-cask', brand:'Don Q', expression:'Double Aged Cognac Cask Finish', displayName:'Don Q 2x Aged Cognac Cask',
+      cat:'Rum', subcategory:'premium-and-aged',
+      country:'Puerto Rico', city:'Ponce',
+      producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
+      style:'Puerto Rican Rum - American Oak Aged, French Oak Cognac Cask Finished',
+      proofN:99.2, ageText:'5-8 years, then about 2 years finishing',
+      priceUsd:19, toastItemGuid:'cc170791-4ab7-454c-8621-76d5c9cfe481',
+      topNotes:['Dried apricot','Vanilla','Milk chocolate'],
+      productionRows:[
+        ['Base','Molasses',true],
+        ['Distillation','A blend of single-column and multiple-column distillates',true],
+        ['Maturation','5 to 8 years in American white oak',true],
+        ['Finishing','About 2 further years in French oak ex-Cognac casks',true],
+        ['Bottling Proof','99.2 (49.6% ABV) - see limitations, the shelf line said 80',true],
+        ['Distillery','Destilería Serrallés, Ponce, Puerto Rico - distilling since 1865',true]
+      ],
+      prodTags:['Puerto Rico','Cognac Cask Finish','Double Aged','Column Still'],
+      why:'Serrallés blends single-column and multiple-column Puerto Rican rums, matures them five to eight years in American white oak, then moves the blend into French oak ex-Cognac casks for roughly two more years. It belongs to the Serrallés Double Aged series, which also runs Port, Zinfandel, Sherry and Pedro Ximénez finishes - but unlike most of that series, this release is bottled near 49.6% ABV rather than 40%.',
+      whyShort:'Ponce rum aged 5 to 8 years, then two more in French oak Cognac casks.',
+      history:'Juan Serrallés Colón began distilling rum at the Hacienda Mercedita in Ponce in 1865, after importing a still from France. The Don Q brand launched in 1932, named for Cervantes\' Don Quixote, and reached the continental United States in 2009.',
+      timeline:[
+        ['1865','Juan Serrallés Colón begins distilling at Hacienda Mercedita, Ponce'],
+        ['1932','Don Q brand launched'],
+        ['2009','Don Q distributed in the continental United States']
+      ],
+      sources:[
+        {url:'https://donq.com/rums/don-q-double-aged-cognac-cask-finish/',sourceType:'producer',coversFields:['age','cask','identity']},
+        {url:'https://rumx.com/en/rums/13901/destileria-serralles-don-q-double-cask-finish-cognac-casks/',sourceType:'reference',coversFields:['strength','producer','tasting']},
+        {url:'https://thelonecaner.com/r1128/',sourceType:'review',coversFields:['strength','production','age']},
+        {url:'https://jensensliquors.com/products/don-q-double-aged-cognac-cask-finish-rum',sourceType:'retailer',coversFields:['strength']},
+        {url:'https://en.wikipedia.org/wiki/Don_Q',sourceType:'reference',coversFields:['history']}
+      ],
+      sourcingLimitations:[
+        'PROOF CORRECTED AND CONFIRMED. The shelf line said 80 proof and was wrong. Every retrieved source put this at 49.6% ABV, and Sean confirmed 49.6% off the bottle on 2026-09-04. Recorded at 99.2 proof. The old shelf style line should be corrected.',
+        'Total age is ambiguous and no single figure should be printed. The producer says 5 to 8 years plus about 2 years finishing, but the bottle label\'s own dates as reported by a reviewer - October 2009 to July 2012 in oak, then finishing to June 2022 - do not reconcile with that.',
+        'The SKU name is Don Q Double Aged Cognac Cask Finish. The Toast label reads "Don Q 2x aged Congnac cask", which is misspelled twice over. Display name left unchanged.',
+        'Tasting notes are community-aggregated from a reference database, not producer-published; the producer page carries only marketing adjectives.',
+        'No credible added-sugar measurement was found for this expression.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'don-q-gran-reserva-anejo-xo', brand:'Don Q', expression:'Gran Reserva XO', displayName:'Don Q Gran Reserva Añejo XO',
+      cat:'Rum', subcategory:'premium-and-aged',
+      country:'Puerto Rico', city:'Ponce',
+      producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
+      style:'Puerto Rican Solera Rum - 9 to 12 Years, American White Oak',
+      proofN:80, ageText:'Solera - core 9 to 12 years', minYears:9, maxYears:12,
+      priceUsd:9.25, toastItemGuid:'3e684b36-cec2-4550-a325-41e4d03e3076',
+      topNotes:['Aged oak','Soft caramel','Dried fruit'],
+      productionRows:[
+        ['Base','Molasses',true],
+        ['Distillation','Column still'],
+        ['Maturation','9 to 12 years in American white oak',true],
+        ['Solera','The blend is enriched with solera rums the producer describes as aged up to 50 years',true],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','Destilería Serrallés, Ponce, Puerto Rico',true]
+      ],
+      prodTags:['Puerto Rico','Solera','9-12 Years','Column Still'],
+      why:'Don Q\'s XO is built from Puerto Rican column-still rums aged nine to twelve years in American white oak, with a solera component the producer describes as aged up to fifty years. That fifty-year figure refers to the oldest stock in the solera, not to the blend as a whole. Bottled at 40% ABV. It has taken platinum at the San Francisco World Spirits Competition and the SIP Awards.',
+      whyShort:'A solera blend of 9 to 12 year Puerto Rican rums, lifted by much older stock.',
+      history:'Juan Serrallés Colón began distilling in Ponce in 1865 using a French still; the Don Q brand followed in 1932. The distillery has stayed in Serrallés family hands, and Don Q remains the top-selling rum in Puerto Rico.',
+      timeline:[
+        ['1865','Juan Serrallés Colón begins distilling at Hacienda Mercedita, Ponce'],
+        ['1932','Don Q brand launched'],
+        ['2009','Don Q distributed in the continental United States']
+      ],
+      sources:[
+        {url:'https://donq.com/rums/don-q-gran-reserva-xo/',sourceType:'producer',coversFields:['age','solera','tasting','awards']},
+        {url:'https://rumx.com/rums/531/destileria-serralles-don-q-gran-anejo',sourceType:'reference',coversFields:['strength','producer','age']},
+        {url:'https://en.wikipedia.org/wiki/Don_Q',sourceType:'reference',coversFields:['history']}
+      ],
+      sourcingLimitations:[
+        'This is a solera blend. "Up to 50 years" describes the oldest component only, and 9 to 12 years is the producer\'s description of the core blend. Do not present this as either a 12-year-old or a 50-year-old rum.',
+        'The producer titles the product "Don Q Gran Reserva XO"; the US label and most retail listings read "Gran Reserva Añejo XO". Same product; venue display name left unchanged.',
+        'A commonly repeated 98/2 split between the core blend and the older solera stock appeared in search but the page carrying it was not retrieved, so it is not recorded.',
+        'No lab added-sugar measurement was found for any Don Q expression.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'ron-batran-12-reserva-superior', brand:'Botran', expression:'No. 12 Reserva Superior', displayName:'Ron Botran Reserva #12',
+      cat:'Rum', subcategory:'dark-and-aged',
+      country:'Guatemala', region:'Quetzaltenango',
+      producer:'Industrias Licoreras de Guatemala', distilleryName:'San Andrés Villaseca Distillery',
+      style:'Guatemalan Solera Rum - Cane Honey, 5 to 12 Years at Altitude',
+      proofN:80, ageText:'Solera - 5 to 12 years', minYears:5, maxYears:12,
+      priceUsd:9, toastItemGuid:'0da69595-de07-452a-b3fe-aac3d351e623',
+      topNotes:['Vanilla','Toasted oak','Dried fruit'],
+      productionRows:[
+        ['Base','Virgin sugarcane honey - the first press of the cane',true],
+        ['Fermentation','Slow discontinuous fermentation with a pineapple yeast, 100 to 120 hours',true],
+        ['Distillation','Copper sectioned stills at San Andrés Villaseca'],
+        ['Maturation','A solera system the company calls dynamic ageing, at Casa Botran in the Quetzaltenango highlands - roughly 2,300 m, averaging about 14 C',true],
+        ['Casks','American whiskey, medium-toasted American whiskey, and sherry'],
+        ['Bottling Proof','80 (40% ABV)',true],
+        ['Distillery','San Andrés Villaseca, Guatemala; aged at Casa Botran, Quetzaltenango',true]
+      ],
+      prodTags:['Guatemala','Solera','Cane Honey','High-Altitude Ageing'],
+      why:'Botran distils from the first press of the cane - virgin sugarcane honey - fermented slowly with a pineapple yeast for 100 to 120 hours, then run through copper sectioned stills at San Andrés Villaseca on the Pacific coast. Maturation happens far from the distillery, at Casa Botran in the Quetzaltenango highlands roughly 2,300 metres up, where the average temperature is about 14 C, in a solera system the company calls dynamic ageing. No. 12 blends rums aged between five and twelve years.',
+      whyShort:'A Guatemalan solera of 5 to 12 year rums, aged at 2,300 metres.',
+      history:'Five brothers from Burgos, Spain emigrated to Quetzaltenango around 1935 and founded Industria Licorera Quezalteca in 1939. That company later merged with three other Guatemalan liquor firms to form Industrias Licoreras de Guatemala, of which Botran remains the family-name rum brand.',
+      timeline:[
+        ['1935','The five Botrán brothers emigrate from Burgos to Quetzaltenango'],
+        ['1939','Industria Licorera Quezalteca founded'],
+        ['1940s','Merger forms Industrias Licoreras de Guatemala']
+      ],
+      sources:[
+        {url:'https://www.spiriteddrinks.com/botran-rum-guatemala/',sourceType:'reference',coversFields:['producer','production','age','origin']},
+        {url:'https://sunsetcorners.com/products/botran-no-12-reserva-superior-anejo-rum',sourceType:'retailer',coversFields:['strength','cask','age','tasting']},
+        {url:'https://botranrum.com/',sourceType:'producer',coversFields:['origin','ageing']},
+        {url:'https://en.wikipedia.org/wiki/Industrias_Licoreras_de_Guatemala',sourceType:'reference',coversFields:['history','ownership']}
+      ],
+      sourcingLimitations:[
+        'DO NOT PRINT "12 YEAR OLD". Retail copy contradicts itself, saying both "aged a minimum of 12 years" and "a blend of 5 to 12 year old rums" on the same page. The 5 to 12 range is corroborated independently by trade press listing the whole Botran range (No. 8 = 5-8, No. 12 = 5-12, No. 15 = 5-15, No. 18 = 5-18), so 12 is the oldest component, not a minimum.',
+        'The slug ron-batran-12-reserva-superior misspells Botran. It is a legacy import artifact, preserved so the importer updates in place.',
+        'The shelf label reads "Ron Botran Reserva #12"; the SKU is Botran No. 12 Reserva Superior. Confirmed as the No. 12 expression rather than Solera 1893 or No. 18. Display name left unchanged.',
+        'No producer-site confirmation was obtained - the Botran product pages would not return specs - so ABV and cask detail rest on retailer-hosted brand copy plus trade press. Verify ABV against the bottle.',
+        'No added-sugar measurement was found for No. 12. A published figure exists for Botran 18, which is a different expression and must not be attributed to this one.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'ron-barcelo-imperial', brand:'Ron Barceló', expression:'Imperial', displayName:'Ron Barceló Imperial',
+      cat:'Rum', subcategory:'specialty',
+      country:'Dominican Republic', city:'San Pedro de Macorís',
+      producer:'Barceló & Co.', distilleryName:'Barceló, San Pedro de Macorís',
+      style:'Dominican Column-Still Rum - Ex-American-Whiskey Oak',
+      proofN:80, ageText:'No age statement; up to 10 years', maxYears:10,
+      priceUsd:null, toastItemGuid:null,
+      topNotes:['Vanilla','Dried cherry','Caramelised nuts'],
+      productionRows:[
+        ['Base','Dominican sugarcane - base material disputed, see limitations',true],
+        ['Distillation','Multi-column stills'],
+        ['Maturation','American oak casks that previously held American whiskey',true],
+        ['Age','Up to ten years - the oldest component, not an age statement',true],
+        ['Bottling Proof','80 (40% ABV) US; the EU bottling is 76 (38% ABV)',true],
+        ['Distillery','Barceló, San Pedro de Macorís, Dominican Republic',true]
+      ],
+      prodTags:['Dominican Republic','Column Still','Ex-Bourbon Oak','No Age Statement'],
+      why:'Ron Barceló has been headquartered in San Pedro de Macorís since 1946, and Imperial has been its flagship since 1980. The rum is column distilled and matured in American oak casks that previously held American whiskey. The producer describes it as naturally aged for up to ten years; Difford\'s Guide records the blend as spanning four to ten years with no age statement on the bottle.',
+      whyShort:'A Dominican column-still rum in ex-whiskey oak, with stock up to ten years old.',
+      history:'Brothers Julián and Andrés Barceló emigrated from Mallorca to Santo Domingo in 1929 and founded Barceló & Co. in 1930. The company moved to San Pedro de Macorís in 1946 and released Imperial as its flagship in 1980. The group built a dedicated cane-juice distillery, Alcoholes Finos Dominicanos, in 2010.',
+      timeline:[
+        ['1930','Barceló & Co. founded in Santo Domingo'],
+        ['1946','Company relocates to San Pedro de Macorís'],
+        ['1980','Ron Barceló Imperial released as the flagship'],
+        ['2010','Alcoholes Finos Dominicanos cane-juice distillery established']
+      ],
+      sources:[
+        {url:'https://ronbarcelo.com/en/rum/imperial/',sourceType:'producer',coversFields:['age','origin','tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1450/ron-barcelo-imperial-rum',sourceType:'reference',coversFields:['strength','age','cask','classification']},
+        {url:'https://en.wikipedia.org/wiki/Barcel%C3%B3_(rum)',sourceType:'reference',coversFields:['history','production']}
+      ],
+      sourcingLimitations:[
+        'The shelf line called this "10 Yr". THAT IS NOT AN AGE STATEMENT. The producer says "up to ten years", which describes the oldest component, and Difford\'s records no age statement on the bottle and a blend spanning four to ten years. Do not label this a 10-year-old rum.',
+        'Base material is genuinely disputed. The producer and Wikipedia say Barceló shifted to 100% sugarcane juice with the 2010 AFD distillery; Difford\'s classifies Imperial as a molasses rum, and stock aged before 2010 would be molasses-based either way. "Cane juice" is not printed as settled fact.',
+        'Two bottling strengths exist: US 40% / 80 proof, EU 38% / 76 proof. The 80 proof recorded here is the US figure.',
+        'No lab added-sugar measurement was located for standard Imperial. Figures published for Imperial Onyx, Porto Cask and 40 Aniversario are different expressions and do not apply. A widely circulated ~16-27 g/L figure for standard Imperial has no retrievable lab source.',
+        'No Toast match for this row, so no price is recorded.'
+      ]
+    }),
+    sourcedDraftSpirit({
+      id:'planteray-3-star', brand:'Planteray', expression:'3 Stars', displayName:'Planteray 3-Star',
+      cat:'Rum', subcategory:'white-and-silver',
+      country:'France', region:'Cognac',
+      producer:'Maison Ferrand', distilleryName:'Blender - component distilleries not producer-confirmed',
+      style:'Blended White Caribbean Rum - Barbados, Jamaica and Trinidad, Married in Cognac Casks',
+      proofN:82.4, ageText:'Blend of unaged and aged components',
+      priceUsd:6.5, toastItemGuid:'3f707432-29dd-445a-8243-98ef0d6a94f7',
+      topNotes:['Tropical fruit','Vanilla','Cardamom'],
+      productionRows:[
+        ['Base','Molasses',true],
+        ['Origins','Barbados for richness and balance, Trinidad for finesse, Jamaica for structure',true],
+        ['Distillation','Both pot and column stills across the three islands',true],
+        ['Maturation','Components aged in their countries of origin; the blend includes unaged rum'],
+        ['Blending','Married at Maison Ferrand in Cognac, in small Limousin oak ex-Cognac casks',true],
+        ['Filtration','Carbon filtered to remove the colour the casks gave it',true],
+        ['Bottling Proof','82.4 (41.2% ABV)',true]
+      ],
+      prodTags:['Blended Caribbean','Pot + Column','Cognac Cask Marriage','Carbon Filtered'],
+      why:'3 Stars is Maison Ferrand\'s white blend of rums from three islands - Barbados for richness and balance, Trinidad for finesse, Jamaica for structure - drawing on both pot and column distillation. The components are aged in their countries of origin, then married in small Limousin oak ex-Cognac casks in France and carbon filtered so the rum bottles clear. Bottled at 41.2% ABV.',
+      whyShort:'A white blend of three islands, married in Cognac casks and filtered clear.',
+      history:'The brand was created by Maison Ferrand, a Cognac house whose roots trace to 1702, under cellar master Alexandre Gabriel. In January 2024 Maison Ferrand renamed the rum from Plantation to Planteray, after committing to drop the word "plantation" and its associations with slavery. The liquid was not changed by the rename.',
+      timeline:[['2024','Plantation rum renamed Planteray by Maison Ferrand']],
+      sources:[
+        {url:'https://planterayrum.com/product/three-stars/',sourceType:'producer',coversFields:['identity','blend','origins']},
+        {url:'https://spiritsreview.com/reviews/planteray-3-stars-white-rum/',sourceType:'review',coversFields:['strength','production','tasting']},
+        {url:'https://rumx.com/en/rums/116/west-indies-plantation-3-stars-white/',sourceType:'reference',coversFields:['strength','production','age']},
+        {url:'https://www.thespiritseducator.com/plantation',sourceType:'reference',coversFields:['components','dosage']}
+      ],
+      sourcingLimitations:[
+        'CONFIRM THE BOTTLE IS THE WHITE. Planteray also sells a separate "3 Stars Original Dark". The Toast label is only "Rum category" and the shelf label reads "Planteray 3-Star".',
+        'Plantation was renamed Planteray in January 2024, so older bottles, reviews and retailer listings still say Plantation 3 Stars. Same product.',
+        'Component distilleries are NOT producer-confirmed. The current product page names only the three islands. West Indies Rum Distillery, Long Pond and Trinidad Distillers are reference-site attributions and are recorded here only as reported, which is why distilleryName says blender.',
+        'Component ages are reference-site only - a 10-year Jamaican fraction and a 2 to 3 year Trinidad component per one site, a broader 1 to 3 year band per another. The producer publishes no age breakdown, so none is recorded.',
+        'Dosage is reported at roughly 9 to 10 g/L of toasted sugar syrup by two reference sites, but no lab measurement was retrieved, so it is not stated as measured.',
+        'Specific still models rest on a single reference site and are omitted.'
+      ]
+    }),
   ];
 
   // ── Agave / Rum / Vodka draft inventory setup.
@@ -1589,56 +2748,27 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Agave','mezcal','Fosforo Mezcal',9,'47a5826e-3e75-40ea-866a-9a092694a260','Fosforo Mezcal','Stone Grille website shelf','Mezcal - Artisanal / 100% Maguey',null],
     ['Agave','mezcal','Granja Nómada',6,'9c29c317-3566-40fc-90b8-166e989a6aad','Granja 100% Maguey','Stone Grille website shelf','Mezcal - 100% Maguey / Traditional Production',null],
     ['Agave','blanco-silver','Aman Tequila Blanco',15,'b657bc99-ede3-42e4-8a48-6be15136ded7','Aman Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / 100% Blue Weber Agave',80],
-    ['Agave','blanco-silver','El Jimador Cristalino',7,'2564383e-dfe8-4b43-9e7c-865077b6f32a','El Jimador, Cristalino','Stone Grille website shelf','Blanco / Silver - 80 Proof / Filtered Añejo',80],
-    ['Agave','blanco-silver','El Luchador Blanco',9.25,'85945271-026a-42dc-a584-b9ff00fcb4ef','El Luchador Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 110 Proof / High-Proof Blanco',110],
     ['Agave','blanco-silver','Herradura Ultra Blanco',13.5,'3554205e-72c8-48b4-bcd7-91254a104184','Herradura Ultra Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Cristalino',80],
-    ['Agave','blanco-silver','Mi Campo Blanco',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
-    ['Agave','blanco-silver','Milagro Silver',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
     ['Agave','blanco-silver','Rey Supremo Rosa',null,null,null,'Stone Grille website shelf','Blanco / Silver - 80 Proof / Red Wine Barrel Finish',80],
     ['Agave','blanco-silver','Santaleza Blanco',9.25,'a62216ff-3e9d-4642-9043-2aabd645d01e','Santaleza Tequila Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
-    ['Agave','blanco-silver','Tres Agaves Organic Blanco',7,'8d4a2ff0-9fa2-4860-9147-eeccf229b755','Tres agaves "organic" blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Certified Organic',80],
     ['Agave','blanco-silver','Zumbador Blanco',7,'c9694ac6-04e8-495a-bc6d-65c3d9300470','Zumbador Blanco','Stone Grille website shelf','Blanco / Silver - 80 Proof / Highland Blanco',80],
-    ['Agave','blanco-silver','1800 Silver',8,'62a16d10-23d7-4892-85d1-f289841381ab','1800 Silver Tequila','Stone Grille website shelf','Blanco / Silver - 80 Proof / Blanco',80],
-    ['Agave','reposado','Adictivo Reposado',12.5,'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9','Adictivo Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / 11 Months / French Oak',80],
-    ['Agave','reposado','Agavales Reposado',7,'b0e9ad5a-04c8-4fc7-9747-23e464602a1c','Agavales Respasado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Don Ramón Reposado Punta Diamante',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Diamond Edition',80,'don-ramon-reposado-punta-diamante'],
-    ['Agave','reposado','El Luchador Reposado',10.25,'6b7368fd-086c-42a3-a2fe-a30cb80ca148','El Luchador Reposado','Stone Grille website shelf','Reposado - 110 Proof / High-Proof Reposado',110],
-    ['Agave','reposado','1800 Reposado',11,'68345cbb-1da9-4f56-ad43-78e6687f9680','Jose 1800 Reposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80,'jose-1800-reposado'],
-    ['Agave','reposado','Mi Campo Reposado',null,null,null,'Stone Grille website shelf','Reposado - 80 Proof / Wine Barrel Finish',80],
-    ['Agave','reposado','Milagro Reposado',8,'02b44e5b-bd59-4ea3-a917-ec6019f8e915','Milagro Resposado Tequila','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
     ['Agave','reposado','Skelly Reposado',19.5,'e599647b-ee8e-4182-b2e4-8f2fcb4a8033','Skelly Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Reposado',80],
-    ['Agave','reposado','Terralta Reposado',12,'145112ea-d187-4d80-90f3-e723bf0d9b0b','Terralta Tequila Reposado','Stone Grille website shelf','Reposado - 80 Proof / Highlands',80],
     ['Agave','reposado','Tita Doña Celia Reposado',16,'eb2f5d2b-7775-4f11-b2e5-b1b05adf0415','Tita Dona Celia Reposado','Stone Grille website shelf','Reposado - 80 Proof / Woman-Owned / Jalisco',80],
     ['Agave','anejo-and-specialty','Zumbador Añejo',null,null,null,'Stone Grille website shelf',"Añejo & Specialty - 80 Proof / 14 Months / Ex-Jack Daniel's Barrels",80],
     ['Agave','reposado','Zumbador Reposado',8.25,'5b9bfb5c-79f0-49f1-9040-1374a358117a','Zumbador Repo','Toast menu pull','Tequila category',null],
-    ['Agave','anejo-and-specialty','1800 Anejo Tequila',11,'2c8baacb-0214-48c9-b957-fbf6fe2c6501','1800 Anejo Tequila','Toast menu pull','Tequila category',null],
-    ['Agave','flavored-infused','21 Seeds Cucumber Jalapeno',8.75,'df3bee27-5831-4280-ad55-e30a98b07cc0','21 Seeds Cucumber Jalapeno','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Jose Cuervo Tequila',6,'98b9c321-5b7c-4e76-80ef-9ea1aa3f0e90','Jose Cuervo Tequila','Toast menu pull','Tequila category',null],
-    ['Agave','anejo-and-specialty','123 Organic Anejo',18.5,'0602b7a7-cd05-48d2-928f-4aae4012cee5','123 Organic anejo','Toast menu pull','Tequila category',null],
     ['Agave','toast-agave-draft','Apostoles Rosa',9,'b363b248-9670-4002-ae3a-19fd5b6aaa8a','Apostoles Rosa','Toast menu pull','Tequila category',null],
     ['Agave','anejo-and-specialty','Don Ramón Añejo Punta Diamante',7.5,'d9ad245c-f834-4587-b422-e428da0d5353','Don Roman Anejo Punta Diamante','Toast menu pull','Tequila category',null,'don-roman-anejo-punta-diamante'],
 
-    ['Rum','white-and-silver','Angostura White Oak',6,'806c5186-02d9-460c-91d8-8184489a6a18','Angostura White Oak Rum','Stone Grille website shelf','White & Silver - 80 Proof / Trinidad / Column Still',80],
-    ['Rum','spiced-and-flavored','Bacardi Dragonberry',7,'6f2146b9-f9dd-4130-a475-9347afdbd86c','Bacardi Dragonberry  Rum','Stone Grille website shelf','Spiced & Flavored - 70 Proof / Flavored / Dragon Fruit',70],
-    ['Rum','spiced-and-flavored','Captain Morgan Private Stock',6.5,'7a8c1dfd-e561-46d0-a164-be3a15497049','Captain Morgan Private Stock','Stone Grille website shelf','Spiced & Flavored - 80 Proof / Premium Spiced',80],
     ['Rum','spiced-and-flavored','Hidden Still Spiced',7,'a7c28066-95f0-456d-9349-fabbbfda1add','Hidden Still Rum','Stone Grille website shelf','Spiced & Flavored - Spiced / Craft',null],
-    ['Rum','dark-and-aged','Bumbu Dark',9,'81953ac0-d66e-4c20-9661-753a95be4b1e','Bumbu Rum','Stone Grille website shelf','Dark & Aged - 85 Proof / Barbados / Spiced & Aged',85],
-    ['Rum','dark-and-aged','Kasama Small Batch 7 Year',6.5,'0fb40a27-2699-41fa-86ac-5ce4da3dea80','Kasama Small Batch 7 yr','Stone Grille website shelf','Dark & Aged - 7 Yr / 80 Proof / Philippine',80],
     ['Rum','dark-and-aged','Maison Ferrand Plantation Moko Dark',10,'7255317b-1c75-4f49-a4b6-751650e93793','Maison Peryat Moko Dark','Stone Grille website shelf','Dark & Aged - 80 Proof / Martinique / Agricole',80],
-    ['Rum','dark-and-aged',"Papa's Pilar Blonde",6.5,'74f10a76-9858-482f-9968-73903acf365f','Papas Pillar Blonde Rum','Stone Grille website shelf','Dark & Aged - 84 Proof / Solera Aged',84],
     ['Rum','dark-and-aged',"Papa's Pilar Dark Rye Barrel",7.75,'883091ed-10cd-42a5-8a4b-5bee9caccfd8',"Papa's Pilar Rum Dark Rye barrel",'Stone Grille website shelf','Dark & Aged - 86 Proof / Rye Whiskey Cask Finish',86],
-    ['Rum','premium-and-aged','Don Q 2x Aged Cognac Cask',19,'cc170791-4ab7-454c-8621-76d5c9cfe481','Don Q 2x aged Congnac cask','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / Cognac Finish',80],
-    ['Rum','premium-and-aged','Don Q Gran Reserva Añejo XO',9.25,'3e684b36-cec2-4550-a325-41e4d03e3076','Don Q Gran Reserva Anejo XO','Stone Grille website shelf','Premium & Aged - 80 Proof / Puerto Rico / XO Solera',80],
     ['Rum','premium-and-aged',"Papa's Pilar Sherry Cask",8,'df28cc66-510b-4561-a995-d9ffb4b25c17',"Papa's Pilar Rum Sherry Cask",'Stone Grille website shelf','Premium & Aged - 86 Proof / Sherry Cask Finish',86],
-    ['Rum','dark-and-aged','Ron Botran Reserva #12',9,'0da69595-de07-452a-b3fe-aac3d351e623','Ron Batran #12 Res. Seperior','Stone Grille website shelf','Specialty - Reserva Superior',null,'ron-batran-12-reserva-superior'],
-    ['Rum','specialty','Ron Barceló Imperial',null,null,null,'Stone Grille website shelf','Specialty - 80 Proof / Dominican Republic / 10 Yr',80],
     ['Rum','spiced-and-flavored','Planteray Pineapple Rum',8.75,'4a5ab3c1-a943-4a22-8564-d88ff2681d28','Planteray Pineapple Rum','Toast menu pull','Rum category',null],
-    ['Rum','white-and-silver','Planteray 3-Star',6.5,'3f707432-29dd-445a-8243-98ef0d6a94f7','Planteray, 3-Star','Toast menu pull','Rum category',null],
 
     ['Vodka','vodka','House Vodka',6.5,'73985435-c504-46b8-8e81-c736c8ab5369','House Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Strawberry Vodka',6,'6b34648c-9761-4edc-8865-7575b140bb7e','Vodka Strawberry','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Stoli Vodka',7,'5089405f-f571-403a-8da9-e946401bde5c','Stoli Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','vodka','Double Cross Vodka',9,'4d76da46-c944-4b68-8aee-1f81aa8246bb','Double Cross Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Amsterdam Apple Vodka',7,'16e51ad9-e1ff-494c-be4a-7050b0b38d3c','Amsterdam Apple Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Vodka Blueberry',6.5,'3528cb35-9482-4ebb-abd9-1c0abd255ced','Vodka Blueberry','Toast menu pull','Vodka category',null],
     ['Vodka','flavored-vodka','Vodka Peach',6.5,'c1e4a3e6-fb0e-4f54-b62c-43bfb8a6e471','Vodka Peach','Toast menu pull','Vodka category',null],
@@ -1650,8 +2780,6 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     ['Vodka','flavored-vodka','Apple Holla Vodka',6.5,'38dfd08e-bbb5-4d72-8e39-9fcde27c77e4','Vodka Apple Holla','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Ketle Vodka',8,'a05a7974-4ef6-4d7b-8473-e8aae3d0d2d7','Kettle One Vodka','Toast menu pull','Vodka category',null],
     ['Vodka','vodka','Holla Vodka',6.5,'80fc8cb0-ea4e-4aa3-8896-ae0e237ce7ab','Holla Vodka','Toast menu pull','Vodka category',null],
-    ['Vodka','potato-vodka','Boyd & Blair Potato Vodka',6.5,'bac26ec1-0f61-4f15-bdc7-30db4a988120','Boyd Bair Potato Vodka','Toast menu pull','Vodka category',null,'boyd-bair-potato-vodka'],
-    ['Vodka','vodka','Vodka Grey Whale',8,'9af54e37-36bc-4268-842d-c271d14585e4','Vodka Grey Whale','Toast menu pull','Vodka category',null],
   ];
 
   var DRAFT_INVENTORY = DRAFT_INVENTORY_ROWS.map(function(row){

@@ -206,6 +206,15 @@ describe("createSpiritFlight", () => {
     expect(h.flightCreate).not.toHaveBeenCalled();
   });
 
+  it("rejects non-standard unavailable labels (Sold out, 86'd, etc.)", async () => {
+    h.pourFindMany.mockResolvedValue([
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Sold out" },
+      { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: "In stock" },
+    ]);
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/not currently available/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects duplicate pours in the same flight", async () => {
     await expect(
       createSpiritFlight({

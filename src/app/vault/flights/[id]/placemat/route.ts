@@ -2,17 +2,14 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightPourView, type FlightView } from "@/lib/spirit-vault/flight-view";
-import { dayGateEnabled, qrTargetUrl, todayCode } from "@/lib/spirit-vault/day-code";
-import { qrSvg } from "@/lib/spirit-vault/qr";
 
-// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. STAFF ONLY:
-// this print artifact renders today's vault code + a QR containing it, so it must
-// never be publicly fetchable (that would leak the day's access code and defeat the
-// physical-presence gate). Guests use the digital flight page, not this route. Rich
-// per pour from the vault dossier; flavor as a bar chart. The @page margins are
-// asymmetric to compensate for the venue printer's offset (measured: shifts content
-// ~3/16in left, ~1/8in down at Actual Size) so it prints centered with the bottom
-// Production line clear of the clip zone.
+// Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. STAFF ONLY.
+// Guest access is printed separately from /admin/spirit-vault/today because not
+// every guest orders a flight. Rich per pour from the vault dossier; flavor as a
+// bar chart. The @page margins are asymmetric to compensate for the venue
+// printer's offset (measured: shifts content ~3/16in left, ~1/8in down at Actual
+// Size) so it prints centered with the bottom Production line clear of the clip
+// zone.
 // TODO(multi-venue): move the printer-offset margins to a per-venue setting.
 const AXES = ["Sweet", "Oak", "Spice", "Fruit", "Smoke", "Earth", "Herbal"] as const;
 
@@ -62,7 +59,7 @@ function glass(p: FlightPourView): string {
   </div>`;
 }
 
-function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): string {
+function placematHtml(v: FlightView): string {
   const cols = Math.min(Math.max(v.pours.length, 1), 6);
   const through = v.description
     ? `<div class="through"><p>${esc(v.description)}</p></div>`
@@ -86,7 +83,7 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
   .fname{font-family:var(--display);font-weight:600;font-size:30px;line-height:1.02;color:var(--band-text);-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
   .through{margin-top:3px}
   .through p{font-family:var(--display);font-style:italic;font-size:13px;line-height:1.25;color:#cdbf9f;-webkit-line-clamp:2;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
-  .pricebox{display:flex;align-items:center;flex:none}
+  .pricebox{display:flex;align-items:center;gap:.2in;flex:none}
   .pricestack{text-align:right}
   .price{font-family:var(--mono);font-weight:700;font-size:28px;color:var(--gold-light);line-height:1}
   .flight{flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);min-height:0}
@@ -144,8 +141,8 @@ function placematHtml(v: FlightView, qr: { svg: string; code: string | null }): 
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  // Staff-only: the placemat prints today's access code, so gate it like the prep
-  // sheet. Do NOT rely on middleware — /vault is Clerk-public — enforce here.
+  // Staff-only print artifact. Do NOT rely on middleware — /vault is Clerk-public
+  // — enforce here.
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
   const role = await prisma.userRestaurantRole.findFirst({
@@ -158,11 +155,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // The guest digital page stays published-only.
   const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
-  const qr = {
-    svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),
-    code: dayGateEnabled() ? todayCode() : null,
-  };
-  return new Response(placematHtml(view, qr), {
+  return new Response(placematHtml(view), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }

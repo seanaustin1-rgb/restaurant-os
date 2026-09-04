@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   listingToCandidatePours,
-  isFlightPourUnavailable,
   matchesFlightTemplateRules,
   rankFlightCandidates,
   groupCandidatesByTemplateSlot,
   type FlightCandidatePour,
   type CandidateListingRow,
 } from "./flight-template-candidates";
+import { isFlightPourUnavailable } from "./availability";
 import type { FlightTemplate, FlightTemplateRules } from "./flight-templates";
 
 // ── Test fixtures ──

@@ -265,7 +265,7 @@ export function SpiritFlightCreateForm({
               ))}
             </div>
           ) : (
-            <PourTable pours={pours} selectedIds={selectedIds} selected={selected} add={add} />
+            <FilterablePourTable pours={pours} selectedIds={selectedIds} selected={selected} add={add} />
           )}
         </section>
 
@@ -351,6 +351,89 @@ export function SpiritFlightCreateForm({
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
+
+// ── Category chip filters for build-from-scratch mode ──
+
+const CATEGORY_CHIPS = [
+  { key: "all", label: "All" },
+  { key: "bourbon", label: "Bourbon", match: (c: string) => /bourbon|tennessee|american whiskey/i.test(c) },
+  { key: "rye", label: "Rye", match: (c: string) => /\brye\b/i.test(c) },
+  { key: "scotch", label: "Scotch / World", match: (c: string) => /scotch|irish|japanese|canadian|world whisky/i.test(c) },
+  { key: "agave", label: "Agave", match: (c: string) => /tequila|mezcal|agave|sotol/i.test(c) },
+  { key: "rum", label: "Rum", match: (c: string) => /\brum\b/i.test(c) },
+  { key: "other", label: "Other" },
+] as const;
+
+type ChipKey = (typeof CATEGORY_CHIPS)[number]["key"];
+
+function categoryChipKey(category: string): ChipKey {
+  for (const chip of CATEGORY_CHIPS) {
+    if (chip.key === "all" || chip.key === "other") continue;
+    if (chip.match(category)) return chip.key;
+  }
+  return "other";
+}
+
+function FilterablePourTable({
+  pours,
+  selectedIds,
+  selected,
+  add,
+}: {
+  pours: readonly FlightPourOption[];
+  selectedIds: ReadonlySet<string>;
+  selected: readonly { venueSpiritId: string }[];
+  add: (pour: FlightPourOption) => void;
+}) {
+  const [activeChip, setActiveChip] = useState<ChipKey>("all");
+
+  const chipCounts = useMemo(() => {
+    const counts = new Map<ChipKey, number>();
+    for (const pour of pours) {
+      const key = categoryChipKey(pour.category);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }, [pours]);
+
+  const filtered = useMemo(() => {
+    if (activeChip === "all") return pours;
+    return pours.filter((p) => categoryChipKey(p.category) === activeChip);
+  }, [pours, activeChip]);
+
+  const visibleChips = CATEGORY_CHIPS.filter(
+    (chip) => chip.key === "all" || (chipCounts.get(chip.key) ?? 0) > 0,
+  );
+
+  return (
+    <div className="space-y-2">
+      {visibleChips.length > 2 && (
+        <div className="flex flex-wrap gap-1.5">
+          {visibleChips.map((chip) => {
+            const count = chip.key === "all" ? pours.length : chipCounts.get(chip.key) ?? 0;
+            const active = activeChip === chip.key;
+            return (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => setActiveChip(chip.key)}
+                className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
+                  active
+                    ? "border-copper-soft bg-copper/15 text-copper-soft"
+                    : "border-line text-muted hover:border-copper-dim hover:text-copper-soft/80"
+                }`}
+              >
+                {chip.label}
+                <span className="ml-1.5 text-[9px] opacity-60">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      <PourTable pours={filtered} selectedIds={selectedIds} selected={selected} add={add} />
     </div>
   );
 }

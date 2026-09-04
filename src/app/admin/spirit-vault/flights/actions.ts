@@ -6,7 +6,7 @@ import { Prisma, type SpiritLifecycleStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { calculateFlightPricing, type FlightPricingResult } from "@/lib/spirit-vault/flight-pricing";
-import { isFlightPourUnavailable } from "@/lib/spirit-vault/flight-template-candidates";
+import { pourIsAvailable } from "@/lib/spirit-vault/availability";
 
 const FLIGHTS_PATH = "/admin/spirit-vault/flights";
 const STATUS_RANK: Record<SpiritLifecycleStatus, number> = { DRAFT: 0, REVIEWED: 1, PUBLISHED: 2 };
@@ -137,7 +137,7 @@ async function resolvePricingForItems(
     throw new Error("Every flight item must reference a published vault spirit and priced pour");
   }
   for (const pour of selectedPours) {
-    if (isFlightPourUnavailable(pour.availability)) {
+    if (!pourIsAvailable(pour.availability)) {
       throw new Error("A flight cannot include a pour that is not currently available");
     }
   }

@@ -20,9 +20,13 @@ type Choice = FlightTemplate | "blank" | null;
 export function TemplatedFlightBuilder({
   pours,
   templates,
+  dynamicTemplates,
+  customTemplates,
 }: {
   pours: FlightCandidatePour[];
   templates: FlightTemplate[];
+  dynamicTemplates?: FlightTemplate[];
+  customTemplates?: FlightTemplate[];
 }) {
   const [choice, setChoice] = useState<Choice>(null);
 
@@ -99,6 +103,18 @@ export function TemplatedFlightBuilder({
           <div>
             <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">More templates</p>
             <TemplateGrid templates={more} pours={pours} onPick={setChoice} />
+          </div>
+        )}
+        {dynamicTemplates && dynamicTemplates.length > 0 && (
+          <div>
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Suggested for your vault</p>
+            <TemplateGrid templates={dynamicTemplates} pours={pours} onPick={setChoice} />
+          </div>
+        )}
+        {customTemplates && customTemplates.length > 0 && (
+          <div>
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">Your templates</p>
+            <TemplateGrid templates={customTemplates} pours={pours} onPick={setChoice} />
           </div>
         )}
       </div>

@@ -109,6 +109,80 @@ export const FLIGHT_TEMPLATES: FlightTemplate[] = [
     autoOrder: "slot-order",
     slots: [{ key: "favorites", label: "Staff pick", rules: { requiresVenueVoice: true }, itemNote: "A house favorite — lead with the story of why we carry it." }],
   },
+  {
+    key: "agave-terroir",
+    name: "Agave Terroir",
+    description: "Earth, smoke, and wood across agave spirits.",
+    throughLine:
+      "This flight traces terroir across agave spirits — how soil, altitude, roasting method, and barrel treatment shape flavor from blanco through añejo and beyond.",
+    maxPours: 4,
+    autoOrder: "slot-order",
+    slots: [{ key: "agave", label: "Agave spirit", rules: { categories: ["Tequila", "Mezcal", "Agave", "Sotol"] }, itemNote: "Notice how the agave's origin and treatment shape the spirit." }],
+  },
+  {
+    key: "smoke-peat-earth",
+    name: "Smoke, Peat & Earth",
+    description: "Smoky, peated, and earthy spirits side by side.",
+    throughLine:
+      "A flight built around smoke, peat, and earth — comparing how different fuel sources, terroir, and production methods create distinct expressions of these flavors.",
+    maxPours: 4,
+    autoOrder: "slot-order",
+    slots: [{ key: "smoky", label: "Smoky / Peated / Earthy", rules: { searchTerms: ["smoke", "smoked", "smoky", "peat", "peated", "islay", "campfire", "mezcal", "earth"] }, itemNote: "Trace the smoke — is it peat, charcoal, open fire, or roasted agave?" }],
+  },
+  {
+    key: "top-shelf",
+    name: "Top Shelf",
+    description: "Premium pours for a special occasion.",
+    throughLine:
+      "A celebration flight of premium pours — longer aged, limited release, or higher proof expressions that reward slow, focused tasting.",
+    maxPours: 4,
+    autoOrder: "proof-asc",
+    slots: [{ key: "premium", label: "Premium pour", rules: { searchTerms: ["reserve", "single barrel", "barrel pick", "barrel select", "limited", "rare", "cask strength", "barrel proof", "aged", "estate", "special"] }, itemNote: "A premium pour — take your time and note the complexity." }],
+  },
+  {
+    key: "gateway",
+    name: "Gateway Flight",
+    description: "Approachable pours for first-time explorers.",
+    throughLine:
+      "An introductory flight designed for guests who are new to sipping spirits — approachable proofs, familiar flavors, and a gentle progression that builds comfort and curiosity.",
+    maxPours: 4,
+    autoOrder: "proof-asc",
+    slots: [{ key: "intro", label: "80–95 proof", rules: { proofMin: 80, proofMax: 95 }, itemNote: "An approachable entry — notice the sweetness and texture before the finish." }],
+  },
+  {
+    key: "scotch-world",
+    name: "Scotch & World Whiskey",
+    description: "Single malts, blends, and world whiskeys compared.",
+    throughLine:
+      "A journey beyond American whiskey — comparing Scotch, Irish, Japanese, and other world whiskeys to reveal how geography, grain, and tradition shape flavor.",
+    maxPours: 4,
+    autoOrder: "slot-order",
+    slots: [{ key: "world", label: "Scotch / World Whiskey", rules: { categories: ["Scotch", "Irish", "Japanese", "Canadian", "World Whisky", "World Whiskey", "Single Malt"] }, itemNote: "Compare the regional character — climate, water, grain, and cask tradition." }],
+  },
+  {
+    key: "single-barrel",
+    name: "Single Barrel Selections",
+    description: "Barrel picks and single barrel expressions.",
+    throughLine:
+      "Every barrel ages differently. This flight compares single barrel selections — each chosen for its individual character — showing how the same distillery can produce distinct flavors barrel to barrel.",
+    maxPours: 4,
+    autoOrder: "proof-asc",
+    slots: [{ key: "barrel", label: "Single barrel / Barrel pick", rules: { searchTerms: ["single barrel", "barrel pick", "barrel select", "barrel proof", "store pick", "private select", "private barrel"] }, itemNote: "A barrel selection — notice what makes this barrel unique." }],
+  },
+  {
+    key: "mash-bill",
+    name: "Mash Bill Comparison",
+    description: "How grain recipes shape flavor.",
+    throughLine:
+      "This flight compares how different grain recipes — corn-forward, high-rye, wheated, and four-grain — shape sweetness, spice, body, and finish in American whiskey.",
+    maxPours: 4,
+    autoOrder: "slot-order",
+    slots: [
+      { key: "corn", label: "Corn-forward / Traditional", rules: { categories: ["Bourbon"], searchTerms: ["corn", "traditional", "low rye"] }, itemNote: "Corn-forward sweetness — the baseline mash bill." },
+      { key: "high-rye", label: "High-rye", rules: { categories: ["Bourbon", "Rye"], searchTerms: ["high rye", "rye"] }, itemNote: "Higher rye content adds spice and structure." },
+      { key: "wheat", label: "Wheated", rules: { categories: ["Bourbon"], searchTerms: ["wheat", "wheated"] }, itemNote: "Wheat softens the profile — notice the rounder, gentler finish." },
+    ],
+  },
 ];
 
 export function flightTemplateByKey(key: string): FlightTemplate | undefined {

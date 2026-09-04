@@ -39,7 +39,27 @@ merged to `main`. Nothing is broken in production; everything is stuck in review
 
 Plus ~9 older non-Spirit-Vault PRs (#138, #121, #120, #113, #106, #105, #103, #91, #63, #53) — out of scope here, but they are why the PR list is noisy.
 
-### ⚠ #162 vs #163 — identical file surface
+### ⚠⚠ CORRECTED 2026-09-04 — #162 and #163 are a STACK, not rivals
+
+**The section immediately below is wrong and is kept only so the mistake is
+visible.** It concluded from an independent merge test against `main` that these
+were competing implementations requiring Sean to pick one. Checking the PR base
+branches shows otherwise:
+
+```
+#162  base=main                                        CLEAN, mergeable
+#163  base=claude/spirit-vault-flight-builder-x71qai   CONFLICTING with its base
+```
+
+#163 is stacked **on #162's branch**. The 12 shared files are shared because #163
+*contains* #162's work. **No decision is required from Sean.** #163 conflicts
+because it branched from an older point on #162 and #162 has gained 10+ commits
+since. Sequence: merge #162 → update #163 from its base → merge #163.
+
+See `CODEX-DIRECTIVE-2026-09-04.md` §1 for the corrected instruction, including a
+content-guardrail review #162 needs before it lands.
+
+### ~~#162 vs #163 — identical file surface~~ (superseded, see above)
 
 Both branches modify **exactly these 12 files**:
 

@@ -263,6 +263,82 @@ that day, derived from the existing flight records — "Aug 12 · the night we p
 the Sagamore flight." The passport gets substance for free, and it stays a record
 of *being there*, which is the whole point.
 
+### 6.6 AMENDS 6.5 — record pours as well as attendance (Sean, 2026-09-04)
+
+> "If it isn't much to do then I would say that we record both. I can offer food
+> options if they have had a certain amount of pours."
+
+So v1 records **two things**: the visit stamp (§6.5) *and* which pours were had.
+They stay separate tables — the stamp is proof of presence and never depends on
+the catalog; the pour log is what was tasted.
+
+#### `GuestPour` — lighter than the deferred `GuestTasting`
+
+```prisma
+  guestId        String
+  restaurantId   String
+  venueSpiritId  String
+  stampedDayKey  String    // same venue-local day key as the stamp
+  loggedAt       DateTime  @default(now())
+
+  @@unique([guestId, venueSpiritId, stampedDayKey])  // one log per spirit per day
+  @@index([guestId, stampedDayKey])                  // "pours today" -> food threshold
+  @@index([restaurantId, venueSpiritId])             // operator rollups
+```
+
+**No rating and no notes in v1.** Those belong to the contribution layer in §6.5
+and return with it. This is only "I had this."
+
+Why unique on `(guest, spirit, day)` rather than the `(guest, spirit)` of §4:
+
+- **`(guest, spirit)`** — one row ever — gives coverage ("40 of 109 tried") but
+  cannot count tonight's pours, so it cannot drive a food threshold.
+- **No uniqueness** — one row per tap — counts pours but lets a guest tap the same
+  spirit ten times to cross a threshold.
+- **`(guest, spirit, day)`** gives both: distinct spirits ever tried, pours logged
+  today, and a natural ceiling on same-night repetition.
+
+#### ⚠ The food reward changes the threat model — do not auto-comp
+
+Recording pours is cheap. Making a pour count **trustworthy enough to give away
+food** is not, and that distinction is the whole cost here.
+
+A guest self-logging their own pours is unverified. Attendance stamps are cheap to
+fake but the reward is low-value, so nobody bothers. **The moment the reward has
+real food cost, the self-reported count becomes an attack surface** — tap four
+bottles you never ordered, claim the plate.
+
+Three ways to make a count trustworthy, in increasing cost:
+
+| | Trust | Cost |
+|---|---|---|
+| Guest self-logs | none | free — already the plan |
+| Staff confirms at the bar | high | a staff-facing screen + staff adoption |
+| Toast check data | highest | Phase 3, already deferred |
+
+**v1 recommendation: log pours, but do not automate the comp.** Surface the count
+to staff as a *prompt* — "this guest has logged 4 pours tonight" — and let a human
+decide. Zero fraud surface, no Toast dependency, and the bartender already makes
+this judgment. Automate it later against staff-confirmed or Toast-verified counts.
+
+#### ⚠ Regulatory — this is the case that most needs the PA answer
+
+A food comp keyed to *how many drinks you have had* is the textbook shape of a
+consumption inducement, and Pennsylvania is a liquor-control state. Rewarding food
+rather than more alcohol is very likely a better posture, and it may even read as
+responsible service — food slows absorption, and offering it to a guest several
+pours in is good hospitality before it is a promotion. **But that is reasoning, not
+a legal finding, and nobody here is qualified to give one.**
+
+Two framings, which may not be treated the same way:
+
+- "Have 5 pours, earn a free appetizer" — a volume-based inducement.
+- "We bring something from the kitchen to guests settling in for a tasting" — staff
+  hospitality, exercised by judgment, with the pour count as an internal prompt.
+
+The second is what §6.6 recommends building, and it is materially easier to defend.
+Get a PA liquor attorney to confirm before any of it is advertised to guests.
+
 ### 6.4 Anti-fraud posture (honest limits)
 
 The day code is a *shared* daily secret on a printed table tent, so it proves

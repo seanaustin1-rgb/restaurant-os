@@ -18,12 +18,52 @@ Spec of record: `docs/spirit-vault/PHASE2-GUEST-LAYER-SPEC.md` §6 (read §6.5 f
 
 - Stop adding features to the stacked PRs.
 - `main` has not moved since 2026-08-19; ~17 PRs are queued behind it.
-- **Blocked on Sean:** PRs #162 (Claude) and #163 (Codex) are competing
-  implementations of the same flight-builder work, touching **all 12 of the same
-  files**. Each merges cleanly into `main` alone; they will not merge into each
-  other. Sean picks the base — do not merge both, and do not start a third.
-- Once he picks: cherry-pick the loser's unique work into the winner, close the
-  loser, land it.
+### ⚠ CORRECTION — #162 and #163 are a STACK, not rivals
+
+An earlier version of this directive (and of `CODEX-RESTART-HANDOFF.md` §2) said
+these were competing implementations and that Sean had to pick one. **That was
+wrong.** Verified 2026-09-04:
+
+```
+#162  base=main                                   CLEAN, mergeable
+#163  base=claude/spirit-vault-flight-builder-x71qai   CONFLICTING with its base
+```
+
+**#163 is based on #162's branch**, not on `main`. They share 12 files because
+#163 *contains* #162's work. **No decision is needed from Sean.** The conflict is
+that #163 branched from an older point on #162, and #162 has since gained 10+
+commits.
+
+Correct sequence:
+
+1. Merge **#162** into `main` (it is clean).
+2. Update **#163** from its base, resolve, merge.
+3. Do not open a third branch in this lane.
+
+### ⚠ Review #162 before merging — it may cross a content guardrail
+
+#162 is not just flight-builder work. It also carries:
+
+- `e3e9aa3 feat(spirit-vault): publish Draft spirits with pour pricing on re-import`
+  — the enrichment import route **flips `recordStatus` and `publicationStatus`
+  straight to `PUBLISHED`** for any draft with a price in the import JSON, via a
+  direct Prisma update. It does **not** appear to route through
+  `validatePublishableSpirit`, which is the gate enforcing 3 non-empty `topNotes`
+  and all 7 flavor axes.
+- `74dfd4d Update spirits-import.json with Gemini Round 2 production fields` —
+  Gemini-generated production data.
+- `98109cc add 10 missing vodkas to complete 200-spirit import` +
+  `fb0c510 include spirits-import.json in repo` — a `spirits-import.json` path
+  alongside the canonical `spirit-vault-data.js`.
+
+**This may be exactly what Sean asked for** — the preceding commit is
+"fill in 5 remaining pour prices from Sean." Do not revert anything. But it
+collides head-on with the guardrail this week's content work has been run under
+(§5.1, §5.6, §4), and if that route runs against the current corpus it can publish
+records whose `topNotes` still read *"Pending source review."*
+
+**Ask Sean which rule wins before merging**, and confirm whether the publish path
+should call `validatePublishableSpirit`. Flagging, not blocking.
 - **Rescue #145.** It is 13 commits behind `main` and conflicts on 3 files, largely
   because `11a0b7b "Open Spirit Vault to browse view"` re-implements `09b6f7f`
   (#156), already merged. Update from `main`, resolve the browse-landing conflict
@@ -73,11 +113,38 @@ Future status is earned by **contributing** — writing useful notes, recommendi
 to other guests — **not by consuming**. Materially safer than a consumption
 milestone, and a better motive for writing notes at all.
 
-### 3.2 Schema — one table, no catalog binding
+### 3.2 Schema — TWO tables (updated, Sean 2026-09-04)
 
-**⚠ `GuestTasting` is DEFERRED. Do not build it. v1 has no `venueSpiritId`.**
+> "If it isn't much to do then I would say that we record both. I can offer food
+> options if they have had a certain amount of pours."
 
-Key on `(guestId, restaurantId, stampedDayKey, kind)`:
+v1 records **attendance and pours**, as two separate tables. The stamp is proof of
+presence and never touches the catalog; the pour log is what was tasted.
+
+**Table 2 — `GuestPour`** (lighter than the still-deferred `GuestTasting`: **no
+rating, no notes** in v1 — those return with the contribution layer):
+
+```prisma
+  guestId, restaurantId, venueSpiritId, stampedDayKey, loggedAt
+
+  @@unique([guestId, venueSpiritId, stampedDayKey])  // one log per spirit per day
+  @@index([guestId, stampedDayKey])                  // "pours today" -> food prompt
+  @@index([restaurantId, venueSpiritId])             // operator rollups
+```
+
+Uniqueness on `(guest, spirit, day)` — not the `(guest, spirit)` of spec §4 —
+because that form gives coverage but cannot count tonight's pours, while no
+uniqueness at all lets a guest tap one bottle ten times to cross a threshold.
+
+**⚠ Do NOT auto-comp food.** Recording pours is cheap; making a self-reported
+count trustworthy enough to give away food is not. Surface the count to staff as a
+prompt ("this guest has logged 4 pours tonight") and let a human decide. Automate
+only against staff-confirmed or Toast-verified counts. See spec §6.6 for the
+threat model and the Pennsylvania regulatory note — a food comp keyed to drink
+count is the textbook inducement shape and needs a PA attorney's read before it is
+advertised.
+
+**Table 1 — the stamp.** Key on `(guestId, restaurantId, stampedDayKey, kind)`:
 
 - `stampedDayKey` — venue-local `YYYY-MM-DD` of the code that stamped it.
   Non-null by construction.
@@ -179,8 +246,8 @@ requires Sean's tasting pass to set the radar. The remaining 33 are blocked on
 
 ## 6. Order of work
 
-1. Get Sean's answer on **#162 vs #163**. Nothing in that lane moves until then.
-2. Land the flight builder; finish the placemat cleanup (§5.9).
+1. Merge **#162** into `main` (it is clean) — after the guardrail review in §1.
+2. Update **#163** from its base, resolve, merge. Finish the placemat cleanup (§5.9).
 3. Rescue and merge #145.
 4. Get `main` current.
 5. **Then** build the passport: one stamp table (§3.2), event code (§3.3), stamp
@@ -193,7 +260,10 @@ Green gate before every push: `npm.cmd test -- --run src/lib/spirit-vault`,
 
 ## 7. Open, needs Sean — do not guess
 
-1. **#162 or #163** as the flight-builder base.
+1. **Does #162's `publish-draft-spirits` path override the "no publish without
+   per-record approval" guardrail, and should it call `validatePublishableSpirit`?**
+   Replaces the old "#162 or #163" question — that was a mistaken read; they are a
+   stack, not rivals.
 2. Tier C house/flavored vodkas — dossiers or shelf-only? Blocks 8 records.
 3. Jose Cuervo — which SKU?
 4. Apostoles Rosa — which product, and is it agave at all?
@@ -205,3 +275,5 @@ Green gate before every push: `npm.cmd test -- --run src/lib/spirit-vault`,
    This gates the 109 → 166 publish.
 9. If the coin is the membership, do milestones become digital-only badges later,
    or go away entirely?
+10. Food-for-pours: a staff-judgment prompt (recommended) or an automated comp?
+    The latter needs verified counts and a PA legal read first.

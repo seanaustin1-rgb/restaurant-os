@@ -139,6 +139,68 @@ if (await memberHasOffPremiseEntitlement(clerkUserId)) return { allowed: true, v
 So an off-premise **member** reaches the vault without today's code; everyone else
 still needs to be on-site. No gate rework.
 
+---
+
+## 6. AMENDMENT — the stamp rule (Sean, 2026-09-04)
+
+> "The passport is driven by the scan code… the scan code is the **stamp on the
+> passport that they were here**."
+
+This splits the gate into **read** and **write**, which §5 did not distinguish:
+
+| Action | On-site (valid day code) | Off-premise member (future paid) |
+|---|---|---|
+| **Read** the vault / your passport | ✅ | ✅ — that is what the tier buys |
+| **Write** a passport entry (stamp) | ✅ | ❌ **never** |
+
+A stamp asserts physical presence. If a subscription could mint stamps from the
+couch, the passport stops meaning anything and the challenge coins lose their
+basis. So the write path gates on `via === "day-code"` — **not** on `allowed`.
+
+### 6.1 Schema delta to `GuestTasting`
+
+Add one column; everything else in §4 stands.
+
+```prisma
+  /// Venue-local day (YYYY-MM-DD) whose code stamped this entry. Non-null by
+  /// construction: a row cannot be written without a valid day code. Makes
+  /// "you were here on these dates" derivable, and makes the presence claim
+  /// auditable rather than implied.
+  stampedDayKey  String
+  @@index([guestId, stampedDayKey])   // visit history / streak + visit-count badges
+```
+
+Distinct `stampedDayKey` per guest = **visit count**, for free, with no visits
+table. That is the natural axis for coin milestones alongside bottle coverage.
+
+### 6.2 Two constraints found in the live code (verified 2026-09-04)
+
+**a) Check-ins must be Server Actions under `/vault/*`.** `/v/[code]/route.ts`
+sets the `sv_day` cookie with `path: "/vault"` — deliberately, so a same-day
+bearer credential is never sent to app/admin/API routes. A Server Action invoked
+from a `/vault/**` page posts to that same path and receives the cookie; an
+API route at `/api/passport/**` would **not**. Colocate with the existing
+[`src/app/vault/actions.ts`](src/app/vault/actions.ts).
+
+**b) No day secret ⇒ no stamps, ever.** `dayGateEnabled()` is false when
+`SPIRIT_VAULT_DAY_SECRET` is unset, `isValidDayCode` returns `false`, and
+`resolveVaultAccess` yields `via: "open"` — which the write gate must reject.
+That is correct (fail-closed on writes while fail-open on reads), but it means
+the secret is a hard prerequisite for the passport, and `.env.local` does not
+currently set one, so the stamp path cannot be exercised locally without a dev
+secret. Prod was configured 2026-08-18 — re-verify before relying on it.
+
+### 6.3 Anti-fraud posture (honest limits)
+
+The day code is a *shared* daily secret printed on a placemat, so it proves
+"someone had today's placemat," not "this specific person was at the bar." That
+is the right trade for a loyalty passport — cheap, offline, no hardware. Worth
+stating plainly rather than overclaiming: a guest could text today's code to a
+friend. Mitigations if it ever matters, in increasing cost: rate-limit stamps per
+guest per day; cap stamps per day (you cannot taste 40 bottles in a night);
+per-table codes on the placemat; eventually Toast check-level verification.
+`stampedDayKey` is what makes any of those enforceable later.
+
 ## 6. Phasing
 
 - **2a — Foundation (biggest value, smallest surface):** Clerk guest sign-in +

@@ -112,9 +112,20 @@ Full spec: **`docs/spirit-vault/PHASE2-GUEST-LAYER-SPEC.md` §6** (branch
   sets the `sv_day` cookie with `path: "/vault"`, so an API route at
   `/api/passport/**` receives nothing and every stamp silently fails.
 - With `SPIRIT_VAULT_DAY_SECRET` unset the gate resolves `via: "open"` and **no
-  stamp can ever be written**. `.env.local` does not set one; prod was configured
-  2026-08-18 (per Sean's notes — re-verify, `vercel env ls` could not be reached
-  from this session).
+  stamp can ever be written**. `.env.local` does not set one (verified) — so the
+  stamp path cannot be exercised locally until someone adds a dev secret.
+
+  **Prod status is UNKNOWN, not "missing."** Sean's notes say he set it
+  2026-08-18, but this session could not confirm it: the Vercel CLI is **logged
+  out** (`vercel whoami` → "Logged out."), and the first attempt piped stderr
+  through the same grep as stdout, so an auth error and a genuine "not set"
+  produced identical empty output. Do not read that as evidence the secret is
+  absent. To actually check:
+
+  ```bash
+  npx vercel login
+  npx vercel env ls production | grep -i spirit_vault
+  ```
 
 `GuestTasting` / `GuestFavorite` **do not exist in the DB.** Spec only.
 

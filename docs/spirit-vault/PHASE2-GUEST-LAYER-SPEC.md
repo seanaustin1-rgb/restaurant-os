@@ -190,15 +190,33 @@ the secret is a hard prerequisite for the passport, and `.env.local` does not
 currently set one, so the stamp path cannot be exercised locally without a dev
 secret. Prod was configured 2026-08-18 — re-verify before relying on it.
 
-### 6.3 Anti-fraud posture (honest limits)
+### 6.3 Where the scan code lives (Sean, 2026-09-04)
 
-The day code is a *shared* daily secret printed on a placemat, so it proves
-"someone had today's placemat," not "this specific person was at the bar." That
-is the right trade for a loyalty passport — cheap, offline, no hardware. Worth
-stating plainly rather than overclaiming: a guest could text today's code to a
-friend. Mitigations if it ever matters, in increasing cost: rate-limit stamps per
-guest per day; cap stamps per day (you cannot taste 40 bottles in a night);
-per-table codes on the placemat; eventually Toast check-level verification.
+**The scan code is NOT on the flight placemat.** It is its own printed piece —
+the staff-printed table tent at `/admin/spirit-vault/today` — because **not every
+guest orders a flight**, and every guest needs a way in. The placemat and the
+scan code are deliberately separate artifacts.
+
+Current state, verified 2026-09-04:
+
+| Surface | `main` | branch `codex/flight-builder-availability-hardening` |
+|---|---|---|
+| Table tent `/admin/spirit-vault/today` | renders QR + code ✅ | unchanged ✅ |
+| Flight placemat | **still renders QR + code ❌ (wrong)** | layout no longer renders it ✅, but the route still calls `qrSvg()`/`todayCode()` and passes an unused `qr` param — **dead code to remove** |
+
+So the placemat fix exists only on that branch. Until it lands, `main` still
+prints the code on the placemat. Removing it should also drop the now-unused
+`qrSvg` / `todayCode` / `dayGateEnabled` imports from the placemat route.
+
+### 6.4 Anti-fraud posture (honest limits)
+
+The day code is a *shared* daily secret on a printed table tent, so it proves
+"someone in the room had today's card," not "this specific person was at the bar."
+That is the right trade for a loyalty passport — cheap, offline, no hardware.
+Worth stating plainly rather than overclaiming: a guest could text today's code to
+a friend. Mitigations if it ever matters, in increasing cost: rate-limit stamps
+per guest per day; cap stamps per day (you cannot taste 40 bottles in a night);
+per-table rather than per-venue codes; eventually Toast check-level verification.
 `stampedDayKey` is what makes any of those enforceable later.
 
 ## 6. Phasing

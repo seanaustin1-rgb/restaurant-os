@@ -263,7 +263,41 @@ that day, derived from the existing flight records — "Aug 12 · the night we p
 the Sagamore flight." The passport gets substance for free, and it stays a record
 of *being there*, which is the whole point.
 
-### 6.6 AMENDS 6.5 — record pours as well as attendance (Sean, 2026-09-04)
+### 6.7 ⚠ SUPERSEDES 6.6 — the currency is VISITS (Sean, 2026-09-04, final)
+
+> "We will operate by the times they dine and not what or how much they drink. If
+> they just have dinner and scan the code each time then it counts."
+
+**This is the operating rule. It replaces the pour-threshold idea in §6.6 outright.**
+
+- The passport ledger is **visits**. Not pours, not bottles, not spend.
+- **A guest who never drinks can fully participate.** Dinner + scan = a stamp.
+  Nothing in the passport may require a pour to be meaningful.
+- The food offer, if any, keys off **visit count**, never off drink count.
+
+**Consequences:**
+
+1. **`GuestPour` is deferred, along with `GuestTasting`.** v1 is **one table** —
+   the visit stamp of §6.5. Everything in §6.6 below is retained for reference
+   only and is **not** the v1 build.
+2. **The regulatory concern in §6.6 and §7.1 of the Gemini brief largely
+   dissolves.** Rewarding people for dining is an ordinary restaurant loyalty
+   program; rewarding them for drinking is the thing that draws scrutiny in a
+   control state. A PA attorney read is still sensible before anything is
+   advertised, but this is no longer a design risk that could reshape the product.
+3. **The "thin passport" problem stands** and the §6.5 mitigation is now the
+   answer, not a nice-to-have: render each attended date with what was poured that
+   night, derived from existing flight records. It needs no guest input, and it is
+   the only content the passport has.
+4. The special-event second code (§6.5) is unaffected and still applies.
+
+Honest limit, unchanged: the stamp records **a scan**, which stands in for a
+visit. The day code is shared, so it proves someone in the room had it. That was
+already the accepted trade and it does not get worse here.
+
+---
+
+### 6.6 ~~AMENDS 6.5 — record pours as well as attendance~~ (SUPERSEDED by 6.7 — reference only)
 
 > "If it isn't much to do then I would say that we record both. I can offer food
 > options if they have had a certain amount of pours."

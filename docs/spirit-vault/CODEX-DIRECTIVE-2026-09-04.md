@@ -34,11 +34,31 @@ wrong.** Verified 2026-09-04:
 that #163 branched from an older point on #162, and #162 has since gained 10+
 commits.
 
-Correct sequence:
+### ✅ RESOLVED — Codex already did this, correctly
 
-1. Merge **#162** into `main` (it is clean).
-2. Update **#163** from its base, resolve, merge.
-3. Do not open a third branch in this lane.
+Branch **`codex/flight-builder-163-plus-162`** (pushed 2026-09-04 09:37 EDT, head
+`c2be5dc "Port selected flight builder work from PR 162"`). Audited 2026-09-04:
+
+| Check | Result |
+|---|---|
+| Merges into `main` | **CLEAN** (18 commits ahead) |
+| #163 availability hardening | included |
+| Useful #162 work | ported — dynamic flight groups, custom templates, availability, `SpiritListTable`, flight templates |
+| `scripts/publish-draft-spirits.ts` (auto-publish) | **excluded** ✅ |
+| `spirits-import.json` (parallel catalog) | **excluded** ✅ |
+| Placemat QR/day-code | **fully removed**, including the dead `qrSvg`/`todayCode`/`dayGateEnabled` computation ✅ |
+
+The word "selected" in that commit was load-bearing: Codex ported the flight-builder
+value from #162 and left behind both the guardrail risk and the parallel catalog.
+That is the right call and it also satisfies §5.9 (placemat cleanup) in the same move.
+
+**Remaining steps:**
+
+1. **Open a PR for `codex/flight-builder-163-plus-162` against `main`.** There is
+   none yet, so **CI has never run on this branch** — that is the only gap.
+2. Green gate, then merge.
+3. Close **#162** and **#163** as superseded, so the stack stops confusing readers.
+4. Do not open a fourth branch in this lane.
 
 ### ⚠ Review #162 before merging — it may cross a content guardrail
 
@@ -113,38 +133,28 @@ Future status is earned by **contributing** — writing useful notes, recommendi
 to other guests — **not by consuming**. Materially safer than a consumption
 milestone, and a better motive for writing notes at all.
 
-### 3.2 Schema — TWO tables (updated, Sean 2026-09-04)
+### 3.2 Schema — ONE table. The currency is VISITS. (Sean, 2026-09-04, final)
 
-> "If it isn't much to do then I would say that we record both. I can offer food
-> options if they have had a certain amount of pours."
+> "We will operate by the times they dine and not what or how much they drink. If
+> they just have dinner and scan the code each time then it counts."
 
-v1 records **attendance and pours**, as two separate tables. The stamp is proof of
-presence and never touches the catalog; the pour log is what was tasted.
+**This is the operating rule and it is final for v1.** An earlier revision of this
+directive briefly called for a second `GuestPour` table to drive a food offer keyed
+to pour count. **That is withdrawn.** Spec §6.7 supersedes §6.6.
 
-**Table 2 — `GuestPour`** (lighter than the still-deferred `GuestTasting`: **no
-rating, no notes** in v1 — those return with the contribution layer):
+- The ledger is **visits**. Not pours, not bottles, not spend.
+- **A guest who never drinks fully participates.** Dinner + scan = a stamp.
+  Nothing in the passport may require a pour to be meaningful.
+- Any food offer keys off **visit count**, never drink count.
 
-```prisma
-  guestId, restaurantId, venueSpiritId, stampedDayKey, loggedAt
+**⚠ `GuestPour` and `GuestTasting` are BOTH deferred. Do not build either. v1 has
+no `venueSpiritId` anywhere in the passport.**
 
-  @@unique([guestId, venueSpiritId, stampedDayKey])  // one log per spirit per day
-  @@index([guestId, stampedDayKey])                  // "pours today" -> food prompt
-  @@index([restaurantId, venueSpiritId])             // operator rollups
-```
+This also means the Pennsylvania inducement question is no longer a design risk:
+rewarding dining is an ordinary loyalty program. A legal read before advertising
+is still sensible, but nothing is blocked on it.
 
-Uniqueness on `(guest, spirit, day)` — not the `(guest, spirit)` of spec §4 —
-because that form gives coverage but cannot count tonight's pours, while no
-uniqueness at all lets a guest tap one bottle ten times to cross a threshold.
-
-**⚠ Do NOT auto-comp food.** Recording pours is cheap; making a self-reported
-count trustworthy enough to give away food is not. Surface the count to staff as a
-prompt ("this guest has logged 4 pours tonight") and let a human decide. Automate
-only against staff-confirmed or Toast-verified counts. See spec §6.6 for the
-threat model and the Pennsylvania regulatory note — a food comp keyed to drink
-count is the textbook inducement shape and needs a PA attorney's read before it is
-advertised.
-
-**Table 1 — the stamp.** Key on `(guestId, restaurantId, stampedDayKey, kind)`:
+**The one table — the stamp.** Key on `(guestId, restaurantId, stampedDayKey, kind)`:
 
 - `stampedDayKey` — venue-local `YYYY-MM-DD` of the code that stamped it.
   Non-null by construction.
@@ -260,10 +270,11 @@ Green gate before every push: `npm.cmd test -- --run src/lib/spirit-vault`,
 
 ## 7. Open, needs Sean — do not guess
 
-1. **Does #162's `publish-draft-spirits` path override the "no publish without
-   per-record approval" guardrail, and should it call `validatePublishableSpirit`?**
-   Replaces the old "#162 or #163" question — that was a mistaken read; they are a
-   stack, not rivals.
+1. ~~Does #162's `publish-draft-spirits` path override the no-publish guardrail?~~
+   **Deferred, not urgent.** `codex/flight-builder-163-plus-162` excludes that path
+   entirely, so nothing is blocked. Still worth Sean's answer before it is ever
+   revived: should an import be able to publish a draft, and if so must it call
+   `validatePublishableSpirit`?
 2. Tier C house/flavored vodkas — dossiers or shelf-only? Blocks 8 records.
 3. Jose Cuervo — which SKU?
 4. Apostoles Rosa — which product, and is it agave at all?
@@ -275,5 +286,5 @@ Green gate before every push: `npm.cmd test -- --run src/lib/spirit-vault`,
    This gates the 109 → 166 publish.
 9. If the coin is the membership, do milestones become digital-only badges later,
    or go away entirely?
-10. Food-for-pours: a staff-judgment prompt (recommended) or an automated comp?
-    The latter needs verified counts and a PA legal read first.
+10. ~~Food-for-pours~~ — **closed.** Sean: the currency is visits, not drinks
+    (§3.2). Any food offer keys off visit count.

@@ -208,6 +208,61 @@ So the placemat fix exists only on that branch. Until it lands, `main` still
 prints the code on the placemat. Removing it should also drop the now-unused
 `qrSvg` / `todayCode` / `dayGateEnabled` imports from the placemat route.
 
+### 6.5 ⚠ SUPERSEDES 6.1 — the passport is ATTENDANCE, not tasting (Sean, 2026-09-04)
+
+> "The passport is only that they attended that day. Perhaps a double check-in on
+> a special event."
+>
+> "For now the milestones can be set to the side. If we get to a point whereby
+> people can give their own tasting notes and make suggestions to other tasters,
+> then they can elevate to a status similar to the 'local guide'."
+
+This is a **scope cut, and a large one**. The passport is a visit record. It is
+not a tasting log, and for v1 it **does not reference `VenueSpirit` at all**.
+
+| | v1 | Later |
+|---|---|---|
+| Passport entry | attendance for a day | unchanged |
+| Tasting notes / ratings | **cut** | returns as the *contribution* layer |
+| Milestones / badges | **cut** | revisit after the above |
+| Earned status | none | contributor reputation ("local guide" model) |
+
+Consequences:
+
+- **`GuestTasting` is deferred.** v1 needs one table keyed on
+  `(guestId, restaurantId, stampedDayKey, kind)` — no `venueSpiritId`.
+- **`@@unique` moves to the day axis.** One stamp per guest per day per kind. The
+  `@@unique([guestId, venueSpiritId])` rule in §4 belongs to the deferred tasting
+  layer, not to the passport.
+- **Status is earned by contributing, not consuming.** The future ladder rewards
+  writing useful notes and recommending to other guests — not volume. That is a
+  materially safer posture than a consumption milestone (see §6.4).
+
+#### Special events — use a second code, not a special case
+
+Sean wants a "double check-in" on event nights (whiskey dinners, release
+tastings). Do **not** add a weight/multiplier column. Give the event its own
+printed code, derived from the same primitive with a different input:
+
+```
+daily  code = HMAC(secret, `${tenant}:${dateKey}`)            // existing table tent
+event  code = HMAC(secret, `${tenant}:${dateKey}:${eventId}`) // event card
+```
+
+Deterministic, reprintable, no new table, no cron — identical properties to the
+day code. A guest at an event scans both and gets two stamps naturally, because
+they are different `kind` values on the same day. The rule stays "one stamp per
+guest per day per kind," with no exception branch to maintain.
+
+#### Making a pure attendance passport worth opening
+
+Honest risk: "you have been here 12 times" is thinner than "you have tasted 40 of
+109 bottles," and the guest supplies nothing. Mitigation that needs **no guest
+input and no new data**: render each attended date with what was actually poured
+that day, derived from the existing flight records — "Aug 12 · the night we poured
+the Sagamore flight." The passport gets substance for free, and it stays a record
+of *being there*, which is the whole point.
+
 ### 6.4 Anti-fraud posture (honest limits)
 
 The day code is a *shared* daily secret on a printed table tent, so it proves

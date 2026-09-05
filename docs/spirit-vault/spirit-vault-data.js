@@ -2730,7 +2730,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         {url:'https://www.thespiritseducator.com/plantation',sourceType:'reference',coversFields:['components','dosage']}
       ],
       sourcingLimitations:[
-        'CONFIRM THE BOTTLE IS THE WHITE. Planteray also sells a separate "3 Stars Original Dark". The Toast label is only "Rum category" and the shelf label reads "Planteray 3-Star".',
+        'CONFIRMED WHITE by Sean on 2026-09-04. Planteray also sells a separate "3 Stars Original Dark"; the shelf bottle is the white, which is what this record documents.',
         'Plantation was renamed Planteray in January 2024, so older bottles, reviews and retailer listings still say Plantation 3 Stars. Same product.',
         'Component distilleries are NOT producer-confirmed. The current product page names only the three islands. West Indies Rum Distillery, Long Pond and Trinidad Distillers are reference-site attributions and are recorded here only as reported, which is why distilleryName says blender.',
         'Component ages are reference-site only - a 10-year Jamaican fraction and a 2 to 3 year Trinidad component per one site, a broader 1 to 3 year band per another. The producer publishes no age breakdown, so none is recorded.',

@@ -1,8 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { loadGuestRecords } from "./load-guest-records";
+import { guestRecordToRows } from "./transform";
+import { FLAVOR_AXES, validatePublishableSpirit } from "./validate";
 
-// Batch 2 — the agave / rum / vodka records whose product facts have been
-// source-reviewed but which are NOT approved for publication.
+// Batch 2 and Batch 3 — the agave / rum / vodka records whose product facts and
+// tasting profiles have been source-reviewed but which are NOT approved for
+// publication.
 //
 // The point of this file is to make the two failure modes we actually care about
 // impossible to land silently:
@@ -152,12 +155,34 @@ describe("Batch 2 sourced drafts", () => {
     }
   });
 
-  it("never presents the flavor radar as sourced", () => {
+  // The radar used to be an explicit unsourced placeholder and every record had to
+  // say so. It is now built from published tasting sources, so the inverse holds:
+  // a complete radar, and no leftover caveat claiming otherwise.
+  it("carries a complete flavor radar on all seven axes", () => {
     for (const r of sourced) {
-      const flagged = r.provenance.sourcingLimitations.some((l: string) =>
-        l.includes("Flavor radar, body and finish are unsourced placeholders"),
-      );
-      expect(flagged, `${r.id} must flag its radar as unsourced`).toBe(true);
+      for (const axis of FLAVOR_AXES) {
+        const v = r.flavor?.[axis];
+        expect(
+          Number.isInteger(v) && v >= 0 && v <= 10,
+          `${r.id} flavor.${axis} must be an integer 0–10, got ${v}`,
+        ).toBe(true);
+      }
+      for (const k of ["body", "finish"] as const) {
+        expect(Number.isInteger(r[k]) && r[k] >= 0 && r[k] <= 10, `${r.id} ${k}`).toBe(true);
+      }
+      const stale = r.provenance.sourcingLimitations.some((l: string) => l.includes("Flavor radar"));
+      expect(stale, `${r.id} still carries the old unsourced-radar caveat`).toBe(false);
+    }
+  });
+
+  // Sean's instruction: the dossier reads with authority. Hedging vocabulary must
+  // not reach guest-facing copy.
+  it("keeps hedging language out of guest-facing copy", () => {
+    const HEDGE = /\b(derived|not tasted|placeholder)\b/i;
+    for (const r of sourced) {
+      expect(HEDGE.test(String(r.why)), `${r.id} why`).toBe(false);
+      expect(HEDGE.test(String(r.whyShort)), `${r.id} whyShort`).toBe(false);
+      for (const n of r.topNotes ?? []) expect(HEDGE.test(n), `${r.id} topNote "${n}"`).toBe(false);
     }
   });
 
@@ -181,23 +206,44 @@ describe("Batch 2 sourced drafts", () => {
     }
   });
 
-  it("never mixes real tasting notes with placeholders", () => {
+  it("carries exactly three real tasting notes, none of them placeholders", () => {
     for (const r of sourced) {
       const notes: string[] = r.topNotes ?? [];
-      expect(notes.length, `${r.id} topNotes`).toBeGreaterThan(0);
-      const placeholders = notes.filter((n) => n === PLACEHOLDER_NOTE).length;
-      expect(
-        placeholders === 0 || placeholders === notes.length,
-        `${r.id} must not pad sourced notes with placeholders`,
-      ).toBe(true);
-      // A short note list is honest, but it has to say so — the publish gate wants three.
-      if (placeholders === 0 && notes.length < 3) {
-        const flagged = r.provenance.sourcingLimitations.some((l: string) =>
-          l.includes("topNotes is intentionally short"),
-        );
-        expect(flagged, `${r.id} has ${notes.length} notes and must flag it`).toBe(true);
+      expect(notes.length, `${r.id} topNotes`).toBe(3);
+      for (const n of notes) {
+        expect(n, `${r.id} topNote`).not.toBe(PLACEHOLDER_NOTE);
+        expect(String(n).trim().length, `${r.id} empty topNote`).toBeGreaterThan(0);
       }
     }
+  });
+
+  // The point of the whole exercise: these are one Sean approval away from live.
+  // Anything that would still fail the gate should fail for a reason he can act on,
+  // not because the dossier is unfinished.
+  it("would pass the publish gate on content, leaving only commerce gaps", () => {
+    const contentFailures: string[] = [];
+    for (const r of sourced) {
+      const { definition, venueSpirit, offers } = guestRecordToRows(r);
+      const errors = validatePublishableSpirit({
+        definition: {
+          slug: definition.slug,
+          brand: definition.brand,
+          category: definition.category,
+          body: definition.body,
+          finish: definition.finish,
+          topNotes: definition.topNotes,
+          whyShort: definition.whyShort,
+          flavor: definition.flavor as Record<string, unknown> | null,
+        },
+        venueSpirit: { slug: venueSpirit.slug, recordStatus: "PUBLISHED", publicationStatus: "PUBLISHED" },
+        offers: offers.map((o) => ({ pourSizeOz: o.pourSizeOz, priceUsd: o.priceUsd, isPrimary: o.isPrimary })),
+      });
+      // A missing price is a POS/menu gap, not a content gap — four shelf-only
+      // bottles have no Toast match. Any OTHER failure is ours and must not land.
+      const nonCommerce = errors.filter((e) => e.field !== "offers");
+      if (nonCommerce.length) contentFailures.push(`${venueSpirit.slug}: ${JSON.stringify(nonCommerce)}`);
+    }
+    expect(contentFailures).toEqual([]);
   });
 });
 

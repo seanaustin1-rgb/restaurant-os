@@ -719,7 +719,7 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       verificationStatus:'source-reviewed',
       topNotes:config.topNotes || ['Pending source review','Pending source review','Pending source review'],
       history:config.history || 'Brand history is pending source review - no dated history could be sourced for this bottle.',
-      sourcingLimitations:(config.sourcingLimitations || []).concat([UNSOURCED_RADAR_NOTE])
+      sourcingLimitations:(config.sourcingLimitations || []).concat(config.flavor ? [] : [UNSOURCED_RADAR_NOTE])
     }));
     record.status = [{k:'draft',t:'Draft - Source Reviewed'}];
     // Knowledge (facts/sources) was reviewed today; the VENUE review has not happened.
@@ -748,13 +748,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Agave ─────────────
     sourcedDraftSpirit({
       id:'herradura-silver', brand:'Herradura', expression:'Silver', displayName:'Herradura Silver',
+      flavor:{Sweet:3,Oak:2,Spice:6,Fruit:4,Smoke:3,Earth:6,Herbal:4},
+      body:5, finish:7,
+      topNotes:['Chargrilled vegetal','Black pepper','Cooked agave'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
       style:'Tequila Blanco - 100% Blue Weber Agave - 45-Day Rest',
       proofN:80, ageText:'45 days',
       priceUsd:9, toastItemGuid:'0ff5a853-aec0-4ee2-8b20-5235c5245740',
-      topNotes:['Agave forward','Vanilla','Crisp finish'],
       productionRows:[
         ['Agave','100% blue Weber agave',true],
         ['Class','Tequila Blanco',true],
@@ -768,6 +770,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Casa Herradura was founded in 1870 in Amatitán, Jalisco. The distillery operates as NOM 1119 and is owned by Brown-Forman.',
       timeline:[['1870','Casa Herradura founded in Amatitán, Jalisco'],['Today','Operates as NOM 1119 under Brown-Forman ownership']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1901/herradura-silver',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2349-herradura-silver',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://letsdrinkit.com/herradura-silver-tequila/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.herradura.com/blog/product/silver/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
         {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
       ],
@@ -778,13 +783,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'herradura-reposado', brand:'Herradura', expression:'Reposado', displayName:'Herradura Reposado',
+      flavor:{Sweet:7,Oak:5,Spice:6,Fruit:5,Smoke:2,Earth:3,Herbal:1},
+      body:7, finish:7,
+      topNotes:['Roasted agave','Vanilla caramel','Black pepper'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
       style:'Tequila Reposado - 100% Blue Weber Agave - 11 Months',
       proofN:80, ageText:'11 months',
       priceUsd:10, toastItemGuid:'aa401cdb-3902-4183-95d3-33b25246446b',
-      topNotes:['Roasted agave','Dried fruit and anise','Butterscotch finish'],
       productionRows:[
         ['Agave','100% blue Weber agave',true],
         ['Class','Tequila Reposado',true],
@@ -798,6 +805,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Casa Herradura was founded in 1870 in Amatitán, Jalisco. The distillery operates as NOM 1119 and is owned by Brown-Forman.',
       timeline:[['1870','Casa Herradura founded in Amatitán, Jalisco'],['Today','Operates as NOM 1119 under Brown-Forman ownership']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1119/herradura-reposado-tequila',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2348-herradura-reposado',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://specsonline.com/shop/spirits/herradura-tequila-reposado-3/',sourceType:'producer',coversFields:['tasting']},
         {url:'https://www.herradura.com/blog/product/reposado/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
         {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
       ],
@@ -808,13 +818,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'herradura-anejo', brand:'Herradura', expression:'Añejo', displayName:'Herradura Añejo',
+      flavor:{Sweet:7,Oak:6,Spice:6,Fruit:6,Smoke:2,Earth:5,Herbal:2},
+      body:7, finish:7,
+      topNotes:['Toasted oak','Nutty caramel','Cinnamon spice'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
       style:'Tequila Anejo - 100% Blue Weber Agave - 25 Months',
       proofN:80, ageText:'25 months', minYears:2, maxYears:2,
       priceUsd:14.25, toastItemGuid:'7ed22215-7910-4753-b7f7-498c5dab4dba',
-      topNotes:['Toasted oak','Nutty caramel','Warm baking spice'],
       productionRows:[
         ['Agave','100% blue Weber agave',true],
         ['Class','Tequila Anejo',true],
@@ -832,6 +844,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['Today','Operates as NOM 1119 under Brown-Forman ownership']
       ],
       sources:[
+        {url:'https://www.herradura.com/blog/product/anejo/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1120/herradura-anejo-tequila',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2609-herradura-anejo',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.tequila.net/tequila-reviews/anejos/herradura-tequila-anejo.html',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.herradura.com/blog/product/anejo/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/1120/herradura-anejo-tequila',sourceType:'reference',coversFields:['strength','age','cask','history']}
       ],
@@ -842,6 +858,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'el-jimador-silver', brand:'el Jimador', expression:'Silver', displayName:'El Jimador Silver',
+      flavor:{Sweet:4,Oak:0,Spice:5,Fruit:5,Smoke:3,Earth:4,Herbal:4},
+      body:4, finish:4,
+      topNotes:['Baked squash','Grilled pineapple','Smoky pepper'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
@@ -864,6 +883,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2009','Restored to 100% agave']
       ],
       sources:[
+        {url:'https://www.tastings.com/Spirits-Review/El-Jimador-Silver-Tequila-Mexico-05-01-2021.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2577-el-jimador-blanco-tequila',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-el-jimador-silver-tequila/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/560/el-jimador-reposado',sourceType:'reference',coversFields:['producer','history','identity']},
         {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
       ],
@@ -875,6 +897,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'el-jimador-reposado', brand:'el Jimador', expression:'Reposado', displayName:'El Jimador Reposado',
+      flavor:{Sweet:6,Oak:2,Spice:6,Fruit:4,Smoke:2,Earth:5,Herbal:4},
+      body:5, finish:5,
+      topNotes:['Spiced stewed apple','Vanilla caramel','Chargrilled pepper'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
@@ -898,6 +923,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2009','Restored to 100% agave']
       ],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/560/el-jimador-reposado',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.alsotequila.com/en/tequila-el-jimador-reposado/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/el-jimador-reposado-tequila/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/560/el-jimador-reposado',sourceType:'reference',coversFields:['identity','production','age','cask','history']},
         {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
       ],
@@ -909,6 +937,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'el-jimador-anejo', brand:'el Jimador', expression:'Añejo', displayName:'El Jimador Añejo',
+      flavor:{Sweet:6,Oak:5,Spice:5,Fruit:5,Smoke:2,Earth:4,Herbal:2},
+      body:5, finish:5,
+      topNotes:['Baked agave','Buttery caramel','Toasty cedar'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Herradura, S.A. de C.V. (NOM 1119)', distilleryName:'Casa Herradura',
@@ -932,6 +963,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2009','Restored to 100% agave']
       ],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1543/el-jimador-anejo',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-el-jimador-anejo-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tequila.net/tequila-reviews/anejos/el-jimador-tequila-edicion-limitada-anejo.html',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/El-Jimador-Anejo-Tequila-Mexico-05-01-2021.aspx',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/1543/el-jimador-anejo',sourceType:'reference',coversFields:['identity','production','age','cask']},
         {url:'https://www.diffordsguide.com/producers/180/tequila-herradura-sa-de-cv-nom-1119',sourceType:'reference',coversFields:['producer','origin','ownership']}
       ],
@@ -943,6 +978,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'casa-amigos-80pf', brand:'Casamigos', expression:'Blanco', displayName:'Casamigos Blanco',
+      flavor:{Sweet:8,Oak:1,Spice:3,Fruit:4,Smoke:0,Earth:3,Herbal:2},
+      body:6, finish:4,
+      topNotes:['Vanilla bean','Cake batter','Citrus zest'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco',
       producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
@@ -965,6 +1003,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2017','Acquired by Diageo']
       ],
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/4535-casamigos-tequila-blanco',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://spiritsreview.com/reviews/casamigos-tequila-blanco/',sourceType:'review',coversFields:['tasting']},
         {url:'https://distiller.com/spirits/casamigos-blanco-tequila',sourceType:'reference',coversFields:['identity','production','strength','origin']},
         {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
       ],
@@ -977,6 +1017,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'casamigos-reposado', brand:'Casamigos', expression:'Reposado', displayName:'Casamigos Reposado',
+      flavor:{Sweet:8,Oak:4,Spice:5,Fruit:3,Smoke:2,Earth:2,Herbal:1},
+      body:6, finish:6,
+      topNotes:['Caramel cocoa','Dried fruit','Spicy oak'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco',
       producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
@@ -998,6 +1041,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2017','Acquired by Diageo']
       ],
       sources:[
+        {url:'https://www.casamigos.com/en-us/our-tequilas/reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/casamigos-tequila-reposado/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://distiller.com/spirits/casamigos-reposado-tequila',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.oldtowntequila.com/casamigos-reposado-tequila/',sourceType:'retailer',coversFields:['age','cask','strength']},
         {url:'https://www.agavematchmaker.com/agave_spirits/4536-casamigos-tequila-reposado',sourceType:'reference',coversFields:['identity','producer']},
         {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
@@ -1010,6 +1056,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'casamigos-anejo', brand:'Casamigos', expression:'Añejo', displayName:'Casamigos Anejo',
+      flavor:{Sweet:8,Oak:6,Spice:4,Fruit:3,Smoke:2,Earth:3,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Soft caramel','Vanilla butterscotch','Cocoa oak'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco',
       producer:'Productos Finos de Agave, S.A. de C.V. (NOM 1416)', distilleryName:'Productos Finos de Agave',
@@ -1031,6 +1080,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2017','Acquired by Diageo']
       ],
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/5338-casamigos-tequila-anejo',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-casamigos-anejo-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkspirits.com/tequila/review-casamigos-anejo-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.oldtowntequila.com/casamigos-anejo-tequila/',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://spiritsreview.com/reviews/casamigos-anejo-tequila/',sourceType:'review',coversFields:['age','strength']},
         {url:'https://en.wikipedia.org/wiki/Casamigos',sourceType:'reference',coversFields:['history','ownership']}
       ],
@@ -1043,13 +1096,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'patron-silver', brand:'Patrón', expression:'Silver', displayName:'Patrón Silver',
+      flavor:{Sweet:3,Oak:1,Spice:6,Fruit:4,Smoke:1,Earth:6,Herbal:5},
+      body:5, finish:5,
+      topNotes:['White pepper','Mineral dust','Citrus lavender'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Atotonilco el Alto',
       producer:'Hacienda Patrón (NOM 1492)', distilleryName:'Hacienda Patrón',
       style:'Tequila Blanco - Tahona and Roller-Mill Blend - Triple Distilled',
       proofN:80, ageText:'Unaged',
       priceUsd:10.75, toastItemGuid:'d7ecb6ae-4fdf-4cca-a390-2f3b22188a35',
-      topNotes:['Black pepper','Pine and citrus','Warming charcoal finish'],
       productionRows:[
         ['Class','Tequila Blanco',true],
         ['Extraction','Blend of two tequilas - one from a traditional tahona stone mill fermented with the agave fibres, one from a modern roller shredder',true],
@@ -1064,6 +1119,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Patrón was founded in 1989 and is owned by Bacardi. Hacienda Patrón was built in the Jalisco highlands for its agave supply and its deep-well water.',
       timeline:[['1989','Patron founded'],['2002','Production moves to a new facility'],['Today','Owned by Bacardi']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/204/patron-silver-tequila',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2501-patron-silver',sourceType:'reference',coversFields:['tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/204/patron-silver-tequila',sourceType:'reference',coversFields:['identity','production','strength','tasting']},
         {url:'https://www.diffordsguide.com/producer/1118/hacienda-patrn-nom-1492/production',sourceType:'reference',coversFields:['production','origin']},
         {url:'https://en.wikipedia.org/wiki/Patr%C3%B3n',sourceType:'reference',coversFields:['history','ownership','strength']}
@@ -1075,6 +1132,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'don-fulano-reposado', brand:'Don Fulano', expression:'Reposado', displayName:'Don Fulano Reposado',
+      flavor:{Sweet:6,Oak:5,Spice:7,Fruit:6,Smoke:2,Earth:4,Herbal:3},
+      body:7, finish:6,
+      topNotes:['Baking spices','Dried fruit','Toasted nuts'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'La Tequileña (NOM 1146)', distilleryName:'La Tequileña',
@@ -1100,6 +1160,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['Early 2000s','Fonseca begins experimenting with extended French and American oak maturation']
       ],
       sources:[
+        {url:'https://siptequila.com/products/don-fulano-reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Don-Fulano-Reposado-Tequila-Mexico-06-01-2022.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2660-don-fulano-reposado',sourceType:'reference',coversFields:['tasting']},
         {url:'https://siptequila.com/products/don-fulano-reposado',sourceType:'retailer',coversFields:['identity','production','age','cask','strength']},
         {url:'https://www.agavematchmaker.com/brands/1113-don-fulano',sourceType:'reference',coversFields:['producer','origin']},
         {url:'https://raretequilas.com/collections/nom-1146',sourceType:'reference',coversFields:['producer','origin']}
@@ -1112,6 +1175,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'don-fulano-anejo', brand:'Don Fulano', expression:'Añejo', displayName:'Don Fulano Anejo',
+      flavor:{Sweet:5,Oak:7,Spice:7,Fruit:7,Smoke:2,Earth:5,Herbal:4},
+      body:8, finish:9,
+      topNotes:['Dried fruit','French oak','Jasmine honey'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'La Tequileña (NOM 1146)', distilleryName:'La Tequileña',
@@ -1135,6 +1201,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['Early 2000s','Fonseca begins experimenting with extended French and American oak maturation']
       ],
       sources:[
+        {url:'https://theliquorbarn.com/products/don-fulano-anejo-tequila-750ml',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://siptequila.com/products/don-fulano-anejo',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://tastetequila.com/2012/tequila-review-don-fulano-5-year-anejo/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://whwc.com/don-fulano-anejo-tequila/',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://www.oldtowntequila.com/brands/Don-Fulano.html',sourceType:'retailer',coversFields:['identity','age','cask']},
         {url:'https://siptequila.com/collections/don-fulano',sourceType:'retailer',coversFields:['identity','strength','production']},
         {url:'https://raretequilas.com/collections/nom-1146',sourceType:'reference',coversFields:['producer','origin']}
@@ -1149,13 +1219,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Rum ─────────────
     sourcedDraftSpirit({
       id:'bacardi-white', brand:'Bacardi', expression:'Superior', displayName:'Bacardi White',
+      flavor:{Sweet:3,Oak:1,Spice:2,Fruit:3,Smoke:0,Earth:1,Herbal:0},
+      body:3, finish:3,
+      topNotes:['Almond','Citrus zest','Vanilla hint'],
       cat:'Rum', subcategory:'white-and-silver',
       country:'Puerto Rico',
       producer:'Bacardi Limited', distilleryName:'Bacardi',
       style:'White Rum - Oak Aged, Charcoal Filtered',
       proofN:80, ageText:'1-2 years', minYears:1, maxYears:2,
       priceUsd:7, toastItemGuid:'329389fa-73be-4dcc-ae93-7abf1506b7f2',
-      topNotes:['Almond','Lime','Vanilla'],
       productionRows:[
         ['Base','Molasses, yeast and water - fermented, distilled, aged, filtered and blended',true],
         ['Maturation','American white oak barrels',true],
@@ -1168,6 +1240,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'BACARDI Superior was introduced in 1862 by Don Facundo Bacardí Massó. It is produced in Puerto Rico.',
       timeline:[['1862','Introduced by Don Facundo Bacardí Massó']],
       sources:[
+        {url:'https://www.bacardi.com/us/en/our-rums/superior-rum/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/525/bacardi-carta-blanca-light-rum',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/rum-review-bacardi-superior-white-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.bacardi.com/us/en/our-rums/superior-rum/',sourceType:'producer',coversFields:['identity','strength','production','tasting','history']},
         {url:'https://www.tastings.com/Spirits-Review/Bacardi-Superior-White-Rum-Puerto-Rico-05-01-2024.aspx',sourceType:'review',coversFields:['origin','identity']}
       ],
@@ -1180,13 +1255,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'captain-morgan-original-spiced', brand:'Captain Morgan', expression:'Original Spiced', displayName:'Captain Morgan Original Spiced',
+      flavor:{Sweet:7,Oak:3,Spice:7,Fruit:3,Smoke:1,Earth:1,Herbal:1},
+      body:5, finish:5,
+      topNotes:['Vanilla spice','Cinnamon clove','Caramelized sugar'],
       cat:'Rum', subcategory:'spiced-and-flavored',
       country:'USA', region:'U.S. Virgin Islands', city:'St. Croix',
       producer:'Diageo', distilleryName:'Diageo USVI',
       style:'Spiced Rum - Caribbean Rum with Natural Flavours',
       proofN:70, ageText:'Up to 1 year',
       priceUsd:6, toastItemGuid:'d0c2815e-2734-425e-97c3-a475cb3f8d18',
-      topNotes:['Vanilla','Caramel','Baking spice'],
       productionRows:[
         ['Class','Spiced rum - at 35% ABV it sits below the US threshold to be labelled simply rum',true],
         ['Base','Molasses-derived rum, column distilled',true],
@@ -1200,6 +1277,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Captain Morgan is a Diageo brand. The Original Spiced expression was reformulated in 2023 to use real Madagascar vanilla.',
       timeline:[['2023','Reformulated to use real Madagascar vanilla']],
       sources:[
+        {url:'https://www.captainmorgan.com/en-us/products/captain-morgan-original-spiced-rum',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.lcbo.com/en/captain-morgan-original-spiced-rum-617688',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.tastingtable.com/1279077/captain-morgan-original-spiced-rum-bottle-guide/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.walmart.com/ip/Captain-Morgan-Original-Spiced-Rum-750-mL-35-ABV/12167177',sourceType:'retailer',coversFields:['strength','identity']},
         {url:'https://www.ohlq.com/liquor/rum/spiced/captain-morgan-original-spiced-rum',sourceType:'retailer',coversFields:['identity','strength']}
       ],
@@ -1210,13 +1290,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'malibu', brand:'Malibu', expression:'Original Coconut', displayName:'Malibu',
+      flavor:{Sweet:8,Oak:0,Spice:2,Fruit:1,Smoke:0,Earth:0,Herbal:0},
+      body:3, finish:3,
+      topNotes:['Desiccated coconut','Cream vanilla','Light pepper'],
       cat:'Rum', subcategory:'spiced-and-flavored',
       country:'Barbados',
       producer:'Pernod Ricard', distilleryName:'West Indies Rum Distillery Ltd.',
       style:'Coconut Flavoured Rum Liqueur - Barbados',
       proofN:42, ageText:'NAS',
       priceUsd:7, toastItemGuid:'59bc0ace-9834-4c9b-ba06-80d09b24c40a',
-      topNotes:['Coconut'],
       productionRows:[
         ['Class','Coconut-flavoured liqueur made with white rum',true],
         ['Base','Caribbean rum (molasses/sugarcane distillate), water, sugar and coconut flavouring',true],
@@ -1232,6 +1314,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2005','Acquired by Pernod Ricard']
       ],
       sources:[
+        {url:'https://www.lcbo.com/en/malibu-coconut-rum-liqueur-217448',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/228/malibu-original',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://letsdrinkit.com/malibu-coconut-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://en.wikipedia.org/wiki/Malibu_(rum)',sourceType:'reference',coversFields:['identity','strength','production','history','ownership']},
         {url:'https://www.pernod-ricard.com/en/brands/malibu',sourceType:'producer',coversFields:['identity','origin','ownership']}
       ],
@@ -1242,6 +1327,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'gosling-s-black-seal', brand:"Gosling's", expression:'Black Seal', displayName:"Gosling's Black Seal",
+      flavor:{Sweet:6,Oak:5,Spice:5,Fruit:4,Smoke:2,Earth:2,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Molasses','Dried fruit','Baking spice'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Bermuda',
       producer:'Gosling Brothers Limited', distilleryName:"Gosling Brothers (blender)",
@@ -1261,6 +1349,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Gosling Brothers Limited was established in 1806 and is one of the oldest family-run spirits businesses in the Western Hemisphere.',
       timeline:[['1806','Gosling Brothers Limited established in Bermuda']],
       sources:[
+        {url:'https://thefatrumpirate.com/goslings-blackseal',sourceType:'review',coversFields:['tasting']},
+        {url:'https://winedharma.com/en/tastings/goslings-black-seal-rum-review-and-tasting-notes/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://ruminations.blog/2016/01/23/rum-review-goslings-black-seal/',sourceType:'review',coversFields:['tasting']},
         {url:'https://goslings.com/newProduct/goslings-black-seal-rum/',sourceType:'producer',coversFields:['identity','production','history']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/6256/goslings-gold-seal',sourceType:'reference',coversFields:['strength','producer']}
       ],
@@ -1273,13 +1364,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'myers-s-dark', brand:"Myers's", expression:'Original Dark', displayName:"Myers's Dark",
+      flavor:{Sweet:6,Oak:4,Spice:4,Fruit:5,Smoke:2,Earth:4,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Dark caramel','Toasted coconut','Molasses'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Jamaica',
       producer:'Sazerac Company', distilleryName:"Myers's Rum",
       style:'Jamaican Black Rum - Pot and Column Still Blend',
       proofN:80, ageText:'4 years', minYears:4, maxYears:4,
       priceUsd:6, toastItemGuid:'28c8ae0c-27ec-40d9-babc-91b23f63c77a',
-      topNotes:['Dark caramel','Toasted coconut husk'],
       productionRows:[
         ['Class','Jamaican black rum',true],
         ['Base','Jamaican sugarcane molasses',true],
@@ -1294,6 +1387,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Myers\'s Rum is a Jamaican black rum brand now produced by Sazerac.',
       timeline:[['Today','Produced by the Sazerac Company']],
       sources:[
+        {url:'https://www.myerssrum.com/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-myerss-original-dark-rum/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://rumrunnerlabs.com/reviews/myerss-original-dark-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://en.wikipedia.org/wiki/Myers%27s_Rum',sourceType:'reference',coversFields:['identity','origin','strength','ownership']},
         {url:'https://www.gotoliquorstore.com/p/myerss-original-dark-rum/664',sourceType:'retailer',coversFields:['production','age','tasting']}
       ],
@@ -1306,13 +1402,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'don-q-151', brand:'Don Q', expression:'151', displayName:'Don Q 151',
+      flavor:{Sweet:6,Oak:6,Spice:6,Fruit:5,Smoke:4,Earth:3,Herbal:1},
+      body:8, finish:8,
+      topNotes:['Vanilla oak','Charred wood','Dark fruit spice'],
       cat:'Rum', subcategory:'specialty',
       country:'Puerto Rico', city:'Ponce',
       producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
       style:'Overproof Rum - Puerto Rico - 151 Proof',
       proofN:151, ageText:'Up to 3 years', minYears:0, maxYears:3,
       priceUsd:7, toastItemGuid:'8360e46b-eef1-4c21-8e4f-32051d5b2974',
-      topNotes:['Vanilla','Oak','Smoke and tobacco'],
       productionRows:[
         ['Class','Overproof rum',true],
         ['Base','Molasses',true],
@@ -1327,6 +1425,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Don Q is produced by Destilería Serrallés in Puerto Rico.',
       timeline:[['Today','Produced by Destilería Serrallés, Puerto Rico']],
       sources:[
+        {url:'https://thelonecaner.com/r1120/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.gotrum.com/rumreviews/angels-share-rum-reviews/don-q-151/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://spiritsreview.com/reviews/don-q-151-rum-151-proof/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.rum-x.com/rums/1376/destileria-serralles-don-q-151-overproof/',sourceType:'reference',coversFields:['identity','strength','age','producer']},
         {url:'https://www.excellencerhum.com/en/puerto-rico/5375-rum-don-q-151-755.html',sourceType:'retailer',coversFields:['strength','origin']},
         {url:'https://en.wikipedia.org/wiki/Destiler%C3%ADa_Serrall%C3%A9s',sourceType:'reference',coversFields:['producer','origin']}
@@ -1338,6 +1439,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'zaya-gran-reserva-16-year', brand:'Zaya', expression:'Gran Reserva 16 Year', displayName:'Zaya Gran Reserva 16 Year',
+      flavor:{Sweet:8,Oak:5,Spice:3,Fruit:4,Smoke:1,Earth:2,Herbal:0},
+      body:6, finish:5,
+      topNotes:['Vanilla chocolate','Caramel','Brown sugar'],
       cat:'Rum', subcategory:'premium-and-aged',
       country:'Trinidad and Tobago',
       producer:'Trinidad Distillers Ltd. (Angostura)', distilleryName:'Trinidad Distillers Ltd.',
@@ -1360,6 +1464,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['Today','Distilled by Angostura at Trinidad Distillers Ltd.']
       ],
       sources:[
+        {url:'https://rumx.com/en/rums/526/tdl-zaya-rum-gran-reserva/',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.leafenthusiast.com/libation-review-zaya-gran-reserva/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.rum-x.com/rums/526/tdl-zaya-rum-gran-reserva/',sourceType:'reference',coversFields:['identity','strength','producer','age']},
         {url:'https://www.excellencerhum.com/en/trinidad-and-tobago/5635-rum-zaya-gran-reserva-16-years-old.html',sourceType:'retailer',coversFields:['origin','age']},
         {url:'https://www.caskers.com/zaya-gran-reserva-16-year-old-rum/',sourceType:'retailer',coversFields:['identity','history']}
@@ -1373,13 +1479,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'diplomatico-mantuano-dark', brand:'Diplomatico', expression:'Mantuano', displayName:'Diplomatico Mantuano Dark',
+      flavor:{Sweet:5,Oak:6,Spice:4,Fruit:5,Smoke:1,Earth:2,Herbal:1},
+      body:6, finish:5,
+      topNotes:['Dried plum','Oak spice','Vanilla'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Venezuela',
       producer:'Destilerías Unidas S.A.', distilleryName:'Destilerías Unidas S.A.',
       style:'Venezuelan Aged Rum - Up to 8 Years - Column, Batch Kettle and Pot Still',
       proofN:80, ageText:'Up to 8 years', maxYears:8,
       priceUsd:9, toastItemGuid:'185450cb-9afb-4f5a-a710-a96d20f67027',
-      topNotes:['Dried plum','Oak','Vanilla'],
       productionRows:[
         ['Class','Venezuelan aged rum',true],
         ['Base','Sugarcane molasses and honeys',true],
@@ -1394,6 +1502,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Diplomatico is produced by Destilerías Unidas S.A. in Venezuela.',
       timeline:[['Today','Produced by Destilerías Unidas S.A., Venezuela']],
       sources:[
+        {url:'https://www.rondiplomatico.com/product/mantuano/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://thefatrumpirate.com/diplomatico-mantuano',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-diplomatico-mantuano-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://rumx.com/en/rums/29/diplomatico-mantuano/',sourceType:'reference',coversFields:['identity','strength','producer','age']},
         {url:'https://www.bienmanger.com/2F29243_Mantuano_Diplomatico_Rum_From_Venezuela.html',sourceType:'retailer',coversFields:['origin','strength','producer']},
         {url:'https://www.caskers.com/diplomatico-mantuano-rum/',sourceType:'retailer',coversFields:['production','cask','tasting']}
@@ -1408,6 +1519,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Vodka ─────────────
     sourcedDraftSpirit({
       id:'absolut-vodka', brand:'Absolut', expression:'Original', displayName:'Absolut Vodka',
+      flavor:{Sweet:3,Oak:0,Spice:4,Fruit:2,Smoke:0,Earth:1,Herbal:2},
+      body:3, finish:4,
+      topNotes:['Black pepper','Bread crust','Vanilla-caramel'],
       cat:'Vodka', subcategory:'vodka',
       country:'Sweden', region:'Skåne', city:'Åhus',
       producer:'The Absolut Company (Pernod Ricard)', distilleryName:'Absolut Distillery, Åhus',
@@ -1427,6 +1541,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Absolut traces to 1879, when Lars Olsson Smith introduced uninterrupted (continuous) distillation. Production has remained centred on Åhus in southern Sweden.',
       timeline:[['1879','Lars Olsson Smith introduces continuous distillation']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/630/absolut-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.absolut.com/en-us/products/absolut-vodka/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Absolut-Original-Vodka-Sweden-03-01-2023.aspx',sourceType:'reference',coversFields:['tasting']},
         {url:'https://www.absolut.com/en-us/products/absolut-vodka/',sourceType:'producer',coversFields:['identity','strength','production','origin']}
       ],
       sourcingLimitations:[
@@ -1436,6 +1553,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'grey-goose-vodka', brand:'Grey Goose', expression:'Original', displayName:'Grey Goose Vodka',
+      flavor:{Sweet:4,Oak:0,Spice:4,Fruit:4,Smoke:1,Earth:3,Herbal:4},
+      body:3, finish:5,
+      topNotes:['Citrus zest','Cracked pepper','Minerality'],
       cat:'Vodka', subcategory:'vodka',
       country:'France', region:'Picardie and Cognac',
       producer:'Bacardi Limited', distilleryName:'Grey Goose',
@@ -1454,6 +1574,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Grey Goose was created in 1997 by Sidney Frank and is now owned by Bacardi Limited.',
       timeline:[['1997','Created by Sidney Frank'],['Today','Owned by Bacardi Limited']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/68/grey-goose-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.greygoose.com/faqs/what-does-vodka-taste-like.html',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/grey-goose-vodka/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.greygoose.com/products/grey-goose-vodka.html',sourceType:'producer',coversFields:['identity','production','origin']},
         {url:'https://www.greygoose.com/faqs/what-is-the-alcohol-content-of-grey-goose-vodka.html',sourceType:'producer',coversFields:['strength']}
       ],
@@ -1464,6 +1587,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'tito-s-vodka', brand:"Tito's", expression:'Handmade Vodka', displayName:"Tito's Vodka",
+      flavor:{Sweet:5,Oak:0,Spice:4,Fruit:0,Smoke:0,Earth:2,Herbal:1},
+      body:3, finish:4,
+      topNotes:['Sweet corn','Black pepper','Creamy mouthfeel'],
       cat:'Vodka', subcategory:'vodka',
       country:'USA', region:'Texas', city:'Austin',
       producer:'Fifth Generation, Inc.', distilleryName:'Tito\'s Handmade Vodka',
@@ -1482,6 +1608,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'In 1995 Bert "Tito" Beveridge obtained the first legal permit to distil in Texas and created Tito\'s Handmade Vodka. It is distilled and bottled by Fifth Generation, Inc. in Austin.',
       timeline:[['1995','First legal distilling permit in Texas; Tito\'s Handmade Vodka created']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1907/titos-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://spiritsreview.com/reviews/titos-handmade-vodka/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.titosvodka.com/',sourceType:'producer',coversFields:['identity','production','origin']},
         {url:'https://en.wikipedia.org/wiki/Tito%27s_Vodka',sourceType:'reference',coversFields:['history','production','strength']}
       ],
@@ -1493,13 +1621,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'belvidere-vodka', brand:'Belvedere', expression:'Original', displayName:'Belvedere Vodka',
+      flavor:{Sweet:4,Oak:0,Spice:6,Fruit:2,Smoke:0,Earth:3,Herbal:3},
+      body:3, finish:5,
+      topNotes:['White pepper','Vanilla cream','Rye bread crust'],
       cat:'Vodka', subcategory:'vodka',
       country:'Poland', city:'Żyrardów',
       producer:'Polmos Żyrardów', distilleryName:'Polmos Żyrardów',
       style:'Polish Rye Vodka - 100% Dankowskie Rye - Quadruple Distilled',
       proofN:80, ageText:'Unaged',
       priceUsd:10, toastItemGuid:'24b60efe-dc1d-41c5-9379-0bc207912b6c',
-      topNotes:['White pepper','Faint vanilla','Clean finish'],
       productionRows:[
         ['Base','100% Polish Dankowskie rye',true],
         ['Distillation','Quadruple distilled - once at an agricultural distillery, three more times on a four-column continuous still',true],
@@ -1513,6 +1643,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Belvedere is produced at the Polmos Żyrardów distillery in Żyrardów, Poland.',
       timeline:[['Today','Produced at Polmos Żyrardów, Poland']],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1135/belvedere-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.belvederevodka.com/en-int/collection/vodka/belvedere-vodka',sourceType:'producer',coversFields:['tasting']},
         {url:'https://en.wikipedia.org/wiki/Belvedere_Vodka',sourceType:'reference',coversFields:['identity','origin','production','strength']},
         {url:'https://www.drinklab.org/belvedere-vodka/',sourceType:'review',coversFields:['production','tasting']}
       ],
@@ -1524,6 +1656,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'chopin-potato-vodka', brand:'Chopin', expression:'Potato Vodka', displayName:'Chopin Potato Vodka',
+      flavor:{Sweet:4,Oak:0,Spice:1,Fruit:3,Smoke:2,Earth:7,Herbal:3},
+      body:4, finish:5,
+      topNotes:['Mushroom umami','Green apple','Toasted vanilla'],
       cat:'Vodka', subcategory:'potato-vodka',
       country:'Poland', region:'Podlasie', city:'Krzesk',
       producer:'Chopin Distillery (Polmos Siedlce)', distilleryName:'Chopin Distillery',
@@ -1542,6 +1677,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Chopin is produced at the Chopin Distillery (Polmos Siedlce) in Krzesk, in the Podlasie region of eastern Poland, an agricultural area known for potato farming.',
       timeline:[['Today','Produced at the Chopin Distillery, Krzesk, Podlasie']],
       sources:[
+        {url:'https://www.nataliemaclean.com/wine-reviews/chopin-potato-vodka/94234',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Chopin-Potato-Vodka-Poland-03-01-2025.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/chopin-potato-vodka/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://chopinvodka.com/product/chopin-potato-vodka/',sourceType:'producer',coversFields:['tasting']},
         {url:'https://en.wikipedia.org/wiki/Chopin_(vodka)',sourceType:'reference',coversFields:['identity','origin','production','strength']},
         {url:'https://www.caskers.com/chopin-potato-vodka/',sourceType:'retailer',coversFields:['production','strength']}
       ],
@@ -1553,6 +1692,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'haku-vodka', brand:'Haku', expression:'Japanese Craft Vodka', displayName:'Haku Vodka',
+      flavor:{Sweet:5,Oak:0,Spice:2,Fruit:3,Smoke:1,Earth:1,Herbal:3},
+      body:2, finish:3,
+      topNotes:['Floral rice','Pear blossom','Peppercorn tingle'],
       cat:'Vodka', subcategory:'vodka',
       country:'Japan', region:'Kagoshima', city:'Osumi',
       producer:'Suntory', distilleryName:'Osumi Distillery',
@@ -1572,6 +1714,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Haku is made by Suntory, with distillation at the Osumi Distillery in Kagoshima on Kyushu and blending and filtration at the Liquor Atelier in Osaka.',
       timeline:[['Today','Distilled at Osumi, Kagoshima; blended and filtered at the Liquor Atelier, Osaka']],
       sources:[
+        {url:'https://house.suntory.com/haku-vodka/haku-craft-vodka',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://distiller.com/spirits/haku-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/haku-vodka/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Haku-Vodka-Japan-03-01-2023.aspx',sourceType:'review',coversFields:['tasting']},
         {url:'https://house.suntory.com/haku-vodka',sourceType:'producer',coversFields:['identity','production','origin','strength']},
         {url:'https://house.suntory.com/craft-philosophy/haku-vodka',sourceType:'producer',coversFields:['production']}
       ],
@@ -1583,13 +1729,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Batch 3 · Agave — blanco / silver ─────────────
     sourcedDraftSpirit({
       id:'el-jimador-cristalino', brand:'el Jimador', expression:'Cristalino', displayName:'El Jimador Cristalino',
+      flavor:{Sweet:6,Oak:3,Spice:5,Fruit:4,Smoke:3,Earth:3,Herbal:3},
+      body:6, finish:7,
+      topNotes:['Vanilla bean','Campfire ash','Black pepper'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Brown-Forman Tequila México (NOM 1119)', distilleryName:'Casa Herradura',
       style:'Tequila Cristalino - 100% Blue Weber Agave - Reposado Base, Charcoal Filtered',
       proofN:80, ageText:'2 months',
       priceUsd:7, toastItemGuid:'2564383e-dfe8-4b43-9e7c-865077b6f32a',
-      topNotes:['Citrus and herbs','Flowers','Vanilla and caramel'],
       productionRows:[
         ['Agave','100% blue Weber agave, hand harvested',true],
         ['Class','Cristalino - a filtered reposado, not a filtered anejo',true],
@@ -1610,6 +1758,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2025','Cristalino rolled out in the United States']
       ],
       sources:[
+        {url:'https://www.wineenthusiast.com/buying-guide/el-jimador-tequila-cristalino/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.forbes.com/sites/emilyprice/2025/10/24/el-jimadors-cristalino-brings-a-clear-new-chapter-to-a-classic-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.eljimador.com/product/cristalino/',sourceType:'producer',coversFields:['tasting']},
         {url:'https://www.eljimador.com/product/cristalino/',sourceType:'producer',coversFields:['identity','production','age','tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/6438-el-jimador-reposado-cristalino',sourceType:'reference',coversFields:['identity','producer','origin','production']},
         {url:'https://www.agavematchmaker.com/distilleries/160-brown-forman-tequila-mexico-s-de-r-l-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
@@ -1624,6 +1775,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'el-luchador-blanco', brand:'El Luchador', expression:'Blanco', displayName:'El Luchador Blanco',
+      flavor:{Sweet:6,Oak:1,Spice:5,Fruit:4,Smoke:1,Earth:6,Herbal:3},
+      body:6, finish:6,
+      topNotes:['Cooked agave','Saline citrus','Sweet cinnamon'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Arandas',
       producer:'Tequila Galindo (NOM 1517)', distilleryName:'Tequila Galindo',
@@ -1646,6 +1800,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2022','Relaunched in March with four expressions, including a 55% ABV Still Strength Blanco']
       ],
       sources:[
+        {url:'https://www.besttastingspirits.com/review-el-luchador-tequila-blanco/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['tasting']},
         {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['identity','lineup','strength']},
         {url:'https://www.agavematchmaker.com/distilleries/255-tequila-galindo-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin','production']},
         {url:'https://www.fredminnick.com/2022/03/01/el-luchador-tequila-relaunches-with-four-new-expressions/',sourceType:'review',coversFields:['lineup','strength','history']},
@@ -1661,13 +1817,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'mi-campo-blanco', brand:'Mi Campo', expression:'Blanco', displayName:'Mi Campo Blanco',
+      flavor:{Sweet:7,Oak:3,Spice:4,Fruit:6,Smoke:0,Earth:3,Herbal:3},
+      body:6, finish:6,
+      topNotes:['Orange blossom','Honey coconut','Black pepper'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco',
       producer:'Tequilera Don Roberto (NOM 1437)', distilleryName:'Tequilera Don Roberto',
       style:'Tequila Blanco - 100% Blue Weber Agave - Rested in White Wine Barrels',
       proofN:80, ageText:'Up to 1 month',
       priceUsd:null, toastItemGuid:null,
-      topNotes:['Fresh coconut and almond','Sweet orange and green apple','Orange blossom and white pepper'],
       productionRows:[
         ['Agave','100% blue Weber agave, matured seven years before harvest',true],
         ['Class','Tequila Blanco, barrel rested',true],
@@ -1684,6 +1842,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Mi Campo was introduced to the US market by Constellation Brands on 1 November 2018, blended by master blender Juan José Diaz Nieves.',
       timeline:[['2018','Launched in the US by Constellation Brands']],
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/6445-tequila-mi-campo-blanco',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://tequilamicampo.com/products/blanco',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://agavespiritsjourney.com/2024/10/26/tasting-notes-review-tequila-mi-campo-blanco/',sourceType:'review',coversFields:['tasting']},
         {url:'https://tequilamicampo.com/products/blanco',sourceType:'producer',coversFields:['identity','production','tasting']},
         {url:'https://www.cbrands.com/blogs/press-releases/driving-innovation-in-the-fastest-growing-spirits-category-tequila-mi-campo-launches-in-the-u-s',sourceType:'producer',coversFields:['strength','production','history','tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/6445-tequila-mi-campo-blanco',sourceType:'reference',coversFields:['producer','origin']}
@@ -1698,6 +1859,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'milagro-silver', brand:'Milagro', expression:'Silver', displayName:'Milagro Silver',
+      flavor:{Sweet:6,Oak:1,Spice:5,Fruit:5,Smoke:1,Earth:5,Herbal:5},
+      body:5, finish:5,
+      topNotes:['Sweet agave','Citrus lime','Green herbs'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Tepatitlán de Morelos',
       producer:'Tequilera Milagro (NOM 1559)', distilleryName:'Tequilera Milagro',
@@ -1719,6 +1883,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Milagro was founded in 1997 by Daniel Schneeweiss and Moises Guindi, and is now owned by William Grant & Sons.',
       timeline:[['1997','Founded by Daniel Schneeweiss and Moises Guindi']],
       sources:[
+        {url:'https://www.besttastingspirits.com/review-milagro-tequila-silver/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.spiritsreview.com/reviews-tequila-milagro-silver.html',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/milagro-silver/',sourceType:'reference',coversFields:['tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2624-milagro-silver',sourceType:'reference',coversFields:['identity','producer','origin','strength','production']},
         {url:'https://www.agavematchmaker.com/distilleries/287-tequilera-milagro-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/2270/milagro-silver',sourceType:'reference',coversFields:['strength','origin','ownership','history']}
@@ -1733,13 +1900,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'tres-agaves-organic-blanco', brand:'Tres Agaves', expression:'Organic Blanco', displayName:'Tres Agaves Organic Blanco',
+      flavor:{Sweet:4,Oak:0,Spice:5,Fruit:4,Smoke:0,Earth:6,Herbal:6},
+      body:5, finish:6,
+      topNotes:['Cooked agave','Lime zest','Mineral salinity'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:"Tequilera TAP's (NOM 1614)", distilleryName:"Tequilera TAP's",
       style:'Tequila Blanco - 100% Blue Weber Agave - Certified Organic, Unaged',
       proofN:80, ageText:'Unaged', minYears:0, maxYears:0,
       priceUsd:7, toastItemGuid:'8d4a2ff0-9fa2-4860-9147-eeccf229b755',
-      topNotes:['Citrus','Herbal','Bright, clean agave'],
       productionRows:[
         ['Agave','100% blue Weber agave, single-source certified organic',true],
         ['Class','Tequila Blanco (unaged), USDA Organic',true],
@@ -1762,6 +1931,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2018','Iliana Partida appointed master distiller']
       ],
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/6613-tres-agaves-blanco-organic',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Tres-Agaves-Organic-Blanco-Tequila-Mexico-05-01-2019.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tequilareport.com/p/tres-agaves-blanco-tequila-review',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.tresagaves.com/tequila/',sourceType:'producer',coversFields:['identity','origin','organic','tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/6613-tres-agaves-blanco-organic',sourceType:'reference',coversFields:['producer','origin','strength','production']},
         {url:'https://en.wikipedia.org/wiki/Tres_Agaves',sourceType:'reference',coversFields:['history','ownership']}
@@ -1776,13 +1948,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'1800-silver', brand:'1800', expression:'Silver', displayName:'1800 Silver',
+      flavor:{Sweet:3,Oak:2,Spice:6,Fruit:3,Smoke:0,Earth:5,Herbal:5},
+      body:3, finish:4,
+      topNotes:['Black pepper','Green vegetal','Angelica root'],
       cat:'Agave', subcategory:'blanco-silver',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
       style:'Tequila Blanco - 100% Blue Weber Agave - Unaged',
       proofN:80, ageText:'Unaged', minYears:0, maxYears:0,
       priceUsd:8, toastItemGuid:'62a16d10-23d7-4892-85d1-f289841381ab',
-      topNotes:['Fruit and black peppercorn','Sweet prune','Roasted pepper'],
       productionRows:[
         ['Agave','100% blue Weber agave',true],
         ['Class','Tequila Blanco',true],
@@ -1803,6 +1977,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2008','Proximo Spirits takes over US distribution']
       ],
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/2450-1800-silver',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.masterofmalt.com/tequila/1800/1800-silver-tequila/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/1800-silver-100-agave-tequila-nom-1122-crt/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.1800tequila.com/products/blanco',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2450-1800-silver',sourceType:'reference',coversFields:['producer','origin','strength','production']},
         {url:'https://en.wikipedia.org/wiki/1800_Tequila',sourceType:'reference',coversFields:['history','ownership']}
@@ -1817,13 +1994,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Batch 3 · Agave — reposado ─────────────
     sourcedDraftSpirit({
       id:'adictivo-reposado', brand:'Adictivo', expression:'Reposado', displayName:'Adictivo Reposado',
+      flavor:{Sweet:7,Oak:5,Spice:4,Fruit:3,Smoke:1,Earth:3,Herbal:1},
+      body:6, finish:7,
+      topNotes:['Honey butterscotch','Cooked agave','Strong oak'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'El Arenal',
       producer:'Gildardo Partida Hermosillo (NOM 1653)', distilleryName:'Gildardo Partida Hermosillo',
       style:'Tequila Reposado - 100% Blue Weber Agave - French Oak',
       proofN:80, ageText:'8 months',
       priceUsd:12.5, toastItemGuid:'e1f01b15-f2e0-4223-bbc5-dd1245d5eeb9',
-      topNotes:['Cooked agave','Vanilla bean','Butterscotch'],
       productionRows:[
         ['Agave','100% blue Weber agave',true],
         ['Class','Tequila Reposado',true],
@@ -1838,6 +2017,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Adictivo is produced in El Arenal in the Los Valles lowlands of Jalisco from 100% blue Weber agave, under master distiller Gildardo Partida. The reposado is matured in French oak rather than the more common ex-bourbon American oak, which retailer listings put at roughly eight months. Agave Matchmaker records the brand moving across three distillery registrations over its life - NOM 1477, then 1560, then 1653 - so the NOM can differ bottle to bottle.',
       whyShort:'A French-oak reposado from El Arenal, in the Jalisco lowlands.',
       sources:[
+        {url:'https://siptequila.com/products/adictivo-doble-reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.blackwellswines.com/products/adictivo-doble-reposado-tequila',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://tastersclub.com/products/adictivo-reposado',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/5755-adictivo-tequila-reposado',sourceType:'reference',coversFields:['producer','origin','identity']},
         {url:'https://www.agavematchmaker.com/brands/1952-adictivo-tequila',sourceType:'reference',coversFields:['producer']},
         {url:'https://theliquorbarn.com/products/adictivo-reposado-750ml',sourceType:'retailer',coversFields:['strength','age','tasting']},
@@ -1855,6 +2037,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'agavales-reposado', brand:'Agavales', expression:'Reposado', displayName:'Agavales Reposado',
+      flavor:{Sweet:6,Oak:3,Spice:6,Fruit:4,Smoke:2,Earth:4,Herbal:3},
+      body:6, finish:6,
+      topNotes:['Clove cinnamon','Caramel apricot','Oak smoke'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'Destiladora del Valle de Tequila / Casa Maestri (NOM 1438)', distilleryName:'Destiladora del Valle de Tequila',
@@ -1875,6 +2060,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Agavales is bottled at NOM 1438, Destiladora del Valle de Tequila - the Casa Maestri contract distillery in the town of Tequila. The agave is blended from both Los Altos and Tequila Valley plantings, cooked in a mix of masonry ovens and autoclaves, milled on a roller mill, fermented in stainless steel and double distilled, then rested about six months in ex-bourbon Kentucky oak. Despite its value price it is a 100% agave tequila rather than a mixto.',
       whyShort:'A 100% agave value reposado from Casa Maestri, rested in ex-bourbon oak.',
       sources:[
+        {url:'https://www.agavematchmaker.com/agave_spirits/2528-agavales-reposado-tequila',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Agavales-Reposado-Tequila-Mexico-06-17-2025.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tequila.net/tequila-reviews/reposados/agavales-tequila-reposado.html',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2528-agavales-reposado-tequila',sourceType:'reference',coversFields:['producer','origin','strength','production']},
         {url:'https://www.tequila.net/tequila-reviews/reposados/agavales-tequila-reposado.html',sourceType:'reference',coversFields:['age','cask','production']}
       ],
@@ -1887,13 +2075,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'el-luchador-reposado', brand:'El Luchador', expression:'Reposado', displayName:'El Luchador Reposado',
+      flavor:{Sweet:5,Oak:3,Spice:5,Fruit:5,Smoke:1,Earth:5,Herbal:5},
+      body:5, finish:5,
+      topNotes:['Roasted agave','Bright citrus','Nutty earthy'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco',
       producer:'David Ravandi / 123 Spirits', distilleryName:'Pending source review',
       style:'Tequila Reposado - 100% Agave - White Oak, 4 to 6 Months',
       proofN:80, ageText:'4-6 months',
       priceUsd:10.25, toastItemGuid:'6b7368fd-086c-42a3-a2fe-a30cb80ca148',
-      topNotes:['Roasted agave','Bright citrus','Vanilla'],
       productionRows:[
         ['Agave','100% agave',true],
         ['Class','Tequila Reposado',true],
@@ -1905,6 +2095,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'El Luchador is a tequila range from David Ravandi, the founder behind 123 Organic Tequila, named for the masked wrestlers of lucha libre. The producer lists four expressions - a Still Strength Blanco at 110 proof, a standard Blanco, a Reposado and an Anejo - and describes the Reposado as aged four to six months in white oak. The high-proof bottling in this range is the Blanco, not the Reposado.',
       whyShort:'A white-oak reposado from the founder of 123 Organic Tequila.',
       sources:[
+        {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.oldtowntequila.com/el-luchador-reposado-tequila/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://distiller.com/spirits/el-luchador-reposado-tequila/tastes',sourceType:'review',coversFields:['tasting']},
         {url:'https://elluchadortequila.com/',sourceType:'producer',coversFields:['identity','age','cask','tasting']},
         {url:'https://www.oldtowntequila.com/el-luchador-reposado-tequila/',sourceType:'retailer',coversFields:['strength','age']},
         {url:'https://www.agavematchmaker.com/brands/926-123-organic-tequila',sourceType:'reference',coversFields:['producer','origin']}
@@ -1914,11 +2107,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         'NOM unresolved. One retailer lists NOM 1517 for the Reposado; the sibling 123 Organic brand is NOM 1480. Neither was confirmed by the producer, so no NOM is recorded.',
         'Highlands versus lowlands is disputed and is not asserted here: retailer copy says highlands, Agave Matchmaker places the related 123 Organic brand in Los Valles.',
         'The producer site root fetched but its deeper spec pages 404, so no agave source, oven, mill or still detail was obtainable.',
+        'Cask type conflicts between sources: the producer and retailers say white oak for 4 to 6 months, while an independent review says ex-Puligny-Montrachet wine casks - which matches the 2022 relaunch press describing French oak that had held Puligny-Montrachet. Both are recorded; neither is presented as settled.',
         'Do not print "USDA Organic" for this bottle. Organic certification is described for the 123 Spirits portfolio in secondary coverage, not confirmed on a producer page for this expression.'
       ]
     }),
     sourcedDraftSpirit({
       id:'jose-1800-reposado', brand:'1800', expression:'Reposado', displayName:'1800 Reposado',
+      flavor:{Sweet:7,Oak:5,Spice:6,Fruit:5,Smoke:2,Earth:3,Herbal:3},
+      body:6, finish:7,
+      topNotes:['Toasted coconut','Butterscotch vanilla','White pepper'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
@@ -1945,6 +2142,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2004','Silver and Reposado expressions added']
       ],
       sources:[
+        {url:'https://www.1800tequila.com/products/reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1944/1800-reposado-tequila-38',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.tequilareport.com/p/1800-reposado-tequila-review',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2449-1800-reposado',sourceType:'reference',coversFields:['producer','origin','strength','production']},
         {url:'https://www.diffordsguide.com/producers/602/la-rojena-distillery-tequila-town-nom-1122',sourceType:'reference',coversFields:['producer','origin','production','cask']},
         {url:'https://en.wikipedia.org/wiki/1800_(tequila)',sourceType:'reference',coversFields:['history','ownership']}
@@ -1959,13 +2159,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'mi-campo-reposado', brand:'Mi Campo', expression:'Reposado', displayName:'Mi Campo Reposado',
+      flavor:{Sweet:7,Oak:3,Spice:4,Fruit:7,Smoke:1,Earth:2,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Honey maple','Ripe banana','White chocolate'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco',
       producer:'Tequilera Don Roberto (NOM 1437)', distilleryName:'Tequilera Don Roberto',
       style:'Tequila Reposado - 100% Blue Weber Agave - Used Red Wine Barrels',
       proofN:80, ageText:'Up to 1 year',
       priceUsd:null, toastItemGuid:null,
-      topNotes:['Cooked agave and ripe banana','Honey maple','White chocolate'],
       productionRows:[
         ['Agave','100% blue Weber agave, matured seven years',true],
         ['Class','Tequila Reposado',true],
@@ -1982,6 +2184,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Mi Campo was introduced to the US market by Constellation Brands in 2018.',
       timeline:[['2018','Launched in the US by Constellation Brands']],
       sources:[
+        {url:'https://tequilamicampo.com/products/reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.cbrands.com/blogs/press-releases/driving-innovation-in-the-fastest-growing-spirits-category-tequila-mi-campo-launches-in-the-u-s',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://marcasdetequila.com/mi-campo-reposado-tequila-review/',sourceType:'review',coversFields:['tasting']},
         {url:'https://tequilamicampo.com/products/reposado',sourceType:'producer',coversFields:['identity','cask','production','tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/6446-tequila-mi-campo-reposado',sourceType:'reference',coversFields:['producer','origin']},
         {url:'https://woodencork.com/products/mi-campo-reposado',sourceType:'retailer',coversFields:['strength','cask']}
@@ -1997,13 +2202,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'milagro-reposado', brand:'Milagro', expression:'Reposado', displayName:'Milagro Reposado',
+      flavor:{Sweet:6,Oak:2,Spice:5,Fruit:3,Smoke:1,Earth:4,Herbal:4},
+      body:5, finish:5,
+      topNotes:['Vanilla caramel','Cooking spices','Black pepper'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Tepatitlán de Morelos',
       producer:'Tequilera Milagro (NOM 1559)', distilleryName:'Tequilera Milagro',
       style:'Tequila Reposado - 100% Blue Agave - 4 Months American Oak',
       proofN:80, ageText:'4 months',
       priceUsd:8, toastItemGuid:'02b44e5b-bd59-4ea3-a917-ec6019f8e915',
-      topNotes:['Vanilla','Caramel','Black pepper'],
       productionRows:[
         ['Agave','100% blue agave',true],
         ['Class','Tequila Reposado',true],
@@ -2018,6 +2225,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Milagro is bottled at its own distillery, NOM 1559 in Tepatitlán de Morelos, in the southern Jalisco highlands. The producer states the reposado rests four months in American oak and bottles at 40% ABV. Agave Matchmaker records stone and brick ovens, roller-mill extraction, stainless fermentation, and distillation in stainless pot and column stills at that distillery.',
       whyShort:'A highland reposado, four months in American oak, from its own distillery.',
       sources:[
+        {url:'https://milagrotequila.com/our-tequilas/reposado',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://distiller.com/spirits/milagro-reposado-tequila/tastes',sourceType:'review',coversFields:['tasting']},
+        {url:'https://curiada.com/products/milagro-reposado-tequila',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://milagrotequila.com/our-tequilas/reposado',sourceType:'producer',coversFields:['identity','strength','age','cask','tasting']},
         {url:'https://www.agavematchmaker.com/distilleries/287-tequilera-milagro-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin','production']}
       ],
@@ -2029,6 +2239,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'terralta-reposado', brand:'Terralta', expression:'Reposado', displayName:'Terralta Reposado',
+      flavor:{Sweet:6,Oak:3,Spice:4,Fruit:4,Smoke:1,Earth:6,Herbal:2},
+      body:6, finish:6,
+      topNotes:['Vanilla caramel','Mineral earth','Soft pepper spice'],
       cat:'Agave', subcategory:'reposado',
       country:'Mexico', region:'Jalisco', city:'Jesús María',
       producer:'Destilería El Pandillo (NOM 1579)', distilleryName:'Destilería El Pandillo',
@@ -2050,6 +2263,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Terralta is made at Destilería El Pandillo in Jesús María, in the southern Jalisco highlands, under Felipe Camarena. The line is defined by its water: where El Pandillo\'s other brands blend rain and spring water, Terralta uses only the distillery\'s deep well, roughly 150 metres down. Agave Matchmaker records 100% blue Weber agave cooked in stone and brick ovens, milled on a tahona, double distilled in copper pot stills, and aged in used American white oak.',
       whyShort:'A tahona-milled highland reposado from Felipe Camarena\'s El Pandillo.',
       sources:[
+        {url:'https://www.oldtowntequila.com/terralta-reposado-tequila/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/5785-terralta-tequila-reposado',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://cwspirits.com/collections/terralta-reposado',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://www.agavematchmaker.com/agave_spirits/5785-terralta-tequila-reposado',sourceType:'reference',coversFields:['producer','origin','production','cask']},
         {url:'https://www.agavematchmaker.com/brands/1953-tequila-terralta',sourceType:'reference',coversFields:['producer','origin']},
         {url:'https://siptequila.com/collections/terralta-tequila',sourceType:'retailer',coversFields:['production','strength','water']}
@@ -2067,13 +2283,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Batch 3 · Agave — añejo / specialty, and vodka ─────────────
     sourcedDraftSpirit({
       id:'1800-anejo-tequila', brand:'1800', expression:'Añejo', displayName:'1800 Anejo Tequila',
+      flavor:{Sweet:6,Oak:8,Spice:6,Fruit:4,Smoke:3,Earth:4,Herbal:1},
+      body:7, finish:7,
+      topNotes:['Oaky vanilla','Toffee nut','Peppery char'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco', city:'Tequila',
       producer:'Casa Cuervo (NOM 1122)', distilleryName:'La Rojeña',
       style:'Tequila Añejo - 100% Blue Weber Agave - 12 to 16 Months, American and French Oak',
       proofN:80, ageText:'12-16 months', minYears:1, maxYears:1,
       priceUsd:11, toastItemGuid:'2c8baacb-0214-48c9-b957-fbf6fe2c6501',
-      topNotes:['Oaky vanilla','Toffee','Peppery spice'],
       productionRows:[
         ['Agave','100% blue Weber agave from the Tequila Valley',true],
         ['Agave Maturity','5.5 to 12 years before harvest, hand cut with a coa'],
@@ -2095,6 +2313,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2008','Proximo Spirits begins US distribution']
       ],
       sources:[
+        {url:'https://www.1800tequila.com/products/anejo',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.agavematchmaker.com/agave_spirits/2451-1800-anejo',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/1517/1800-anejo-tequila-38',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.spiritsreview.com/reviews-tequila-1800-anejo.htm',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/1800-Anejo-Tequila-Mexico-06-01-2022.aspx',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.1800tequila.com/products/anejo',sourceType:'producer',coversFields:['strength','age','cask','tasting']},
         {url:'https://www.1800tequila.com/pages/tequila-facts',sourceType:'producer',coversFields:['origin','production','history']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2451-1800-anejo',sourceType:'reference',coversFields:['producer','origin','strength','production']},
@@ -2110,13 +2333,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'21-seeds-cucumber-jalapeno', brand:'21Seeds', expression:'Cucumber Jalapeño', displayName:'21 Seeds Cucumber Jalapeno',
+      flavor:{Sweet:5,Oak:0,Spice:7,Fruit:4,Smoke:0,Earth:4,Herbal:9},
+      body:4, finish:6,
+      topNotes:['Crisp cucumber','Jalapeño heat','Fresh lime'],
       cat:'Agave', subcategory:'flavored-infused',
       country:'Mexico', region:'Jalisco',
       producer:'Destiladora del Valle de Tequila / Casa Maestri (NOM 1438)', distilleryName:'Destiladora del Valle de Tequila',
       style:'Infused Blanco Tequila - Cucumber and Jalapeño - 35% ABV',
       proofN:70, ageText:'Unaged',
       priceUsd:8.75, toastItemGuid:'df3bee27-5831-4280-ad55-e30a98b07cc0',
-      topNotes:['Cucumber','Jalapeño spice'],
       productionRows:[
         ['Base','Blanco tequila',true],
         ['Distillation','Double distilled'],
@@ -2134,6 +2359,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2022','Acquired by Diageo']
       ],
       sources:[
+        {url:'https://www.thebar.com/en-us/products/21seeds-cucumber-jalapeno-750-ml',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.drinkhacker.com/2025/05/21/review-21-seeds-valencia-orange-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.besttastingspirits.com/review-21-seeds-cucumber-jalapeno-tequila/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/21-Seeds-Cucumber-Jalepeno-Tequila-Mexico-05-01-2019.aspx',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.thebar.com/en-us/products/21seeds-cucumber-jalapeno-750-ml',sourceType:'producer',coversFields:['strength','identity','production','tasting']},
         {url:'https://www.agavematchmaker.com/brands/2296-21seeds',sourceType:'reference',coversFields:['producer','origin','history']},
         {url:'https://www.finewineandgoodspirits.com/21-seeds-cucumber-jalapeno-tequila-blanco/product/000098763',sourceType:'retailer',coversFields:['strength']}
@@ -2148,13 +2377,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'123-organic-anejo', brand:'123 Organic', expression:'Añejo (Tres)', displayName:'123 Organic Anejo',
+      flavor:{Sweet:6,Oak:6,Spice:6,Fruit:5,Smoke:3,Earth:6,Herbal:3},
+      body:6, finish:7,
+      topNotes:['Cooked agave','Toasted oak','Warm tobacco'],
       cat:'Agave', subcategory:'anejo-and-specialty',
       country:'Mexico', region:'Jalisco', city:'Amatitán',
       producer:'Tequila Las Americas (NOM 1480)', distilleryName:'Tequila Las Americas',
       style:'Tequila Añejo - Certified Organic - American White Oak',
       proofN:80, ageText:'18 months', minYears:1, maxYears:1,
       priceUsd:18.5, toastItemGuid:'0602b7a7-cd05-48d2-928f-4aae4012cee5',
-      topNotes:['Cooked agave','Toasted oak','Vanilla'],
       productionRows:[
         ['Agave','100% blue Weber agave from the Valley of Tequila',true],
         ['Class','Tequila Añejo - the range runs Uno (blanco), Dos (reposado), Tres (añejo), Diablito (extra añejo)',true],
@@ -2172,6 +2403,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       whyShort:'The "Tres" - a USDA and EU organic anejo from Amatitán, in American white oak.',
       history:'123 Organic Tequila was created by tequilero David Ravandi as an early certified-organic tequila. Bottles are hand-blown from recycled glass and labelled on recycled paper printed with soy ink.',
       sources:[
+        {url:'https://siptequila.com/products/123-organic-tequila-anejo',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.theliquorbarn.com/123-organic-tequila-3-anejo/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://distiller.com/spirits/1-2-3-organic-anejo-tres-tequila/tastes',sourceType:'review',coversFields:['tasting']},
+        {url:'https://bottlebuzz.com/products/123-organic-tequila-anejo',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://123tequila.com/',sourceType:'producer',coversFields:['identity','range','organic']},
         {url:'https://www.agavematchmaker.com/agave_spirits/2445-123-organic-tequila-anejo',sourceType:'reference',coversFields:['producer','origin','strength','production','cask']},
         {url:'https://www.agavematchmaker.com/distilleries/257-tequila-las-americas-s-a-de-c-v',sourceType:'reference',coversFields:['producer','origin']},
@@ -2187,6 +2422,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'stoli-vodka', brand:'Stoli', expression:'Vodka', displayName:'Stoli Vodka',
+      flavor:{Sweet:5,Oak:0,Spice:5,Fruit:3,Smoke:0,Earth:2,Herbal:2},
+      body:3, finish:3,
+      topNotes:['Marshmallow','Citrus peel','Balanced pepper'],
       cat:'Vodka', subcategory:'vodka',
       country:'Latvia', city:'Riga',
       producer:'SPI Group', distilleryName:'Latvijas Balzams',
@@ -2211,6 +2449,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2022','Rebranded from Stolichnaya to Stoli']
       ],
       sources:[
+        {url:'https://www.lcbo.com/en/stolichnaya-vodka-225243',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.systembolaget.se/produkt/sprit/stoli-9502/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://cwspirits.com/products/stolichnaya-vodka-80-proof',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://storka.com/products/stolichnaya-vodka',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://en.wikipedia.org/wiki/Stolichnaya',sourceType:'reference',coversFields:['ownership','origin','production','history']},
         {url:'https://vinepair.com/articles/stolichnaya-vodka-elit-stoli-guide/',sourceType:'reference',coversFields:['origin','production','history']}
       ],
@@ -2224,13 +2466,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'double-cross-vodka', brand:'Double Cross', expression:'Vodka', displayName:'Double Cross Vodka',
+      flavor:{Sweet:4,Oak:0,Spice:4,Fruit:4,Smoke:0,Earth:3,Herbal:2},
+      body:2, finish:4,
+      topNotes:['Citrus lemon','White chocolate','Clean minerality'],
       cat:'Vodka', subcategory:'vodka',
       country:'Slovakia', region:'Tatra Mountains', city:'Stará Ľubovňa',
       producer:'DCV Investors', distilleryName:'Pending source review',
       style:'Slovak Estate Winter Wheat Vodka - Seven Times Distilled and Filtered',
       proofN:80, ageText:'Unaged',
       priceUsd:9, toastItemGuid:'4d76da46-c944-4b68-8aee-1f81aa8246bb',
-      topNotes:['Citrus','White chocolate','Clean minerality'],
       productionRows:[
         ['Base','Estate-grown Slovak winter wheat',true],
         ['Water','Aquifers roughly 200 feet beneath the Tatra Mountains',true],
@@ -2245,6 +2489,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Double Cross was introduced in 2008 and took gold medals at that year\'s San Francisco World Spirits Competition for both taste and package design.',
       timeline:[['2008','Introduced; double gold at the San Francisco World Spirits Competition']],
       sources:[
+        {url:'https://www.doublecrossvodka.com/products/double-cross-vodka',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.besttastingspirits.com/review-double-cross-vodka/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://therumhowlerblog.com/vodka-reviews/double-cross-vodka/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.doublecrossvodka.com/',sourceType:'producer',coversFields:['identity','strength','production','tasting']},
         {url:'https://en.wikipedia.org/wiki/Double_Cross_Vodka',sourceType:'reference',coversFields:['origin','production','history']}
       ],
@@ -2257,13 +2504,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'boyd-bair-potato-vodka', brand:'Boyd & Blair', expression:'Potato Vodka', displayName:'Boyd & Blair Potato Vodka',
+      flavor:{Sweet:5,Oak:0,Spice:4,Fruit:3,Smoke:0,Earth:6,Herbal:1},
+      body:4, finish:4,
+      topNotes:['Roast chestnut','Black pepper','Honeyed toffee'],
       cat:'Vodka', subcategory:'potato-vodka',
       country:'USA', region:'Pennsylvania', city:'Glenshaw',
       producer:'Pennsylvania Pure Distilleries', distilleryName:'Boyd & Blair / Pennsylvania Pure Distilleries',
       style:'Pennsylvania Potato Vodka - Copper Pot Still - Hearts Only',
       proofN:80, ageText:'Unaged',
       priceUsd:6.5, toastItemGuid:'bac26ec1-0f61-4f15-bdc7-30db4a988120',
-      topNotes:['Vanilla','Black pepper','Honey'],
       productionRows:[
         ['Base','Pennsylvania-grown potatoes from Somerset, Butler and Schuylkill Counties',true],
         ['Fermentation','Champagne yeast'],
@@ -2284,6 +2533,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2011','Ranked highest vodka and 22nd spirit overall by Spirit Journal']
       ],
       sources:[
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/2867/boyd-and-blair-potato-vodka',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.wineenthusiast.com/buying-guide/boyd-blair-potato-vodka/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.boydandblair.com/potato-vodka',sourceType:'producer',coversFields:['tasting']},
         {url:'https://www.boydandblair.com/potato-vodka',sourceType:'producer',coversFields:['base','production','strength','origin']},
         {url:'https://en.wikipedia.org/wiki/Boyd_%26_Blair',sourceType:'reference',coversFields:['history','origin','strength']},
         {url:'https://padistillersguild.com/profile/boyd-blair/',sourceType:'reference',coversFields:['producer','production']},
@@ -2299,6 +2551,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'vodka-grey-whale', brand:'Gray Whale', expression:'Vodka', displayName:'Vodka Grey Whale',
+      flavor:{Sweet:4,Oak:0,Spice:1,Fruit:4,Smoke:0,Earth:1,Herbal:1},
+      body:3, finish:3,
+      topNotes:['Soft vanilla','Citrus brightness','Creamy texture'],
       cat:'Vodka', subcategory:'vodka',
       country:'USA', region:'California',
       producer:'Gray Whale Spirits Co.', distilleryName:'Gray Whale Spirits Co.',
@@ -2316,6 +2571,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Gray Whale Vodka is made in California from a base the producer states is 90% grain and 10% California grapes, without additives or added sugar, and bottled at 40% ABV. The brand ties its identity to the California gray whale migration and states that every bottle sold supports ocean protection.',
       whyShort:'A California vodka on a grain-and-grape base, made without additives.',
       sources:[
+        {url:'https://graywhalespirits.com/pages/vodka',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://goodspiritsnews.wordpress.com/2026/05/12/gsn-review-gray-whale-vodka/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.totalwine.com/spirits/vodka/vodka/gray-whale-vodka/p/2126278101',sourceType:'retailer',coversFields:['tasting']},
         {url:'https://graywhalespirits.com/pages/faqs-contact-us',sourceType:'producer',coversFields:['strength','base']},
         {url:'https://graywhalespirits.com/pages/vodka',sourceType:'producer',coversFields:['base','additives']},
         {url:'https://graywhalespirits.com/pages/about',sourceType:'producer',coversFields:['identity','positioning']}
@@ -2332,13 +2590,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Batch 3 · Rum — white, spiced, dark ─────────────
     sourcedDraftSpirit({
       id:'angostura-white-oak', brand:'Angostura', expression:'White Oak', displayName:'Angostura White Oak',
+      flavor:{Sweet:6,Oak:3,Spice:1,Fruit:5,Smoke:1,Earth:2,Herbal:0},
+      body:4, finish:4,
+      topNotes:['Coconut','Molasses','Plantain'],
       cat:'Rum', subcategory:'white-and-silver',
       country:'Trinidad and Tobago',
       producer:'Angostura Limited', distilleryName:'Angostura Limited',
       style:'Trinidadian Light Rum - Molasses, Column Distilled',
       proofN:80, ageText:'Pending source review',
       priceUsd:6, toastItemGuid:'806c5186-02d9-460c-91d8-8184489a6a18',
-      topNotes:['Coconut','Molasses','Burnt sugar'],
       productionRows:[
         ['Base','Sugar cane molasses',true],
         ['Fermentation','Proprietary yeast propagated from a 1940s culture, 24 to 36 hours'],
@@ -2352,6 +2612,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Angostura White Oak is made in Trinidad by Angostura Limited, which operates the country\'s only remaining rum distillery. The producer describes it as a light-bodied blend fermented and distilled from sugar cane molasses. Angostura\'s distillery-wide process is continuous column distillation using a house yeast culture dating to the 1940s, followed by maturation in once-used bourbon American white oak. Bottled at 40% ABV.',
       whyShort:'Column-distilled Trinidadian molasses rum from the island\'s last distillery.',
       sources:[
+        {url:'https://www.lcbo.com/en/angostura-white-oak-rum-30333',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://angostura.com/brands/rums/standard-rums/angostura-white-oak/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.besttastingspirits.com/review-angostura-white-oak-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://angostura.com/brands/rums/standard-rums/angostura-white-oak/',sourceType:'producer',coversFields:['identity','base']},
         {url:'https://angostura.com/our-business/rum-making-process/',sourceType:'producer',coversFields:['production','cask']},
         {url:'https://www.lcbo.com/en/angostura-white-oak-rum-30333',sourceType:'retailer',coversFields:['strength','origin','tasting']},
@@ -2367,13 +2630,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'bacardi-dragonberry', brand:'Bacardi', expression:'Dragonberry', displayName:'Bacardi Dragonberry',
+      flavor:{Sweet:8,Oak:0,Spice:3,Fruit:8,Smoke:0,Earth:0,Herbal:0},
+      body:3, finish:3,
+      topNotes:['Strawberry','Dragon fruit','Candy sweetness'],
       cat:'Rum', subcategory:'spiced-and-flavored',
       country:'Puerto Rico',
       producer:'Bacardi Limited', distilleryName:'Bacardi',
       style:'Flavoured Rum - Strawberry and Dragon Fruit - 35% ABV',
       proofN:70, ageText:'NAS',
       priceUsd:7, toastItemGuid:'6f2146b9-f9dd-4130-a475-9347afdbd86c',
-      topNotes:['Dragon fruit','Strawberry'],
       productionRows:[
         ['Base','Sugar cane molasses, fermented with yeast and water',true],
         ['Flavouring','Dragon fruit and strawberry; method not disclosed by the producer',true],
@@ -2384,6 +2649,8 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'BACARDÍ Dragonberry is a flavoured rum combining dragon fruit with strawberry on a molasses base. US retail listings put it at 35% ABV, which is below the 40% the US standard of identity requires for the rum class - so it sits legally under the flavoured-spirits standard, designated by base spirit plus predominant flavours. Bacardi publishes no age or still detail for this expression.',
       whyShort:'A 35% ABV flavoured rum - legally a flavoured spirit rather than straight rum.',
       sources:[
+        {url:'https://www.bacardi.com/our-rums/dragonberry-rum/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://spiritsreview.com/reviews/bacardi-dragonberry/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.bacardi.com/us/en/our-rums/dragonberry-rum/',sourceType:'producer',coversFields:['identity','flavour','base','tasting']},
         {url:'https://www.bacardi.com/us/en/flavored-rums/',sourceType:'producer',coversFields:['identity']},
         {url:'https://theliquorbarn.com/products/bacardi-dragon-berry-750ml',sourceType:'retailer',coversFields:['strength','origin']},
@@ -2399,6 +2666,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'captain-morgan-private-stock', brand:'Captain Morgan', expression:'Private Stock', displayName:'Captain Morgan Private Stock',
+      flavor:{Sweet:8,Oak:4,Spice:6,Fruit:3,Smoke:0,Earth:1,Herbal:1},
+      body:6, finish:5,
+      topNotes:['Vanilla','Caramel','Cinnamon spice'],
       cat:'Rum', subcategory:'spiced-and-flavored',
       country:'USA', region:'U.S. Virgin Islands',
       producer:'Diageo', distilleryName:'Diageo USVI (brand-level attribution)',
@@ -2420,6 +2690,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2010','Diageo opens its own Captain Morgan distillery on St. Croix']
       ],
       sources:[
+        {url:'https://thelonecaner.com/captain-morgan-private-stock-review/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.thirtyonewhiskey.com/review-captain-morgan-private-stock/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://therumhowlerblog.com/rum-reviews/flavoured-spiced-rums/captain-morgan-private-stock/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://rumratings.com/rum/1034-captain-morgan-private-stock',sourceType:'reference',coversFields:['tasting']},
         {url:'https://www.captainmorgan.com/en-us/products/captain-morgan-private-stock-rum',sourceType:'producer',coversFields:['strength','classification']},
         {url:'https://en.wikipedia.org/wiki/Captain_Morgan',sourceType:'reference',coversFields:['ownership','history']},
         {url:'https://clui.org/ludb/site/captain-morgan-rum-distillery-us-virgin-islands',sourceType:'reference',coversFields:['origin']}
@@ -2433,19 +2707,21 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'bumbu-dark', brand:'Bumbu', expression:'The Original', displayName:'Bumbu Dark',
+      flavor:{Sweet:9,Oak:4,Spice:3,Fruit:5,Smoke:0,Earth:1,Herbal:1},
+      body:7, finish:5,
+      topNotes:['Butterscotch toffee','Dried apricot','Vanilla'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Barbados',
       producer:'Bumbu Rum Company / Sovereign Brands', distilleryName:'West Indies Rum Distillery (per Pernod Ricard)',
       style:'Barbados Rum With Natural Flavours - Spiced and Sweetened',
-      proofN:null, ageText:'Pending source review',
+      proofN:70, ageText:'Pending source review',
       priceUsd:9, toastItemGuid:'81953ac0-d66e-4c20-9661-753a95be4b1e',
-      topNotes:['Toffee','Dried apricot','Vanilla'],
       productionRows:[
         ['Class','Rum with Natural Flavors - the producer\'s own label wording. In the US the TTB classes it a rum specialty rather than rum',true],
         ['Base','Blended from Barbados rum',true],
         ['Blending','Distilled in small batches and blended by hand with hand-selected spices; the spices are not disclosed',true],
         ['Added Sugar','Measured well above what the rum class permits - a state monopoly lists 47 g/l on the 40% bottling, other measurements range to roughly 51 g/l',true],
-        ['Bottling Proof','PENDING - the shelf line said 85, which matches no Bumbu product; see limitations',true],
+        ['Bottling Proof','70 (35% ABV) - The Original, US bottling, confirmed off the bottle by Sean 2026-09-04',true],
         ['Distillery','West Indies Rum Distillery, Barbados, established 1893, per Pernod Ricard',true]
       ],
       prodTags:['Barbados','Spiced','Sweetened','Rum Specialty'],
@@ -2457,14 +2733,18 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2024','Bumbu joins the Pernod Ricard France portfolio']
       ],
       sources:[
+        {url:'https://www.systembolaget.se/produkt/sprit/bumbu-8163701/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://www.masterofmalt.com/rum/bumbu/bumbu-original-40-rum/',sourceType:'retailer',coversFields:['tasting']},
+        {url:'https://rumratings.com/rum/3660-bumbu-original',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.rumwonk.com/p/is-bumbu-rum-it-depends',sourceType:'review',coversFields:['tasting']},
         {url:'https://bumbu.sovereignbrands.com/pages/the-original',sourceType:'producer',coversFields:['identity','classification','strength','production']},
         {url:'https://www.pernod-ricard.com/en/brand/bumbu',sourceType:'producer',coversFields:['origin','ownership']},
         {url:'https://www.rumwonk.com/p/is-bumbu-rum-it-depends',sourceType:'reference',coversFields:['classification','sugar']},
         {url:'https://www.systembolaget.se/produkt/sprit/bumbu-8163701/',sourceType:'retailer',coversFields:['strength','sugar','tasting']}
       ],
       sourcingLimitations:[
-        'READ THE BOTTLE. "Bumbu Dark" is not a SKU the producer publishes. Bumbu lists exactly three products - The Original (35% ABV US, 40% outside North America), XO (40%) and Crème (15%). The shelf label most likely means The Original, which is merchandised in a dark bottle. Display name left unchanged.',
-        'THE ASSERTED 85 PROOF MATCHES NO BUMBU PRODUCT. proofN is left null rather than guess between a 70-proof US bottling and an 80-proof export one.',
+        'IDENTITY CONFIRMED. "Bumbu Dark" is not a SKU the producer publishes. Bumbu lists exactly three products - The Original (35% ABV US, 40% outside North America), XO (40%) and Crème (15%). Sean confirmed the bottle is The Original, which is merchandised in a dark bottle. Display name left unchanged as the venue label.',
+        'The shelf line asserted 85 proof, which matches no Bumbu product. Sean confirmed off the bottle on 2026-09-04 that this is The Original at 35% ABV / 70 proof, the US bottling. The old shelf line should be corrected.',
         'Bumbu never names a distillery. The West Indies Rum Distillery attribution comes from Pernod Ricard and is corroborated by an independent review. Bumbu XO, by contrast, is Panamanian - the range spans two origins, which is a common source of confusion.',
         'Added-sugar figures disagree and come from different bottlings - 47 g/l and 51 g/l from a state monopoly, roughly 40 g/l from an independent hydrometer test - and none exists for the 35% US bottling, so no single number is stated.',
         'Tasting notes describe the 40% European bottling via a state-monopoly listing, not the US product and not the producer.',
@@ -2473,13 +2753,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'kasama-small-batch-7-year', brand:'Kasama', expression:'Small Batch 7 Year', displayName:'Kasama Small Batch 7 Year',
+      flavor:{Sweet:6,Oak:4,Spice:3,Fruit:7,Smoke:0,Earth:2,Herbal:4},
+      body:6, finish:6,
+      topNotes:['Sweet pineapple','Vanilla','Sea salt'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Philippines',
       producer:'Kasama Rum', distilleryName:'Blender - source distillery undisclosed',
       style:'Philippine Cane-Juice Rum - 7 Years, Ex-Bourbon American Oak',
       proofN:80, ageText:'7 years', minYears:7, maxYears:7,
       priceUsd:6.5, toastItemGuid:'0fb40a27-2699-41fa-86ac-5ce4da3dea80',
-      topNotes:['Pineapple','Vanilla','Sea salt'],
       productionRows:[
         ['Base','Freshly pressed noble cane juice - a juice rum, not a molasses one',true],
         ['Maturation','7 years in ex-bourbon American oak, in the Philippines',true],
@@ -2493,6 +2775,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'Kasama was launched in 2021 by Alexandra Dorda, who is of Filipino and Polish descent and whose family previously created Belvedere and Chopin vodkas.',
       timeline:[['2021','Kasama launched by Alexandra Dorda']],
       sources:[
+        {url:'https://www.kasamarum.com/products/kasama-rum',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.rum-x.com/rums/10538/kasama-small-batch-rum/',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.whisky.com/whisky-database/details/kasama-small-batch-rum.html',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.allatsea.net/kasama-small-batch-philippines/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://letsdrinkit.com/kasama-small-batch-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.kasamarum.com/products/kasama-rum',sourceType:'producer',coversFields:['identity','age','base','cask','tasting']},
         {url:'https://rumx.com/en/rums/10538/kasama-small-batch-rum/',sourceType:'reference',coversFields:['strength','age','origin']},
         {url:'https://uproxx.com/life/kasama-small-batch-rum-review/',sourceType:'review',coversFields:['strength','production','origin']}
@@ -2508,13 +2795,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'papa-s-pilar-blonde', brand:"Papa's Pilar", expression:'Blonde', displayName:"Papa's Pilar Blonde",
+      flavor:{Sweet:6,Oak:4,Spice:2,Fruit:7,Smoke:0,Earth:1,Herbal:2},
+      body:6, finish:5,
+      topNotes:['Bright citrus','Apricot','Butterscotch'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'USA', region:'Florida', city:'Key West',
       producer:'Hemingway Rum Company', distilleryName:"Papa's Pilar Distillery - blending and bottling only",
       style:'Solera-Blended Light Rum - Bourbon Barrel and Oloroso Sherry Cask',
       proofN:84, ageText:'Solera - no age statement',
       priceUsd:6.5, toastItemGuid:'74f10a76-9858-482f-9968-73903acf365f',
-      topNotes:['Bright citrus','Almond','Butterscotch'],
       productionRows:[
         ['Base','Six hand-selected rums from the Dominican Republic, Panama, Venezuela and Florida',true],
         ['Blending','A proprietary solera process',true],
@@ -2526,6 +2815,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       why:'Papa\'s Pilar Blonde blends six rums sourced from the Dominican Republic, Panama, Venezuela and Florida, married in the Hemingway Rum Company\'s proprietary solera and given time in bourbon barrels and Spanish Oloroso sherry casks. It is bottled at 84 proof, above the usual strength for a light rum. Because it is a solera blend no single age applies, and the producer publishes no age statement. The brand is named for Ernest Hemingway\'s boat, Pilar.',
       whyShort:'A solera light rum from four countries, sherry- and bourbon-cask finished, at 84 proof.',
       sources:[
+        {url:'https://www.papaspilar.com/pages/papas-rum',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.diffordsguide.com/beer-wine-spirits/3818/papas-pilar-3-blonde',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://www.pastemagazine.com/drink/rum/papas-pilar-blonde-and-dark-rum-review',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkhacker.com/2018/11/27/review-papas-pilar-platinum-blonde-rum-and-bourbon-barrel-finished-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://www.papaspilar.com/pages/papas-rum',sourceType:'producer',coversFields:['strength','blend','cask','tasting']},
         {url:'https://www.papaspilar.com/products/papas-pilar-blonde-rum',sourceType:'producer',coversFields:['strength','identity']},
         {url:'https://www.shawross.com/portfolio-of-products/spirits/papas-pilar-blonde/',sourceType:'producer',coversFields:['blend','cask','tasting']}
@@ -2542,13 +2835,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     // ───────────── Batch 3 · Rum — premium, aged, specialty ─────────────
     sourcedDraftSpirit({
       id:'don-q-2x-aged-cognac-cask', brand:'Don Q', expression:'Double Aged Cognac Cask Finish', displayName:'Don Q 2x Aged Cognac Cask',
+      flavor:{Sweet:6,Oak:8,Spice:6,Fruit:5,Smoke:0,Earth:3,Herbal:1},
+      body:8, finish:8,
+      topNotes:['Brown sugar','Dried mango','Honeyed oak'],
       cat:'Rum', subcategory:'premium-and-aged',
       country:'Puerto Rico', city:'Ponce',
       producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
       style:'Puerto Rican Rum - American Oak Aged, French Oak Cognac Cask Finished',
       proofN:99.2, ageText:'5-8 years, then about 2 years finishing',
       priceUsd:19, toastItemGuid:'cc170791-4ab7-454c-8621-76d5c9cfe481',
-      topNotes:['Dried apricot','Vanilla','Milk chocolate'],
       productionRows:[
         ['Base','Molasses',true],
         ['Distillation','A blend of single-column and multiple-column distillates',true],
@@ -2567,6 +2862,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2009','Don Q distributed in the continental United States']
       ],
       sources:[
+        {url:'https://donq.passionspirits.com/don-q-double-aged-cognac-cask-finish',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://thelonecaner.com/r1128/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://robbreport.com/food-drink/spirits/don-q-cognac-cask-finish-rum-1234761291/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://rumratings.com/rum/16435-don-q-double-aged-cognac-cask-finish-7-year',sourceType:'reference',coversFields:['tasting']},
         {url:'https://donq.com/rums/don-q-double-aged-cognac-cask-finish/',sourceType:'producer',coversFields:['age','cask','identity']},
         {url:'https://rumx.com/en/rums/13901/destileria-serralles-don-q-double-cask-finish-cognac-casks/',sourceType:'reference',coversFields:['strength','producer','tasting']},
         {url:'https://thelonecaner.com/r1128/',sourceType:'review',coversFields:['strength','production','age']},
@@ -2583,13 +2882,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'don-q-gran-reserva-anejo-xo', brand:'Don Q', expression:'Gran Reserva XO', displayName:'Don Q Gran Reserva Añejo XO',
+      flavor:{Sweet:6,Oak:7,Spice:4,Fruit:4,Smoke:0,Earth:3,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Aged oak','Soft caramel','Dried fruit'],
       cat:'Rum', subcategory:'premium-and-aged',
       country:'Puerto Rico', city:'Ponce',
       producer:'Destilería Serrallés', distilleryName:'Destilería Serrallés',
       style:'Puerto Rican Solera Rum - 9 to 12 Years, American White Oak',
       proofN:80, ageText:'Solera - core 9 to 12 years', minYears:9, maxYears:12,
       priceUsd:9.25, toastItemGuid:'3e684b36-cec2-4550-a325-41e4d03e3076',
-      topNotes:['Aged oak','Soft caramel','Dried fruit'],
       productionRows:[
         ['Base','Molasses',true],
         ['Distillation','Column still'],
@@ -2608,6 +2909,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2009','Don Q distributed in the continental United States']
       ],
       sources:[
+        {url:'https://donq.passionspirits.com/don-q-gran-reserva-anejo-xo',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://www.tastings.com/Spirits-Review/Don-Q-Gran-Reserva-Anejo-XO-Rum-Puerto-Rico-05-01-2024.aspx',sourceType:'review',coversFields:['tasting']},
+        {url:'https://thelonecaner.com/r1125/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkhacker.com/2024/12/08/review-don-q-reserva-and-gran-reserva-anejo-xo-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://donq.com/rums/don-q-gran-reserva-xo/',sourceType:'producer',coversFields:['age','solera','tasting','awards']},
         {url:'https://rumx.com/rums/531/destileria-serralles-don-q-gran-anejo',sourceType:'reference',coversFields:['strength','producer','age']},
         {url:'https://en.wikipedia.org/wiki/Don_Q',sourceType:'reference',coversFields:['history']}
@@ -2621,13 +2926,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'ron-batran-12-reserva-superior', brand:'Botran', expression:'No. 12 Reserva Superior', displayName:'Ron Botran Reserva #12',
+      flavor:{Sweet:6,Oak:6,Spice:5,Fruit:4,Smoke:0,Earth:2,Herbal:1},
+      body:6, finish:5,
+      topNotes:['Vanilla','Toasted oak','Dried fruit'],
       cat:'Rum', subcategory:'dark-and-aged',
       country:'Guatemala', region:'Quetzaltenango',
       producer:'Industrias Licoreras de Guatemala', distilleryName:'San Andrés Villaseca Distillery',
       style:'Guatemalan Solera Rum - Cane Honey, 5 to 12 Years at Altitude',
       proofN:80, ageText:'Solera - 5 to 12 years', minYears:5, maxYears:12,
       priceUsd:9, toastItemGuid:'0da69595-de07-452a-b3fe-aac3d351e623',
-      topNotes:['Vanilla','Toasted oak','Dried fruit'],
       productionRows:[
         ['Base','Virgin sugarcane honey - the first press of the cane',true],
         ['Fermentation','Slow discontinuous fermentation with a pineapple yeast, 100 to 120 hours',true],
@@ -2647,6 +2954,9 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['1940s','Merger forms Industrias Licoreras de Guatemala']
       ],
       sources:[
+        {url:'https://thefatrumpirate.com/botran-ron-anejo-12',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkhacker.com/2022/09/28/review-botran-rum-no-12-15-and-18-2022-relaunch/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://rumratings.com/rum/754-botran-anejo-12-year',sourceType:'reference',coversFields:['tasting']},
         {url:'https://www.spiriteddrinks.com/botran-rum-guatemala/',sourceType:'reference',coversFields:['producer','production','age','origin']},
         {url:'https://sunsetcorners.com/products/botran-no-12-reserva-superior-anejo-rum',sourceType:'retailer',coversFields:['strength','cask','age','tasting']},
         {url:'https://botranrum.com/',sourceType:'producer',coversFields:['origin','ageing']},
@@ -2662,13 +2972,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'ron-barcelo-imperial', brand:'Ron Barceló', expression:'Imperial', displayName:'Ron Barceló Imperial',
+      flavor:{Sweet:7,Oak:5,Spice:3,Fruit:6,Smoke:0,Earth:2,Herbal:1},
+      body:7, finish:6,
+      topNotes:['Buttercream','Dried cherry','Vanilla'],
       cat:'Rum', subcategory:'specialty',
       country:'Dominican Republic', city:'San Pedro de Macorís',
       producer:'Barceló & Co.', distilleryName:'Barceló, San Pedro de Macorís',
       style:'Dominican Column-Still Rum - Ex-American-Whiskey Oak',
       proofN:80, ageText:'No age statement; up to 10 years', maxYears:10,
       priceUsd:null, toastItemGuid:null,
-      topNotes:['Vanilla','Dried cherry','Caramelised nuts'],
       productionRows:[
         ['Base','Dominican sugarcane - base material disputed, see limitations',true],
         ['Distillation','Multi-column stills'],
@@ -2688,6 +3000,10 @@ window.SPIRIT_VAULT_DATA = function(ctx){
         ['2010','Alcoholes Finos Dominicanos cane-juice distillery established']
       ],
       sources:[
+        {url:'https://ronbarcelo.com/en/rum/imperial/',sourceType:'producer',coversFields:['tasting']},
+        {url:'https://thelonecaner.com/r0178/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://thefatrumpirate.com/ronbarceloimperial',sourceType:'review',coversFields:['tasting']},
+        {url:'https://therumhowlerblog.com/rum-reviews/dark-rums/barcelo-imperial-rum/',sourceType:'review',coversFields:['tasting']},
         {url:'https://ronbarcelo.com/en/rum/imperial/',sourceType:'producer',coversFields:['age','origin','tasting']},
         {url:'https://www.diffordsguide.com/beer-wine-spirits/1450/ron-barcelo-imperial-rum',sourceType:'reference',coversFields:['strength','age','cask','classification']},
         {url:'https://en.wikipedia.org/wiki/Barcel%C3%B3_(rum)',sourceType:'reference',coversFields:['history','production']}
@@ -2702,13 +3018,15 @@ window.SPIRIT_VAULT_DATA = function(ctx){
     }),
     sourcedDraftSpirit({
       id:'planteray-3-star', brand:'Planteray', expression:'3 Stars', displayName:'Planteray 3-Star',
+      flavor:{Sweet:5,Oak:2,Spice:2,Fruit:6,Smoke:0,Earth:2,Herbal:3},
+      body:4, finish:4,
+      topNotes:['Vanilla cream','Ripe banana','Molasses'],
       cat:'Rum', subcategory:'white-and-silver',
       country:'France', region:'Cognac',
       producer:'Maison Ferrand', distilleryName:'Blender - component distilleries not producer-confirmed',
       style:'Blended White Caribbean Rum - Barbados, Jamaica and Trinidad, Married in Cognac Casks',
       proofN:82.4, ageText:'Blend of unaged and aged components',
       priceUsd:6.5, toastItemGuid:'3f707432-29dd-445a-8243-98ef0d6a94f7',
-      topNotes:['Tropical fruit','Vanilla','Cardamom'],
       productionRows:[
         ['Base','Molasses',true],
         ['Origins','Barbados for richness and balance, Trinidad for finesse, Jamaica for structure',true],
@@ -2724,6 +3042,11 @@ window.SPIRIT_VAULT_DATA = function(ctx){
       history:'The brand was created by Maison Ferrand, a Cognac house whose roots trace to 1702, under cellar master Alexandre Gabriel. In January 2024 Maison Ferrand renamed the rum from Plantation to Planteray, after committing to drop the word "plantation" and its associations with slavery. The liquid was not changed by the rename.',
       timeline:[['2024','Plantation rum renamed Planteray by Maison Ferrand']],
       sources:[
+        {url:'https://www.diffordsguide.com/en-au/beer-wine-spirits/2552/plantation-3-stars-artisanal-rum',sourceType:'reference',coversFields:['tasting']},
+        {url:'https://thefatrumpirate.com/plantation-3-stars-artisanal-rum',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkhacker.com/2012/09/26/review-plantation-3-stars-white-rum/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://thelonecaner.com/r0878/',sourceType:'review',coversFields:['tasting']},
+        {url:'https://www.drinkspirits.com/rum/plantation-3-stars-white-rum-review/',sourceType:'review',coversFields:['tasting']},
         {url:'https://planterayrum.com/product/three-stars/',sourceType:'producer',coversFields:['identity','blend','origins']},
         {url:'https://spiritsreview.com/reviews/planteray-3-stars-white-rum/',sourceType:'review',coversFields:['strength','production','tasting']},
         {url:'https://rumx.com/en/rums/116/west-indies-plantation-3-stars-white/',sourceType:'reference',coversFields:['strength','production','age']},

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import type { BusinessType, UserRole } from "@prisma/client";
 import { Menu, X } from "lucide-react";
-import { navLinksForRoles } from "@/lib/nav";
+import { appHeaderLinks } from "@/lib/nav";
 
 // Routes that render their own chrome or shouldn't show app nav at all. The
 // dashboard has its own (richer) header with the restaurant/role switchers, so
@@ -19,12 +19,14 @@ function isHidden(path: string): boolean {
   return path.startsWith("/sign-in") || path.startsWith("/sign-up");
 }
 
-export function AppHeader({ roles = [], businessTypes = [] }: { roles?: UserRole[]; businessTypes?: BusinessType[] }) {
+export function AppHeader({ roles = [], businessTypes = [], teamOnly = false, hasTeamAccess = false, teamManager = false }: {
+  roles?: UserRole[]; businessTypes?: BusinessType[]; teamOnly?: boolean; hasTeamAccess?: boolean; teamManager?: boolean;
+}) {
   const pathname = usePathname() || "/";
   const [open, setOpen] = useState(false);
   if (isHidden(pathname)) return null;
 
-  const navLinks = navLinksForRoles(roles, businessTypes);
+  const navLinks = appHeaderLinks(roles, businessTypes, teamOnly, hasTeamAccess, teamManager);
   const isActive = (href: string) =>
     pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
 
@@ -40,7 +42,7 @@ export function AppHeader({ roles = [], businessTypes = [] }: { roles?: UserRole
           >
             {open ? <X size={16} /> : <Menu size={16} />}
           </button>
-          <Link href="/dashboard" className="flex shrink-0 items-center">
+          <Link href={teamOnly ? "/team" : "/dashboard"} className="flex shrink-0 items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="OutFront Data" className="h-7 w-auto" />
           </Link>

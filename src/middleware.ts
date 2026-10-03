@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { teamOnlyDestination, trustedTeamGuardUrl } from "@/lib/team/route-policy";
 
 // Public routes don't require authentication.
 const isPublicRoute = createRouteMatcher([
@@ -41,6 +42,34 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+  const pathname = req.nextUrl.pathname;
+  if (pathname === "/api/team/route-guard") return;
+  const { userId } = await auth();
+  if (!userId) return;
+  if (pathname === "/team" || pathname.startsWith("/team/") || pathname.startsWith("/api/team/")) return;
+  // The server route uses the regular Node Prisma client and fresh DB state.
+  // Never trust a client-supplied role claim for this boundary.
+  const guardUrl = trustedTeamGuardUrl(req.url, process.env.NEXT_PUBLIC_APP_URL, process.env.VERCEL_URL);
+  if (!guardUrl) return NextResponse.json({ error: "Access check unavailable" }, { status: 503 });
+  let teamOnly: boolean;
+  try {
+    const response = await fetch(guardUrl, {
+      headers: {
+        cookie: req.headers.get("cookie") ?? "",
+        ...(req.headers.get("authorization") ? { authorization: req.headers.get("authorization")! } : {}),
+      },
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Team route guard unavailable");
+    const result = await response.json() as { teamOnly?: boolean };
+    if (typeof result.teamOnly !== "boolean") throw new Error("Invalid Team route guard response");
+    teamOnly = result.teamOnly;
+  } catch {
+    return NextResponse.json({ error: "Access check unavailable" }, { status: 503 });
+  }
+  const decision = teamOnlyDestination(pathname, teamOnly);
+  if (decision === "forbid") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (decision === "redirect") return NextResponse.redirect(new URL("/team", req.url));
 });
 
 export const config = {

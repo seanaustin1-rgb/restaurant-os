@@ -1,5 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { navLinksForRoles, NAV_LINKS } from "./nav";
+import { appHeaderLinks, navLinksForRoles, NAV_LINKS } from "./nav";
+
+describe("Team-only navigation", () => {
+  it("shows only Team links to staff without a business role", () => {
+    expect(appHeaderLinks([], [], true, true, false)).toEqual([{ href: "/team", label: "Team Hub" }]);
+    expect(appHeaderLinks([], [], true, true, true)).toEqual([
+      { href: "/team", label: "Team Hub" },
+      { href: "/team/manage", label: "Manage team" },
+    ]);
+  });
+});
 
 const hrefs = (links: { href: string }[]) => links.map((l) => l.href);
 

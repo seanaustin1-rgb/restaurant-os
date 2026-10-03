@@ -58,3 +58,18 @@ export function navLinksForRoles(
     return roleOk && typeOk;
   });
 }
+
+export function appHeaderLinks(
+  roles: readonly UserRole[],
+  businessTypes: readonly BusinessType[],
+  teamOnly: boolean,
+  hasTeamAccess: boolean,
+  teamManager: boolean,
+): Pick<NavLink, "href" | "label">[] {
+  const teamLinks = [
+    { href: "/team", label: "Team Hub" },
+    ...(teamManager ? [{ href: "/team/manage", label: "Manage team" }] : []),
+  ];
+  if (teamOnly) return teamLinks;
+  return [...navLinksForRoles(roles, businessTypes), ...(hasTeamAccess ? teamLinks : [])];
+}

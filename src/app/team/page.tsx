@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { requireTeamAccess, TeamAccessDenied } from "@/lib/team/access";
 import { listMyTeamTenants } from "@/lib/team/tenants";
 
@@ -29,7 +29,14 @@ export default async function TeamPage({ searchParams }: { searchParams: { resta
       </main>
     );
   }
-  if (tenants.length === 0) redirect("/dashboard");
+  if (tenants.length === 0) {
+    return (
+      <main className="mx-auto max-w-3xl space-y-4 px-5 py-10">
+        <h1 className="font-display text-3xl">No active Team access</h1>
+        <p className="text-sm text-muted">Your Team access is no longer active. Ask your manager if you expected to see a team here.</p>
+      </main>
+    );
+  }
   return (
     <main className="mx-auto max-w-3xl space-y-5 px-5 py-10">
       <h1 className="font-display text-3xl">Team Hub</h1>

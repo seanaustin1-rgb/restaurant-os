@@ -629,6 +629,7 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const [report, setReport] = useState("");
   const [sent, setSent] = useState(false);
   const [phone, setPhone] = useState<string | null>(null);
+  const [remind, setRemind] = useState(true);
   const f = FLAG[l.flag];
   const activeTpl = EMAIL_TEMPLATES.find((t) => t.id === templateId) ?? EMAIL_TEMPLATES[0];
 
@@ -678,7 +679,8 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
   const send = () => {
     setSent(true);
     setDone(true);
-    onFire(compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.");
+    const base = compose?.kind === "text" ? "Text sent — logged to the lead." : "Email sent — logged to the lead.";
+    onFire(remind ? `${base} Reminder set: follow up Fri 10 AM if no reply.` : base);
   };
 
   return (
@@ -785,6 +787,12 @@ function LeadView({ l, onFire }: { l: Lead; onFire: (msg: string) => void }) {
             rows={compose.kind === "email" ? 9 : 3}
             disabled={sent}
           />
+          <label className="lremind">
+            <input type="checkbox" checked={remind} disabled={sent} onChange={(e) => setRemind(e.target.checked)} />
+            <span>
+              Remind me to follow up <b>Friday 10 AM</b> if there&apos;s no reply
+            </span>
+          </label>
           <div className="cmp-act">
             <button type="button" className="btn primary" disabled={sent} onClick={send}>
               {sent ? "✓ Sent" : compose.kind === "text" ? "Send text" : "Send email"}
@@ -1053,6 +1061,376 @@ function GamePlanItem({ it, checked, onToggle, say }: { it: PlanItem; checked: b
   );
 }
 
+// Voice front door — the assistant as workflow, not a chatbox. A simulated
+// voice memo is parsed into structured actions (task, email draft, reminder,
+// CRM sync) so the demo shows the AI *doing the work*, not just chatting.
+// Generated-data-only; sync states are simulated with an honest disclosure.
+type VParsed = { kind: "contact" | "task" | "email" | "reminder" | "sync"; label: string; detail: string; badge?: string };
+const VOICE_TRANSCRIPT =
+  "Just met the Hendersons at 1420 Maple. They loved the backyard but got cold feet on the kitchen. They want to walk it again Thursday. Send them the comps, and remind me to follow up Friday if they go quiet.";
+const VOICE_PARSED: VParsed[] = [
+  { kind: "contact", label: "Client history updated", detail: "Hendersons · 1420 Maple — showing notes + kitchen concern logged", badge: "CRM" },
+  { kind: "task", label: "Task created", detail: "Book the second showing — 1420 Maple, Thursday" },
+  { kind: "email", label: "Email drafted", detail: "“Comps for 1420 Maple” — ready for your approval", badge: "Needs approval" },
+  { kind: "reminder", label: "Reminder set", detail: "Follow up Friday 10 AM if the Hendersons go quiet" },
+  { kind: "sync", label: "Synced to BoldTrail Smart CRM", detail: "contact, timeline note, and follow-up task staged", badge: "Simulated" },
+];
+function VIcon({ kind }: { kind: VParsed["kind"] }) {
+  const c = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (kind === "contact") return (<svg {...c}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>);
+  if (kind === "task") return (<svg {...c}><path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>);
+  if (kind === "email") return (<svg {...c}><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><path d="m22 6-10 7L2 6" /></svg>);
+  if (kind === "reminder") return (<svg {...c}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>);
+  return (<svg {...c}><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>);
+}
+function VoiceMemo({ say }: { say: (m: string) => void }) {
+  const [stage, setStage] = useState<"idle" | "listening" | "parsed">("idle");
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (t.current) clearTimeout(t.current); }, []);
+  const start = () => {
+    setStage("listening");
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => setStage("parsed"), 1400);
+  };
+  const reset = () => { if (t.current) clearTimeout(t.current); setStage("idle"); };
+
+  return (
+    <div className="vbar">
+      <div className="vbar-head">
+        <span className="vbadge">AI assistant</span>
+        <span className="vsub">turn a messy voice note into done work — no typing</span>
+      </div>
+
+      {stage === "idle" && (
+        <button type="button" className="vgo" onClick={start}>
+          <span className="vmic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" />
+            </svg>
+          </span>
+          <span className="vgo-txt">
+            <b>Talk to AI assistant</b>
+            <small>tap and speak · or play the sample voice memo</small>
+          </span>
+          <span className="vgo-cue">Simulate voice memo</span>
+        </button>
+      )}
+
+      {stage === "listening" && (
+        <button type="button" className="vlisten" onClick={reset}>
+          <span className="vwave">
+            {[10, 18, 26, 16, 22, 12, 20, 28, 14, 19, 24, 11].map((h, i) => (
+              <span key={i} style={{ height: h }} />
+            ))}
+          </span>
+          <span className="vlisten-txt">Listening…</span>
+          <span className="vlisten-h">tap to stop</span>
+        </button>
+      )}
+
+      {stage === "parsed" && (
+        <div className="vparsed">
+          <div className="vtrans">
+            <span className="vtrans-l">Heard</span>
+            <p>&ldquo;{VOICE_TRANSCRIPT}&rdquo;</p>
+          </div>
+          <div className="vresult-l">Turned into action</div>
+          <div className="vitems">
+            {VOICE_PARSED.map((p) => (
+              <div className={`vitem ${p.kind}`} key={p.label}>
+                <span className="vi-ic"><VIcon kind={p.kind} /></span>
+                <span className="vi-body">
+                  <span className="vi-l">
+                    {p.label}
+                    {p.badge && <span className={`vi-badge ${p.kind}`}>{p.badge}</span>}
+                  </span>
+                  <span className="vi-d">{p.detail}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="vact">
+            <button type="button" className="btn primary" onClick={() => { say("Approved — email sent, task + reminder staged, BoldTrail synced (demo only)."); reset(); }}>
+              Approve &amp; sync all
+            </button>
+            <button type="button" className="btn ghost" onClick={reset}>Discard</button>
+          </div>
+          <p className="vdisc">
+            Demo mode: simulated BoldTrail sync shown for workflow clarity. Live MLS/RESO, BoldTrail, calendar, email, and
+            voice wiring is design-partner roadmap.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Agent Business Coach — a fractional-COO voice modeled on real-estate growth
+// coaches: gamify leading indicators (reps, not GCI), protect the agent's own
+// Profit First margins, and turn every insight into an action taken right now.
+// Generated-data-only, like the rest of the demo.
+const COACH_KPIS: { l: string; v: string; goal: string; frac: number; note: string }[] = [
+  { l: "Conversations", v: "6", goal: "12", frac: 0.5, note: "+2 vs your daily average · 4-day streak" },
+  { l: "Contact rate", v: "38%", goal: "40%", frac: 0.95, note: "2 dials from today's target" },
+  { l: "Database touches", v: "9", goal: "15", frac: 0.6, note: "6 more keeps your sphere warm" },
+];
+const COACH_PF: { l: string; v: string; note: string; ok?: boolean }[] = [
+  { l: "Safe Take Home Pay", v: "$6,800", note: "pay yourself this now — don't raise lead spend until Cedar Bluff clears" },
+  { l: "Tax Reserve", v: "$14,460", note: "30% held & protected · on track", ok: true },
+  { l: "Cash Runway", v: "5.2 mo", note: "fixed costs covered if the pipeline paused" },
+  { l: "Pipeline cash expected", v: "$48,200", note: "your side after the split · 3 files closing this week" },
+];
+const COACH_ASKS: { q: string; a: string }[] = [
+  { q: "What's my one number today?", a: "Conversations — you're at 6 of 12. Nothing else on this screen outranks getting to twelve real conversations. Appointments follow reps, not wishes." },
+  { q: "Can I pay myself yet?", a: "Yes. $6,800 is safe with your tax reserve already funded. Take it — underpaying yourself isn't discipline, it's a leak." },
+  { q: "Should I buy more leads?", a: "Not yet. At a 2.1% appointment rate you'd be pouring water into a leaky bucket. Get your contact rate over 3% for two weeks, then we scale spend." },
+];
+const COACH_TEXT =
+  "Hi Sam — Priya with Cascade Realty. Sorry I missed you earlier. I've already pulled three homes that fit what you described and can get you in this week. What's easier for a quick 10-minute call — today at 4, or tomorrow morning?";
+
+function AgentCoach({ say }: { say: (m: string) => void }) {
+  const [draft, setDraft] = useState(false);
+  const [body, setBody] = useState(COACH_TEXT);
+  const [sent, setSent] = useState(false);
+  const [phone, setPhone] = useState(false);
+  const [ask, setAsk] = useState<number | null>(null);
+
+  return (
+    <div className="section">
+      <div className="sh">
+        <span className="eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+          </svg>
+          Agent Business Coach · Profit First
+        </span>
+        <span className="desc">your plain-talk AI coach · generated demo</span>
+      </div>
+
+      <div className="coach">
+        {/* plain-talk assistant — jumps straight to the insight, peer-to-peer */}
+        <div className="coach-say">
+          <span className="coach-ava">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+            </svg>
+          </span>
+          <p className="coach-line">
+            Morning, Priya. You can safely take home <b>$6,800</b> this month — just don&apos;t raise lead spend until the
+            Cedar Bluff commission clears. Today&apos;s gap is <b>reps, not results</b>: two conversations before noon and
+            the week takes care of itself.
+          </p>
+        </div>
+
+        {/* gamified leading indicators */}
+        <div className="coach-block">
+          <span className="eyebrow">Today&apos;s scoreboard · leading indicators</span>
+          <div className="coach-kpis">
+            {COACH_KPIS.map((k) => (
+              <div className="ckpi" key={k.l}>
+                <div className="ck-top">
+                  <span className="ck-l">{k.l}</span>
+                  <span className="ck-v">
+                    {k.v}
+                    <small> / {k.goal}</small>
+                  </span>
+                </div>
+                <div className="ck-bar">
+                  <span className="ck-fill" style={{ width: `${Math.round(k.frac * 100)}%` }} />
+                </div>
+                <div className="ck-note">{k.note}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Profit First — the agent's own income treated like a business */}
+        <div className="coach-block">
+          <span className="eyebrow">Profit First · your commission income</span>
+          <div className="coach-pf">
+            {COACH_PF.map((r) => (
+              <div className="pf-row" key={r.l}>
+                <span className="pf-l">
+                  {r.l}
+                  {r.ok && (
+                    <svg className="pf-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
+                </span>
+                <span className="pf-v">{r.v}</span>
+                <span className="pf-note">{r.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* lead-spend coaching guardrail */}
+        <div className="coach-guard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <div>
+            <b>Lead Spend Guardrail.</b> You&apos;re at <b>$1,240/mo</b> on portal leads at a <b>2.1%</b> appointment rate.
+            Rule: don&apos;t scale spend under <b>3%</b> — the leak is speed-to-lead, not volume. Fix the Sam-Ortega gap
+            first, then we open the tap.
+          </div>
+        </div>
+
+        {/* drive instant action — the next move, right now */}
+        <div className="coach-next">
+          <p className="cn-head">
+            <span className="cn-kicker">Next action, right now</span>
+            <b>Sam Ortega — referral, 41 min cold.</b> A referral going cold is money you already earned walking out the
+            door. One text stops the bleed.
+          </p>
+          <div className="lact">
+            <button type="button" className={`btn ${draft ? "primary" : "ghost"}`} onClick={() => { setDraft((d) => !d); setPhone(false); setSent(false); }}>
+              <span className="gp-bi"><GpIcon kind="text" /></span>
+              Draft the text
+            </button>
+            <button type="button" className={`btn ${phone ? "primary" : "ghost"}`} onClick={() => { setPhone((p) => !p); setDraft(false); }}>
+              <span className="gp-bi"><GpIcon kind="call" /></span>
+              Call Sam now
+            </button>
+          </div>
+
+          {phone && (
+            <div className="lcall">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2z" />
+              </svg>
+              <span className="lcall-n">(208) 555-0142</span>
+              <span className="lcall-h">Twilio click-to-dial · generated demo contact</span>
+            </div>
+          )}
+
+          {draft && (
+            <div className="compose">
+              <div className="cmp-hd">
+                <GpIcon kind="text" />
+                Text · Sam Ortega
+                <span className="cmp-tag">AI-drafted · edit before sending</span>
+              </div>
+              <textarea className="cmp-body text" value={body} onChange={(e) => setBody(e.target.value)} rows={4} disabled={sent} />
+              <div className="cmp-act">
+                <button type="button" className="btn primary" disabled={sent} onClick={() => { setSent(true); say("Text queued to Sam Ortega · Twilio trigger (demo only · not sent)"); }}>
+                  {sent ? "✓ Sent via Twilio" : "Send via Twilio"}
+                </button>
+                <button type="button" className="btn ghost" onClick={() => setDraft(false)}>
+                  {sent ? "Close" : "Cancel"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ask the coach — plain-talk Q&A */}
+        <div className="coach-ask">
+          <span className="eyebrow">Ask your coach</span>
+          <div className="ask-chips">
+            {COACH_ASKS.map((qa, i) => (
+              <button type="button" key={qa.q} className={`ask-chip ${ask === i ? "on" : ""}`} onClick={() => setAsk((a) => (a === i ? null : i))}>
+                {qa.q}
+              </button>
+            ))}
+          </div>
+          {ask !== null && (
+            <div className="ask-ans">
+              <span className="coach-ava sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v4M12 18v4M5 5l2 2M17 17l2 2M2 12h4M18 12h4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" />
+                </svg>
+              </span>
+              <p>{COACH_ASKS[ask].a}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Evening roundup — closes the day-in-life and gives a reason to come back
+// tomorrow: what was won, what's still open, the single first move tomorrow,
+// and a voice "dictate daily review." Generated-data-only.
+const ROUNDUP_WON = [
+  "214 Highland Park cleared to fund — compliance docs in before the noon cutoff",
+  "Sam Ortega re-engaged — referral saved before it went cold",
+  "6 conversations logged · 9 database touches",
+];
+const ROUNDUP_OPEN: { t: string; n: string }[] = [
+  { t: "88 Cedar Bluff — 1 admin task open", n: "checklist at 80%; clear it before the 9 AM walk-through" },
+  { t: "Ridgeline convert-to-listing note", n: "drafted, not yet sent — the market window is open now" },
+];
+const ROUNDUP_TOMORROW = { t: "9:00 AM · 88 Cedar Bluff listing appointment", n: "comps + CMA staged — walk in with a price" };
+
+function EveningRoundup({ say }: { say: (m: string) => void }) {
+  const [dictating, setDictating] = useState(false);
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (t.current) clearTimeout(t.current); }, []);
+  const dictate = () => {
+    setDictating(true);
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => { setDictating(false); say("Daily review captured — tomorrow's plan updated (demo only)."); }, 1600);
+  };
+  return (
+    <div className="section">
+      <div className="sh">
+        <span className="eyebrow">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--copper-soft)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+          </svg>
+          Evening roundup · next-day preview
+        </span>
+        <span className="desc">close the day · set up tomorrow</span>
+      </div>
+
+      <div className="round">
+        <div className="rcol won">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+            Won today
+          </div>
+          <ul>
+            {ROUNDUP_WON.map((w) => (<li key={w}>{w}</li>))}
+          </ul>
+        </div>
+
+        <div className="rcol open">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v4" /><path d="M12 16h.01" /></svg>
+            Still open
+          </div>
+          <ul>
+            {ROUNDUP_OPEN.map((o) => (
+              <li key={o.t}><b>{o.t}</b><small>{o.n}</small></li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rcol tmrw">
+          <div className="rcol-h">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            Tomorrow first
+          </div>
+          <div className="rtmrw">
+            <b>{ROUNDUP_TOMORROW.t}</b>
+            <small>{ROUNDUP_TOMORROW.n}</small>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" className={`rdictate ${dictating ? "on" : ""}`} onClick={dictate} disabled={dictating}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v3" />
+        </svg>
+        {dictating ? "Listening… speak your recap" : "Dictate daily review"}
+      </button>
+    </div>
+  );
+}
+
 export default function AgentApp() {
   const [guardResolved, setGuardResolved] = useState(false);
   const [handled, setHandled] = useState(false);
@@ -1068,6 +1446,9 @@ export default function AgentApp() {
 
   return (
     <div className="agent">
+      {/* voice front door — the assistant as the first thing you reach for */}
+      <VoiceMemo say={say} />
+
       {/* executive brief — the 20-second read before the first task */}
       <div className="brief">
         <span className="eyebrow">Your morning</span>
@@ -1139,6 +1520,9 @@ export default function AgentApp() {
           </div>
         </div>
       )}
+
+      {/* agent business coach — the fractional-COO advisor voice */}
+      <AgentCoach say={say} />
 
       {/* today's game plan — time-boxed, checkable rollup of the day */}
       <div className="section gameplan">
@@ -1356,6 +1740,9 @@ export default function AgentApp() {
           </div>
         </div>
       </div>
+
+      {/* evening roundup — the day-in-life closer */}
+      <EveningRoundup say={say} />
 
       <div className="footnote">
         <b>Generated demo data.</b> Closings/inspections pull from transaction file checklists, market from the MLS (SkySlope),
@@ -1660,6 +2047,605 @@ export default function AgentApp() {
         .section .desc {
           font-size: 11.5px;
           color: var(--muted);
+        }
+
+        /* agent business coach */
+        .agent :global(.coach) {
+          border: 1px solid var(--copper-dim);
+          border-radius: 12px;
+          background: var(--surface);
+          padding: 15px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .agent :global(.coach-say) {
+          display: flex;
+          gap: 11px;
+          align-items: flex-start;
+        }
+        .agent :global(.coach-ava) {
+          flex: none;
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+          border: 1px solid var(--copper-dim);
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+          display: grid;
+          place-items: center;
+        }
+        .agent :global(.coach-ava svg) {
+          width: 17px;
+          height: 17px;
+        }
+        .agent :global(.coach-ava.sm) {
+          width: 24px;
+          height: 24px;
+        }
+        .agent :global(.coach-ava.sm svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .agent :global(.coach-line) {
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: var(--text);
+          margin: 2px 0 0;
+        }
+        .agent :global(.coach-line b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.coach-block) {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .agent :global(.coach-kpis) {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+        .agent :global(.ckpi) {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+          padding: 10px 11px;
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .agent :global(.ck-top) {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 6px;
+        }
+        .agent :global(.ck-l) {
+          font-size: 11px;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          font-weight: 600;
+        }
+        .agent :global(.ck-v) {
+          font-family: var(--font-mono);
+          font-size: 17px;
+          color: var(--text);
+          line-height: 1;
+        }
+        .agent :global(.ck-v small) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.ck-bar) {
+          height: 5px;
+          border-radius: 999px;
+          background: var(--line);
+          overflow: hidden;
+        }
+        .agent :global(.ck-fill) {
+          display: block;
+          height: 100%;
+          border-radius: 999px;
+          background: var(--copper-soft);
+        }
+        .agent :global(.ck-note) {
+          font-size: 11px;
+          color: var(--text-soft);
+          line-height: 1.35;
+        }
+        .agent :global(.coach-pf) {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        .agent :global(.pf-row) {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          grid-template-areas: "label value" "note note";
+          gap: 2px 10px;
+          padding: 9px 12px;
+          background: var(--panel);
+        }
+        .agent :global(.pf-row + .pf-row) {
+          border-top: 1px solid var(--line);
+        }
+        .agent :global(.pf-l) {
+          grid-area: label;
+          font-size: 12.5px;
+          color: var(--text);
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+        .agent :global(.pf-ok) {
+          width: 12px;
+          height: 12px;
+          color: var(--green);
+        }
+        .agent :global(.pf-v) {
+          grid-area: value;
+          font-family: var(--font-mono);
+          font-size: 14px;
+          color: var(--text);
+          text-align: right;
+        }
+        .agent :global(.pf-note) {
+          grid-area: note;
+          font-size: 11px;
+          color: var(--muted);
+          line-height: 1.35;
+        }
+        .agent :global(.coach-guard) {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          padding: 11px 12px;
+          border: 1px solid var(--yellow);
+          border-radius: 10px;
+          background: color-mix(in srgb, var(--yellow) 9%, transparent);
+        }
+        .agent :global(.coach-guard svg) {
+          width: 16px;
+          height: 16px;
+          flex: none;
+          margin-top: 1px;
+          color: var(--yellow);
+        }
+        .agent :global(.coach-guard div) {
+          font-size: 12px;
+          line-height: 1.5;
+          color: var(--text-soft);
+        }
+        .agent :global(.coach-guard b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.coach-next) {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .agent :global(.cn-head) {
+          margin: 0;
+          font-size: 12.5px;
+          line-height: 1.5;
+          color: var(--text-soft);
+        }
+        .agent :global(.cn-head b) {
+          color: var(--text);
+          font-weight: 700;
+        }
+        .agent :global(.cn-kicker) {
+          display: block;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+          font-weight: 700;
+          color: var(--copper-soft);
+          margin-bottom: 4px;
+        }
+        .agent :global(.coach-ask) {
+          display: flex;
+          flex-direction: column;
+          gap: 9px;
+        }
+        .agent :global(.ask-chips) {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 7px;
+        }
+        .agent :global(.ask-chip) {
+          border: 1px solid var(--line);
+          background: var(--panel);
+          color: var(--text-soft);
+          border-radius: 999px;
+          padding: 6px 12px;
+          font: inherit;
+          font-size: 12px;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+        .agent :global(.ask-chip:hover) {
+          border-color: var(--copper-dim);
+          color: var(--text);
+        }
+        .agent :global(.ask-chip.on) {
+          border-color: var(--copper-soft);
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+        }
+        .agent :global(.ask-ans) {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          padding: 11px 12px;
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--panel);
+        }
+        .agent :global(.ask-ans p) {
+          margin: 0;
+          font-size: 12.5px;
+          line-height: 1.5;
+          color: var(--text);
+        }
+        @media (max-width: 560px) {
+          .agent :global(.coach-kpis) {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* voice front door */
+        .agent :global(.vbar) {
+          border: 1px solid var(--copper-soft);
+          border-radius: 12px;
+          background: var(--copper-wash);
+          padding: 14px;
+          margin-bottom: 14px;
+        }
+        .agent :global(.vbar-head) {
+          display: flex;
+          align-items: baseline;
+          gap: 9px;
+          margin-bottom: 11px;
+          flex-wrap: wrap;
+        }
+        .agent :global(.vbadge) {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: var(--ink);
+          background: var(--copper-soft);
+          border-radius: 999px;
+          padding: 3px 9px;
+        }
+        .agent :global(.vsub) {
+          font-size: 12px;
+          color: var(--text-soft);
+        }
+        .agent :global(.vgo) {
+          width: 100%;
+          display: grid;
+          grid-template-columns: 42px 1fr auto;
+          gap: 12px;
+          align-items: center;
+          padding: 11px 13px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 10px;
+          background: var(--surface);
+          color: inherit;
+          font: inherit;
+          text-align: left;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s;
+        }
+        .agent :global(.vgo:hover) {
+          border-color: var(--copper-soft);
+        }
+        .agent :global(.vmic) {
+          width: 42px;
+          height: 42px;
+          border-radius: 999px;
+          background: var(--copper-soft);
+          color: var(--ink);
+          display: grid;
+          place-items: center;
+        }
+        .agent :global(.vmic svg) {
+          width: 20px;
+          height: 20px;
+        }
+        .agent :global(.vgo-txt) {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .agent :global(.vgo-txt b) {
+          font-size: 15px;
+          color: var(--text);
+        }
+        .agent :global(.vgo-txt small) {
+          font-size: 11.5px;
+          color: var(--muted);
+        }
+        .agent :global(.vgo-cue) {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--copper-soft);
+          white-space: nowrap;
+        }
+        .agent :global(.vlisten) {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 16px 14px;
+          border: 1px solid var(--copper-soft);
+          border-radius: 10px;
+          background: var(--surface);
+          color: inherit;
+          font: inherit;
+          cursor: pointer;
+        }
+        .agent :global(.vwave) {
+          display: flex;
+          align-items: center;
+          gap: 3px;
+          height: 30px;
+        }
+        .agent :global(.vwave span) {
+          width: 3px;
+          border-radius: 999px;
+          background: var(--copper-soft);
+          display: block;
+        }
+        .agent :global(.vlisten-txt) {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--text);
+        }
+        .agent :global(.vlisten-h) {
+          margin-left: auto;
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.vparsed) {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .agent :global(.vtrans) {
+          border-left: 2px solid var(--copper-soft);
+          padding: 2px 0 2px 11px;
+        }
+        .agent :global(.vtrans-l) {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 700;
+          color: var(--copper-soft);
+        }
+        .agent :global(.vtrans p) {
+          margin: 3px 0 0;
+          font-size: 13px;
+          line-height: 1.5;
+          color: var(--text-soft);
+          font-style: italic;
+        }
+        .agent :global(.vresult-l) {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          font-weight: 700;
+          color: var(--muted);
+        }
+        .agent :global(.vitems) {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .agent :global(.vitem) {
+          display: grid;
+          grid-template-columns: 30px 1fr;
+          gap: 10px;
+          align-items: start;
+          padding: 9px 11px;
+          border: 1px solid var(--line);
+          border-left: 3px solid var(--copper-dim);
+          border-radius: 9px;
+          background: var(--surface);
+        }
+        .agent :global(.vitem.sync) {
+          border-left-color: var(--green);
+        }
+        .agent :global(.vitem.reminder) {
+          border-left-color: var(--yellow);
+        }
+        .agent :global(.vi-ic) {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          display: grid;
+          place-items: center;
+          color: var(--copper-soft);
+        }
+        .agent :global(.vitem.sync .vi-ic) {
+          color: var(--green);
+        }
+        .agent :global(.vitem.reminder .vi-ic) {
+          color: var(--yellow);
+        }
+        .agent :global(.vi-ic svg) {
+          width: 16px;
+          height: 16px;
+        }
+        .agent :global(.vi-body) {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+        .agent :global(.vi-l) {
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--text);
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .agent :global(.vi-badge) {
+          font-size: 9.5px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 2px 7px;
+          border-radius: 999px;
+          background: var(--panel);
+          border: 1px solid var(--line);
+          color: var(--muted);
+        }
+        .agent :global(.vi-badge.sync) {
+          color: var(--green);
+          border-color: color-mix(in srgb, var(--green) 40%, transparent);
+        }
+        .agent :global(.vi-badge.email) {
+          color: var(--copper-soft);
+          border-color: var(--copper-dim);
+        }
+        .agent :global(.vi-d) {
+          font-size: 11.5px;
+          color: var(--muted);
+          line-height: 1.4;
+        }
+        .agent :global(.vact) {
+          display: flex;
+          gap: 8px;
+        }
+        .agent :global(.vdisc) {
+          margin: 2px 0 0;
+          font-size: 10.5px;
+          color: var(--muted);
+          line-height: 1.45;
+        }
+
+        /* evening roundup */
+        .agent :global(.round) {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 9px;
+        }
+        .agent :global(.rcol) {
+          border: 1px solid var(--line);
+          border-radius: 10px;
+          background: var(--surface);
+          padding: 11px 12px;
+        }
+        .agent :global(.rcol-h) {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 8px;
+        }
+        .agent :global(.rcol-h svg) {
+          width: 14px;
+          height: 14px;
+        }
+        .agent :global(.rcol.won .rcol-h svg) {
+          color: var(--green);
+        }
+        .agent :global(.rcol.open .rcol-h svg) {
+          color: var(--yellow);
+        }
+        .agent :global(.rcol.tmrw .rcol-h svg) {
+          color: var(--copper-soft);
+        }
+        .agent :global(.rcol ul) {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .agent :global(.rcol li) {
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.4;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+        }
+        .agent :global(.rcol li b) {
+          color: var(--text);
+          font-weight: 600;
+        }
+        .agent :global(.rcol li small) {
+          font-size: 11px;
+          color: var(--muted);
+        }
+        .agent :global(.rtmrw) {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .agent :global(.rtmrw b) {
+          font-size: 13px;
+          color: var(--text);
+        }
+        .agent :global(.rtmrw small) {
+          font-size: 11.5px;
+          color: var(--muted);
+          line-height: 1.4;
+        }
+        .agent :global(.rdictate) {
+          margin-top: 10px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 9px 15px;
+          border: 1px solid var(--copper-dim);
+          border-radius: 999px;
+          background: var(--copper-wash);
+          color: var(--copper-soft);
+          font: inherit;
+          font-size: 12.5px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .agent :global(.rdictate:hover) {
+          border-color: var(--copper-soft);
+        }
+        .agent :global(.rdictate.on) {
+          color: var(--text);
+        }
+        .agent :global(.rdictate svg) {
+          width: 15px;
+          height: 15px;
+        }
+        @media (max-width: 560px) {
+          .agent :global(.round) {
+            grid-template-columns: 1fr;
+          }
+          .agent :global(.vgo) {
+            grid-template-columns: 38px 1fr;
+          }
+          .agent :global(.vgo-cue) {
+            display: none;
+          }
         }
         .queue {
           display: flex;
@@ -2327,6 +3313,25 @@ export default function AgentApp() {
         .agent :global(.cmp-subj:disabled),
         .agent :global(.cmp-body:disabled) {
           opacity: 0.7;
+        }
+        .agent :global(.lremind) {
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-top: 10px;
+          font-size: 12px;
+          color: var(--text-soft);
+          line-height: 1.4;
+          cursor: pointer;
+        }
+        .agent :global(.lremind input) {
+          margin-top: 1px;
+          accent-color: var(--copper-soft);
+          flex: none;
+        }
+        .agent :global(.lremind b) {
+          color: var(--text);
+          font-weight: 600;
         }
         .agent :global(.cmp-act) {
           display: flex;

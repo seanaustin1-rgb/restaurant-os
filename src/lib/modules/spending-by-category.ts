@@ -5,6 +5,7 @@ import {
   describeLedgerSource,
   type LedgerReadSource,
 } from "@/lib/financial-ledger/ledger-coverage";
+import { LEDGER_NON_SPEND_ACCOUNTS as SHARED_LEDGER_NON_SPEND_ACCOUNTS } from "@/lib/financial-ledger/bucket-map";
 
 // Spending by Category module. Splits the period's outflows into high-level
 // groups (for the pie) and detailed categories (for the table), and compares
@@ -113,15 +114,7 @@ export const LEDGER_SPEND_ACCOUNTS: Partial<Record<LedgerAccount, { group: strin
 
 /** Accounts that are never operating spend: the cash contra side, revenue,
  * pass-throughs, internal moves, and the profit allocation target. */
-export const LEDGER_NON_SPEND_ACCOUNTS: readonly LedgerAccount[] = [
-  "OPERATING_CASH",
-  "REVENUE",
-  "REAL_REVENUE",
-  "PASS_THROUGH_PAYABLE",
-  "AGENT_PAYABLE",
-  "INTERNAL_TRANSFER",
-  "PROFIT",
-];
+export const LEDGER_NON_SPEND_ACCOUNTS = SHARED_LEDGER_NON_SPEND_ACCOUNTS;
 
 /**
  * Aggregate spend + revenue from clean-ledger lines. Pure so the account-mapping

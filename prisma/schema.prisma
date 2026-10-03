@@ -287,6 +287,15 @@ model Restaurant {
   spiritFlights                   SpiritFlight[]
   membershipCodes                 MembershipCode[]
   guestMemberships                GuestMembership[]
+  teamMemberships                 TeamMembership[]
+  teamMediaAssets                 TeamMediaAsset[]
+  teamLessons                     TeamLesson[]
+  teamModules                     TeamModule[]
+  teamModuleItems                 TeamModuleItem[]
+  teamAssignments                 TeamAssignment[]
+  teamLessonProgress              TeamLessonProgress[]
+  teamMoments                     TeamMoment[]
+  teamActionLogs                  TeamActionLog[]
 }
 
 model UserRestaurantRole {
@@ -1646,4 +1655,271 @@ model GuestMembership {
 
   @@index([guestId, restaurantId, status])
   @@index([restaurantId, currentPeriodEnd])
+}
+
+// Team Hub. Every relationship between Team records includes restaurantId, so
+// the database rejects cross-tenant references even if an application caller errs.
+enum TeamRole {
+  MEMBER
+  CONTRIBUTOR
+  MANAGER
+}
+
+enum TeamDept {
+  FOH
+  BOH
+  BAR
+  BAKERY
+  MGMT
+}
+
+enum TeamMemberStatus {
+  INVITED
+  ACTIVE
+  REMOVED
+}
+
+enum TeamLessonType {
+  SHIFT_BRIEF
+  HOSPITALITY
+  PRODUCT
+  UPDATE
+  MOMENT
+}
+
+enum TeamLessonStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TeamLessonSource {
+  UPLOAD
+  IMPORT
+  SUBMISSION
+}
+
+enum TeamMediaStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum TeamMomentStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model TeamMembership {
+  id             String           @id @default(cuid())
+  restaurantId   String
+  clerkUserId    String?
+  phoneE164      String
+  displayName    String
+  role           TeamRole         @default(MEMBER)
+  departments    TeamDept[]
+  status         TeamMemberStatus @default(INVITED)
+  lastFeedSeenAt DateTime?
+  createdAt      DateTime         @default(now())
+  removedAt      DateTime?
+
+  restaurant           Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  authoredLessons      TeamLesson[]         @relation("TeamLessonAuthor")
+  assignments          TeamAssignment[]     @relation("TeamAssignmentMember")
+  assignedAssignments  TeamAssignment[]     @relation("TeamAssignmentAssigner")
+  lessonProgress       TeamLessonProgress[] @relation("TeamProgressMember")
+  demonstratedProgress TeamLessonProgress[] @relation("TeamProgressDemonstrator")
+  submittedMoments     TeamMoment[]         @relation("TeamMomentSubmitter")
+  reviewedMoments      TeamMoment[]         @relation("TeamMomentReviewer")
+
+  @@unique([restaurantId, phoneE164])
+  @@unique([restaurantId, clerkUserId])
+  @@unique([id, restaurantId])
+  @@index([clerkUserId, status])
+}
+
+model TeamMediaAsset {
+  id              String          @id @default(cuid())
+  restaurantId    String
+  provider        String          @default("CLOUDFLARE_STREAM")
+  providerAssetId String
+  status          TeamMediaStatus @default(UPLOADING)
+  durationSec     Int?
+  hasCaptions     Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+
+  restaurant Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  lessons    TeamLesson[] @relation("TeamLessonMedia")
+  moments    TeamMoment[] @relation("TeamMomentMedia")
+
+  @@unique([provider, providerAssetId])
+  @@unique([id, restaurantId])
+  @@index([restaurantId])
+}
+
+model TeamLesson {
+  id            String           @id @default(cuid())
+  restaurantId  String
+  type          TeamLessonType
+  title         String
+  takeaway      String
+  category      String
+  tags          String[]
+  audience      TeamDept[]
+  managersOnly  Boolean          @default(false)
+  status        TeamLessonStatus @default(DRAFT)
+  source        TeamLessonSource @default(UPLOAD)
+  version       Int              @default(1)
+  mediaAssetId  String?
+  authorId      String
+  publishedAt   DateTime?
+  feedExpiresAt DateTime?
+  checkPrompt   String?
+  checkOptions  Json?
+  checkAnswer   Int?
+  productRef    String?
+  importKey     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  restaurant       Restaurant           @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  mediaAsset       TeamMediaAsset?      @relation("TeamLessonMedia", fields: [mediaAssetId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  author           TeamMembership       @relation("TeamLessonAuthor", fields: [authorId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  moduleItems      TeamModuleItem[]
+  progress         TeamLessonProgress[]
+  publishedMoments TeamMoment[]         @relation("TeamMomentPublishedLesson")
+
+  @@unique([restaurantId, importKey])
+  @@unique([id, restaurantId])
+  @@index([restaurantId, status, publishedAt])
+  @@index([mediaAssetId, restaurantId])
+  @@index([authorId, restaurantId])
+}
+
+model TeamModule {
+  id           String     @id @default(cuid())
+  restaurantId String
+  title        String
+  description  String?
+  audience     TeamDept[]
+  managersOnly Boolean    @default(false)
+  archived     Boolean    @default(false)
+
+  restaurant  Restaurant       @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  items       TeamModuleItem[]
+  assignments TeamAssignment[]
+
+  @@unique([id, restaurantId])
+  @@index([restaurantId])
+}
+
+model TeamModuleItem {
+  id           String  @id @default(cuid())
+  restaurantId String
+  moduleId     String
+  lessonId     String
+  position     Int
+  requiresDemo Boolean @default(false)
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  module     TeamModule @relation(fields: [moduleId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  lesson     TeamLesson @relation(fields: [lessonId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@unique([moduleId, position])
+  @@unique([moduleId, lessonId])
+  @@index([restaurantId])
+  @@index([lessonId, restaurantId])
+}
+
+model TeamAssignment {
+  id           String    @id @default(cuid())
+  restaurantId String
+  moduleId     String
+  membershipId String
+  assignedById String
+  dueAt        DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  restaurant Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  module     TeamModule     @relation(fields: [moduleId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  membership TeamMembership @relation("TeamAssignmentMember", fields: [membershipId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  assignedBy TeamMembership @relation("TeamAssignmentAssigner", fields: [assignedById, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@unique([moduleId, membershipId])
+  @@unique([id, restaurantId])
+  @@index([restaurantId])
+  @@index([membershipId, restaurantId])
+  @@index([assignedById, restaurantId])
+}
+
+model TeamLessonProgress {
+  id               String    @id @default(cuid())
+  restaurantId     String
+  membershipId     String
+  lessonId         String
+  lessonVersion    Int
+  firstViewedAt    DateTime  @default(now())
+  watchedAt        DateTime?
+  understoodAt     DateTime?
+  demonstratedAt   DateTime?
+  demonstratedById String?
+
+  restaurant     Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  membership     TeamMembership  @relation("TeamProgressMember", fields: [membershipId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  lesson         TeamLesson      @relation(fields: [lessonId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  demonstratedBy TeamMembership? @relation("TeamProgressDemonstrator", fields: [demonstratedById, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@unique([membershipId, lessonId])
+  @@unique([id, restaurantId])
+  @@index([restaurantId])
+  @@index([lessonId, restaurantId])
+  @@index([demonstratedById, restaurantId])
+}
+
+model TeamMoment {
+  id                String           @id @default(cuid())
+  restaurantId      String
+  submittedById     String
+  moment            String
+  whyItMattered     String
+  tryThisShift      String
+  mediaAssetId      String?
+  status            TeamMomentStatus @default(SUBMITTED)
+  reviewedById      String?
+  reviewNote        String?
+  publishedLessonId String?
+  createdAt         DateTime         @default(now())
+
+  restaurant      Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  submittedBy     TeamMembership  @relation("TeamMomentSubmitter", fields: [submittedById, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  mediaAsset      TeamMediaAsset? @relation("TeamMomentMedia", fields: [mediaAssetId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  reviewedBy      TeamMembership? @relation("TeamMomentReviewer", fields: [reviewedById, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  publishedLesson TeamLesson?     @relation("TeamMomentPublishedLesson", fields: [publishedLessonId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+
+  @@unique([id, restaurantId])
+  @@index([restaurantId, status])
+  @@index([submittedById, restaurantId])
+  @@index([mediaAssetId, restaurantId])
+  @@index([reviewedById, restaurantId])
+  @@index([publishedLessonId, restaurantId])
+}
+
+model TeamActionLog {
+  id           String   @id @default(cuid())
+  restaurantId String
+  actorId      String
+  action       String
+  targetType   String
+  targetId     String
+  detail       Json?
+  createdAt    DateTime @default(now())
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([id, restaurantId])
+  @@index([restaurantId, createdAt])
 }

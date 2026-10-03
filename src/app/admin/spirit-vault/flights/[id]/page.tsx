@@ -9,6 +9,7 @@ import {
   type FlightFormInitial,
 } from "@/components/spirit-vault/SpiritFlightCreateForm";
 import { suggestBites } from "@/lib/spirit-vault/flight-pairings";
+import { pourIsAvailable } from "@/lib/spirit-vault/availability";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
       offers: {
         where: { priceUsd: { not: null }, pourSizeOz: { not: null } },
         orderBy: [{ isPrimary: "desc" }, { pourSizeOz: "asc" }],
-        select: { id: true, pourLabel: true, pourSizeOz: true, priceUsd: true },
+        select: { id: true, pourLabel: true, pourSizeOz: true, priceUsd: true, availability: true },
       },
     },
   });
@@ -82,6 +83,7 @@ export default async function EditSpiritFlightPage({ params }: { params: { id: s
       const priceUsd = decimalToNumber(offer.priceUsd);
       const pourSizeOz = decimalToNumber(offer.pourSizeOz);
       if (priceUsd == null || pourSizeOz == null || pourSizeOz <= 0) return [];
+      if (!pourIsAvailable(offer.availability)) return [];
       return [
         {
           venueSpiritId: listing.id,

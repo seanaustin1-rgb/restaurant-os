@@ -51,8 +51,8 @@ beforeEach(() => {
   h.authMock.mockResolvedValue({ userId: "user_1" });
   h.roleFindFirst.mockResolvedValue({ restaurantId: "rest_1" });
   h.pourFindMany.mockResolvedValue([
-    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 },
-    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5 },
+    { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: null },
+    { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
   ]);
   h.flightCreate.mockResolvedValue({ id: "flight_1" });
   h.flightFindFirst.mockResolvedValue({ id: "flight_1" });
@@ -87,6 +87,7 @@ describe("createSpiritFlight", () => {
         venueSpiritId: true,
         priceUsd: true,
         pourSizeOz: true,
+        availability: true,
       },
     });
 
@@ -143,9 +144,85 @@ describe("createSpiritFlight", () => {
   });
 
   it("rejects missing or unpublished source pours", async () => {
-    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2 }]);
+    h.pourFindMany.mockResolvedValue([{ id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: null }]);
 
     await expect(createSpiritFlight(baseInput)).rejects.toThrow(/published vault spirit/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a description longer than 500 characters", async () => {
+    await expect(
+      createSpiritFlight({ ...baseInput, description: "x".repeat(501) }),
+    ).rejects.toThrow(/500-character limit/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects an item note longer than 200 characters", async () => {
+    await expect(
+      createSpiritFlight({
+        ...baseInput,
+        items: [
+          { venueSpiritId: "venue_1", spiritPourId: "pour_1", itemNote: "y".repeat(201) },
+          { venueSpiritId: "venue_2", spiritPourId: "pour_2" },
+        ],
+      }),
+    ).rejects.toThrow(/200-character limit/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects a bite longer than 80 characters", async () => {
+    await expect(
+      createSpiritFlight({
+        ...baseInput,
+        items: [
+          { venueSpiritId: "venue_1", spiritPourId: "pour_1", pairingBites: ["z".repeat(81)] },
+          { venueSpiritId: "venue_2", spiritPourId: "pour_2" },
+        ],
+      }),
+    ).rejects.toThrow(/80-character limit/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("accepts exactly-at-limit lengths", async () => {
+    await createSpiritFlight({
+      ...baseInput,
+      description: "x".repeat(500),
+      items: [
+        { venueSpiritId: "venue_1", spiritPourId: "pour_1", itemNote: "y".repeat(200), pairingBites: ["z".repeat(80)] },
+        { venueSpiritId: "venue_2", spiritPourId: "pour_2" },
+      ],
+    });
+    expect(h.flightCreate).toHaveBeenCalled();
+  });
+
+  it("rejects an out-of-stock pour", async () => {
+    h.pourFindMany.mockResolvedValue([
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Out of stock" },
+      { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: null },
+    ]);
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/out-of-stock/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-standard unavailable labels (Sold out, 86'd, etc.)", async () => {
+    h.pourFindMany.mockResolvedValue([
+      { id: "pour_1", venueSpiritId: "venue_1", priceUsd: 14, pourSizeOz: 2, availability: "Sold out" },
+      { id: "pour_2", venueSpiritId: "venue_2", priceUsd: 18, pourSizeOz: 1.5, availability: "In stock" },
+    ]);
+    await expect(createSpiritFlight(baseInput)).rejects.toThrow(/out-of-stock/i);
+    expect(h.flightCreate).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate pours in the same flight", async () => {
+    await expect(
+      createSpiritFlight({
+        ...baseInput,
+        items: [
+          { venueSpiritId: "venue_1", spiritPourId: "pour_1" },
+          { venueSpiritId: "venue_2", spiritPourId: "pour_1" },
+        ],
+      }),
+    ).rejects.toThrow(/same pour twice/i);
     expect(h.flightCreate).not.toHaveBeenCalled();
   });
 });

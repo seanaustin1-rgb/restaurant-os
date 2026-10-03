@@ -43,6 +43,11 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
     flavor?: unknown;
     topNotes?: unknown;
     pairings?: unknown;
+    mashBill?: string | null;
+    caskDetails?: string | null;
+    productionMethod?: string | null;
+    servingSuggestion?: string | null;
+    suggestedCocktails?: string[] | null;
   };
   const ovTopNotes = asStrings(ov.topNotes);
   const ovPairings = asStrings(ov.pairings);
@@ -72,6 +77,11 @@ export default async function SpiritEditPage({ params }: { params: { id: string 
           flavor: asFlavor(ov.flavor ?? item.definition.flavor),
           topNotes: ovTopNotes.length ? ovTopNotes : item.definition.topNotes,
           pairings: ovPairings.length ? ovPairings : asStrings(item.definition.pairings),
+          mashBill: ov.mashBill ?? "",
+          caskDetails: ov.caskDetails ?? "",
+          productionMethod: ov.productionMethod ?? "",
+          servingSuggestion: ov.servingSuggestion ?? "",
+          suggestedCocktails: asStrings(ov.suggestedCocktails),
           recordStatus: item.recordStatus,
           publicationStatus: item.publicationStatus,
         }}

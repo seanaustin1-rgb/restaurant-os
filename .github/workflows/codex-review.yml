@@ -87,6 +87,7 @@ jobs:
       # the environment of the step that processes the (untrusted) PR diff. This
       # shrinks the secret surface during the sandbox-bypassed run.
       - name: Run Codex review
+        id: review
         if: steps.guard.outputs.enabled == 'true'
         run: |
           # --dangerously-bypass-approvals-and-sandbox disables Codex's internal
@@ -95,6 +96,7 @@ jobs:
           # otherwise blocks every shell command Codex runs to read the diff.
           # Safe here: the runner is already an isolated, ephemeral VM and this
           # review is read-only. See openai/codex#15957, #16334.
+          set +e
           codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox \
             "Read AGENTS.md for project context, conventions, and guardrails. \
              Then review the pull-request diff in /tmp/pr.diff. Prioritize \
@@ -103,10 +105,26 @@ jobs:
              auth/middleware changes, then style. Be concise: list only concrete, \
              actionable findings with file:line references; if the diff looks \
              clean, say so. Do NOT run database migrations." \
-            > /tmp/review.md 2>&1 || echo "(Codex review exited non-zero; see log above)" >> /tmp/review.md
+            > /tmp/review.md 2>&1
+          status=$?
+          set -e
+          # Only post a PR comment when Codex actually produced a review. Infra
+          # failures — API quota exhaustion, auth/bearer drops, transport errors —
+          # otherwise post an error comment on EVERY push, spamming the thread
+          # (this happened repo-wide when OPENAI_API_KEY hit its quota). This job
+          # is an advisory second opinion; the real gate is CI. A broken Codex
+          # must stay silent, not spam. When it fails we surface a workflow notice
+          # (visible in the Actions tab) instead of a PR comment.
+          if [ "$status" -ne 0 ] || \
+             grep -qiE 'Quota exceeded|Missing bearer|401 Unauthorized|error sending request|stream (disconnected|error)' /tmp/review.md; then
+            echo "::notice::Codex review unavailable (exit=$status); no PR comment posted. Check OPENAI_API_KEY quota/billing."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Post review comment
-        if: steps.guard.outputs.enabled == 'true'
+        if: steps.guard.outputs.enabled == 'true' && steps.review.outputs.ok == 'true'
         uses: actions/github-script@v7
         with:
           script: |

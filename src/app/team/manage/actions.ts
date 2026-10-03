@@ -105,7 +105,10 @@ export async function prepareTeamInvite(input: { restaurantId: string; memberId:
   catch { throw new Error("The app URL must be configured before sharing invites."); }
   const localDev = process.env.NODE_ENV !== "production" && appUrl.protocol === "http:" && ["localhost", "127.0.0.1"].includes(appUrl.hostname);
   if (appUrl.protocol !== "https:" && !localDev) throw new Error("The app URL must use HTTPS before sharing invites.");
-  const url = new URL(`/team/claim?restaurantId=${encodeURIComponent(input.restaurantId)}`, appUrl).toString();
+  const claimUrl = new URL("/team/claim", appUrl);
+  claimUrl.searchParams.set("restaurantId", input.restaurantId);
+  claimUrl.searchParams.set("membershipId", member.id);
+  const url = claimUrl.toString();
   await db.teamActionLog.create({ data: {
     restaurantId: input.restaurantId,
     actorId: viewer.membershipId ?? viewer.clerkUserId,

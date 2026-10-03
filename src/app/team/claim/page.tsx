@@ -4,10 +4,10 @@ import { claimTeamMembership, TeamClaimDenied } from "@/lib/team/claim";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClaimTeamPage({ searchParams }: { searchParams: { restaurantId?: string } }) {
+export default async function ClaimTeamPage({ searchParams }: { searchParams: { restaurantId?: string; membershipId?: string } }) {
   const restaurantId = searchParams.restaurantId ?? "";
   try {
-    await claimTeamMembership(restaurantId);
+    await claimTeamMembership(restaurantId, searchParams.membershipId ?? "");
   } catch (error) {
     if (!(error instanceof TeamClaimDenied)) throw error;
     return (

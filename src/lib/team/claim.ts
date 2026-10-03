@@ -12,8 +12,8 @@ export class TeamClaimDenied extends Error {
 }
 
 /** The phone comes only from Clerk's verified primary phone, never the invite URL. */
-export async function claimTeamMembership(restaurantId: string): Promise<void> {
-  if (!restaurantId?.trim()) throw new TeamClaimDenied();
+export async function claimTeamMembership(restaurantId: string, membershipId: string): Promise<void> {
+  if (!restaurantId?.trim() || !membershipId?.trim()) throw new TeamClaimDenied();
   const { userId } = await auth();
   if (!userId) throw new TeamClaimDenied();
   const clerk = await clerkClient();
@@ -31,7 +31,8 @@ export async function claimTeamMembership(restaurantId: string): Promise<void> {
     where: { restaurantId_phoneE164: { restaurantId, phoneE164 } },
     select: { id: true, status: true, clerkUserId: true },
   });
-  if (invite?.status === "ACTIVE" && invite.clerkUserId === userId) {
+  if (invite?.id !== membershipId) throw new TeamClaimDenied();
+  if (invite.status === "ACTIVE" && invite.clerkUserId === userId) {
     await requireTeamAccess(restaurantId);
     return;
   }

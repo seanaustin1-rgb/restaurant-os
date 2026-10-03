@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe("phone login claim", () => {
   it("binds only the invited row for the explicitly named restaurant and verified phone", async () => {
-    await claimTeamMembership("tenant_a");
+    await claimTeamMembership("tenant_a", "member_a");
     expect(h.teamDb).toHaveBeenCalledWith("tenant_a");
     expect(h.findUnique).toHaveBeenCalledWith({
       where: { restaurantId_phoneE164: { restaurantId: "tenant_a", phoneE164: "+17175551234" } },
@@ -48,20 +48,31 @@ describe("phone login claim", () => {
 
   it("cannot claim an invitation from another restaurant", async () => {
     h.findUnique.mockResolvedValue(null);
-    await expect(claimTeamMembership("tenant_b")).rejects.toBeInstanceOf(TeamClaimDenied);
+    await expect(claimTeamMembership("tenant_b", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
     expect(h.teamDb).toHaveBeenCalledWith("tenant_b");
     expect(h.updateMany).not.toHaveBeenCalled();
   });
 
+  it("does not let a forwarded link claim another invited row in the same restaurant", async () => {
+    h.findUnique.mockResolvedValue({ id: "member_b", status: "INVITED", clerkUserId: null });
+    await expect(claimTeamMembership("tenant_a", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
+    expect(h.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("does not claim a link missing its roster entry", async () => {
+    await expect(claimTeamMembership("tenant_a", "")).rejects.toBeInstanceOf(TeamClaimDenied);
+    expect(h.teamDb).not.toHaveBeenCalled();
+  });
+
   it("does not claim while Team Hub is disabled for that restaurant", async () => {
     h.moduleFindUnique.mockResolvedValue({ isEnabled: false });
-    await expect(claimTeamMembership("tenant_a")).rejects.toBeInstanceOf(TeamClaimDenied);
+    await expect(claimTeamMembership("tenant_a", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
     expect(h.teamDb).not.toHaveBeenCalled();
   });
 
   it.each(["ACTIVE", "REMOVED"])("does not bind a %s membership", async (status) => {
     h.findUnique.mockResolvedValue({ id: "member_a", status, clerkUserId: null });
-    await expect(claimTeamMembership("tenant_a")).rejects.toBeInstanceOf(TeamClaimDenied);
+    await expect(claimTeamMembership("tenant_a", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
     expect(h.updateMany).not.toHaveBeenCalled();
   });
 
@@ -70,10 +81,10 @@ describe("phone login claim", () => {
       primaryPhoneNumberId: "phone_1",
       phoneNumbers: [{ id: "phone_1", phoneNumber: "+17175551234", verification: { status: "unverified" } }],
     });
-    await expect(claimTeamMembership("tenant_a")).rejects.toBeInstanceOf(TeamClaimDenied);
+    await expect(claimTeamMembership("tenant_a", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
     expect(h.teamDb).not.toHaveBeenCalled();
     h.updateMany.mockResolvedValueOnce({ count: 0 });
-    await expect(claimTeamMembership("tenant_a")).rejects.toBeInstanceOf(TeamClaimDenied);
+    await expect(claimTeamMembership("tenant_a", "member_a")).rejects.toBeInstanceOf(TeamClaimDenied);
     expect(h.logCreate).not.toHaveBeenCalled();
   });
 });

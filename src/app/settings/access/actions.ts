@@ -4,7 +4,6 @@ import { randomBytes } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { landingPathForRole } from "@/lib/access/landing";
@@ -147,7 +146,7 @@ export async function revokeAccessInvite(input: { inviteId: string }): Promise<v
   revalidatePath(PATH);
 }
 
-export async function acceptAccessInvite(token: string): Promise<void> {
+export async function acceptAccessInvite(token: string): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("Sign in to accept this invite.");
 
@@ -183,7 +182,7 @@ export async function acceptAccessInvite(token: string): Promise<void> {
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
   revalidatePath("/investor");
-  redirect(landingPathForRole(invite.role));
+  return landingPathForRole(invite.role);
 }
 
 export async function removeAccessRole(input: { roleId: string }): Promise<void> {

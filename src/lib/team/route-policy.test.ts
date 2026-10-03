@@ -18,4 +18,12 @@ describe("Team-only route policy", () => {
     expect(teamOnlyDestination("/sign-out", true)).toBe("allow");
     expect(teamOnlyDestination("/dashboard", false)).toBe("allow");
   });
+
+  it("allows only the business invite page and its accept POST", () => {
+    expect(teamOnlyDestination("/access/accept", true, "GET")).toBe("allow");
+    expect(teamOnlyDestination("/access/accept", true, "POST")).toBe("allow");
+    expect(teamOnlyDestination("/access/accept", true, "DELETE")).toBe("forbid");
+    expect(teamOnlyDestination("/access/accept/other", true, "GET")).toBe("redirect");
+    expect(teamOnlyDestination("/access", true, "GET")).toBe("redirect");
+  });
 });

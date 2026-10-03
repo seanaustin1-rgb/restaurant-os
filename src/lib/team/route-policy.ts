@@ -4,6 +4,9 @@ export function teamOnlyDestination(pathname: string, teamOnly: boolean, method 
     /^\/(sign-in|sign-out|sign-up)(\/|$)/.test(pathname)) {
     return "allow";
   }
+  // The exact invite page and its form POST need to be reachable before the
+  // business role exists. acceptAccessInvite verifies the signed-in email.
+  if (pathname === "/access/accept" && ["GET", "HEAD", "POST"].includes(method)) return "allow";
   return pathname.startsWith("/api/") || pathname.startsWith("/trpc/") || !["GET", "HEAD"].includes(method)
     ? "forbid"
     : "redirect";

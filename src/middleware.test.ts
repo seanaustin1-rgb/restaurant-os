@@ -49,4 +49,14 @@ describe("Team-only middleware", () => {
     const auth = viewer();
     expect(await handle(auth, new NextRequest("https://app.example/dashboard"))).toBeUndefined();
   });
+
+  it("lets a Team-only user open and submit the exact business invite page", async () => {
+    const auth = viewer(true);
+    expect(await handle(auth, new NextRequest("https://app.example/access/accept?token=invite")))
+      .toBeUndefined();
+    expect(await handle(auth, new NextRequest("https://app.example/access/accept?token=invite", { method: "POST" })))
+      .toBeUndefined();
+    const other = await handle(auth, new NextRequest("https://app.example/access/other"));
+    expect(other?.headers.get("location")).toBe("https://app.example/team");
+  });
 });

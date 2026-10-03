@@ -48,36 +48,17 @@ export default async function SpiritFlightsPage() {
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/admin/spirit-vault" className="text-xs text-muted hover:text-copper-soft">
-            Back to Spirit Vault
-          </Link>
-          <h1 className="mt-2 font-display text-2xl text-copper-soft">Create a Flight</h1>
+          <h1 className="font-display text-2xl text-copper-soft">Flights</h1>
           <p className="mt-1 text-sm text-muted">
-            {role.restaurant?.name ?? "Your bar"} - build Toast-trackable flights from existing vault spirits.
+            {role.restaurant?.name ?? "Your bar"} — build Toast-trackable flights from existing vault spirits.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/admin/spirit-vault/membership"
-            className="rounded-md border border-line px-4 py-2 text-sm text-copper-soft hover:bg-surface"
-          >
-            Membership codes
-          </Link>
-          <a
-            href="/admin/spirit-vault/today"
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-md border border-line px-4 py-2 text-sm text-copper-soft hover:bg-surface"
-          >
-            Print today&apos;s code ↗
-          </a>
-          <Link
-            href="/admin/spirit-vault/flights/new"
-            className="rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20"
-          >
-            New flight
-          </Link>
-        </div>
+        <Link
+          href="/admin/spirit-vault/flights/new"
+          className="rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20"
+        >
+          New flight
+        </Link>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-line">

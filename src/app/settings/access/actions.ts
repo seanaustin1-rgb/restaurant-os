@@ -9,6 +9,7 @@ import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { landingPathForRole } from "@/lib/access/landing";
 import { sendAccessInviteEmail } from "@/lib/email/access-invite";
+import { clearTeamOnlyForBusinessRole, syncTeamOnlyForCurrentAccess } from "@/lib/team/metadata";
 
 const PATH = "/settings/access";
 const ALLOWED_ROLES: UserRole[] = ["OPERATOR", "CONSULTANT", "INVESTOR", "MANAGER"];
@@ -73,6 +74,7 @@ export async function saveAccessRole(input: {
     update: { role },
     create: { clerkUserId, restaurantId, role },
   });
+  await clearTeamOnlyForBusinessRole(clerkUserId);
 
   revalidatePath(PATH);
   revalidatePath("/dashboard");
@@ -103,6 +105,7 @@ export async function inviteAccessByEmail(input: {
       update: { role },
       create: { clerkUserId: existingUserId, restaurantId, role },
     });
+    await clearTeamOnlyForBusinessRole(existingUserId);
     revalidatePath(PATH);
     revalidatePath("/dashboard");
     return { status: "granted", note: "This email already has a Clerk account, so access was granted immediately." };
@@ -175,6 +178,7 @@ export async function acceptAccessInvite(token: string): Promise<void> {
       data: { status: "ACCEPTED", acceptedBy: userId, acceptedAt: new Date() },
     }),
   ]);
+  await clearTeamOnlyForBusinessRole(userId);
 
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
@@ -199,6 +203,7 @@ export async function removeAccessRole(input: { roleId: string }): Promise<void>
   }
 
   await prisma.userRestaurantRole.delete({ where: { id: role.id } });
+  await syncTeamOnlyForCurrentAccess(role.clerkUserId);
   revalidatePath(PATH);
   revalidatePath("/dashboard");
 }

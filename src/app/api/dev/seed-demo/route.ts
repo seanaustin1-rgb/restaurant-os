@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { seedDemoData } from "@/lib/dev/seed-demo";
+import { clearTeamOnlyForBusinessRole } from "@/lib/team/metadata";
 
 // DEV ONLY: seed a month of demo data.
 // - If signed in: seeds into the user's restaurant (creating one + OPERATOR role if needed).
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
       },
     });
     restaurantId = created.id;
+    if (userId) await clearTeamOnlyForBusinessRole(userId);
   }
 
   try {

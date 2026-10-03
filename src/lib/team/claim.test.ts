@@ -3,14 +3,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   auth: vi.fn(), getUser: vi.fn(), teamDb: vi.fn(), findUnique: vi.fn(),
   updateMany: vi.fn(), logCreate: vi.fn(), requireTeamAccess: vi.fn(), moduleFindUnique: vi.fn(),
+  businessRoleCount: vi.fn(), updateUserMetadata: vi.fn(),
 }));
 vi.mock("@clerk/nextjs/server", () => ({
   auth: h.auth,
-  clerkClient: async () => ({ users: { getUser: h.getUser } }),
+  clerkClient: async () => ({ users: { getUser: h.getUser, updateUserMetadata: h.updateUserMetadata } }),
 }));
 vi.mock("./db", () => ({ teamDb: h.teamDb }));
 vi.mock("./access", () => ({ requireTeamAccess: h.requireTeamAccess }));
-vi.mock("@/lib/prisma", () => ({ prisma: { moduleConfig: { findUnique: h.moduleFindUnique } } }));
+vi.mock("@/lib/prisma", () => ({ prisma: {
+  moduleConfig: { findUnique: h.moduleFindUnique },
+  userRestaurantRole: { count: h.businessRoleCount },
+} }));
 
 import { claimTeamMembership, TeamClaimDenied } from "./claim";
 
@@ -23,6 +27,7 @@ beforeEach(() => {
   });
   h.findUnique.mockResolvedValue({ id: "member_a", status: "INVITED", clerkUserId: null });
   h.moduleFindUnique.mockResolvedValue({ isEnabled: true });
+  h.businessRoleCount.mockResolvedValue(0);
   h.updateMany.mockResolvedValue({ count: 1 });
   h.logCreate.mockResolvedValue({ id: "log_1" });
   h.teamDb.mockReturnValue({
@@ -44,6 +49,15 @@ describe("phone login claim", () => {
       data: { clerkUserId: "clerk_1", status: "ACTIVE" },
     });
     expect(h.requireTeamAccess).toHaveBeenCalledWith("tenant_a");
+    expect(h.businessRoleCount).toHaveBeenCalledWith({ where: { clerkUserId: "clerk_1" } });
+    expect(h.updateUserMetadata).toHaveBeenCalledWith("clerk_1", { publicMetadata: { teamOnly: true } });
+  });
+
+  it("does not mark a claimant Team-only when they already have a business role", async () => {
+    h.businessRoleCount.mockResolvedValue(1);
+    await claimTeamMembership("tenant_a", "member_a");
+    expect(h.updateUserMetadata).toHaveBeenCalledWith("clerk_1", { publicMetadata: { teamOnly: false } });
+    expect(h.updateUserMetadata).not.toHaveBeenCalledWith("clerk_1", { publicMetadata: { teamOnly: true } });
   });
 
   it("cannot claim an invitation from another restaurant", async () => {

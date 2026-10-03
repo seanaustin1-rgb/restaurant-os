@@ -2,6 +2,7 @@ import { auth, clerkClient } from "@clerk/nextjs/server";
 import { requireTeamAccess } from "./access";
 import { teamDb } from "./db";
 import { normalizeTeamPhone } from "./phone";
+import { syncTeamOnlyAfterClaim } from "./metadata";
 import { prisma } from "@/lib/prisma";
 
 export class TeamClaimDenied extends Error {
@@ -34,6 +35,7 @@ export async function claimTeamMembership(restaurantId: string, membershipId: st
   if (invite?.id !== membershipId) throw new TeamClaimDenied();
   if (invite.status === "ACTIVE" && invite.clerkUserId === userId) {
     await requireTeamAccess(restaurantId);
+    await syncTeamOnlyAfterClaim(userId);
     return;
   }
   if (!invite || invite.status !== "INVITED" || invite.clerkUserId) throw new TeamClaimDenied();
@@ -47,4 +49,5 @@ export async function claimTeamMembership(restaurantId: string, membershipId: st
     actorId: invite.id, action: "CLAIM_MEMBER", targetType: "TeamMembership", targetId: invite.id,
   } });
   await requireTeamAccess(restaurantId);
+  await syncTeamOnlyAfterClaim(userId);
 }

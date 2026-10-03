@@ -27,11 +27,3 @@ export async function listMyTeamTenants(): Promise<TeamTenant[]> {
   }
   return tenants;
 }
-
-export async function isTeamOnlyUser(): Promise<boolean> {
-  const { userId } = await auth();
-  if (!userId) return false;
-  const businessRoles = await prisma.userRestaurantRole.count({ where: { clerkUserId: userId } });
-  if (businessRoles > 0) return false;
-  return (await listMyTeamTenants()).length > 0;
-}

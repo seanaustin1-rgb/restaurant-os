@@ -5,6 +5,7 @@ import { TeamDept, TeamRole } from "@prisma/client";
 import { requireTeamAccess } from "@/lib/team/access";
 import { teamDb } from "@/lib/team/db";
 import { normalizeTeamPhone } from "@/lib/team/phone";
+import { syncTeamOnlyForCurrentAccess } from "@/lib/team/metadata";
 
 const DEPARTMENTS: TeamDept[] = ["FOH", "BOH", "BAR", "BAKERY", "MGMT"];
 const ROLES: TeamRole[] = ["MEMBER", "CONTRIBUTOR", "MANAGER"];
@@ -75,11 +76,17 @@ export async function removeTeamMember(input: { restaurantId: string; memberId: 
   const viewer = await requireTeamAccess(input.restaurantId, "MANAGER");
   if (viewer.membershipId === input.memberId) throw new Error("You cannot remove your own Team access.");
   const db = teamDb(input.restaurantId);
+  const member = await db.teamMembership.findFirst({
+    where: { id: input.memberId, status: { not: "REMOVED" } },
+    select: { clerkUserId: true },
+  });
+  if (!member) throw new Error("Roster member not found.");
   const result = await db.teamMembership.updateMany({
     where: { id: input.memberId, status: { not: "REMOVED" } },
     data: { status: "REMOVED", removedAt: new Date() },
   });
   if (result.count !== 1) throw new Error("Roster member not found.");
+  if (member.clerkUserId) await syncTeamOnlyForCurrentAccess(member.clerkUserId);
   await db.teamActionLog.create({ data: {
     restaurantId: input.restaurantId,
     actorId: viewer.membershipId ?? viewer.clerkUserId,

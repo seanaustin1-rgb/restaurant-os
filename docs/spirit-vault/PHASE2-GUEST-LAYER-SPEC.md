@@ -1,12 +1,12 @@
-# Spirit Vault — Phase 2 Guest Layer Spec (DRAFT)
+# Spirit Vault — Phase 2 Guest Layer Spec (v2, Codex-reviewed)
 
-Status: DRAFT for Sean + Codex alignment · Author: Claude · 2026-08-18
-Supersedes the deferred "P4" bullet in the Phase-1 plan. Phase 1 (daily-code gate +
-placemat QR) shipped in PR #150.
+Status: DRAFT for Sean sign-off · Author: Claude · Codex design review folded in 2026-08-18
+Supersedes the deferred "P4" bullet. Phase 1 (daily-code gate + placemat QR) shipped
+in PR #150 and is LIVE.
 
-**Lane:** Claude proposes this spec and owns the guest-facing UI. The new tables +
-auth are the **data spine = Codex's lane** — nothing here is built until Codex and
-Sean sign off on the model. This doc is the alignment surface.
+**Lane:** Claude proposes; the tables + auth are the **data spine = Codex's lane**.
+Codex has reviewed this design (verdict: sound, with the tightening folded in below).
+Nothing is built until Sean signs off.
 
 ---
 
@@ -14,7 +14,7 @@ Sean sign off on the model. This doc is the alignment surface.
 
 The Spirit Vault is **not Untappd**. Untappd is a global, crowd-rated, platform-owned
 social network you check into from anywhere — a discovery app that builds loyalty to
-*Untappd*, not to the bar. The Vault inverts every axis of that:
+*Untappd*, not the bar. The Vault inverts every axis:
 
 | Axis | Untappd | Spirit Vault |
 |---|---|---|
@@ -23,144 +23,166 @@ social network you check into from anywhere — a discovery app that builds loya
 | Where it works | Anywhere | **On-premise by design** (daily code); off-prem = paid |
 | Who benefits from the data | Untappd | **The operator** (stock/86/hospitality signal) |
 
-Everything below follows from that: a **house-scoped membership + tasting journal
-that only works because you're here**, whose data feeds operator intelligence.
+Everything below follows: a **house-scoped membership + tasting journal that only
+works because you're here**, whose data feeds operator intelligence.
 
 ## 2. North stars (all four confirmed by Sean)
 
 1. **Passport / Cellar** — a personal collection scoped to *this house's shelf*:
-   tried / untried, progress ("12 of 47 in the bourbon vault"), favorites. The
-   retention hook.
-2. **Curator-vs-you** — the guest's 1–5 stars + note stored beside Sean's curator
-   note for the same spirit. Palate-building against house expertise.
-3. **What-to-try-next** — recommendations drawn from **in-stock, priced** pours
-   (Toast) using the guest's ratings + the structured flavor axes. A conversion
-   engine, not window-shopping.
+   tried / untried, progress ("12 of 47 in the bourbon vault"), favorites.
+2. **Curator-vs-you** — the guest's 1–5 stars + note beside Sean's curator note for
+   the same spirit.
+3. **What-to-try-next** — recommendations from **in-stock, priced** pours (Toast)
+   using the guest's ratings + the structured flavor axes.
 4. **Membership tiers** — free on-premise; **paid off-premise** access + perks,
-   plugged into the gate seam already built (`resolveVaultAccess` member branch).
+   plugged into the gate seam already built.
 
-## 3. Identity (recommended: Clerk, email magic-link)
+## 3. Identity — Clerk, email magic-link (Codex-confirmed)
 
-**Recommendation: Clerk guest accounts with email magic-link / OTP sign-in.**
+- Clerk bills on **MRU (Monthly Retained Users)** — returning users only; one-time
+  guests don't count. **50,000 MRUs free/app**, then $0.02/MRU. Codex verified these
+  numbers against Clerk's pricing + the Feb 2026 changelog. Effectively $0 for a
+  single venue; pennies per regular at multi-venue scale.
+- **Email magic-link/OTP** is on the free tier and is the right v1 (lower friction
+  than passwords, less sensitive than SMS, recoverable across devices).
+- **Clerk Billing** powers the paid membership tier into the gate seam.
+- **Guest = Clerk user with no `UserRestaurantRole`** → no admin access, automatically.
 
-- Clerk bills on **MRU (Monthly Retained Users)** — users who return *a day after
-  signup*. One-time guests don't count. **Free up to 50,000 MRUs/app**, then
-  $0.02/MRU (volume-discounted). A single venue never approaches 50k *returning*
-  guests; cost is effectively $0 until multi-venue scale, then pennies per regular.
-- **Email magic-link/OTP is on Clerk's free tier** (SMS codes / passkeys are what
-  require Pro at $25/mo). Lowest friction that still gives a real, recoverable
-  account.
-- **Clerk Billing** (PricingTable + `has()` entitlements) can power the paid
-  membership tier directly into the gate seam — one system for identity *and*
-  membership, vs. bolting Stripe onto a hand-rolled magic-link.
-- **Separation from staff is automatic:** a guest is a Clerk user with **no
-  `UserRestaurantRole`** → no admin access. Staff (tiny count) and guests share the
-  same free tier.
+> **Codex caveat (action item):** this separation is only safe if every staff surface
+> uses a POSITIVE `UserRestaurantRole` check where *absence = deny* (never "authenticated
+> ⇒ staff", never auto-onboard/promote by email). A **staff-route audit** is part of the
+> 2a-foundation slice below, and staff-invite flows must not grant roles to a guest
+> account by email without explicit operator action.
 
-> OPEN (Sean): confirm Clerk-email-link vs. lightweight magic-link. Everything in §4
-> except `GuestProfile`/membership is identity-agnostic, so this can be finalized late.
+## 4. Data model (Codex-reviewed)
 
-## 4. Data model (proposal — Codex owns final shape)
-
-Follows the canonical split model + composite tenant-FK convention (PR #137).
-`GuestProfile` is **global** (a guest can visit multiple OutFront venues); tasting
-data is **tenant-scoped**, so a passport is per-venue and can also aggregate.
+Global `GuestProfile`; all activity tenant-scoped via the composite-FK convention
+(matches `SpiritPour`/`SpiritPriceObservation`/`SpiritFlightItem` in the schema).
 
 ```prisma
-// Global guest identity. clerkUserId is the bridge to Clerk; a guest is simply a
-// Clerk user with no UserRestaurantRole.
+enum GuestMembershipScope { VENUE ACCOUNT }
+enum GuestMembershipStatus { ACTIVE PAST_DUE CANCELED }
+
+// Global guest identity — a Clerk user with no UserRestaurantRole.
 model GuestProfile {
-  id           String          @id @default(cuid())
-  clerkUserId  String          @unique
+  id           String   @id @default(cuid())
+  clerkUserId  String   @unique
   displayName  String?
-  createdAt    DateTime        @default(now())
-  tastings     GuestTasting[]
-  favorites    GuestFavorite[]
-  memberships  GuestMembership[]
+  createdAt    DateTime @default(now())
+  // relations: visits, tastings, favorites, memberships
 }
 
-// One guest's take on one venue's spirit. (guest, venueSpirit) unique — latest
-// rating/note wins; history can live in an append-only table later if wanted.
+// On-premise session provenance (Codex: add this — a check-in record).
+model GuestVisit {
+  id            String   @id @default(cuid())
+  guestId       String
+  restaurantId  String
+  unlockedVia   String   // "day-code" | "member-offpremise"
+  createdAt     DateTime @default(now())
+  @@index([restaurantId, createdAt])
+  @@index([guestId, restaurantId])
+}
+
+// One guest's current take on one venue's spirit. Latest-wins for 2a.
 model GuestTasting {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   guestId        String
-  restaurantId   String
+  restaurantId   String        // required
   venueSpiritId  String
-  rating         Int?         // 1..5 (DB CHECK), nullable = tried, not rated
+  flightId       String?       // tenant-safe FK below
+  rating         Int?          // CHECK: rating IS NULL OR 1..5
   note           String?
-  flightId       String?      // if tasted as part of a flight
-  tastedAt       DateTime     @default(now())
-  guest          GuestProfile @relation(fields: [guestId], references: [id])
-  venueSpirit    VenueSpirit  @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId])
-  @@unique([guestId, venueSpiritId])
-  @@index([restaurantId, venueSpiritId]) // operator rollups
+  // consent for operator/bartender visibility — modeled now, not deferred
+  shareWithStaff Boolean       @default(false)
+  firstTastedAt  DateTime      @default(now())
+  lastTastedAt   DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  venueSpirit    VenueSpirit   @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId], onDelete: Restrict)
+  flight         SpiritFlight? @relation(fields: [flightId, restaurantId], references: [id, restaurantId], onDelete: SetNull)
+  @@unique([guestId, restaurantId, venueSpiritId])
+  @@index([guestId, restaurantId])
+  @@index([restaurantId, venueSpiritId])
+  @@index([restaurantId, lastTastedAt])
 }
 
 model GuestFavorite {
-  id             String       @id @default(cuid())
+  id             String      @id @default(cuid())
   guestId        String
   restaurantId   String
   venueSpiritId  String
-  createdAt      DateTime     @default(now())
-  guest          GuestProfile @relation(fields: [guestId], references: [id])
-  @@unique([guestId, venueSpiritId])
+  createdAt      DateTime    @default(now())
+  venueSpirit    VenueSpirit @relation(fields: [venueSpiritId, restaurantId], references: [id, restaurantId], onDelete: Cascade)
+  @@unique([guestId, restaurantId, venueSpiritId])
 }
 
-// Drives the paid off-premise tier + the resolveVaultAccess member branch. Mirrors
-// Clerk Billing subscription state (source of truth = Clerk; this is the read cache).
+// Read-cache of Clerk Billing state — NOT the payment source of truth.
 model GuestMembership {
-  id                String       @id @default(cuid())
-  guestId           String
-  restaurantId      String?      // null = account-wide; set = per-venue membership
-  tier              String       // e.g. "off_premise"
-  status            String       // active | past_due | canceled
-  currentPeriodEnd  DateTime?
-  guest             GuestProfile @relation(fields: [guestId], references: [id])
-  @@index([guestId, status])
+  id                  String                @id @default(cuid())
+  guestId             String
+  restaurantId        String                // required in v1 (per-venue)
+  scope               GuestMembershipScope  @default(VENUE)
+  tier                String                // e.g. "off_premise"
+  status              GuestMembershipStatus
+  clerkSubscriptionId String?
+  currentPeriodEnd    DateTime?
+  lastSyncedAt        DateTime?
+  @@index([guestId, restaurantId, status])
 }
 ```
 
-- **Passport/coverage** is derived, not stored: `count(distinct GuestTasting.venueSpiritId where restaurantId=X)` over `count(published VenueSpirit for X)`. No denormalized counter to drift.
-- **Curator-vs-you** joins `GuestTasting` to the existing `SpiritDefinition.whyShort` / curator fields — no new curator storage.
-- **What-to-try-next** = untried published `VenueSpirit` with a priced in-stock `SpiritPour`, ranked by flavor-axis proximity to the guest's highly-rated spirits. Pure read over existing tables + `GuestTasting`.
-- **DB CHECK:** `rating BETWEEN 1 AND 5`. All additive tables — zero risk to existing models (same posture as the Phase-1 migration).
+Codex-driven changes from v1:
+- **Composite FK on `GuestFavorite`** (was missing) and on **`GuestTasting.flightId`**
+  (`[flightId, restaurantId] → SpiritFlight`, `onDelete: SetNull`).
+- **Unique keys include `restaurantId`** explicitly (`[guestId, restaurantId, venueSpiritId]`).
+- **Timestamps** `firstTastedAt`/`lastTastedAt`/`updatedAt`; keep latest-only for 2a,
+  add append-only `GuestTastingEvent` **only** if rating/note history is a near-term need.
+- **New `GuestVisit`** for on-prem session provenance; **consent flag** (`shareWithStaff`)
+  modeled now, since bartender-in-the-loop is part of the value prop.
+- **Membership `restaurantId` required + `scope` enum** (VENUE default) instead of a
+  nullable restaurantId — account-wide access is explicit, never accidental cross-venue.
+- **CHECK** `rating IS NULL OR rating BETWEEN 1 AND 5`; **enums** for membership
+  status/tier; **onDelete**: `VenueSpirit` deletion Restricts tastings (preserve
+  history), Cascades favorites; `GuestProfile`/`Restaurant` deletes cascade their rows.
+- Passport coverage stays **derived** (no stored counter).
 
-## 5. Gate integration (already seamed)
+## 5. Gate integration (contract change flagged by Codex)
 
-`src/lib/spirit-vault/vault-access.ts` already resolves as
-`validDayCode OR (future) member off-premise entitlement`. Phase 2 fills the second
-branch:
+`vault-access.ts` seam is `validDayCode OR member-offpremise`. Filling the member
+branch (2c) requires the resolver to become **async and tenant-aware** — today
+`resolveVaultAccess(providedCode?)` is sync and carries no `clerkUserId`/`restaurantId`.
+That's a planned 2c refactor, isolated to the resolver + its call sites. Membership
+checks must be **fail-closed** and tenant-scoped (a VENUE membership unlocks only its
+own venue).
 
-```ts
-// in resolveVaultAccess, after the day-code checks:
-if (await memberHasOffPremiseEntitlement(clerkUserId)) return { allowed: true, via: "member-offpremise" };
-```
+## 6. Phasing (Codex: split 2a)
 
-So an off-premise **member** reaches the vault without today's code; everyone else
-still needs to be on-site. No gate rework.
-
-## 6. Phasing
-
-- **2a — Foundation (biggest value, smallest surface):** Clerk guest sign-in +
-  `GuestProfile`/`GuestTasting`/`GuestFavorite` + the guest UI to **log a rating/note**
-  and see the **Passport** and **Curator-vs-you**. North stars 1 & 2. No billing.
-- **2b — What-to-try-next:** recommendation read over 2a data + Toast availability.
-  North star 3.
-- **2c — Membership / off-premise (paid):** `GuestMembership` + Clerk Billing +
-  fill the `resolveVaultAccess` member branch. North star 4.
+- **2a-foundation** — Clerk guest sign-in; `GuestProfile` + `GuestVisit` +
+  `GuestTasting` + `GuestFavorite` + consent field; **staff-route audit** (absence of
+  role = deny). No visible feature yet.
+- **2a-experience** — the guest UI to **log a rating/note**, the **Passport**, and
+  **Curator-vs-you** (clean reads over `GuestTasting` + existing curator fields).
+- **2b — What-to-try-next** — recommendation read over 2a data + Toast availability.
+- **2c — Membership / off-premise (paid)** — `GuestMembership` + Clerk Billing sync +
+  async/tenant-aware `resolveVaultAccess` member branch.
 
 ## 7. Operator intelligence (the payoff, on-brand for OutFront)
 
-Because the venue owns the data, `GuestTasting` rollups become operator signal:
-top-rated pours, flights that convert, "loved but low-stock," "86 candidates" — and,
-with consent, **bartender-in-the-loop** hospitality ("regular loves high-proof
-wheated, hasn't tried the new Weller"). This is the thread back to OutFront's core
-thesis: guest behavior → operator decisions.
+`GuestTasting` rollups become operator signal: top-rated pours, flights that convert,
+"loved but low-stock," 86 candidates — and, **with consent** (`shareWithStaff`),
+bartender-in-the-loop hospitality. The thread back to OutFront's core thesis: guest
+behavior → operator decisions.
 
-## 8. Open questions
+## 8. Decisions
 
-1. **Identity:** confirm Clerk-email-link (recommended) vs. lightweight magic-link.
-2. **Membership scope:** per-venue or account-wide off-premise access? (`GuestMembership.restaurantId` nullable supports either.)
-3. **Bartender-in-the-loop consent:** opt-in per guest before any staff can see a passport. Default = private. Need Sean's rule.
-4. **Community:** none by default (just you + the house). Optional later: a *this-venue* regulars' view, never a global feed. Confirm we stay non-social for v1.
-5. **Data/privacy:** guest data retention + export/delete policy (esp. if EU guests ever). Additive now, but decide before launch.
+- **Identity:** Clerk email magic-link. ✅ (Sean to confirm.)
+- **Membership scope:** **per-venue in v1** (`scope = VENUE`, `restaurantId` required);
+  account-wide only later via explicit `scope = ACCOUNT`. (Codex recommendation; was the
+  open scope question.)
+- **Consent:** modeled now (`shareWithStaff`, default false / private). Sean to set the
+  product rule for when/how a guest opts in.
+- **Community:** none for v1 (just you + the house). Optional later: a *this-venue*
+  regulars' view, never a global feed.
+- **Rating history:** latest-only for 2a; add `GuestTastingEvent` only if history
+  becomes a near-term product need.
+- **Privacy:** guest data retention + export/delete policy to settle before launch
+  (esp. any EU guests).

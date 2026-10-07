@@ -23,7 +23,8 @@ beforeEach(() => {
 });
 
 describe("Team media token", () => {
-  it("uses the shared visibility predicate so even a MGMT member gets 404 for managers-only", async () => {
+  it.each(["MEMBER", "CONTRIBUTOR"])("uses shared visibility so a MGMT %s gets 404 for managers-only", async role => {
+    h.access.mockResolvedValue({ ...member, role });
     h.findFirst.mockResolvedValue(null);
     const response = await GET(request(), { params: { lessonId: "lesson_1" } });
     expect(response.status).toBe(404);

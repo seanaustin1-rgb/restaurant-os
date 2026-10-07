@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid upload details" }, { status: 400 });
   }
   try {
-    await requireTeamAccess(input.restaurantId, "MANAGER");
+    await requireTeamAccess(input.restaurantId, "CONTRIBUTOR");
     const upload = await createStreamUpload(input.restaurantId, input.byteLength);
     const asset = await teamDb(input.restaurantId).teamMediaAsset.create({
       data: { restaurantId: input.restaurantId, provider: STREAM_PROVIDER, providerAssetId: upload.providerAssetId, status: "UPLOADING" },

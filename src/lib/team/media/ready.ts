@@ -1,3 +1,4 @@
+import { publishQueuedLessons } from "@/lib/team/lessons";
 import { teamDb } from "@/lib/team/db";
 import { streamHasReadyCaptions, STREAM_PROVIDER } from "./stream";
 
@@ -11,7 +12,7 @@ export async function settleTeamMedia(input: {
     select: { id: true, status: true },
   });
   if (!asset) return { updated: false, reason: "unknown-asset" };
-  if (asset.status === "READY") return { updated: false, reason: "already-ready" };
+  if (asset.status === "READY") { await publishQueuedLessons(input.restaurantId, asset.id); return { updated: false, reason: "already-ready" }; }
   const hasCaptions = input.ready ? await streamHasReadyCaptions(input.providerAssetId) : false;
   const result = await db.teamMediaAsset.updateMany({
     where: { id: asset.id, status: { not: "READY" } },
@@ -21,5 +22,6 @@ export async function settleTeamMedia(input: {
       hasCaptions,
     },
   });
+  if (input.ready) await publishQueuedLessons(input.restaurantId, asset.id);
   return { updated: result.count === 1 };
 }

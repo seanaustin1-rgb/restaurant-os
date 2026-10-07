@@ -1,3 +1,4 @@
+import { publishQueuedLessons } from "@/lib/team/lessons";
 import { inngest } from "./client";
 import { prisma } from "@/lib/prisma";
 import { runPlaidSync } from "@/lib/plaid/sync";
@@ -262,7 +263,16 @@ export const teamMediaReady = inngest.createFunction(
   })),
 );
 
+export const teamPublishRequested = inngest.createFunction(
+  { id: "team-publish-requested", retries: 4 },
+  { event: "team/lesson.publish.requested" },
+  async ({ event, step }) => step.run("publish-approved-ready-lesson", () => publishQueuedLessons(
+    event.data.restaurantId as string, event.data.assetId as string,
+  )),
+);
+
 export const functions = [
+  teamPublishRequested,
   teamMediaReady,
   dailyPlaidSyncScheduler,
   syncPlaidConnection,

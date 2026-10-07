@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { BusinessType } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { clearTeamOnlyForBusinessRole } from "@/lib/team/metadata";
 import { industryTemplateFor } from "@/lib/industry-templates";
 import {
   plannedSourceConfigsForOnboarding,
@@ -143,6 +144,7 @@ export async function createRestaurant(input: OnboardingInput): Promise<void> {
       },
     },
   });
+  await clearTeamOnlyForBusinessRole(userId);
 
   redirect(firstRunPath(input));
 }

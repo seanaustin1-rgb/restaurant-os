@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { teamOnlyDestination } from "@/lib/team/route-policy";
 
 // Public routes don't require authentication.
 const isPublicRoute = createRouteMatcher([
@@ -41,6 +42,12 @@ export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+  const pathname = req.nextUrl.pathname;
+  const { userId, sessionClaims } = await auth();
+  if (!userId) return;
+  const decision = teamOnlyDestination(pathname, sessionClaims?.metadata?.teamOnly === true, req.method);
+  if (decision === "forbid") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (decision === "redirect") return NextResponse.redirect(new URL("/team", req.url));
 });
 
 export const config = {

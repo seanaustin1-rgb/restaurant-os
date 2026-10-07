@@ -1,9 +1,9 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { CheckCircle2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { landingPathForRole } from "@/lib/access/landing";
-import { acceptAccessInvite } from "@/app/settings/access/actions";
+import { AcceptBusinessInviteButton } from "@/components/access/AcceptBusinessInviteButton";
 
 function userEmail(user: Awaited<ReturnType<Awaited<ReturnType<typeof clerkClient>>["users"]["getUser"]>>): string | null {
   const primaryId = user.primaryEmailAddressId;
@@ -34,11 +34,6 @@ export default async function AcceptAccessInvitePage({
     : null;
   const landingPath = invite ? landingPathForRole(invite.role) : "/dashboard";
   const landingLabel = invite?.role === "INVESTOR" ? "Investor Matrix" : invite ? "setup launch" : "dashboard";
-
-  async function accept() {
-    "use server";
-    await acceptAccessInvite(token);
-  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl items-center px-6 py-10">
@@ -77,14 +72,7 @@ export default async function AcceptAccessInvitePage({
                 You are signed in as {email ?? "a different email"}. Sign in with {invite.email} to accept this access.
               </p>
             ) : (
-              <form action={accept}>
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-copper-dim bg-copper/10 px-4 py-2 text-sm text-copper-soft hover:bg-copper/20"
-                >
-                  <CheckCircle2 size={15} /> Accept access
-                </button>
-              </form>
+              <AcceptBusinessInviteButton token={token} />
             )}
           </div>
         )}

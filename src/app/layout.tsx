@@ -6,6 +6,7 @@ import type { BusinessType, UserRole } from "@prisma/client";
 import { Cormorant_Garamond, DM_Sans, Space_Mono } from "next/font/google";
 import { AppHeader } from "@/components/AppHeader";
 import { prisma } from "@/lib/prisma";
+import { listMyTeamTenants } from "@/lib/team/tenants";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -31,17 +32,22 @@ export const metadata: Metadata = {
   description: "Financial insights for operators — know your numbers, decide now.",
 };
 
-async function loadSignedInAccess(): Promise<{ roles: UserRole[]; businessTypes: BusinessType[] }> {
+async function loadSignedInAccess(): Promise<{ roles: UserRole[]; businessTypes: BusinessType[]; teamOnly: boolean; hasTeamAccess: boolean; teamManager: boolean }> {
   const { userId } = await auth();
-  if (!userId) return { roles: [], businessTypes: [] };
+  if (!userId) return { roles: [], businessTypes: [], teamOnly: false, hasTeamAccess: false, teamManager: false };
 
   const rows = await prisma.userRestaurantRole.findMany({
     where: { clerkUserId: userId },
     select: { role: true, restaurant: { select: { businessType: true } } },
   });
+  const roles = [...new Set(rows.map((row) => row.role))];
+  const teams = await listMyTeamTenants();
   return {
-    roles: [...new Set(rows.map((row) => row.role))],
+    roles,
     businessTypes: [...new Set(rows.map((row) => row.restaurant.businessType))],
+    teamOnly: roles.length === 0 && teams.length > 0,
+    hasTeamAccess: teams.length > 0,
+    teamManager: teams.some((team) => team.viewer.role === "MANAGER"),
   };
 }
 
@@ -50,7 +56,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { roles, businessTypes } = await loadSignedInAccess();
+  const { roles, businessTypes, teamOnly, hasTeamAccess, teamManager } = await loadSignedInAccess();
 
   return (
     <ClerkProvider
@@ -69,7 +75,7 @@ export default async function RootLayout({
     >
       <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
         <body className="min-h-screen bg-ink text-ink-text antialiased">
-          <AppHeader roles={roles} businessTypes={businessTypes} />
+          <AppHeader roles={roles} businessTypes={businessTypes} teamOnly={teamOnly} hasTeamAccess={hasTeamAccess} teamManager={teamManager} />
           {children}
         </body>
       </html>

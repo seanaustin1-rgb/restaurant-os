@@ -4,11 +4,11 @@ import { randomBytes } from "node:crypto";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { landingPathForRole } from "@/lib/access/landing";
 import { sendAccessInviteEmail } from "@/lib/email/access-invite";
+import { clearTeamOnlyForBusinessRole, syncTeamOnlyForCurrentAccess } from "@/lib/team/metadata";
 
 const PATH = "/settings/access";
 const ALLOWED_ROLES: UserRole[] = ["OPERATOR", "CONSULTANT", "INVESTOR", "MANAGER"];
@@ -73,6 +73,7 @@ export async function saveAccessRole(input: {
     update: { role },
     create: { clerkUserId, restaurantId, role },
   });
+  await clearTeamOnlyForBusinessRole(clerkUserId);
 
   revalidatePath(PATH);
   revalidatePath("/dashboard");
@@ -103,6 +104,7 @@ export async function inviteAccessByEmail(input: {
       update: { role },
       create: { clerkUserId: existingUserId, restaurantId, role },
     });
+    await clearTeamOnlyForBusinessRole(existingUserId);
     revalidatePath(PATH);
     revalidatePath("/dashboard");
     return { status: "granted", note: "This email already has a Clerk account, so access was granted immediately." };
@@ -144,7 +146,7 @@ export async function revokeAccessInvite(input: { inviteId: string }): Promise<v
   revalidatePath(PATH);
 }
 
-export async function acceptAccessInvite(token: string): Promise<void> {
+export async function acceptAccessInvite(token: string): Promise<string> {
   const { userId } = await auth();
   if (!userId) throw new Error("Sign in to accept this invite.");
 
@@ -175,11 +177,12 @@ export async function acceptAccessInvite(token: string): Promise<void> {
       data: { status: "ACCEPTED", acceptedBy: userId, acceptedAt: new Date() },
     }),
   ]);
+  await clearTeamOnlyForBusinessRole(userId);
 
   revalidatePath("/dashboard");
   revalidatePath("/onboarding");
   revalidatePath("/investor");
-  redirect(landingPathForRole(invite.role));
+  return landingPathForRole(invite.role);
 }
 
 export async function removeAccessRole(input: { roleId: string }): Promise<void> {
@@ -199,6 +202,7 @@ export async function removeAccessRole(input: { roleId: string }): Promise<void>
   }
 
   await prisma.userRestaurantRole.delete({ where: { id: role.id } });
+  await syncTeamOnlyForCurrentAccess(role.clerkUserId);
   revalidatePath(PATH);
   revalidatePath("/dashboard");
 }

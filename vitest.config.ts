@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 // is provided because some module files instantiate PrismaClient at import time
 // (construction is lazy — it never connects during these pure-function tests).
 export default defineConfig({
+  // Next preserves JSX; page tests need the installed Vite 8 transformer to emit it.
+  oxc: { jsx: { runtime: "automatic" } },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

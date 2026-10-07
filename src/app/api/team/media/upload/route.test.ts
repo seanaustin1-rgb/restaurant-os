@@ -23,10 +23,10 @@ beforeEach(() => {
 });
 
 describe("Team direct upload route", () => {
-  it("requires manager access to the explicit tenant before provisioning Stream", async () => {
+  it("requires contributor-or-manager access to the explicit tenant before provisioning Stream", async () => {
     const response = await POST(request());
     expect(response.status).toBe(200);
-    expect(h.access).toHaveBeenCalledWith("tenant_a", "MANAGER");
+    expect(h.access).toHaveBeenCalledWith("tenant_a", "CONTRIBUTOR");
     expect(h.upload).toHaveBeenCalledWith("tenant_a", 5000);
     expect(h.teamDb).toHaveBeenCalledWith("tenant_a");
     expect(h.create).toHaveBeenCalledWith({

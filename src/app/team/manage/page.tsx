@@ -38,6 +38,7 @@ export default async function TeamManagePage({ searchParams }: { searchParams: {
         <h1 className="font-display text-3xl">Team roster</h1>
         <p className="mt-1 text-sm text-muted">Add staff by phone, then text each invitation link. A verified phone code activates their membership.</p>
       </div>
+      <Link className="inline-flex min-h-11 items-center rounded border border-copper-dim px-4 text-sm text-copper-soft" href={`/team/manage/new?restaurantId=${encodeURIComponent(restaurantId)}`}>New lesson</Link>
       <TeamRoster restaurantId={restaurantId} members={members} />
     </main>
   );

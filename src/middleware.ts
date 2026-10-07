@@ -26,6 +26,8 @@ const isPublicRoute = createRouteMatcher([
   "/v/(.*)",
   // Inngest authenticates via its signing key, not Clerk.
   "/api/inngest(.*)",
+  // Stream authenticates this exact machine callback with Webhook-Signature.
+  "/api/team/media/webhook",
   // Dev-only helper routes (additionally guarded by NODE_ENV inside each handler).
   "/api/dev(.*)",
 ]);

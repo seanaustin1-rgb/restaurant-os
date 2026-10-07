@@ -19,6 +19,7 @@ import { loadForwardCash } from "@/lib/modules/forward-cash";
 import { buildDailyDigest } from "@/lib/modules/daily-digest";
 import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
 import { digestRecipientEmails } from "@/lib/email/digest-recipients";
+import { settleTeamMedia } from "@/lib/team/media/ready";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -249,7 +250,20 @@ export const sendDailyDigest = inngest.createFunction(
   },
 );
 
+export const teamMediaReady = inngest.createFunction(
+  { id: "team-media-ready", retries: 4 },
+  { event: "team/media.ready" },
+  async ({ event, step }) => step.run("settle-team-media", () => settleTeamMedia({
+    restaurantId: event.data.restaurantId as string,
+    assetId: event.data.assetId as string,
+    providerAssetId: event.data.providerAssetId as string,
+    ready: event.data.ready === true,
+    durationSec: typeof event.data.durationSec === "number" ? event.data.durationSec : null,
+  })),
+);
+
 export const functions = [
+  teamMediaReady,
   dailyPlaidSyncScheduler,
   syncPlaidConnection,
   dailyToastSyncScheduler,

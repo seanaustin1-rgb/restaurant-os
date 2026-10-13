@@ -44,6 +44,7 @@ Part-time staff working two shifts a week miss the pre-shift meeting, the small 
 | Capability | Release | Audience | Notes |
 |---|---|---|---|
 | Staff roster + phone invite | R1 | Manager | Add one-by-one or paste a list (name, phone, departments) |
+| Toast roster sync | R1 | System + Manager | New Toast employees appear automatically; archived/terminated are removed automatically (§4.7) |
 | Phone login + deep-link return | R1 | All | Sling link → login → lands on that exact lesson |
 | Feed (newest first, vertical snap) | R1 | All | Filtered to member's departments + "all" |
 | "Since your last visit" | R1 | All | Count + total minutes of unseen published lessons |
@@ -86,11 +87,25 @@ model TeamMembership {
   role           TeamRole @default(MEMBER)
   departments    TeamDept[]
   status         TeamMemberStatus @default(INVITED)
+  source         String   @default("MANUAL")   // MANUAL | TOAST
+  externalId     String?            // Toast employee GUID
+  needsReview    Boolean  @default(false)       // new from sync, phone missing, or job unmapped
+  lastSyncedAt   DateTime?
   lastFeedSeenAt DateTime?          // drives "since your last visit"
   createdAt      DateTime @default(now())
   removedAt      DateTime?
   @@unique([restaurantId, phoneE164])
   @@unique([restaurantId, clerkUserId])
+  @@unique([restaurantId, source, externalId])
+}
+
+model TeamDeptMapping {              // Toast job → department, per tenant
+  id           String   @id @default(cuid())
+  restaurantId String
+  jobKey       String               // Toast job GUID (or normalized title for CSV)
+  jobTitle     String
+  dept         TeamDept?            // null = ignore this job for Team Hub
+  @@unique([restaurantId, jobKey])
 }
 
 model TeamMediaAsset {
@@ -222,6 +237,25 @@ model TeamActionLog {
 3. Staff opens link → Clerk phone OTP → on first sign-in, server matches verified phone to an `INVITED` membership in that restaurant → sets `clerkUserId`, `ACTIVE`.
 4. A signed-in user with **no** `UserRestaurantRole` and at least one active Team membership is redirected from `/dashboard` (and any non-`/team` app route) to `/team`. Nav for such users shows Team items only.
 
+### 4.1a Toast roster sync
+Runs daily via Inngest (reusing the per-tenant Toast sync fan-out) plus a manager "Sync now" button. Read-only against Toast.
+
+| Toast state | Hub action |
+|---|---|
+| New active employee | Create `TeamMembership(INVITED, source=TOAST, needsReview=true)`; departments from `TeamDeptMapping`. Shows in "New from Toast" for a manager to tap **Send invite** (invites are never auto-sent). |
+| Active, details changed | Update name/phone/departments. Never changes `role`. |
+| Archived / deleted / terminated | Set `REMOVED` on the next sync, log it. Same effect as §5.4 removal — access ends within token TTL. |
+| Rehired (reactivated) | Back to `INVITED` with `needsReview`; prior progress history reattaches by `externalId`. |
+| Missing phone | Created with `needsReview`; can't be invited until a manager adds a phone. |
+| Job not yet mapped | `needsReview`; manager maps the job once in a small table, applied to everyone with that job. |
+
+Rules:
+- **Sync never grants or raises a Team role.** Everyone from Toast is MEMBER; MANAGER/CONTRIBUTOR are set by hand.
+- **Sync only touches `source=TOAST` rows.** Manually added people (partners, family, vendors like a brewer) are never removed by sync.
+- Matching order: `externalId`, then phone, so a manually added person who later appears in Toast is linked instead of duplicated (manager confirms the link).
+- **Fallback if Toast employee access isn't available:** manager uploads Toast's employee export CSV; same matching and the same add/update/remove rules run against the file. Archived employees missing from a full export are flagged for removal, confirmed by a manager.
+- Every sync writes a summary: "3 added · 1 updated · 2 removed · 1 needs review."
+
 ### 4.2 Shift brief (the R1 money path — must take ≤5 minutes on a phone)
 1. Manager records 2–3 min after pre-shift.
 2. `/team/manage/new` → pick video → server creates Stream direct-upload URL (resumable/tus) + `TeamMediaAsset(UPLOADING)` → phone uploads straight to Stream (bytes never touch our server).
@@ -317,6 +351,7 @@ Model labels are for Codex; Claude Code may take any phase.
 |---|---|---|---|
 | 1 | Migration (all §3 models incl. R2/R3 columns), `teamDb`, `requireTeamAccess`, grep gate, two-tenant isolation tests | `team-hub-1-foundation` | **Sol · high** (tenant boundary) |
 | 2 | Roster UI, invite, phone-login claim flow, non-financial redirect + nav | `team-hub-2-members` | **Sol · high** (auth) |
+| 2b | Toast roster sync (§4.1a): job mapping table, daily Inngest sync, Sync now, review queue; CSV-export fallback if Toast employee access is unavailable | `team-hub-2b-roster-sync` | Sol · medium |
 | 3 | Stream adapter (direct upload, webhook, signed token), media Inngest function | `team-hub-3-media` | Sol · medium |
 | 4 | New-lesson flow, publish, copy link, feed, lesson page, since-last-visit, progress beacon, search/filters, shift-brief expiry | `team-hub-4-feed` | Sol · medium |
 | — | **R1 pilot launch gate** (§10 R1 boxes) | | |
@@ -335,6 +370,7 @@ Each phase: additive only, Vitest green, typecheck + build green, PR summary lis
 - [ ] Grep gate: zero `prisma.team` references outside `src/lib/team/db.ts`.
 - [ ] Team-only user cannot load `/dashboard` or any financial route; is redirected to `/team`.
 - [ ] Removed member's token request fails; test proves it.
+- [ ] Roster sync: new Toast employee appears as INVITED/needsReview; archived employee becomes REMOVED and loses access; a MANUAL member is untouched by sync; sync never changes role; rerunning the same sync makes no changes.
 - [ ] Shift brief recorded on an iPhone and an Android, uploaded, published, link copied in ≤5 minutes.
 - [ ] Sling link opened signed-out in the Sling mobile app → OTP login → lands on that lesson.
 - [ ] Feed newest-first, department-filtered, shift briefs gone after 14 days but searchable.
@@ -377,5 +413,5 @@ next phase.
 2. **Clerk:** enable phone number + SMS verification code sign-in; confirm SMS is included on the current Clerk plan and note any per-message cost.
 3. **Cloudflare Stream:** enable Stream on the Cloudflare account; create an API token scoped to Stream edit; create a signing key; set the webhook URL (provided after Phase 3 deploys) and store the webhook secret. Put all values in Vercel env, never in the repo.
 4. **ModuleConfig:** enable `team_hub` for the Stone Grille tenant.
-5. **Roster:** list of staff names, mobile numbers, departments (export from Toast Payroll is fine).
+5. **Roster:** handled by Toast sync (§4.1a). Only needed: confirm the Toast job → department mapping on first sync. If Toast employee access isn't available, upload the Toast employee export instead.
 6. **Content:** script/record the 6 hospitality foundations + 3 product lessons during Phases 1–4 so the pilot launches with content.

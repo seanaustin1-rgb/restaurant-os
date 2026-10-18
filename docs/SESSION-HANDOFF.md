@@ -142,6 +142,10 @@ of 2026-10-18 and summarized here:
    has an empty duplicate tenant, so check the `restaurant` it prints. **A real re-apply tool
    (current rules → bank-fed non-override rows → ledger re-mirror, exact-slug tenant resolve,
    dry-run default) is a V1 gate item:** without it, fixing a rule can't clean history.
+   **Built in PR #175** (`scripts/reapply-rules.ts --tenant <slug> [--commit]`, CI green,
+   awaiting review; not yet run against prod). It holds rows whose ledger event was already
+   decided on the review page rather than re-mirroring over that decision. After #175 merges,
+   point CLAUDE.md / PRODUCT-MAP at it.
 
 **Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle
 matching → Vault entitlement toggle + walled-off guest endpoint → bulk-upload export.

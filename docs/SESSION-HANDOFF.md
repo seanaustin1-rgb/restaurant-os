@@ -137,7 +137,9 @@ of 2026-10-18 and summarized here:
    cleanup; CLAUDE.md and PRODUCT-MAP still cite it). The live equivalent is
    `scripts/reapply-categorization-ledger.ts "Stone Grille"`, which **writes by default**: it
    disables weak KEYWORD rules, re-runs `categorize()` on bank-fed rows, and re-mirrors them to
-   the ledger. Always run it with `--dry-run` first:
+   the ledger. Always run it with `--dry-run` first (dry-run still calls
+   `ensureDefaultCategories`, which adds any missing default categories — `skipDuplicates`, so
+   a no-op on a tenant that already has them; everything else is skipped):
    `npx dotenv -e .env.local -o -- tsx scripts/reapply-categorization-ledger.ts "Stone Grille" --dry-run`
 
 **Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle

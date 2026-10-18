@@ -133,14 +133,15 @@ of 2026-10-18 and summarized here:
 4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once 1 is done.
 5. **Overnight re-accumulation check** — after a clear, the next fan-out should add single
    digits. If not, a rule gap exists — fix the rule, then re-apply it to existing rows.
-   **⚠️ `scripts/recategorize-transactions.ts` no longer exists** (deleted in #33's dead-code
-   cleanup; CLAUDE.md and PRODUCT-MAP still cite it). The live equivalent is
-   `scripts/reapply-categorization-ledger.ts "Stone Grille"`, which **writes by default**: it
-   disables weak KEYWORD rules, re-runs `categorize()` on bank-fed rows, and re-mirrors them to
-   the ledger. Always run it with `--dry-run` first (dry-run still calls
-   `ensureDefaultCategories`, which adds any missing default categories — `skipDuplicates`, so
-   a no-op on a tenant that already has them; everything else is skipped):
-   `npx dotenv -e .env.local -o -- tsx scripts/reapply-categorization-ledger.ts "Stone Grille" --dry-run`
+   **⚠️ No tool on `main` re-applies an edited rule to already-categorized rows.**
+   `scripts/recategorize-transactions.ts` did (Plaid-fed, non-override rows; it did not touch
+   the ledger) and was deleted in #33. `scripts/reapply-categorization-ledger.ts` only fills
+   rows that are UNCATEGORIZED or confidence ≤ 0, re-mirroring those to the ledger; it writes
+   by default (use `--dry-run`, which still back-fills missing default categories via
+   `skipDuplicates`), and resolves the tenant with an unordered name-substring `findFirst` — Stone
+   has an empty duplicate tenant, so check the `restaurant` it prints. **A real re-apply tool
+   (current rules → bank-fed non-override rows → ledger re-mirror, exact-slug tenant resolve,
+   dry-run default) is a V1 gate item:** without it, fixing a rule can't clean history.
 
 **Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle
 matching → Vault entitlement toggle + walled-off guest endpoint → bulk-upload export.

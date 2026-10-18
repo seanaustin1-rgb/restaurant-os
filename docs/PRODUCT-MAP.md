@@ -83,9 +83,9 @@ Public funnel: `/heartbeat` landing, `/demo` estimators per vertical,
   `categorize()`; KEYWORD matching is now word-start-bounded; `signatureOf` has
   a stopword filter; the manual rules form now rejects generic/too-short
   keywords (`keywordPatternProblem`). Rule edits still don't retro-move rows —
-  run `scripts/reapply-categorization-ledger.ts "<tenant>" --dry-run`, then
-  without `--dry-run`, after changes (it writes by default; the old
-  `recategorize-transactions.ts` was removed in #33).
+  and since `recategorize-transactions.ts` was removed in #33 nothing re-applies
+  an edited rule to already-categorized rows. `reapply-categorization-ledger.ts`
+  only fills UNCATEGORIZED / confidence ≤ 0 rows (writes by default; `--dry-run`).
 - Review flow is approve/exclude only (no inline re-typing, no rule-save-from-
   review, no bulk-apply).
 - ~19 unmerged branches; handoff state lives in `docs/SESSION-HANDOFF.md`

@@ -16,9 +16,11 @@ Grille is the gate. Read it before any billing, entitlement, channel, or Vault w
   the pattern). Never add a third path.
 - **Categorization goes through `categorize()`** in
   `src/lib/categorization/rules.ts` — the one decision shared by Plaid sync,
-  statement import, and the recategorize script. Never fork it.
+  statement import, and `scripts/reapply-categorization-ledger.ts`. Never fork it.
 - **Rule edits do NOT retro-move existing rows.** After any rule change, run
-  `scripts/recategorize-transactions.ts --commit`.
+  `scripts/reapply-categorization-ledger.ts "<tenant name>" --dry-run`, then
+  again without `--dry-run`. It **writes by default** (disables weak KEYWORD
+  rules, re-categorizes bank-fed rows, re-mirrors them to the ledger).
 - **KEYWORD rules are guarded** — word-start matching in the engine, stopword
   rejection in `signatureOf` and `keywordPatternProblem`. Don't relax these;
   a broad keyword rule misfiled $17.7k of labor in June 2026.

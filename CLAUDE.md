@@ -16,9 +16,14 @@ Grille is the gate. Read it before any billing, entitlement, channel, or Vault w
   the pattern). Never add a third path.
 - **Categorization goes through `categorize()`** in
   `src/lib/categorization/rules.ts` — the one decision shared by Plaid sync,
-  statement import, and the recategorize script. Never fork it.
-- **Rule edits do NOT retro-move existing rows.** After any rule change, run
-  `scripts/recategorize-transactions.ts --commit`.
+  statement import, and `scripts/reapply-categorization-ledger.ts`. Never fork it.
+- **Rule edits do NOT retro-move existing rows — and no tool on `main` does it
+  today.** `scripts/recategorize-transactions.ts` (which did) was deleted in #33.
+  `scripts/reapply-categorization-ledger.ts` only fills rows that are
+  UNCATEGORIZED or confidence ≤ 0; already-categorized rows stay put. It also
+  **writes by default** (pass `--dry-run`) and matches the tenant by name
+  substring with no ambiguity check — Stone has an empty duplicate tenant, so
+  confirm the `restaurant` it prints. Restoring a true re-apply tool is open work.
 - **KEYWORD rules are guarded** — word-start matching in the engine, stopword
   rejection in `signatureOf` and `keywordPatternProblem`. Don't relax these;
   a broad keyword rule misfiled $17.7k of labor in June 2026.

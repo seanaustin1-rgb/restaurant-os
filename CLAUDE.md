@@ -22,7 +22,7 @@ Grille is the gate. Read it before any billing, entitlement, channel, or Vault w
   `--commit`. It moves bank-fed, non-override rows and re-mirrors each to the
   ledger; rows already decided on `/settings/sources/review` are held, not
   overwritten. Don't use `reapply-categorization-ledger.ts` for this — it only
-  fills UNCATEGORIZED / confidence ≤ 0 rows and writes by default.
+  fills UNCATEGORIZED / confidence ≤ 0 rows.
 - **KEYWORD rules are guarded** — word-start matching in the engine, stopword
   rejection in `signatureOf` and `keywordPatternProblem`. Don't relax these;
   a broad keyword rule misfiled $17.7k of labor in June 2026.
@@ -46,5 +46,6 @@ Grille is the gate. Read it before any billing, entitlement, channel, or Vault w
 ## Useful entry points
 
 - Exception triage: `scripts/summarize-sync-exceptions.ts [slug]`
+- V1 gate streak: `scripts/recon-health.ts --tenant <slug> --since <cutover>`
 - Module registry: `src/lib/modules.ts` · Source maps: `src/lib/source-map.ts`
 - Profit First engine: `src/lib/profit-first/` · Inngest: `src/lib/inngest/functions.ts`

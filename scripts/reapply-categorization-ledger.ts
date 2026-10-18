@@ -1,3 +1,14 @@
+/**
+ * Fill UNCATEGORIZED / confidence <= 0 rows from the current rules, disable weak
+ * KEYWORD rules, seed missing system vendor rules, and re-mirror the filled rows
+ * to the ledger. This does NOT re-file rows that are already categorized; use
+ * scripts/reapply-rules.ts for that after a rule change.
+ *
+ * Dry run (default — writes nothing):
+ *   npx dotenv -e .env.local -o -- tsx scripts/reapply-categorization-ledger.ts "<name>"
+ * Apply:
+ *   npx dotenv -e .env.local -o -- tsx scripts/reapply-categorization-ledger.ts "<name>" --commit
+ */
 import { prisma } from "../src/lib/prisma";
 import { categoryIdByName, categoryTapById, ensureDefaultCategories, legacyBucketToCategoryName, revenueCategoryId, MISC_CATEGORY_NAME } from "../src/lib/categorization/categories";
 import { categorize, loadRules, type CategorizationContext } from "../src/lib/categorization/rules";
@@ -6,7 +17,8 @@ import { VENDOR_PATTERNS } from "../src/lib/categorization/vendor-map";
 import { mirrorBankTransactionToLedger } from "../src/lib/financial-ledger/bank-transactions";
 
 const restaurantQuery = process.argv[2] ?? "Stone Grille";
-const DRY_RUN = process.argv.includes("--dry-run");
+// Writes only with --commit (repo convention: scripts that write dry-run by default).
+const DRY_RUN = !process.argv.includes("--commit");
 
 async function main() {
   const restaurant = await prisma.restaurant.findFirst({
@@ -15,7 +27,7 @@ async function main() {
   });
   if (!restaurant) throw new Error(`No restaurant matched "${restaurantQuery}"`);
 
-  await ensureDefaultCategories(prisma, restaurant.id);
+  if (!DRY_RUN) await ensureDefaultCategories(prisma, restaurant.id);
   const nameToId = await categoryIdByName(prisma, restaurant.id);
   const tapById = await categoryTapById(prisma, restaurant.id);
 

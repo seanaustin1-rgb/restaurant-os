@@ -132,7 +132,13 @@ of 2026-10-18 and summarized here:
    `spinesConverged()` in `src/lib/financial-ledger/spine-compare.ts`.
 4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once 1 is done.
 5. **Overnight re-accumulation check** — after a clear, the next fan-out should add single
-   digits. If not, a rule gap exists (fix the rule, then `recategorize-transactions.ts --commit`).
+   digits. If not, a rule gap exists — fix the rule, then re-apply it to existing rows.
+   **⚠️ `scripts/recategorize-transactions.ts` no longer exists** (deleted in #33's dead-code
+   cleanup; CLAUDE.md and PRODUCT-MAP still cite it). The live equivalent is
+   `scripts/reapply-categorization-ledger.ts "Stone Grille"`, which **writes by default**: it
+   disables weak KEYWORD rules, re-runs `categorize()` on bank-fed rows, and re-mirrors them to
+   the ledger. Always run it with `--dry-run` first:
+   `npx dotenv -e .env.local -o -- tsx scripts/reapply-categorization-ledger.ts "Stone Grille" --dry-run`
 
 **Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle
 matching → Vault entitlement toggle + walled-off guest endpoint → bulk-upload export.

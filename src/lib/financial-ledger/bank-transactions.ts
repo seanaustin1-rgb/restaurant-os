@@ -80,11 +80,23 @@ export function ledgerMappingForTap(input: {
   }
 }
 
-/** Same absolute amount (to the cent) and same calendar date. */
+function signedAmountOf(payload: Prisma.JsonValue | undefined): number | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return null;
+  const value = (payload as Record<string, unknown>).amount;
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+/**
+ * Same amount to the cent, same direction, same calendar date. An unknown prior
+ * direction (no signed amount in the old payload) counts as changed, so the
+ * event is re-mapped rather than kept on a guess.
+ */
 function sameMoneyFacts(
   existing: { amount: Prisma.Decimal | number; eventDate: Date },
+  priorSignedAmount: number | null,
   input: { amount: number; date: Date },
 ): boolean {
+  if (priorSignedAmount == null || Math.sign(priorSignedAmount) !== Math.sign(input.amount)) return false;
   const cents = (v: number) => Math.round(Math.abs(v) * 100);
   const day = (d: Date) => d.toISOString().slice(0, 10);
   return cents(Number(existing.amount)) === cents(input.amount) && day(existing.eventDate) === day(input.date);
@@ -115,15 +127,21 @@ export async function mirrorBankTransactionToLedger(
   const mappingStatus: FinancialMappingStatus =
     confidence <= 0 || !category ? "PENDING_REVIEW" : confidence >= 0.8 ? "APPROVED" : "PENDING_REVIEW";
 
-  const rawSourceEvent = await db.rawSourceEvent.upsert({
-    where: {
-      restaurantId_sourceSystem_sourceObjectType_sourceObjectId: {
-        restaurantId: input.restaurantId,
-        sourceSystem: input.sourceSystem,
-        sourceObjectType: "bank_transaction",
-        sourceObjectId: input.sourceObjectId,
-      },
+  const rawKey = {
+    restaurantId_sourceSystem_sourceObjectType_sourceObjectId: {
+      restaurantId: input.restaurantId,
+      sourceSystem: input.sourceSystem,
+      sourceObjectType: "bank_transaction",
+      sourceObjectId: input.sourceObjectId,
     },
+  };
+  // The normalized event stores |amount|, so read the prior signed amount from the
+  // raw payload before it's overwritten — direction is part of the money facts.
+  const prior = await db.rawSourceEvent.findUnique({ where: rawKey, select: { payload: true } });
+  const priorSignedAmount = signedAmountOf(prior?.payload);
+
+  const rawSourceEvent = await db.rawSourceEvent.upsert({
+    where: rawKey,
     create: {
       restaurantId: input.restaurantId,
       sourceSystem: input.sourceSystem,
@@ -148,12 +166,12 @@ export async function mirrorBankTransactionToLedger(
   // approvedBy, or EXCLUDED. Plaid re-sends "modified" transactions on later
   // syncs (pending→posted, merchant enrichment); rebuilding here would delete
   // that decision and reopen the exception every morning. Keep it while the
-  // money facts are unchanged; if amount or date moved, the decision may no
+  // money facts are unchanged; if amount, direction or date moved, it may no
   // longer hold, so fall through and re-map honestly.
   const decided = existingNormalized.find(
     (row) => row.approvedBy != null || row.mappingStatus === "EXCLUDED",
   );
-  if (decided && sameMoneyFacts(decided, input)) {
+  if (decided && sameMoneyFacts(decided, priorSignedAmount, input)) {
     await db.rawSourceEvent.update({
       where: { id: rawSourceEvent.id },
       data: { mappingStatus: decided.mappingStatus, processedAt: new Date() },

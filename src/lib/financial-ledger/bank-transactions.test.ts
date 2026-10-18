@@ -36,6 +36,7 @@ describe("mirrorBankTransactionToLedger — category lookup tenancy guard", () =
         findFirst: vi.fn(async () => null),
       },
       rawSourceEvent: {
+        findUnique: vi.fn(async () => null),
         upsert: vi.fn(async () => ({ id: "raw_1" })),
         update: vi.fn(async () => ({ id: "raw_1" })),
       },
@@ -95,10 +96,14 @@ describe("mirrorBankTransactionToLedger — category lookup tenancy guard", () =
 describe("mirrorBankTransactionToLedger — review decisions survive re-sync", () => {
   // Plaid re-sends "modified" transactions on later syncs. A decision made on the
   // review page must not be deleted and reopened by that re-send.
-  function fakeDb(existing: Array<{ mappingStatus: string; approvedBy: string | null; amount: number; eventDate: Date }>) {
+  function fakeDb(
+    existing: Array<{ mappingStatus: string; approvedBy: string | null; amount: number; eventDate: Date }>,
+    priorPayloadAmount: number | null = 812.4,
+  ) {
     return {
       category: { findFirst: vi.fn(async () => ({ name: "Food Purchases", tapBucket: "COGS_FOOD" })) },
       rawSourceEvent: {
+        findUnique: vi.fn(async () => (priorPayloadAmount == null ? null : { payload: { amount: priorPayloadAmount } })),
         upsert: vi.fn(async () => ({ id: "raw_1" })),
         update: vi.fn(async () => ({ id: "raw_1" })),
       },
@@ -162,6 +167,26 @@ describe("mirrorBankTransactionToLedger — review decisions survive re-sync", (
     expect(result.normalizedFinancialEventId).toBe("norm_new");
     expect(result.mappingStatus).toBe("PENDING_REVIEW");
     expect(db.syncException.create).toHaveBeenCalled();
+  });
+
+  it("re-maps when the direction flipped (charge became an equal-sized credit)", async () => {
+    const db = fakeDb(
+      [{ mappingStatus: "APPROVED", approvedBy: "user_sean", amount: 812.4, eventDate: new Date("2026-06-15") }],
+      -812.4,
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await mirrorBankTransactionToLedger(db as any, input);
+    expect(db.normalizedFinancialEvent.deleteMany).toHaveBeenCalled();
+  });
+
+  it("re-maps when the prior direction is unknown (no signed amount on file)", async () => {
+    const db = fakeDb(
+      [{ mappingStatus: "EXCLUDED", approvedBy: null, amount: 812.4, eventDate: new Date("2026-06-15") }],
+      null,
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await mirrorBankTransactionToLedger(db as any, input);
+    expect(db.normalizedFinancialEvent.deleteMany).toHaveBeenCalled();
   });
 
   it("still rebuilds an auto-approved event (no approvedBy) so new rules can apply", async () => {

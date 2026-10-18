@@ -23,8 +23,8 @@ enum). Two financial spines coexist:
    extensible) → code-owned `TapBucket` enum → Profit First (`TapSettings`,
    `VirtualAccount`, `BucketAllocation`, `BucketSweep` on the 10th/25th).
    `Rule` rows do the categorization (engine: `src/lib/categorization/rules.ts`,
-   the single `categorize()` shared by Plaid sync, statement import, and the
-   recategorize script). Inflows are REVENUE by sign; outflows run vendor rules.
+   the single `categorize()` shared by Plaid sync, statement import, and
+   `scripts/reapply-rules.ts`). Inflows are REVENUE by sign; outflows run vendor rules.
 2. **Clean ledger ("financial ledger isolation"):** `RawSourceEvent` →
    `NormalizedFinancialEvent` → `LedgerEntry`, plus `SyncException` and
    `SourceMappingRule`. Plaid + imports dual-write into both spines. Only Cash
@@ -83,9 +83,8 @@ Public funnel: `/heartbeat` landing, `/demo` estimators per vertical,
   `categorize()`; KEYWORD matching is now word-start-bounded; `signatureOf` has
   a stopword filter; the manual rules form now rejects generic/too-short
   keywords (`keywordPatternProblem`). Rule edits still don't retro-move rows —
-  and since `recategorize-transactions.ts` was removed in #33 nothing re-applies
-  an edited rule to already-categorized rows. `reapply-categorization-ledger.ts`
-  only fills UNCATEGORIZED / confidence ≤ 0 rows (writes by default; `--dry-run`).
+  run `scripts/reapply-rules.ts --tenant <slug>` (dry run, then `--commit`),
+  which re-mirrors moved rows to the ledger and holds review-decided ones.
 - Review flow is approve/exclude only (no inline re-typing, no rule-save-from-
   review, no bulk-apply).
 - ~19 unmerged branches; handoff state lives in `docs/SESSION-HANDOFF.md`

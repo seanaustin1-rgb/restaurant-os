@@ -139,3 +139,40 @@ export function spinesConverged(deltas: SpineDelta[], tolerancePct = 1, absFloor
     d.pctDelta == null ? Math.abs(d.delta) <= absFloor : d.pctDelta <= tolerancePct,
   );
 }
+
+type Money = number | { toString(): string } | null | undefined;
+const num = (v: Money): number => (v == null ? 0 : Number(v));
+
+/**
+ * Legacy-spine totals: inflows (stored negative) → REVENUE by sign; outflows run
+ * their category's TapBucket. Shared by compare-spines and recon-health so the
+ * parity math exists once.
+ */
+export function legacySpineTotals(
+  txns: Array<{ amount: Money; categoryId: string | null }>,
+  tapByCategoryId: ReadonlyMap<string, TapBucket>,
+): SpineTotals {
+  const totals: SpineTotals = {};
+  for (const t of txns) {
+    const amt = num(t.amount);
+    if (amt === 0) continue;
+    const bucket: CanonicalBucket =
+      amt < 0 ? "REVENUE" : tapBucketToCanonical(t.categoryId ? tapByCategoryId.get(t.categoryId) ?? null : null);
+    totals[bucket] = (totals[bucket] ?? 0) + Math.abs(amt);
+  }
+  return totals;
+}
+
+/** Clean-ledger totals by account; OPERATING_CASH (the cash contra side) is skipped. */
+export function ledgerSpineTotals(
+  lines: Array<{ ledgerAccount: LedgerAccount; debit: Money; credit: Money }>,
+): SpineTotals {
+  const totals: SpineTotals = {};
+  for (const line of lines) {
+    const bucket = ledgerAccountToCanonical(line.ledgerAccount);
+    if (bucket == null) continue;
+    // Non-cash lines carry the value in exactly one of debit (expense) / credit (revenue).
+    totals[bucket] = (totals[bucket] ?? 0) + num(line.debit) + num(line.credit);
+  }
+  return totals;
+}

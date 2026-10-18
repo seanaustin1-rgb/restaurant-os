@@ -23,15 +23,17 @@ to outside operators until V1 runs clean on Stone Grille (bar: Stone reconciles 
 consecutive days with no manual intervention). Do NOT start billing / channel / Vault-toggle /
 Toast-partner build work until that gate is met.
 
-The live critical path is still the A6 operator run:
-  1. Snapshot: npx dotenv -e .env.local -o -- tsx scripts/summarize-sync-exceptions.ts
-     (no arg = every tenant; read Stone's block. July count was 373.)
-  2. Clear Stone on /settings/sources/review with the bulk "Approve all (N)" / "Exclude all"
-     per vendor group (runbook: docs/fable-5/RUNBOOK-stone-triage.md). Re-run step 1 after.
-  3. Spot-check Tax Vault / Cash Flow / Spending / Forward Cash on real data, then
-     npx dotenv -e .env.local -o -- tsx scripts/compare-spines.ts "Stone Grille"
-  4. Next code work for the gate: a daily reconciliation-health record so "7 clean days"
-     is measurable (see the 10-18 block's ranked list).
+Sean decided (10-18): the pre-cutover backlog (July's 373) doesn't count — start fresh. V1 is
+measured from a cutover date forward; nothing is deleted. The live path:
+  1. Pick the cutover date (first day that counts).
+  2. Each morning after the syncs, check the streak:
+     npx dotenv -e .env.local -o -- tsx scripts/recon-health.ts --tenant <stone-slug> --since <cutover>
+     (first time: run scripts/summarize-sync-exceptions.ts with no arg to see Stone's slug)
+  3. A DIRTY day names its cause: pending review → clear only post-cutover rows on
+     /settings/sources/review; then fix the rule so it doesn't recur and run
+     scripts/reapply-rules.ts --tenant <slug> (dry run, then --commit). Hand-decided rows make
+     that day dirty by definition — the fix is a rule, not more clicking.
+  4. 7 CLEAN days in a row = the V1 reconciliation bar.
 
 Don't touch Codex-lane PRs (codex/* heads, #170 especially — it's a one-time demo→prod copy).
 CLI steps need Sean's local .env.local; the review-page clearing does not.
@@ -118,19 +120,15 @@ has 2 unmerged patches (unreviewed; not a PR). ~110 remote branches total — pr
   hold.** *Not verified:* anything held in the DB-backed admin (`/vault` admin, post-#142) — the
   doc doesn't track it; check the admin's draft list before saying zero.
 
-### ⛔ THE GATE — V1 on Stone (unchanged since July, now explicit)
-Bar: **Stone reconciles clean for 7 consecutive days with no manual intervention**, plus
-`compare-spines` converged. Ranked blockers and the exact commands are in the PR/session notes
-of 2026-10-18 and summarized here:
-1. **Clear Stone's open sync exceptions** (operator, UI) — July: 373. Today's count unknown.
-2. **Define + record "clean day"** (code) — nothing today persists a per-day reconciliation
-   verdict. Needed: after the 06:00 Plaid / 05:30 Toast runs, a deterministic daily check
-   (new open exceptions = 0, both syncs succeeded, compare-spines within tolerance for the day)
-   stored per tenant, so 7 consecutive passes is a query, not a judgment call.
-3. **compare-spines converged on a trailing month** (operator runs; code fixes any bucket that
-   won't converge). Pass = every canonical bucket within **1%** (or **≤ $1** where legacy is 0) —
-   `spinesConverged()` in `src/lib/financial-ledger/spine-compare.ts`.
-4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once 1 is done.
+### ⛔ THE GATE — V1 on Stone (fresh start from a cutover date — Sean, 10-18)
+Bar: **Stone reconciles clean for 7 consecutive days with no manual intervention**, counted
+from the cutover. Measured by `scripts/recon-health.ts` (see the audit section below).
+1. **Pick the cutover date.** Pre-cutover exceptions (July: 373) are ignored, not cleared.
+2. **Clean-day check — BUILT** (`recon-health.ts`, PR `claude/v1-ops-readiness`). Read-only;
+   recomputed each run, not persisted. Persisting a daily record can come later if needed.
+3. **Parity:** only required on clean days (per-day `spinesConverged`, 1% / $1). Whole-month
+   `compare-spines` over pre-cutover data will still drift; ignore it.
+4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once the streak starts.
 5. **Overnight re-accumulation check** — after a clear, the next fan-out should add single
    digits. If not, a rule gap exists — fix the rule, then re-apply it to existing rows.
    Re-apply tool: **`scripts/reapply-rules.ts --tenant <slug>`** (dry run; add `--commit`) —
@@ -152,16 +150,21 @@ allocation port onto the ledger.
   re-sent the txn (pending→posted, merchant enrichment). The mirror now keeps a human/script
   decision (`approvedBy` set, or EXCLUDED) while amount + date are unchanged.
 - **FIXED (same PR):** `reapply-categorization-ledger.ts` wrote by default; now needs `--commit`.
-- **OPEN — needs Sean's call before `compare-spines` can pass:** review decisions only touch the
-  ledger; the legacy `Transaction` keeps the rule's guess. And legacy counts every inflow as
-  REVENUE by sign while the ledger only counts REVENUE-category inflows. So after triage the
-  spines diverge on every re-typed row, every excluded transfer, and every non-revenue deposit.
-  Options: (a) write review decisions back to the legacy row (override) + make compare-spines
-  skip EXCLUDED-category rows on both sides; (b) declare legacy frozen and gate V1 on the ledger
-  alone. Recommendation: (a) — it keeps legacy honest until it's retired.
-- **OPEN — code, not started:** daily reconciliation-health record (gate item 2) so 7 clean days
-  is a query. Pending pre-post Plaid txns also come back as remove+add with a new id, so any
-  decision on a *pending* row is lost by design — review posted rows only.
+- **DECIDED (Sean, 10-18): the pre-cutover backlog doesn't count — start fresh.** The July 373
+  (and anything else dated before cutover) is history; V1 is measured only from a cutover date
+  forward. Nothing gets deleted. Consequence: legacy↔ledger write-back is **not** needed for the
+  gate. Any row a person has to decide already makes its day dirty, so parity only has to hold on
+  untouched days, where both spines come from the same `categorize()` guess. Historical
+  `compare-spines` over pre-cutover months will still show drift; ignore it.
+- **BUILT (same PR): `scripts/recon-health.ts --tenant <slug> --since <cutover>`** — read-only,
+  per-day CLEAN/DIRTY + current streak (target 7). Clean day = no bank events pending review,
+  none hand-decided, legacy/ledger agree for the day (`spinesConverged`), and Toast has a
+  `DailySales` row for the business day. Also prints Plaid `lastSyncedAt` freshness. Logic in
+  `src/lib/financial-ledger/recon-health.ts` (tested); parity math now shared via
+  `legacySpineTotals`/`ledgerSpineTotals` in `spine-compare.ts` (compare-spines uses them too).
+  Bank rows post late, so a past day can flip to DIRTY when a straggler lands; recomputed each run.
+- Pending (pre-post) Plaid txns come back as remove+add with a new id, so any decision on a
+  *pending* row is lost by design. Review posted rows only.
 
 ### Operator reminders (Sean does these)
 - Confirm the previously exposed GitHub PAT is **revoked**.

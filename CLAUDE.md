@@ -46,5 +46,6 @@ Grille is the gate. Read it before any billing, entitlement, channel, or Vault w
 ## Useful entry points
 
 - Exception triage: `scripts/summarize-sync-exceptions.ts [slug]`
+- V1 gate streak: `scripts/recon-health.ts --tenant <slug> --since <cutover>`
 - Module registry: `src/lib/modules.ts` · Source maps: `src/lib/source-map.ts`
 - Profit First engine: `src/lib/profit-first/` · Inngest: `src/lib/inngest/functions.ts`

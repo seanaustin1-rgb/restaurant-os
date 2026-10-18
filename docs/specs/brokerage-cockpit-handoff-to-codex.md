@@ -358,6 +358,24 @@ weighs in per Sean.
     `https://www.outfrontdata.com/demo/real-estate-cockpit` on phone (390-wide) and desktop, run the Rental Maintenance
     Center walkthrough, and confirm — then log the live confirmation here.**
 
+### 2026-07-14 — Claude lane: master-ai-handoff front-end demo-readiness pass (PR #120)
+
+- **NEXT-012 — [Claude] Claim (per master-ai-handoff §8):** Front-end only. Touching
+  `src/app/demo/real-estate-cockpit/native/AgentApp.tsx` (Broker/Rental untouched this pass). Goal: make the master
+  handoff's P0 demo-obvious for today's meeting — (P0.1) a voice **front door** at the top of the Agent App
+  (Talk to AI assistant / Simulate voice memo → visible transcript + structured parser output: task/email/reminder/sync
+  badges); (P0.3) Agent Business Coach copy in solo-operator terms (**Take Home Pay**, **Tax Reserve**, **Lead Spend
+  Guardrail**, **Cash Runway**, **Pipeline cash expected**); (P0.4) a **no-reply reminder** on the existing lead
+  follow-up hub; (P0.5) an **Evening roundup** (Won today / Still open / Tomorrow first / Dictate daily review). All
+  **generated-data-only** — no backend, no Prisma, no real send, no deploy; simulated sync states carry the honest
+  "design-partner roadmap" disclosure. Reuses the `.agent :global(...)` scoping (no P0 styled-jsx regression).
+  Verification: `npx tsc --noEmit`, `npm test`, `npm run build`, and a headless walkthrough at 1440×900 + 390×844
+  (screenshots on file). Held as a **draft PR for Sean's visual approval** (DECISION-004). Note: `master-ai-handoff.md`
+  itself is referenced by Codex but is **not yet committed to this repo** — working from the operator-pasted copy.
+  - Prior increment **SUCCESS-019 — Agent Business Coach · Profit First shipped to draft PR #120** (the coach panel:
+    gamified leading indicators, agent Profit First read, lead-spend guardrail, next-action Twilio draft, Ask-your-coach).
+    CI green (Typecheck/Test/Build/Codex all ✅); Vercel preview deployed. Awaiting Sean's visual approval.
+
 ## 🎬 Presentation script (5–7 min) — July 14 (durable; do not leave only in chat)
 
 **Public demo:** `https://www.outfrontdata.com/demo/real-estate-cockpit`

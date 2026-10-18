@@ -133,19 +133,12 @@ of 2026-10-18 and summarized here:
 4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once 1 is done.
 5. **Overnight re-accumulation check** — after a clear, the next fan-out should add single
    digits. If not, a rule gap exists — fix the rule, then re-apply it to existing rows.
-   **⚠️ No tool on `main` re-applies an edited rule to already-categorized rows.**
-   `scripts/recategorize-transactions.ts` did (Plaid-fed, non-override rows; it did not touch
-   the ledger) and was deleted in #33. `scripts/reapply-categorization-ledger.ts` only fills
-   rows that are UNCATEGORIZED or confidence ≤ 0, re-mirroring those to the ledger; it writes
-   by default (use `--dry-run`, which still back-fills missing default categories via
-   `skipDuplicates`), and resolves the tenant with an unordered name-substring `findFirst` — Stone
-   has an empty duplicate tenant, so check the `restaurant` it prints. **A real re-apply tool
-   (current rules → bank-fed non-override rows → ledger re-mirror, exact-slug tenant resolve,
-   dry-run default) is a V1 gate item:** without it, fixing a rule can't clean history.
-   **Built in PR #175** (`scripts/reapply-rules.ts --tenant <slug> [--commit]`, CI green,
-   awaiting review; not yet run against prod). It holds rows whose ledger event was already
-   decided on the review page rather than re-mirroring over that decision. After #175 merges,
-   point CLAUDE.md / PRODUCT-MAP at it.
+   Re-apply tool: **`scripts/reapply-rules.ts --tenant <slug>`** (dry run; add `--commit`) —
+   current rules → bank-fed non-override rows → ledger re-mirror, exact-slug/unambiguous tenant
+   resolve. Rows already decided on the review page are **held** and listed, never re-mirrored
+   over. Shipped in **PR #175** (replaces `recategorize-transactions.ts`, deleted in #33); not
+   yet run against prod. Don't use `reapply-categorization-ledger.ts` for this — it only fills
+   UNCATEGORIZED / confidence ≤ 0 rows and writes by default.
 
 **Then (post-gate, strategy doc "Order of work"):** bottle matching → Vault entitlement toggle +
 walled-off guest endpoint → bulk-upload export + photo → card → Toast partner application.

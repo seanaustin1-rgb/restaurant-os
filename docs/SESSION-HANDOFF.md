@@ -140,8 +140,10 @@ of 2026-10-18 and summarized here:
    yet run against prod. Don't use `reapply-categorization-ledger.ts` for this — it only fills
    UNCATEGORIZED / confidence ≤ 0 rows and writes by default.
 
-**Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle
-matching → Vault entitlement toggle + walled-off guest endpoint → bulk-upload export.
+**Then (post-gate, strategy doc "Order of work"):** bottle matching → Vault entitlement toggle +
+walled-off guest endpoint → bulk-upload export + photo → card → Toast partner application.
+*Not in the strategy order (ledger-track debt, sequence with Sean):* #91 bucket map → A.3
+allocation port onto the ledger.
 
 ### Operator reminders (Sean does these)
 - Confirm the previously exposed GitHub PAT is **revoked**.

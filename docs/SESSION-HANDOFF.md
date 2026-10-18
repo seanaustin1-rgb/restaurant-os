@@ -4,44 +4,40 @@
 
 > **📌 2026-10-18 — business decisions:** see `docs/strategy/2026-10-18-business-model-and-v1-gate.md`
 > (sales channels, accountant seats, Vault as an operator-only toggle, Toast partner findings,
-> bulk-upload workaround). It changes no code and doesn't override the RESUME block — V1 / A6
-> is still the gate.
+> bulk-upload workaround). It changes no code. V1 / A6 is still the gate — see the 2026-10-18
+> RESUME block below.
 
 ## Resume a session
 
 **Paste this into a fresh session to resume (laptop / next session):**
 
 ```text
-Read CLAUDE.md, docs/PRODUCT-MAP.md, and docs/SESSION-HANDOFF.md, and check your project
-memory for Restaurant OS. Start from the ⏱️ RESUME HERE — 2026-07-04 (EOD) block (it's
-authoritative; every older dated block is history). The app is live on www.outfrontdata.com
-and main auto-deploys on merge.
+Pull latest main. Read, in order: CLAUDE.md, docs/PRODUCT-MAP.md,
+docs/strategy/2026-10-18-business-model-and-v1-gate.md, then docs/SESSION-HANDOFF.md.
+Start from the ⏱️ RESUME HERE — 2026-10-18 block (authoritative; every older dated block,
+including both 2026-07-04 blocks, is history). The app is live on www.outfrontdata.com and
+main auto-deploys on merge — work on a branch, open a PR, never merge to main yourself.
 
-Spec A ledger convergence + the demo-critical read modules are all SHIPPED (A.1 Tax Vault,
-A.2 Cash Flow/Spending/coverage-gap, A5 Spec C bulk triage, A8 Forward Cash, A9 Daily Digest,
-A10 brokerage taxonomy). The live critical path is the A6 operator/laptop run:
+OutFront Data is the business; Spirit Vault is an operator-only toggle module. Nothing ships
+to outside operators until V1 runs clean on Stone Grille (bar: Stone reconciles clean for 7
+consecutive days with no manual intervention). Do NOT start billing / channel / Vault-toggle /
+Toast-partner build work until that gate is met.
 
-  1. Open /settings/sources/review on Stone Grille and use the new bulk "Approve all as
-     [category]" / "Exclude all" on the largest vendor groups to clear the 373 open sync
-     exceptions. Run scripts/summarize-sync-exceptions.ts stone BEFORE and AFTER — that delta
-     is a demo asset. (Runbook: docs/fable-5/RUNBOOK-stone-triage.md.) This step needs NO
-     secrets — it's the app UI.
-  2. Once Stone is clean, spot-check Tax Vault / Cash Flow / Spending / Forward Cash against
-     real data, then run scripts/compare-spines.ts "Stone Grille" for spine parity (the gate
-     before A.3 touches allocation math).
-  3. A10 demo verify: npm run seed:brokerage -- --user <clerkUserId> against the demo DB →
-     confirm "Cascade Realty Group" tiles read brokerage-native.
+The live critical path is still the A6 operator run:
+  1. Snapshot: npx dotenv -e .env.local -o -- tsx scripts/summarize-sync-exceptions.ts
+     (no arg = every tenant; read Stone's block. July count was 373.)
+  2. Clear Stone on /settings/sources/review with the bulk "Approve all (N)" / "Exclude all"
+     per vendor group (runbook: docs/fable-5/RUNBOOK-stone-triage.md). Re-run step 1 after.
+  3. Spot-check Tax Vault / Cash Flow / Spending / Forward Cash on real data, then
+     npx dotenv -e .env.local -o -- tsx scripts/compare-spines.ts "Stone Grille"
+  4. Next code work for the gate: a daily reconciliation-health record so "7 clean days"
+     is measurable (see the 10-18 block's ranked list).
 
-Do NOT touch the Codex lane: PR #90 (accrued-vs-cleared reconciliation) is migration-gated
-(Restaurant.taxProfile) and awaiting a cleared==0 guard. The CLI steps (summarize / compare-
-spines / seed:brokerage) need your local .env.local (DB URL); the A6 exception-clearing does
-not. Grab <clerkUserId> from the Clerk dashboard.
+Don't touch Codex-lane PRs (codex/* heads, #170 especially — it's a one-time demo→prod copy).
+CLI steps need Sean's local .env.local; the review-page clearing does not.
 ```
 
-Or, in prose:
-> "Read `CLAUDE.md`, `docs/PRODUCT-MAP.md`, `docs/SESSION-HANDOFF.md`, and `docs/fable-5/MASTER-ROADMAP-2026-07-03.md`, and check your project memory for Restaurant OS. Start from the **⏱️ RESUME HERE — 2026-07-04 (EOD)** block below (it's authoritative; every older dated block is history). The app is live on **www.outfrontdata.com**. Spec A ledger convergence + the demo-critical read modules are **shipped**; the live critical path is now the **operator/laptop A6 run** (clear Stone's 373 sync exceptions with the new bulk-triage tools, then verify the new modules against real data)."
-
-> **⚠️ Historical note (2026-06-12/13).** The **2026-07-04** block at the top is now authoritative; every
+> **⚠️ Historical note (2026-06-12/13).** The **2026-10-18** block at the top is now authoritative; every
 > dated block below it (2026-06-15, 2026-06-13, …) is history, kept only for context. The 10 live tiles +
 > Toast era integration (this doc's "Where we are")
 > and the Allocation engine + Vercel deploy (the RESUME block) are BOTH on `main`. **PR #18 is MERGED** and
@@ -52,7 +48,103 @@ Repo: **https://github.com/seanaustin1-rgb/restaurant-os** (private)
 
 ---
 
-## ⏱️ RESUME HERE — 2026-07-04 (EOD) — SPEC A + DEMO READ MODULES SHIPPED · A6 IS THE GATE
+## ⏱️ RESUME HERE — 2026-10-18 — STATE RECONSTRUCTED · V1 GATE ON STONE IS THE ONLY PRIORITY
+
+**`main` tip: `aca6546`** (#173, strategy doc). This block was rebuilt from `git log`, the GitHub
+PR list and the repo on 2026-10-18 — the 07-04 handoff had gone stale across ~100 commits.
+**Verified** = read from the repo/GitHub this session. **Inferred** = labelled as such.
+
+### What shipped since 2026-07-04 (verified, `git log origin/main --since=2026-07-04`)
+- **OutFront core / Profit First (07-04 → 07-13):** the 07-04 EOD wave (#85–#88, #94, #95, #97,
+  #98) plus **#107** accrued-vs-cleared tax drift signal (Codex lane; supersedes #90, which was
+  **closed unmerged**), **#108** B6 cash floor + sweep safety, **#109** B7 inferred payroll
+  forward accrual, **#110** Forward Cash threads `db` so demo never hits prod. Onboarding: #92,
+  #96, #99, #101.
+- **Real-estate / Raven demo (07-05 → 07-14):** #104 public RE cockpit demo, #111/#112 merged then
+  **reverted by #114** (approval gate, DECISION-004), #115 July-14 demo, #116–#119 demo polish.
+- **Spirit Vault (07-26 → 08-19):** static Brag Book batches #122–#136 (whiskey shelf complete),
+  **#137** canonical schema + migration, **#139** importer and **#140** Middle West →
+  Ported Pumpernickel Rye (both **merged 07-30**), **#142** admin editor + dynamic `/vault`, #144
+  public payload hardening, **#143/#147–#149/#160** Flight Builder, **#150/#152** daily presence
+  gate + vault-code card, **#153–#158** membership spine/UI/opt-in/hardening.
+- **Team Hub (10-03 → 10-07):** #165 recon, #166 Spec F (`docs/fable-5/SPEC-F-team-hub.md`),
+  **#167** tenant-scoped foundation (+ migration), **#169** roster + phone membership, **#171**
+  Stream media pipeline, **#172** lesson publishing + feed (`/team`).
+- **Other:** #164 ECC plugin at project scope (09-26); #173 strategy doc (10-18).
+- **Nothing since 07-13 touched sync, categorization, the ledger, or reconciliation.** The V1
+  gate has not moved in three months.
+
+### Migrations added to `main` since 07-04 (verified files; prod-applied status NOT verifiable here)
+`20260704033000_add_restaurant_tax_profile` (#107) · `20260713010000_add_restaurant_cash_floor`
+(#108) · `20260728000000_add_spirit_vault` · `20260809000000_add_spirit_flights` ·
+`20260810000000_add_flight_item_pairing_bites` · `20260818210000_add_membership_spine` ·
+`20260819120000_add_member_marketing_optin` · `20260819130000_membership_redemption_tenant_fk` ·
+`20261003153000_team_hub_foundation`. `npm run build` is `prisma generate && next build` — it does
+**not** run `migrate deploy`, so every one of these was (or still is) an operator apply.
+*Inferred:* the live app reads `taxProfile`/`cashFloor`/vault/team tables, so they're probably
+applied — confirm with `npx dotenv -e .env.local -o -- prisma migrate status`.
+
+### Open PRs (verified 2026-10-18) — lane and status
+| PR | Head | Lane | Status / call |
+|---|---|---|---|
+| #170 | `codex/copy-spirits-demo-to-prod` | Codex | Ready. One-time demo→**prod** data copy. Codex lane — don't touch; Sean decides. |
+| #168 | `docs/spec-f-roster-sync` | Team Hub docs | Ready. Toast roster-sync spec. Not V1. |
+| #163 | `codex/flight-builder-availability-hardening` | Codex | Draft, stale since 09-05 (`codex/flight-builder-163-plus-162` also exists). |
+| #162 | `claude/spirit-vault-flight-builder-x71qai` | Claude/Vault | Draft, stranded since 08-25 — Flight Builder already on main via #143/#160; likely superseded. |
+| #161 | `docs/next-session-handoff` | Vault docs | Ready, stranded 08-19 ("Claude owns whole build"). |
+| #159 | `codex/spirit-vault-flight-builder-plan` | Codex | Draft plan, stranded. |
+| #151 | `docs/phase2-guest-layer-spec-v2` | Vault docs | Ready, stranded 08-18. |
+| #146 | `claude/previous-session-continuation-ls0rka` | Claude/Vault | Draft — Sean's answers to 7 Vault audit questions; stranded. |
+| #145 | `feat/spirit-vault-draft-loader` | Vault | Ready — hidden draft inventory; stranded. |
+| #138 | `agent/spirit-vault-doc-sync` | Codex | Draft doc refresh; superseded by later merges. |
+| #121 | `seanaustin1-rgb-patch-1` | Sean | Gemini CLI step in Codex Review workflow. |
+| #120 | `claude/continue-previous-session-0wiffu` | Claude/Raven demo | Draft, stranded since 07-27. |
+| #113 | `claude/stuck-last-session-9fbzxf` | Claude/CI | Draft: silence Codex-review spam. |
+| #106 | `work` | Codex/Raven | Draft: Morning Ritual. Stranded. |
+| #105 | `codex/prepare-for-luke-pilot-execution` | Codex/Raven | Owner Morning Brief. Stranded. |
+| #103 | `claude/a6-operator-laptop-run-9j934q` | Claude/RE | Draft: B6 (now **superseded by #108**) + RE lead-pipeline schema, auto-migrate-on-deploy commit; 2 gated migrations. Stranded. |
+| #91 | `feat/ledger-bucket-map` | Codex | Draft: one TapBucket↔LedgerAccount map — **this is Spec A.3's prerequisite**. Stranded since 07-04. |
+| #63, #53 | `claude/executive-cockpit-design-jtkpse`, `claude/brokerage-loader-dedup` | Claude/brokerage | Drafts, stranded since 07-02. |
+
+**`claude/rule-guardrails-and-triage`** = **PR #77, MERGED 07-04** (squash). The branch still
+exists but carries 0 patches not in main — safe to delete. `claude/stone-triage-execute` still
+has 2 unmerged patches (unreviewed; not a PR). ~110 remote branches total — pruning is overdue.
+
+### Spirit Vault vs `docs/spirit-vault/HANDOFF.md` (verified)
+- #139 and #140 **are merged** (07-30). That doc's top block (07-30) still lists them as open —
+  it's stale and also predates #142–#160. Refresh it when Vault work resumes (after V1).
+- **Bottles held for identity confirmation: none open as of the doc's last update.** Middle West
+  was the last hold (resolved by #140). **Calumet is a Sean "off" decision, kept as draft — not a
+  hold.** *Not verified:* anything held in the DB-backed admin (`/vault` admin, post-#142) — the
+  doc doesn't track it; check the admin's draft list before saying zero.
+
+### ⛔ THE GATE — V1 on Stone (unchanged since July, now explicit)
+Bar: **Stone reconciles clean for 7 consecutive days with no manual intervention**, plus
+`compare-spines` converged. Ranked blockers and the exact commands are in the PR/session notes
+of 2026-10-18 and summarized here:
+1. **Clear Stone's open sync exceptions** (operator, UI) — July: 373. Today's count unknown.
+2. **Define + record "clean day"** (code) — nothing today persists a per-day reconciliation
+   verdict. Needed: after the 06:00 Plaid / 05:30 Toast runs, a deterministic daily check
+   (new open exceptions = 0, both syncs succeeded, compare-spines within tolerance for the day)
+   stored per tenant, so 7 consecutive passes is a query, not a judgment call.
+3. **compare-spines converged on a trailing month** (operator runs; code fixes any bucket that
+   won't converge). Pass = every canonical bucket within **1%** (or **≤ $1** where legacy is 0) —
+   `spinesConverged()` in `src/lib/financial-ledger/spine-compare.ts`.
+4. **Real-data spot-check** of Tax Vault / Cash Flow / Spending / Forward Cash once 1 is done.
+5. **Overnight re-accumulation check** — after a clear, the next fan-out should add single
+   digits. If not, a rule gap exists (fix the rule, then `recategorize-transactions.ts --commit`).
+
+**Then (post-gate, per strategy doc order):** #91 bucket map → A.3 allocation port → bottle
+matching → Vault entitlement toggle + walled-off guest endpoint → bulk-upload export.
+
+### Operator reminders (Sean does these)
+- Confirm the previously exposed GitHub PAT is **revoked**.
+- Toast Partner Connect application status.
+- `prisma migrate status` against prod — confirm the 9 migrations above are applied.
+
+---
+
+## ⏱️ RESUME HERE — 2026-07-04 (EOD) — SPEC A + DEMO READ MODULES SHIPPED · A6 IS THE GATE [HISTORY — superseded by the 2026-10-18 block above]
 
 **`main` tip: `a5db4c1`** (this lane's last merge was **#98 `4077094`** A10; `#96`/`#99` on top are a
 separate onboarding lane — industry deep links + source planning). Everything in the older 2026-07-04 block

@@ -2,6 +2,11 @@
 
 > Safe to email — contains **no secrets**. Bring your `.env.local` separately.
 
+> **📌 2026-10-18 — business decisions:** see `docs/strategy/2026-10-18-business-model-and-v1-gate.md`
+> (sales channels, accountant seats, Vault as an operator-only toggle, Toast partner findings,
+> bulk-upload workaround). It changes no code and doesn't override the RESUME block — V1 / A6
+> is still the gate.
+
 ## Resume a session
 
 **Paste this into a fresh session to resume (laptop / next session):**

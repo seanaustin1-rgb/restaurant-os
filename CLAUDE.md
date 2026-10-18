@@ -4,6 +4,10 @@
 repo: data model, live connectors, dashboard architecture, current debt, and
 the two active execution specs (ledger convergence, Toast multi-tenancy).
 
+**Business model & priorities:** `docs/strategy/2026-10-18-business-model-and-v1-gate.md`
+— OutFront is the business, Spirit Vault is an operator-toggled module, V1 on Stone
+Grille is the gate. Read it before any billing, entitlement, channel, or Vault work.
+
 ## Non-negotiables
 
 - **Two financial spines exist.** Legacy `Transaction`→`TapBucket` and the

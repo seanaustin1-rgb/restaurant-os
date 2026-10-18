@@ -138,12 +138,30 @@ of 2026-10-18 and summarized here:
    resolve. Rows already decided on the review page are **held** and listed, never re-mirrored
    over. Shipped in **PR #175** (replaces `recategorize-transactions.ts`, deleted in #33); not
    yet run against prod. Don't use `reapply-categorization-ledger.ts` for this — it only fills
-   UNCATEGORIZED / confidence ≤ 0 rows and writes by default.
+   UNCATEGORIZED / confidence ≤ 0 rows.
 
 **Then (post-gate, strategy doc "Order of work"):** bottle matching → Vault entitlement toggle +
 walled-off guest endpoint → bulk-upload export + photo → card → Toast partner application.
 *Not in the strategy order (ledger-track debt, sequence with Sean):* #91 bucket map → A.3
 allocation port onto the ledger.
+
+### Ops-readiness audit (2026-10-18 afternoon) — beyond exception clearing
+- **FIXED (PR `claude/v1-ops-readiness`):** the nightly Plaid sync re-mirrored every added *and
+  modified* txn, and `mirrorBankTransactionToLedger` rebuilt the ledger event from scratch —
+  so a review-page approval/exclusion was wiped and its exception reopened whenever Plaid
+  re-sent the txn (pending→posted, merchant enrichment). The mirror now keeps a human/script
+  decision (`approvedBy` set, or EXCLUDED) while amount + date are unchanged.
+- **FIXED (same PR):** `reapply-categorization-ledger.ts` wrote by default; now needs `--commit`.
+- **OPEN — needs Sean's call before `compare-spines` can pass:** review decisions only touch the
+  ledger; the legacy `Transaction` keeps the rule's guess. And legacy counts every inflow as
+  REVENUE by sign while the ledger only counts REVENUE-category inflows. So after triage the
+  spines diverge on every re-typed row, every excluded transfer, and every non-revenue deposit.
+  Options: (a) write review decisions back to the legacy row (override) + make compare-spines
+  skip EXCLUDED-category rows on both sides; (b) declare legacy frozen and gate V1 on the ledger
+  alone. Recommendation: (a) — it keeps legacy honest until it's retired.
+- **OPEN — code, not started:** daily reconciliation-health record (gate item 2) so 7 clean days
+  is a query. Pending pre-post Plaid txns also come back as remove+add with a new id, so any
+  decision on a *pending* row is lost by design — review posted rows only.
 
 ### Operator reminders (Sean does these)
 - Confirm the previously exposed GitHub PAT is **revoked**.

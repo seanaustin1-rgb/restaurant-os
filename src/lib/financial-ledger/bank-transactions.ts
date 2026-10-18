@@ -80,6 +80,16 @@ export function ledgerMappingForTap(input: {
   }
 }
 
+/** Same absolute amount (to the cent) and same calendar date. */
+function sameMoneyFacts(
+  existing: { amount: Prisma.Decimal | number; eventDate: Date },
+  input: { amount: number; date: Date },
+): boolean {
+  const cents = (v: number) => Math.round(Math.abs(v) * 100);
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  return cents(Number(existing.amount)) === cents(input.amount) && day(existing.eventDate) === day(input.date);
+}
+
 export async function mirrorBankTransactionToLedger(
   db: LedgerDb,
   input: BankTransactionLedgerInput,
@@ -131,8 +141,30 @@ export async function mirrorBankTransactionToLedger(
 
   const existingNormalized = await db.normalizedFinancialEvent.findMany({
     where: { rawSourceEventId: rawSourceEvent.id },
-    select: { id: true },
+    select: { id: true, mappingStatus: true, approvedBy: true, amount: true, eventDate: true },
   });
+
+  // A decision made on the review page (or by triage-exceptions.ts) sets
+  // approvedBy, or EXCLUDED. Plaid re-sends "modified" transactions on later
+  // syncs (pending→posted, merchant enrichment); rebuilding here would delete
+  // that decision and reopen the exception every morning. Keep it while the
+  // money facts are unchanged; if amount or date moved, the decision may no
+  // longer hold, so fall through and re-map honestly.
+  const decided = existingNormalized.find(
+    (row) => row.approvedBy != null || row.mappingStatus === "EXCLUDED",
+  );
+  if (decided && sameMoneyFacts(decided, input)) {
+    await db.rawSourceEvent.update({
+      where: { id: rawSourceEvent.id },
+      data: { mappingStatus: decided.mappingStatus, processedAt: new Date() },
+    });
+    return {
+      rawSourceEventId: rawSourceEvent.id,
+      normalizedFinancialEventId: decided.id,
+      mappingStatus: decided.mappingStatus,
+    };
+  }
+
   const existingIds = existingNormalized.map((row) => row.id);
   if (existingIds.length > 0) {
     await db.ledgerEntry.deleteMany({ where: { normalizedFinancialEventId: { in: existingIds } } });

@@ -54,6 +54,24 @@ async function currentUserEmail(userId: string): Promise<string | null> {
   return user.emailAddresses.find((email) => email.id === primaryId)?.emailAddress.toLowerCase() ?? user.emailAddresses[0]?.emailAddress.toLowerCase() ?? null;
 }
 
+/**
+ * S-3 invariant (same as removeAccessRole): a business must keep at least one
+ * OPERATOR. Every path that can change an existing role — saveAccessRole,
+ * inviteAccessByEmail (existing Clerk account), acceptAccessInvite — must call
+ * this before its upsert, or the last operator (incl. yourself, e.g. by
+ * inviting your own email as MANAGER) can be demoted and lock the business out.
+ */
+async function assertKeepsAnOperator(clerkUserId: string, restaurantId: string, nextRole: UserRole): Promise<void> {
+  if (nextRole === "OPERATOR") return;
+  const existing = await prisma.userRestaurantRole.findUnique({
+    where: { clerkUserId_restaurantId: { clerkUserId, restaurantId } },
+    select: { role: true },
+  });
+  if (existing?.role !== "OPERATOR") return;
+  const operatorCount = await prisma.userRestaurantRole.count({ where: { restaurantId, role: "OPERATOR" } });
+  if (operatorCount <= 1) throw new Error("A business must keep at least one operator.");
+}
+
 export async function saveAccessRole(input: {
   clerkUserId: string;
   role: string;
@@ -62,6 +80,8 @@ export async function saveAccessRole(input: {
   const clerkUserId = input.clerkUserId.trim();
   if (!clerkUserId) throw new Error("Clerk user ID is required.");
   const role = cleanRole(input.role);
+
+  await assertKeepsAnOperator(clerkUserId, restaurantId, role);
 
   await prisma.userRestaurantRole.upsert({
     where: {
@@ -94,6 +114,7 @@ export async function inviteAccessByEmail(input: {
   });
   const existingUserId = await clerkUserIdForEmail(email);
   if (existingUserId) {
+    await assertKeepsAnOperator(existingUserId, restaurantId, role);
     await prisma.userRestaurantRole.upsert({
       where: {
         clerkUserId_restaurantId: {
@@ -161,6 +182,7 @@ export async function acceptAccessInvite(token: string): Promise<string> {
     throw new Error(`This invite is for ${invite.email}. Sign in with that email to accept it.`);
   }
 
+  await assertKeepsAnOperator(userId, invite.restaurantId, invite.role);
   await prisma.$transaction([
     prisma.userRestaurantRole.upsert({
       where: {

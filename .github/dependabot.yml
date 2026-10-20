@@ -1,0 +1,28 @@
+# Dependency update PRs (security, 2026-10-20). Weekly, grouped so it's a few
+# PRs a week rather than dozens. Security advisories open PRs immediately
+# regardless of schedule once "Dependabot security updates" is on in repo
+# Settings → Code security.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    ignore:
+      # Major framework upgrades are planned work, not drive-by PRs
+      # (Next 14 → 15 is tracked as H-1 in docs/security/SECURITY-REVIEW-2026-10-20.md).
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/client"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly

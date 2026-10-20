@@ -82,7 +82,9 @@ export async function GET() {
   });
   if (!role) return new Response("Forbidden", { status: 403 });
 
-  const qr = await qrSvg(qrTargetUrl("/vault"));
+  // Route is already restricted to vault-tenant staff; gate the QR the same way
+  // as the printed code anyway so the two can never diverge.
+  const qr = await qrSvg(qrTargetUrl("/vault", { withDayCode: mayIssueDayCode(vaultTenant) }));
   const code = dayGateEnabled() && mayIssueDayCode(vaultTenant) ? todayCode() : null;
   const vaultUrl = appBaseUrl().replace(/^https?:\/\//, "") + "/vault";
   return new Response(cardHtml(role.restaurant?.name ?? "Spirit Vault", code, qr, vaultUrl), {

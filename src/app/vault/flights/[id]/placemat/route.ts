@@ -185,9 +185,12 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // The guest digital page stays published-only.
   const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
+  // Both the printed code AND the QR payload carry today's code, so both are
+  // gated on the same check (the QR's /v/<code> URL is decodable by anyone).
+  const issueCode = dayGateEnabled() && mayIssueDayCode(role.restaurantId);
   const qr = {
-    svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),
-    code: dayGateEnabled() && mayIssueDayCode(role.restaurantId) ? todayCode() : null,
+    svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`, { withDayCode: issueCode })),
+    code: issueCode ? todayCode() : null,
   };
   return new Response(placematHtml(view, qr), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

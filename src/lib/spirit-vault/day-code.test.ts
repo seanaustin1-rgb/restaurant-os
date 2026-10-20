@@ -122,20 +122,26 @@ describe("secondsUntilVenueMidnight", () => {
 describe("qrTargetUrl", () => {
   it("routes through the day-code entry when the gate is enabled", () => {
     const now = new Date("2026-08-18T15:00:00Z");
-    const url = qrTargetUrl("/vault/flights/abc", now);
+    const url = qrTargetUrl("/vault/flights/abc", { withDayCode: true, now });
     expect(url).toBe(`https://www.outfrontdata.com/v/${todayCode(now)}?to=${encodeURIComponent("/vault/flights/abc")}`);
+  });
+
+  it("never embeds the code when the caller may not be shown it (INV-6)", () => {
+    const url = qrTargetUrl("/vault/flights/abc", { withDayCode: false });
+    expect(url).toBe("https://www.outfrontdata.com/vault/flights/abc");
+    expect(url).not.toContain(todayCode());
   });
 
   it("links straight to the destination when the gate is disabled", () => {
     delete process.env.SPIRIT_VAULT_DAY_SECRET;
-    expect(qrTargetUrl("/vault/flights/abc")).toBe("https://www.outfrontdata.com/vault/flights/abc");
+    expect(qrTargetUrl("/vault/flights/abc", { withDayCode: true })).toBe("https://www.outfrontdata.com/vault/flights/abc");
   });
 
   it("honors NEXT_PUBLIC_APP_URL and trims a trailing slash", () => {
     process.env.NEXT_PUBLIC_APP_URL = "https://staging.example.com/";
     expect(appBaseUrl()).toBe("https://staging.example.com");
     delete process.env.SPIRIT_VAULT_DAY_SECRET;
-    expect(qrTargetUrl("/vault")).toBe("https://staging.example.com/vault");
+    expect(qrTargetUrl("/vault", { withDayCode: true })).toBe("https://staging.example.com/vault");
   });
 
   it("never emits a loopback base for a QR (falls back to canonical)", () => {

@@ -38,8 +38,11 @@ const SNAPSHOT_DAYS = 30;
 
 function isMissingIntentTableError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const maybePrisma = error as { code?: string; meta?: { table?: string }; message?: string };
-  const table = maybePrisma.meta?.table ?? "";
+  const maybePrisma = error as { code?: string; meta?: { table?: string; column?: string }; message?: string };
+  // P2022 (missing column) names the column in meta.column / the message rather
+  // than meta.table; a missing `restaurantId` column means the tenant-scope
+  // migration hasn't been applied yet.
+  const table = `${maybePrisma.meta?.table ?? ""} ${maybePrisma.meta?.column ?? ""}`;
   const message = maybePrisma.message ?? "";
   return (
     // P2021 = table missing; P2022 = column missing (tenant-scope migration not
@@ -47,6 +50,7 @@ function isMissingIntentTableError(error: unknown): boolean {
     (maybePrisma.code === "P2021" || maybePrisma.code === "P2022") &&
     (table.includes("AuraIntentSnapshot") ||
       message.includes("AuraIntentSnapshot") ||
+      (maybePrisma.code === "P2022" && (table.includes("restaurantId") || message.includes("restaurantId"))) ||
       message.includes("auraIntentSnapshot"))
   );
 }

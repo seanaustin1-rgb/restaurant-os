@@ -1,6 +1,7 @@
 ﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 import { loadAura } from "@/lib/modules/aura";
 import { loadReputationTrend } from "@/lib/modules/reputation-trend";
 import { AuraModule } from "@/components/modules/AuraModule";
@@ -14,11 +15,11 @@ export default async function AuraPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...INTERNAL_VIEW_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 
-  const [data, trend] = await Promise.all([loadAura(role?.restaurantId), loadReputationTrend()]);
+  const [data, trend] = await Promise.all([loadAura(role?.restaurantId), loadReputationTrend(role?.restaurantId)]);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6 sm:py-10">

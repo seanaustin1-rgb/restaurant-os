@@ -155,7 +155,18 @@ export async function discoverGoogleBusinessProfileLocations(accessToken: string
   return locations;
 }
 
-export async function accessTokenForGoogleBusinessProfile(restaurantId?: string | null): Promise<string> {
+/**
+ * Access token for a tenant's own Google Business Profile connection.
+ *
+ * The env-configured token (GOOGLE_BUSINESS_PROFILE_*) belongs to ONE business
+ * (the env Aura owner — see src/lib/modules/aura-owner.ts). It is only used when
+ * the caller passes `allowEnvFallback: true`, which callers must set solely for
+ * that owning tenant. Default is fail-closed: no connection → throw.
+ */
+export async function accessTokenForGoogleBusinessProfile(
+  restaurantId: string | null | undefined,
+  opts: { allowEnvFallback?: boolean } = {},
+): Promise<string> {
   if (restaurantId) {
     const connection = await prisma.integrationConnection.findFirst({
       where: {
@@ -180,6 +191,8 @@ export async function accessTokenForGoogleBusinessProfile(restaurantId?: string 
     }
     if (connection?.accessToken) return decrypt(connection.accessToken);
   }
+
+  if (!opts.allowEnvFallback) throw new Error("Google Business Profile is not connected for this business.");
 
   const envRefresh = process.env.GOOGLE_BUSINESS_PROFILE_REFRESH_TOKEN?.trim();
   if (envRefresh) {

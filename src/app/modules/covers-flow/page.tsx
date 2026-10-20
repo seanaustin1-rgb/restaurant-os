@@ -1,6 +1,7 @@
 ﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 import { loadCoversFlow } from "@/lib/modules/covers-flow";
 import { CoversFlowModule } from "@/components/modules/CoversFlowModule";
 
@@ -9,7 +10,7 @@ export default async function CoversFlowPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...INTERNAL_VIEW_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 

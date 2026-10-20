@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightPourView, type FlightView } from "@/lib/spirit-vault/flight-view";
-import { dayGateEnabled, qrTargetUrl, todayCode } from "@/lib/spirit-vault/day-code";
+import { dayGateEnabled, qrTargetUrl, todayCode, vaultTenantId, mayIssueDayCode } from "@/lib/spirit-vault/day-code";
 import { qrSvg } from "@/lib/spirit-vault/qr";
 
 // Standalone, print-ready tasting placemat — Legal (8.5x14) landscape. STAFF ONLY:
@@ -163,8 +163,18 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // sheet. Do NOT rely on middleware — /vault is Clerk-public — enforce here.
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
+  // The day code unlocks ONE tenant's guest vault, so only that tenant's staff may
+  // load this (it prints the code). A staff role on any other tenant — e.g. one
+  // self-onboarded via public sign-up — is not enough.
+  const vaultTenant = vaultTenantId();
+  if (!vaultTenant) return new Response("Forbidden", { status: 403 });
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...SPIRIT_VAULT_STAFF_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    where: {
+      clerkUserId: userId,
+      restaurantId: vaultTenant,
+      role: { in: [...SPIRIT_VAULT_STAFF_ROLES] },
+      restaurant: { businessType: "RESTAURANT" },
+    },
     select: { restaurantId: true },
   });
   if (!role) return new Response("Forbidden", { status: 403 });
@@ -175,7 +185,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   if (!view) return new Response("Flight not found", { status: 404 });
   const qr = {
     svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),
-    code: dayGateEnabled() ? todayCode() : null,
+    code: dayGateEnabled() && mayIssueDayCode(vaultTenant) ? todayCode() : null,
   };
   return new Response(placematHtml(view, qr), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

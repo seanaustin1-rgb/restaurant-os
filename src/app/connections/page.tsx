@@ -2,6 +2,7 @@
 import { redirect } from "next/navigation";
 import { Landmark } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 import { ConnectBankButton } from "@/components/plaid/ConnectBankButton";
 import { SyncNowButton } from "@/components/plaid/SyncNowButton";
 import { RemoveConnectionButton } from "@/components/plaid/RemoveConnectionButton";
@@ -11,7 +12,7 @@ export default async function ConnectionsPage() {
   if (!userId) redirect("/sign-in");
 
   const roles = await prisma.userRestaurantRole.findMany({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...INTERNAL_VIEW_ROLES] } },
     select: {
       restaurantId: true,
       createdAt: true,

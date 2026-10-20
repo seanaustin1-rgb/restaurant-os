@@ -70,8 +70,13 @@ export function isGoogleBusinessProfileConfigured(): boolean {
   return missingGoogleBusinessProfileEnv().length === 0;
 }
 
-async function getGoogleBusinessProfileAccessToken(restaurantId?: string | null): Promise<string> {
-  if (restaurantId) return accessTokenForGoogleBusinessProfile(restaurantId);
+async function getGoogleBusinessProfileAccessToken(restaurantId: string, allowEnvFallback: boolean): Promise<string> {
+  if (!allowEnvFallback) return accessTokenForGoogleBusinessProfile(restaurantId);
+  try {
+    return await accessTokenForGoogleBusinessProfile(restaurantId);
+  } catch {
+    // Env owner without its own connection row → fall through to env creds.
+  }
 
   const clientId = process.env.GOOGLE_BUSINESS_PROFILE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_BUSINESS_PROFILE_CLIENT_SECRET?.trim();
@@ -115,16 +120,22 @@ function googleDateToIso(date: GoogleDate | undefined): string | null {
   return `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`;
 }
 
-export async function fetchGoogleBusinessProfilePerformance(days = 30, restaurantId?: string | null): Promise<GoogleBusinessProfilePoint[]> {
-  const missing = missingGoogleBusinessProfileEnv();
-  if (!restaurantId && missing.length > 0) {
-    throw new Error(`Google Business Profile is not configured: ${missing.join(", ")}`);
-  }
-
-  const locationId = process.env.GOOGLE_BUSINESS_PROFILE_LOCATION_ID?.trim() ?? "";
-  const accessToken = await getGoogleBusinessProfileAccessToken(restaurantId);
-  let resolvedLocationId = locationId;
-  if (restaurantId) {
+/**
+ * Daily GBP performance points for ONE tenant. `allowEnvFallback` lets the env
+ * Aura owner (and only it) fall back to the env-configured token + location when
+ * it has no connection row of its own. Every other tenant must have connected
+ * Google itself; there is no cross-tenant fallback.
+ */
+export async function fetchGoogleBusinessProfilePerformance(
+  days: number,
+  restaurantId: string,
+  opts: { allowEnvFallback?: boolean } = {},
+): Promise<GoogleBusinessProfilePoint[]> {
+  const allowEnvFallback = opts.allowEnvFallback === true;
+  const envLocationId = allowEnvFallback ? (process.env.GOOGLE_BUSINESS_PROFILE_LOCATION_ID?.trim() ?? "") : "";
+  const accessToken = await getGoogleBusinessProfileAccessToken(restaurantId, allowEnvFallback);
+  let resolvedLocationId = envLocationId;
+  {
     const connection = await prisma.integrationConnection.findFirst({
       where: {
         restaurantId,
@@ -135,7 +146,7 @@ export async function fetchGoogleBusinessProfilePerformance(days = 30, restauran
       orderBy: { updatedAt: "desc" },
       select: { externalLocationId: true },
     });
-    resolvedLocationId = connection?.externalLocationId ?? locationId;
+    resolvedLocationId = connection?.externalLocationId ?? envLocationId;
   }
   if (!resolvedLocationId) throw new Error("Google Business Profile location is missing.");
   const end = new Date();

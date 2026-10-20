@@ -4,10 +4,12 @@ import {
   dayCodeFor,
   dayGateEnabled,
   isValidDayCode,
+  mayIssueDayCode,
   normalizeCode,
   qrTargetUrl,
   secondsUntilVenueMidnight,
   todayCode,
+  vaultTenantId,
   venueDateKey,
 } from "./day-code";
 
@@ -148,5 +150,23 @@ describe("qrTargetUrl", () => {
       process.env.NEXT_PUBLIC_APP_URL = v;
       expect(appBaseUrl()).toBe("https://www.outfrontdata.com");
     }
+  });
+});
+
+describe("mayIssueDayCode (who may be SHOWN today's code)", () => {
+  it("allows only staff of the vault tenant", () => {
+    expect(mayIssueDayCode("rest-1")).toBe(true);
+  });
+
+  it("refuses any other tenant — e.g. a self-onboarded restaurant", () => {
+    expect(mayIssueDayCode("rest-attacker")).toBe(false);
+  });
+
+  it("fails closed when the vault tenant is unset or the caller has none", () => {
+    expect(mayIssueDayCode(null)).toBe(false);
+    expect(mayIssueDayCode("")).toBe(false);
+    delete process.env.SPIRIT_VAULT_RESTAURANT_ID;
+    expect(vaultTenantId()).toBeNull();
+    expect(mayIssueDayCode("rest-1")).toBe(false);
   });
 });

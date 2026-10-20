@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { PropertyCockpit } from "@/components/cockpit/PropertyCockpit";
 import { loadRentalPropertyRollup } from "@/lib/modules/rental-property-rollup";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 
 export default async function RentalPropertyCockpitPage({
   searchParams,
@@ -17,6 +18,7 @@ export default async function RentalPropertyCockpitPage({
   const role = await prisma.userRestaurantRole.findFirst({
     where: {
       clerkUserId: userId,
+      role: { in: [...INTERNAL_VIEW_ROLES] },
       ...(searchParams?.restaurantId ? { restaurantId: searchParams.restaurantId } : {}),
       restaurant: { businessType: "VACATION_RENTAL" },
     },

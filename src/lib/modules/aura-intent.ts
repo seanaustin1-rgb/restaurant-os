@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auraSnapshotTenantWhere, envAuraOwnerRestaurantId, isEnvAuraOwner } from "@/lib/modules/aura-owner";
 import type { AuraIntentMetric, AuraIntentState } from "@/lib/modules/aura";
 import {
   fetchGoogleBusinessProfilePerformance,
@@ -41,7 +42,9 @@ function isMissingIntentTableError(error: unknown): boolean {
   const table = maybePrisma.meta?.table ?? "";
   const message = maybePrisma.message ?? "";
   return (
-    maybePrisma.code === "P2021" &&
+    // P2021 = table missing; P2022 = column missing (tenant-scope migration not
+    // applied yet). Either way: fail closed — read nothing, write nothing.
+    (maybePrisma.code === "P2021" || maybePrisma.code === "P2022") &&
     (table.includes("AuraIntentSnapshot") ||
       message.includes("AuraIntentSnapshot") ||
       message.includes("auraIntentSnapshot"))
@@ -53,14 +56,15 @@ function utcDate(iso: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void> {
+async function persistPoints(restaurantId: string, points: GoogleBusinessProfilePoint[]): Promise<void> {
   if (points.length === 0) return;
   try {
     await prisma.$transaction(
       points.map((point) =>
         prisma.auraIntentSnapshot.upsert({
           where: {
-            source_metric_date: {
+            restaurantId_source_metric_date: {
+              restaurantId,
               source: GOOGLE_BUSINESS_PROFILE_SOURCE,
               metric: point.metric,
               date: utcDate(point.date),
@@ -68,6 +72,7 @@ async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void
           },
           update: { value: Math.round(point.value) },
           create: {
+            restaurantId,
             source: GOOGLE_BUSINESS_PROFILE_SOURCE,
             metric: point.metric,
             date: utcDate(point.date),
@@ -82,13 +87,14 @@ async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void
   }
 }
 
-async function loadStoredPoints(): Promise<GoogleBusinessProfilePoint[]> {
+async function loadStoredPoints(restaurantId: string, isOwner: boolean): Promise<GoogleBusinessProfilePoint[]> {
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
   start.setUTCDate(start.getUTCDate() - SNAPSHOT_DAYS);
   try {
     const rows = await prisma.auraIntentSnapshot.findMany({
       where: {
+        ...auraSnapshotTenantWhere(restaurantId, isOwner),
         source: GOOGLE_BUSINESS_PROFILE_SOURCE,
         date: { gte: start },
       },
@@ -130,26 +136,73 @@ function configuredFallback(detail: string, state: AuraIntentState = "waiting_hi
   }));
 }
 
-export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS, restaurantId?: string | null): Promise<{ points: number }> {
-  const points = await fetchGoogleBusinessProfilePerformance(days, restaurantId);
-  await persistPoints(points);
-  return { points: points.length };
+/**
+ * Daily cron: snapshot GBP performance for every tenant that has its own active
+ * GBP connection, plus the env Aura owner (env-configured fallback). Each
+ * tenant's points are written under its own restaurantId. One tenant's failure
+ * doesn't block the others.
+ */
+export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS): Promise<{ points: number; tenants: number; failed: number }> {
+  const owner = await envAuraOwnerRestaurantId();
+  const connected = await prisma.integrationConnection.findMany({
+    where: {
+      provider: "GOOGLE_BUSINESS_PROFILE",
+      isActive: true,
+      externalLocationId: { notIn: ["pending", "unselected"] },
+    },
+    select: { restaurantId: true },
+    distinct: ["restaurantId"],
+  });
+  const tenants = new Set(connected.map((c) => c.restaurantId));
+  if (owner && isGoogleBusinessProfileConfigured()) tenants.add(owner);
+
+  let points = 0;
+  let failed = 0;
+  for (const restaurantId of tenants) {
+    try {
+      const fetched = await fetchGoogleBusinessProfilePerformance(days, restaurantId, {
+        allowEnvFallback: isEnvAuraOwner(restaurantId, owner),
+      });
+      await persistPoints(restaurantId, fetched);
+      points += fetched.length;
+    } catch {
+      failed += 1;
+    }
+  }
+  return { points, tenants: tenants.size, failed };
 }
 
 export async function loadAuraIntentMetrics(restaurantId?: string | null): Promise<AuraIntentMetric[]> {
-  if (!restaurantId && !isGoogleBusinessProfileConfigured()) {
+  if (!restaurantId) {
+    return configuredFallback("Connect Google Business Profile to see calls, directions and profile views.", "not_configured");
+  }
+  const owner = await envAuraOwnerRestaurantId();
+  const isOwner = isEnvAuraOwner(restaurantId, owner);
+
+  const hasOwnConnection =
+    (await prisma.integrationConnection.count({
+      where: {
+        restaurantId,
+        provider: "GOOGLE_BUSINESS_PROFILE",
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
+    })) > 0;
+  if (!hasOwnConnection && !(isOwner && isGoogleBusinessProfileConfigured())) {
     return configuredFallback(
-      `Connect Google Business Profile performance data: ${missingGoogleBusinessProfileEnv().join(", ")}`,
+      isOwner
+        ? `Connect Google Business Profile performance data: ${missingGoogleBusinessProfileEnv().join(", ")}`
+        : "Connect Google Business Profile to see calls, directions and profile views.",
       "not_configured",
     );
   }
 
-  const stored = await loadStoredPoints();
+  const stored = await loadStoredPoints(restaurantId, isOwner);
   if (stored.length > 0) return rollup(stored);
 
   try {
-    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS, restaurantId);
-    await persistPoints(live);
+    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS, restaurantId, { allowEnvFallback: isOwner });
+    await persistPoints(restaurantId, live);
     return rollup(live);
   } catch (error) {
     return configuredFallback(

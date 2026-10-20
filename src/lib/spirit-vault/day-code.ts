@@ -57,6 +57,22 @@ export function dayCodeFor(dateKey: string, opts: { secret?: string; tenant?: st
   return out;
 }
 
+/** The single tenant whose guest vault the day code unlocks (env), or null. */
+export function vaultTenantId(): string | null {
+  return process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim() || null;
+}
+
+/**
+ * May staff of `restaurantId` be shown today's code? Only staff of the vault
+ * tenant itself — the code unlocks THAT tenant's guest vault. Staff of any other
+ * tenant (including a self-onboarded one) must never see it. Fails closed when
+ * SPIRIT_VAULT_RESTAURANT_ID is unset.
+ */
+export function mayIssueDayCode(restaurantId: string | null | undefined): boolean {
+  const tenant = vaultTenantId();
+  return Boolean(tenant && restaurantId && restaurantId === tenant);
+}
+
 /** Today's code in the venue timezone. Throws if no secret is configured. */
 export function todayCode(now: Date = new Date()): string {
   return dayCodeFor(venueDateKey(now));

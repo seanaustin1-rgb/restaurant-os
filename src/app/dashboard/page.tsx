@@ -45,14 +45,19 @@ export default async function DashboardPage() {
     redirect("/investor");
   }
 
+  // Investor is read-only and sees only the curated /investor view. For a
+  // mixed-role user, never load the full internal dashboard of a tenant they
+  // only invest in — the client view's role gating is UI, not a data guard.
+  const internalRoles = roles.filter((role) => role.role !== "INVESTOR");
+
   const dashboards: DashboardData[] = [];
-  for (const r of roles) {
+  for (const r of internalRoles) {
     dashboards.push(await loadDashboardData(r.restaurantId));
   }
 
   const layout = await loadDashboardLayout(userId);
 
-  const roleAssignments = roles.map((role) => ({ restaurantId: role.restaurantId, role: role.role }));
+  const roleAssignments = internalRoles.map((role) => ({ restaurantId: role.restaurantId, role: role.role }));
 
   return (
     <DashboardView

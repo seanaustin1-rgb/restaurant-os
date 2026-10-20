@@ -52,8 +52,13 @@ export async function resolveToastRestaurantId(): Promise<string | null> {
   });
   if (conn) return conn.restaurantId;
 
+  // Name match is a legacy single-tenant fallback. Restaurant names are
+  // user-chosen at onboarding, so a self-onboarded tenant could reuse this name;
+  // pin to the OLDEST match (the original install) so a newer look-alike can
+  // never receive the env Toast account's sales. Prefer a PosConnection row.
   const fallback = await prisma.restaurant.findFirst({
     where: { name: { contains: "Stone Grille and Tap" } },
+    orderBy: { createdAt: "asc" },
     select: { id: true },
   });
   return fallback?.id ?? null;

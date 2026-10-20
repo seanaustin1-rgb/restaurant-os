@@ -163,20 +163,22 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   // sheet. Do NOT rely on middleware — /vault is Clerk-public — enforce here.
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
-  // The day code unlocks ONE tenant's guest vault, so only that tenant's staff may
-  // load this (it prints the code). A staff role on any other tenant — e.g. one
-  // self-onboarded via public sign-up — is not enough.
+  // Staff of any restaurant may print their OWN flights. The day code, though,
+  // unlocks ONE tenant's guest vault, so it's printed only for staff of that
+  // tenant (mayIssueDayCode) — never for a self-onboarded or other tenant.
+  const staffWhere = {
+    clerkUserId: userId,
+    role: { in: [...SPIRIT_VAULT_STAFF_ROLES] },
+    restaurant: { businessType: "RESTAURANT" as const },
+  };
+  // Prefer the vault tenant when this staffer belongs to it; otherwise their
+  // oldest restaurant (deterministic for multi-tenant staff).
   const vaultTenant = vaultTenantId();
-  if (!vaultTenant) return new Response("Forbidden", { status: 403 });
-  const role = await prisma.userRestaurantRole.findFirst({
-    where: {
-      clerkUserId: userId,
-      restaurantId: vaultTenant,
-      role: { in: [...SPIRIT_VAULT_STAFF_ROLES] },
-      restaurant: { businessType: "RESTAURANT" },
-    },
-    select: { restaurantId: true },
-  });
+  const role =
+    (vaultTenant
+      ? await prisma.userRestaurantRole.findFirst({ where: { ...staffWhere, restaurantId: vaultTenant }, select: { restaurantId: true } })
+      : null) ??
+    (await prisma.userRestaurantRole.findFirst({ where: staffWhere, orderBy: { createdAt: "asc" }, select: { restaurantId: true } }));
   if (!role) return new Response("Forbidden", { status: 403 });
 
   // Any status — the placemat is a staff print artifact (previewed before publish).
@@ -185,7 +187,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   if (!view) return new Response("Flight not found", { status: 404 });
   const qr = {
     svg: await qrSvg(qrTargetUrl(`/vault/flights/${params.id}`)),
-    code: dayGateEnabled() && mayIssueDayCode(vaultTenant) ? todayCode() : null,
+    code: dayGateEnabled() && mayIssueDayCode(role.restaurantId) ? todayCode() : null,
   };
   return new Response(placematHtml(view, qr), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

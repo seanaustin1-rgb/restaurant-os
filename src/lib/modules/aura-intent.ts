@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { auraSnapshotTenantWhere, envAuraOwnerRestaurantId, isEnvAuraOwner } from "@/lib/modules/aura-owner";
+import {
+  auraSnapshotTenantWhere,
+  envAuraOwnerRestaurantId,
+  isEnvAuraOwner,
+  preferTenantScopedRows,
+} from "@/lib/modules/aura-owner";
 import type { AuraIntentMetric, AuraIntentState } from "@/lib/modules/aura";
 import {
   fetchGoogleBusinessProfilePerformance,
@@ -102,9 +107,10 @@ async function loadStoredPoints(restaurantId: string, isOwner: boolean): Promise
         source: GOOGLE_BUSINESS_PROFILE_SOURCE,
         date: { gte: start },
       },
-      select: { metric: true, date: true, value: true },
+      select: { restaurantId: true, metric: true, date: true, value: true },
     });
-    return rows.map((row) => ({
+    // Owner may have a legacy NULL row AND a scoped row for the same day.
+    return preferTenantScopedRows(rows, (row) => `${row.metric}|${row.date.toISOString().slice(0, 10)}`).map((row) => ({
       metric: row.metric as GoogleBusinessProfileMetric,
       date: row.date.toISOString().slice(0, 10),
       value: row.value,

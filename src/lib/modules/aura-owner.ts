@@ -1,4 +1,5 @@
-import { resolveToastRestaurantId } from "@/lib/integrations/toast/sync";
+import { prisma } from "@/lib/prisma";
+import { getToastConfig, isToastConfigured } from "@/lib/integrations/toast/config";
 
 // Aura's review sources (Google Places / Yelp / Meta) and its Google Business
 // Profile fallback are configured through process-wide env vars. Those vars
@@ -7,15 +8,26 @@ import { resolveToastRestaurantId } from "@/lib/integrations/toast/sync";
 // pins env-configured Aura data to exactly one owning tenant; every other tenant
 // sees only what it connected itself (per-tenant IntegrationConnection).
 //
-// Resolution order: AURA_RESTAURANT_ID (explicit) → the Toast "Customer Zero"
-// resolver (same single-tenant env assumption). If neither resolves, NO tenant
-// gets env-configured data (fail closed).
+// Resolution uses ONLY values a tenant cannot set from the app:
+//   1. AURA_RESTAURANT_ID (explicit env)
+//   2. SPIRIT_VAULT_RESTAURANT_ID (env; same single-tenant install)
+//   3. the PosConnection whose externalId is the env TOAST_RESTAURANT_GUID
+// It deliberately does NOT fall back to matching a restaurant by NAME (as the
+// Toast resolver does) — any self-onboarded tenant can pick any name.
+// If nothing resolves, NO tenant gets env-configured data (fail closed).
 
 export async function envAuraOwnerRestaurantId(): Promise<string | null> {
-  const explicit = process.env.AURA_RESTAURANT_ID?.trim();
+  const explicit = process.env.AURA_RESTAURANT_ID?.trim() || process.env.SPIRIT_VAULT_RESTAURANT_ID?.trim();
   if (explicit) return explicit;
   try {
-    return await resolveToastRestaurantId();
+    if (!isToastConfigured()) return null;
+    const { restaurantGuid } = getToastConfig();
+    const conn = await prisma.posConnection.findFirst({
+      where: { provider: "TOAST", externalId: restaurantGuid, isActive: true },
+      orderBy: { createdAt: "asc" },
+      select: { restaurantId: true },
+    });
+    return conn?.restaurantId ?? null;
   } catch {
     return null;
   }
@@ -32,4 +44,19 @@ export function isEnvAuraOwner(restaurantId: string | null | undefined, ownerId:
  */
 export function auraSnapshotTenantWhere(restaurantId: string, isOwner: boolean) {
   return isOwner ? { OR: [{ restaurantId }, { restaurantId: null }] } : { restaurantId };
+}
+
+/**
+ * The env owner can hold BOTH a legacy row (restaurantId NULL) and a new
+ * tenant-scoped row for the same logical key (e.g. metric + date). Keep one per
+ * key, preferring the tenant-scoped row, so sums never double-count.
+ */
+export function preferTenantScopedRows<T extends { restaurantId: string | null }>(rows: T[], keyOf: (row: T) => string): T[] {
+  const byKey = new Map<string, T>();
+  for (const row of rows) {
+    const key = keyOf(row);
+    const existing = byKey.get(key);
+    if (!existing || (existing.restaurantId === null && row.restaurantId !== null)) byKey.set(key, row);
+  }
+  return [...byKey.values()];
 }

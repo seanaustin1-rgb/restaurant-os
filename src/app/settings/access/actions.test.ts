@@ -3,21 +3,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   auth: vi.fn(), findFirst: vi.fn(), upsert: vi.fn(), updateUserMetadata: vi.fn(), revalidatePath: vi.fn(),
   findInvite: vi.fn(), updateInvite: vi.fn(), getUser: vi.fn(), transaction: vi.fn(),
-  findRole: vi.fn(), countRoles: vi.fn(),
+  findRole: vi.fn(), countRoles: vi.fn(), getUserList: vi.fn(), findRestaurant: vi.fn(),
 }));
 vi.mock("@clerk/nextjs/server", () => ({
   auth: h.auth,
-  clerkClient: async () => ({ users: { getUser: h.getUser, updateUserMetadata: h.updateUserMetadata } }),
+  clerkClient: async () => ({ users: { getUser: h.getUser, updateUserMetadata: h.updateUserMetadata, getUserList: h.getUserList } }),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   userRestaurantRole: { findFirst: h.findFirst, upsert: h.upsert, findUnique: h.findRole, count: h.countRoles },
   businessAccessInvite: { findUnique: h.findInvite, update: h.updateInvite },
+  restaurant: { findUnique: h.findRestaurant },
   $transaction: h.transaction,
 } }));
 vi.mock("next/cache", () => ({ revalidatePath: h.revalidatePath }));
 vi.mock("@/lib/email/access-invite", () => ({ sendAccessInviteEmail: vi.fn() }));
 
-import { acceptAccessInvite, saveAccessRole } from "./actions";
+import { acceptAccessInvite, inviteAccessByEmail, saveAccessRole } from "./actions";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -54,6 +55,25 @@ describe("business access grants", () => {
       "A business must keep at least one operator.",
     );
     expect(h.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses to demote the last operator via an email grant to their own account (S-3)", async () => {
+    h.getUserList.mockResolvedValue({ data: [{ id: "owner" }] });
+    h.findRestaurant.mockResolvedValue({ name: "Tenant A" });
+    h.findRole.mockResolvedValue({ role: "OPERATOR" });
+    h.countRoles.mockResolvedValue(1);
+    await expect(inviteAccessByEmail({ email: "owner@example.com", role: "MANAGER" })).rejects.toThrow(
+      "A business must keep at least one operator.",
+    );
+    expect(h.upsert).not.toHaveBeenCalled();
+  });
+
+  it("refuses an accepted invite that would demote the last operator (S-3)", async () => {
+    h.auth.mockResolvedValue({ userId: "staff" });
+    h.findRole.mockResolvedValue({ role: "OPERATOR" });
+    h.countRoles.mockResolvedValue(1);
+    await expect(acceptAccessInvite("token_1")).rejects.toThrow("A business must keep at least one operator.");
+    expect(h.transaction).not.toHaveBeenCalled();
   });
 
   it("allows demoting an operator when another operator remains", async () => {

@@ -65,6 +65,10 @@ Flag a violation as a blocking finding with file:line.
 
 ### Fixed in PR #177 "security: tenant isolation fixes" (`security/tenant-isolation-fixes`)
 
+> ⚠️ **These fixes live in #177, not in this PR.** This PR alone does NOT close
+> T-1 … T-4 (RLS doesn't restrict Prisma, which connects as the table owner).
+> "✅" below means "fixed once #177 is merged". Merge both.
+
 | ID | Sev | Finding | Status |
 |---|---|---|---|
 | T-1 | High | **Aura cross-tenant leak.** `AuraIntentSnapshot` / `ReputationSnapshot` had no `restaurantId`; env-configured Google/Yelp/Meta reviews and the GBP env token+location were shown to every tenant. | ✅ restaurantId added (migration `20261020120000_aura_tenant_scope`); env sources only for the env owner; per-tenant cron |
@@ -78,7 +82,7 @@ Flag a violation as a blocking finding with file:line.
 |---|---|---|---|
 | S-1 | High | **Supabase Data API exposure.** No migration enabled RLS; with the Data API on, `public` tables are reachable with the project URL + public key. | 🔧 migration `20261020130000_enable_rls_public` (RLS on, no policies) + `scripts/check-rls.ts`; removed unused `@supabase/supabase-js` and the Supabase public-key env requirement |
 | S-2 | Low | `POST /api/plaid/sync` accepted any role (investor could trigger a write). | 🔧 `ADJUSTMENT_ROLES` only |
-| S-3 | Low | `saveAccessRole` could demote the last OPERATOR. | 🔧 same ≥1-operator guard as `removeAccessRole` |
+| S-3 | Low | The last OPERATOR could be demoted — via `saveAccessRole`, an email grant to an existing account (incl. your own), or accepting an invite. | 🔧 shared `assertKeepsAnOperator` guard on every role-changing upsert (same invariant as `removeAccessRole`) |
 | S-4 | Low | No baseline security headers. | 🔧 HSTS, nosniff, Referrer-Policy, X-Frame-Options DENY, Permissions-Policy, `poweredByHeader: false` (`next.config.mjs`) |
 | S-5 | Low | No automated dependency updates. | 🔧 `.github/dependabot.yml` |
 | S-6 | Low | CI workflow token had default permissions. | 🔧 `permissions: contents: read` in `ci.yml` |

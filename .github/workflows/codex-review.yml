@@ -113,7 +113,11 @@ jobs:
             const fs = require('fs');
             let body = '## 🤖 Codex review (advisory)\n\n';
             try {
-              body += fs.readFileSync('/tmp/review.md', 'utf8').slice(0, 60000);
+              // Keep the END of the log: Codex echoes the diff first and writes
+              // its verdict last, so slicing from the start drops the findings
+              // on any non-trivial PR.
+              const log = fs.readFileSync('/tmp/review.md', 'utf8');
+              body += log.length > 60000 ? '_…log truncated; showing the end…_\n\n' + log.slice(-60000) : log;
             } catch (e) {
               body += '_Codex produced no output._';
             }

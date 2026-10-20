@@ -38,8 +38,6 @@ export const REQUIRED_ENV = [
   "DIRECT_URL",
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
   "CLERK_SECRET_KEY",
-  "NEXT_PUBLIC_SUPABASE_URL",
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "ENCRYPTION_KEY",
   "PLAID_CLIENT_ID",
   "PLAID_SECRET",
@@ -52,6 +50,9 @@ export const REQUIRED_ENV = [
 
 // The all-zeros key from .env.example / CI placeholders — never ship it.
 const PLACEHOLDER_ENCRYPTION_KEY = "0".repeat(64);
+// The sandbox key committed in .env.sandbox.example. Public (it's in git), so a
+// production ENCRYPTION_KEY equal to it means stored tokens are effectively plaintext.
+const COMMITTED_SANDBOX_ENCRYPTION_KEY = "00abb5b8d2e9dca108b29bd8495eeac745278fba626b514343f8dad5ac60faa6";
 
 export function assessLaunchReadiness(env: Env): ReadinessReport {
   const checks: ReadinessCheck[] = [];
@@ -93,6 +94,8 @@ export function assessLaunchReadiness(env: Env): ReadinessReport {
     add("encryption-key", "Encryption key", "red", "ENCRYPTION_KEY not set");
   } else if (enc === PLACEHOLDER_ENCRYPTION_KEY) {
     add("encryption-key", "Encryption key", "red", "still the all-zeros placeholder — generate a real 32-byte key");
+  } else if (enc.toLowerCase() === COMMITTED_SANDBOX_ENCRYPTION_KEY) {
+    add("encryption-key", "Encryption key", "red", "matches the sandbox key committed in git — generate a fresh production key");
   } else if (!/^[0-9a-fA-F]{64}$/.test(enc)) {
     add("encryption-key", "Encryption key", "red", "not a 32-byte (64 hex char) key");
   } else {
@@ -114,6 +117,14 @@ export function assessLaunchReadiness(env: Env): ReadinessReport {
     add("app-url", "Public app URL", "green", appUrl);
   } else {
     add("app-url", "Public app URL", "yellow", `${appUrl} — set to the public https URL`);
+  }
+
+  // 7. Spirit Vault day-code secret. Without it the guest vault deliberately
+  // fails OPEN (anyone with the link sees it) — fine pre-launch, not in service.
+  if (has(env, "SPIRIT_VAULT_DAY_SECRET")) {
+    add("vault-day-secret", "Spirit Vault day-code secret", "green", "set");
+  } else {
+    add("vault-day-secret", "Spirit Vault day-code secret", "yellow", "SPIRIT_VAULT_DAY_SECRET not set — the guest vault is open to anyone");
   }
 
   const failCount = checks.filter((c) => c.level === "red").length;

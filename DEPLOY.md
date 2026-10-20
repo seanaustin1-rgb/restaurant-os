@@ -19,8 +19,6 @@ Copy each value from your local `.env.local`:
 |---|---|
 | `DATABASE_URL` | Supabase pooled connection |
 | `DIRECT_URL` | Supabase direct (migrations) |
-| `NEXT_PUBLIC_SUPABASE_URL` | |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | |
 | `CLERK_SECRET_KEY` | test instance is fine for POC |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | |
 | `NEXT_PUBLIC_CLERK_SIGN_IN_URL` | `/sign-in` |

@@ -63,6 +63,20 @@ export async function saveAccessRole(input: {
   if (!clerkUserId) throw new Error("Clerk user ID is required.");
   const role = cleanRole(input.role);
 
+  // Same invariant as removeAccessRole: a business must keep at least one
+  // operator. Demoting the last OPERATOR (yourself or a co-operator) would lock
+  // everyone out of access management.
+  if (role !== "OPERATOR") {
+    const existing = await prisma.userRestaurantRole.findUnique({
+      where: { clerkUserId_restaurantId: { clerkUserId, restaurantId } },
+      select: { role: true },
+    });
+    if (existing?.role === "OPERATOR") {
+      const operatorCount = await prisma.userRestaurantRole.count({ where: { restaurantId, role: "OPERATOR" } });
+      if (operatorCount <= 1) throw new Error("A business must keep at least one operator.");
+    }
+  }
+
   await prisma.userRestaurantRole.upsert({
     where: {
       clerkUserId_restaurantId: {

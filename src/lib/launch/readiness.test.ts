@@ -7,8 +7,6 @@ const prodEnv = (): Record<string, string> => ({
   DIRECT_URL: "postgresql://u:p@db.example.com:5432/app",
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_live_abc123",
   CLERK_SECRET_KEY: "sk_live_abc123",
-  NEXT_PUBLIC_SUPABASE_URL: "https://proj.supabase.co",
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "anon_key",
   ENCRYPTION_KEY: "a".repeat(64),
   PLAID_CLIENT_ID: "client",
   PLAID_SECRET: "secret",
@@ -17,6 +15,7 @@ const prodEnv = (): Record<string, string> => ({
   INNGEST_SIGNING_KEY: "sign",
   RESEND_API_KEY: "re_123",
   NEXT_PUBLIC_APP_URL: "https://app.example.com",
+  SPIRIT_VAULT_DAY_SECRET: "day-secret",
 });
 
 const levelOf = (env: Record<string, string | undefined>, key: string) =>
@@ -79,6 +78,17 @@ describe("assessLaunchReadiness", () => {
     expect(levelOf({ ...prodEnv(), NEXT_PUBLIC_APP_URL: "http://app.example.com" }, "app-url")).toBe("yellow");
   });
 
+  it("rejects the sandbox encryption key committed in git", () => {
+    const env = { ...prodEnv(), ENCRYPTION_KEY: "00abb5b8d2e9dca108b29bd8495eeac745278fba626b514343f8dad5ac60faa6" };
+    expect(levelOf(env, "encryption-key")).toBe("red");
+  });
+
+  it("warns when the Spirit Vault day-code secret is unset (vault fails open)", () => {
+    const env = { ...prodEnv() } as Record<string, string | undefined>;
+    delete env.SPIRIT_VAULT_DAY_SECRET;
+    expect(levelOf(env, "vault-day-secret")).toBe("yellow");
+  });
+
   it("covers exactly the documented required vars", () => {
     // Guards against the list silently drifting from .env.example.
     expect([...REQUIRED_ENV].sort()).toEqual(
@@ -91,8 +101,6 @@ describe("assessLaunchReadiness", () => {
         "INNGEST_SIGNING_KEY",
         "NEXT_PUBLIC_APP_URL",
         "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-        "NEXT_PUBLIC_SUPABASE_URL",
         "PLAID_CLIENT_ID",
         "PLAID_SECRET",
         "PLAID_ENV",

@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const h = vi.hoisted(() => ({
   auth: vi.fn(), findFirst: vi.fn(), upsert: vi.fn(), updateUserMetadata: vi.fn(), revalidatePath: vi.fn(),
   findInvite: vi.fn(), updateInvite: vi.fn(), getUser: vi.fn(), transaction: vi.fn(),
+  findRole: vi.fn(), countRoles: vi.fn(),
 }));
 vi.mock("@clerk/nextjs/server", () => ({
   auth: h.auth,
   clerkClient: async () => ({ users: { getUser: h.getUser, updateUserMetadata: h.updateUserMetadata } }),
 }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
-  userRestaurantRole: { findFirst: h.findFirst, upsert: h.upsert },
+  userRestaurantRole: { findFirst: h.findFirst, upsert: h.upsert, findUnique: h.findRole, count: h.countRoles },
   businessAccessInvite: { findUnique: h.findInvite, update: h.updateInvite },
   $transaction: h.transaction,
 } }));
@@ -32,6 +33,8 @@ beforeEach(() => {
   });
   h.updateInvite.mockResolvedValue({ id: "invite_1" });
   h.transaction.mockResolvedValue([]);
+  h.findRole.mockResolvedValue(null);
+  h.countRoles.mockResolvedValue(1);
 });
 
 describe("business access grants", () => {
@@ -42,6 +45,22 @@ describe("business access grants", () => {
     }));
     expect(h.updateUserMetadata).toHaveBeenCalledWith("staff", { publicMetadata: { teamOnly: false } });
     expect(h.upsert.mock.invocationCallOrder[0]).toBeLessThan(h.updateUserMetadata.mock.invocationCallOrder[0]);
+  });
+
+  it("refuses to demote the last operator (S-3)", async () => {
+    h.findRole.mockResolvedValue({ role: "OPERATOR" });
+    h.countRoles.mockResolvedValue(1);
+    await expect(saveAccessRole({ clerkUserId: "owner", role: "MANAGER" })).rejects.toThrow(
+      "A business must keep at least one operator.",
+    );
+    expect(h.upsert).not.toHaveBeenCalled();
+  });
+
+  it("allows demoting an operator when another operator remains", async () => {
+    h.findRole.mockResolvedValue({ role: "OPERATOR" });
+    h.countRoles.mockResolvedValue(2);
+    await saveAccessRole({ clerkUserId: "co_owner", role: "MANAGER" });
+    expect(h.upsert).toHaveBeenCalled();
   });
 
   it("rejects an invite addressed to a different email without granting access", async () => {

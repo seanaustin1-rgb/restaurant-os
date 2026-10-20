@@ -84,3 +84,7 @@ Prioritize, in order:
 4. **Server/client boundary** — `next build` catches some; flag risky `"use
    client"` / server-only imports.
 5. Then style/simplicity. Run the three checks above and report any failures.
+
+**Security checklist:** check every diff against the invariants (INV-1 … INV-12)
+in `docs/security/SECURITY-REVIEW-2026-10-20.md` §2, and work its §5 hunt list
+for anything not yet recorded. Cite invariant / finding IDs in your review.

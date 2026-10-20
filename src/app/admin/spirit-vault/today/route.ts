@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
-import { appBaseUrl, dayGateEnabled, qrTargetUrl, todayCode } from "@/lib/spirit-vault/day-code";
+import { appBaseUrl, dayGateEnabled, qrTargetUrl, todayCode, vaultTenantId, mayIssueDayCode } from "@/lib/spirit-vault/day-code";
 import { qrSvg } from "@/lib/spirit-vault/qr";
 
 // Standalone, print-ready "today's vault code" card — STAFF ONLY. A table tent / bar
@@ -66,14 +66,26 @@ function cardHtml(venueName: string, code: string | null, qr: string, vaultUrl: 
 export async function GET() {
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
+  // The day code unlocks ONE tenant's guest vault, so only that tenant's staff may
+  // load this (it prints the code). A staff role on any other tenant — e.g. one
+  // self-onboarded via public sign-up — is not enough.
+  const vaultTenant = vaultTenantId();
+  if (!vaultTenant) return new Response("Forbidden", { status: 403 });
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...SPIRIT_VAULT_STAFF_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
+    where: {
+      clerkUserId: userId,
+      restaurantId: vaultTenant,
+      role: { in: [...SPIRIT_VAULT_STAFF_ROLES] },
+      restaurant: { businessType: "RESTAURANT" },
+    },
     select: { restaurant: { select: { name: true } } },
   });
   if (!role) return new Response("Forbidden", { status: 403 });
 
-  const qr = await qrSvg(qrTargetUrl("/vault"));
-  const code = dayGateEnabled() ? todayCode() : null;
+  // Route is already restricted to vault-tenant staff; gate the QR the same way
+  // as the printed code anyway so the two can never diverge.
+  const qr = await qrSvg(qrTargetUrl("/vault", { withDayCode: mayIssueDayCode(vaultTenant) }));
+  const code = dayGateEnabled() && mayIssueDayCode(vaultTenant) ? todayCode() : null;
   const vaultUrl = appBaseUrl().replace(/^https?:\/\//, "") + "/vault";
   return new Response(cardHtml(role.restaurant?.name ?? "Spirit Vault", code, qr, vaultUrl), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },

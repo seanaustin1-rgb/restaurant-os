@@ -10,6 +10,7 @@ import {
 import type { AuraReview, AuraSourceSummary } from "@/lib/integrations/aura";
 import type { HealthStatus } from "@/lib/profit-first/calculator";
 import { loadAuraIntentMetrics } from "@/lib/modules/aura-intent";
+import { envAuraOwnerRestaurantId, isEnvAuraOwner } from "@/lib/modules/aura-owner";
 
 // Aura (Reputation) module loader. Fans out to every CONFIGURED review source,
 // fetches each summary independently (one bad/un-wired source never sinks the
@@ -66,7 +67,10 @@ function bandRating(rating: number | null): HealthStatus {
 const RECENT_CAP = 8;
 
 export async function loadAura(restaurantId?: string | null): Promise<AuraData> {
-  const configured = configuredAuraSources();
+  // Review sources are env-configured for ONE business (the env Aura owner).
+  // Every other tenant gets "not connected" — never another business's reviews.
+  const isOwner = isEnvAuraOwner(restaurantId, await envAuraOwnerRestaurantId());
+  const configured = isOwner ? configuredAuraSources() : [];
   const intentMetricsPromise = loadAuraIntentMetrics(restaurantId);
 
   // Fetch every configured source in parallel; capture failures per source.
@@ -84,7 +88,7 @@ export async function loadAura(restaurantId?: string | null): Promise<AuraData> 
 
   const sources: AuraSourceCard[] = AURA_SOURCES.map((source) => {
     const label = AURA_SOURCE_LABEL[source];
-    if (!isAuraSourceConfigured(source)) {
+    if (!isOwner || !isAuraSourceConfigured(source)) {
       return {
         source,
         label,
@@ -92,7 +96,8 @@ export async function loadAura(restaurantId?: string | null): Promise<AuraData> 
         rating: null,
         reviewCount: 0,
         profileUrl: null,
-        detail: `Set ${missingAuraEnvVars(source).join(", ")}`,
+        // Env var names are only meaningful (and only shown) to the env owner.
+        detail: isOwner ? `Set ${missingAuraEnvVars(source).join(", ")}` : "Not connected for this business yet.",
       };
     }
     const err = errors.get(source);

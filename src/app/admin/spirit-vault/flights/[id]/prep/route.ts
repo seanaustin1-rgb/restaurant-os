@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { SPIRIT_VAULT_STAFF_ROLES } from "@/lib/access/roles";
 import { loadFlightView, type FlightView } from "@/lib/spirit-vault/flight-view";
-import { dayGateEnabled, todayCode } from "@/lib/spirit-vault/day-code";
+import { dayGateEnabled, todayCode, vaultTenantId, mayIssueDayCode } from "@/lib/spirit-vault/day-code";
 
 // Internal, print-ready bar/kitchen prep sheet: each pour + its 1-2 bite
 // accompaniment. Staff only, any status, standalone HTML (no app chrome).
@@ -73,15 +73,27 @@ function prepHtml(v: FlightView, dayCode: string | null): string {
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const { userId } = await auth();
   if (!userId) return new Response("Unauthorized", { status: 401 });
-  const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, role: { in: [...SPIRIT_VAULT_STAFF_ROLES] }, restaurant: { businessType: "RESTAURANT" } },
-    select: { restaurantId: true },
-  });
+  // Staff of any restaurant may print their OWN flights. The day code, though,
+  // unlocks ONE tenant's guest vault, so it's printed only for staff of that
+  // tenant (mayIssueDayCode) — never for a self-onboarded or other tenant.
+  const staffWhere = {
+    clerkUserId: userId,
+    role: { in: [...SPIRIT_VAULT_STAFF_ROLES] },
+    restaurant: { businessType: "RESTAURANT" as const },
+  };
+  // Prefer the vault tenant when this staffer belongs to it; otherwise their
+  // oldest restaurant (deterministic for multi-tenant staff).
+  const vaultTenant = vaultTenantId();
+  const role =
+    (vaultTenant
+      ? await prisma.userRestaurantRole.findFirst({ where: { ...staffWhere, restaurantId: vaultTenant }, select: { restaurantId: true } })
+      : null) ??
+    (await prisma.userRestaurantRole.findFirst({ where: staffWhere, orderBy: { createdAt: "asc" }, select: { restaurantId: true } }));
   if (!role) return new Response("Forbidden", { status: 403 });
 
   const view = await loadFlightView(role.restaurantId, params.id);
   if (!view) return new Response("Flight not found", { status: 404 });
-  return new Response(prepHtml(view, dayGateEnabled() ? todayCode() : null), {
+  return new Response(prepHtml(view, dayGateEnabled() && mayIssueDayCode(role.restaurantId) ? todayCode() : null), {
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
   });
 }

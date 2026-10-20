@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 import { loadBrokerageAnalytics } from "@/lib/modules/brokerage-analytics";
 import { BrokerageAnalyticsModule } from "@/components/modules/BrokerageAnalyticsModule";
 
@@ -10,7 +11,7 @@ export default async function BrokerageAnalyticsPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId, restaurant: { businessType: "REAL_ESTATE_BROKERAGE" } },
+    where: { clerkUserId: userId, role: { in: [...INTERNAL_VIEW_ROLES] }, restaurant: { businessType: "REAL_ESTATE_BROKERAGE" } },
     select: { restaurantId: true, restaurant: { select: { name: true, businessType: true } } },
   });
 

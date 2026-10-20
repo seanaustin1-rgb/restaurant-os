@@ -1,6 +1,7 @@
 ﻿import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { INTERNAL_VIEW_ROLES } from "@/lib/access/roles";
 import { loadRecurring } from "@/lib/modules/recurring";
 import { RecurringModule } from "@/components/modules/RecurringModule";
 
@@ -9,7 +10,7 @@ export default async function RecurringPage() {
   if (!userId) redirect("/sign-in");
 
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...INTERNAL_VIEW_ROLES] } },
     select: { restaurantId: true, restaurant: { select: { name: true } } },
   });
 

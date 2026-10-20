@@ -1,4 +1,10 @@
 import { prisma } from "@/lib/prisma";
+import {
+  auraSnapshotTenantWhere,
+  envAuraOwnerRestaurantId,
+  isEnvAuraOwner,
+  preferTenantScopedRows,
+} from "@/lib/modules/aura-owner";
 import type { AuraIntentMetric, AuraIntentState } from "@/lib/modules/aura";
 import {
   fetchGoogleBusinessProfilePerformance,
@@ -37,13 +43,19 @@ const SNAPSHOT_DAYS = 30;
 
 function isMissingIntentTableError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const maybePrisma = error as { code?: string; meta?: { table?: string }; message?: string };
-  const table = maybePrisma.meta?.table ?? "";
+  const maybePrisma = error as { code?: string; meta?: { table?: string; column?: string }; message?: string };
+  // P2022 (missing column) names the column in meta.column / the message rather
+  // than meta.table; a missing `restaurantId` column means the tenant-scope
+  // migration hasn't been applied yet.
+  const table = `${maybePrisma.meta?.table ?? ""} ${maybePrisma.meta?.column ?? ""}`;
   const message = maybePrisma.message ?? "";
   return (
-    maybePrisma.code === "P2021" &&
+    // P2021 = table missing; P2022 = column missing (tenant-scope migration not
+    // applied yet). Either way: fail closed — read nothing, write nothing.
+    (maybePrisma.code === "P2021" || maybePrisma.code === "P2022") &&
     (table.includes("AuraIntentSnapshot") ||
       message.includes("AuraIntentSnapshot") ||
+      (maybePrisma.code === "P2022" && (table.includes("restaurantId") || message.includes("restaurantId"))) ||
       message.includes("auraIntentSnapshot"))
   );
 }
@@ -53,14 +65,15 @@ function utcDate(iso: string): Date {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
-async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void> {
+async function persistPoints(restaurantId: string, points: GoogleBusinessProfilePoint[]): Promise<void> {
   if (points.length === 0) return;
   try {
     await prisma.$transaction(
       points.map((point) =>
         prisma.auraIntentSnapshot.upsert({
           where: {
-            source_metric_date: {
+            restaurantId_source_metric_date: {
+              restaurantId,
               source: GOOGLE_BUSINESS_PROFILE_SOURCE,
               metric: point.metric,
               date: utcDate(point.date),
@@ -68,6 +81,7 @@ async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void
           },
           update: { value: Math.round(point.value) },
           create: {
+            restaurantId,
             source: GOOGLE_BUSINESS_PROFILE_SOURCE,
             metric: point.metric,
             date: utcDate(point.date),
@@ -82,19 +96,21 @@ async function persistPoints(points: GoogleBusinessProfilePoint[]): Promise<void
   }
 }
 
-async function loadStoredPoints(): Promise<GoogleBusinessProfilePoint[]> {
+async function loadStoredPoints(restaurantId: string, isOwner: boolean): Promise<GoogleBusinessProfilePoint[]> {
   const start = new Date();
   start.setUTCHours(0, 0, 0, 0);
   start.setUTCDate(start.getUTCDate() - SNAPSHOT_DAYS);
   try {
     const rows = await prisma.auraIntentSnapshot.findMany({
       where: {
+        ...auraSnapshotTenantWhere(restaurantId, isOwner),
         source: GOOGLE_BUSINESS_PROFILE_SOURCE,
         date: { gte: start },
       },
-      select: { metric: true, date: true, value: true },
+      select: { restaurantId: true, metric: true, date: true, value: true },
     });
-    return rows.map((row) => ({
+    // Owner may have a legacy NULL row AND a scoped row for the same day.
+    return preferTenantScopedRows(rows, (row) => `${row.metric}|${row.date.toISOString().slice(0, 10)}`).map((row) => ({
       metric: row.metric as GoogleBusinessProfileMetric,
       date: row.date.toISOString().slice(0, 10),
       value: row.value,
@@ -130,26 +146,73 @@ function configuredFallback(detail: string, state: AuraIntentState = "waiting_hi
   }));
 }
 
-export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS, restaurantId?: string | null): Promise<{ points: number }> {
-  const points = await fetchGoogleBusinessProfilePerformance(days, restaurantId);
-  await persistPoints(points);
-  return { points: points.length };
+/**
+ * Daily cron: snapshot GBP performance for every tenant that has its own active
+ * GBP connection, plus the env Aura owner (env-configured fallback). Each
+ * tenant's points are written under its own restaurantId. One tenant's failure
+ * doesn't block the others.
+ */
+export async function syncAuraIntentSnapshots(days = SNAPSHOT_DAYS): Promise<{ points: number; tenants: number; failed: number }> {
+  const owner = await envAuraOwnerRestaurantId();
+  const connected = await prisma.integrationConnection.findMany({
+    where: {
+      provider: "GOOGLE_BUSINESS_PROFILE",
+      isActive: true,
+      externalLocationId: { notIn: ["pending", "unselected"] },
+    },
+    select: { restaurantId: true },
+    distinct: ["restaurantId"],
+  });
+  const tenants = new Set(connected.map((c) => c.restaurantId));
+  if (owner && isGoogleBusinessProfileConfigured()) tenants.add(owner);
+
+  let points = 0;
+  let failed = 0;
+  for (const restaurantId of tenants) {
+    try {
+      const fetched = await fetchGoogleBusinessProfilePerformance(days, restaurantId, {
+        allowEnvFallback: isEnvAuraOwner(restaurantId, owner),
+      });
+      await persistPoints(restaurantId, fetched);
+      points += fetched.length;
+    } catch {
+      failed += 1;
+    }
+  }
+  return { points, tenants: tenants.size, failed };
 }
 
 export async function loadAuraIntentMetrics(restaurantId?: string | null): Promise<AuraIntentMetric[]> {
-  if (!restaurantId && !isGoogleBusinessProfileConfigured()) {
+  if (!restaurantId) {
+    return configuredFallback("Connect Google Business Profile to see calls, directions and profile views.", "not_configured");
+  }
+  const owner = await envAuraOwnerRestaurantId();
+  const isOwner = isEnvAuraOwner(restaurantId, owner);
+
+  const hasOwnConnection =
+    (await prisma.integrationConnection.count({
+      where: {
+        restaurantId,
+        provider: "GOOGLE_BUSINESS_PROFILE",
+        isActive: true,
+        externalLocationId: { notIn: ["pending", "unselected"] },
+      },
+    })) > 0;
+  if (!hasOwnConnection && !(isOwner && isGoogleBusinessProfileConfigured())) {
     return configuredFallback(
-      `Connect Google Business Profile performance data: ${missingGoogleBusinessProfileEnv().join(", ")}`,
+      isOwner
+        ? `Connect Google Business Profile performance data: ${missingGoogleBusinessProfileEnv().join(", ")}`
+        : "Connect Google Business Profile to see calls, directions and profile views.",
       "not_configured",
     );
   }
 
-  const stored = await loadStoredPoints();
+  const stored = await loadStoredPoints(restaurantId, isOwner);
   if (stored.length > 0) return rollup(stored);
 
   try {
-    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS, restaurantId);
-    await persistPoints(live);
+    const live = await fetchGoogleBusinessProfilePerformance(SNAPSHOT_DAYS, restaurantId, { allowEnvFallback: isOwner });
+    await persistPoints(restaurantId, live);
     return rollup(live);
   } catch (error) {
     return configuredFallback(

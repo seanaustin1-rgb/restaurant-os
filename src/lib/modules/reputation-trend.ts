@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { loadAura } from "@/lib/modules/aura";
+import { auraSnapshotTenantWhere, envAuraOwnerRestaurantId, isEnvAuraOwner } from "@/lib/modules/aura-owner";
 
 // Aura "trending" read. Google/Yelp only return the CURRENT aggregate rating, so
 // a recent-weeks trend must come from points we persist over time
@@ -26,13 +27,19 @@ const MIN_SPAN_WEEKS = 2; // need at least ~2 weeks before showing a trend
 
 function isMissingSnapshotTableError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const maybePrisma = error as { code?: string; meta?: { table?: string }; message?: string };
-  const table = maybePrisma.meta?.table ?? "";
+  const maybePrisma = error as { code?: string; meta?: { table?: string; column?: string }; message?: string };
+  // P2022 (missing column) names the column in meta.column / the message rather
+  // than meta.table; a missing `restaurantId` column means the tenant-scope
+  // migration hasn't been applied yet.
+  const table = `${maybePrisma.meta?.table ?? ""} ${maybePrisma.meta?.column ?? ""}`;
   const message = maybePrisma.message ?? "";
   return (
-    maybePrisma.code === "P2021" &&
+    // P2021 = table missing; P2022 = column missing (tenant-scope migration not
+    // applied yet). Fail closed either way.
+    (maybePrisma.code === "P2021" || maybePrisma.code === "P2022") &&
     (table.includes("ReputationSnapshot") ||
       message.includes("ReputationSnapshot") ||
+      (maybePrisma.code === "P2022" && (table.includes("restaurantId") || message.includes("restaurantId"))) ||
       message.includes("reputationSnapshot"))
   );
 }
@@ -42,7 +49,11 @@ function isMissingSnapshotTableError(error: unknown): boolean {
  * "overall" row. Returns the number of rows written. Called by the weekly cron.
  */
 export async function snapshotReputation(): Promise<number> {
-  const data = await loadAura();
+  // Review sources are env-configured for the env Aura owner only, so that is
+  // the only tenant with a reputation series to snapshot.
+  const owner = await envAuraOwnerRestaurantId();
+  if (!owner) return 0;
+  const data = await loadAura(owner);
   const rows: { source: string; rating: number | null; reviewCount: number }[] = [];
   for (const card of data.sources) {
     if (card.state === "live") rows.push({ source: card.source, rating: card.rating, reviewCount: card.reviewCount });
@@ -52,7 +63,7 @@ export async function snapshotReputation(): Promise<number> {
   }
   if (rows.length === 0) return 0;
   try {
-    await prisma.reputationSnapshot.createMany({ data: rows });
+    await prisma.reputationSnapshot.createMany({ data: rows.map((r) => ({ ...r, restaurantId: owner })) });
   } catch (error) {
     if (isMissingSnapshotTableError(error)) return 0;
     throw error;
@@ -62,15 +73,21 @@ export async function snapshotReputation(): Promise<number> {
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export async function loadReputationTrend(windowWeeks = 6): Promise<ReputationTrend> {
-  let snaps: { rating: number | null; reviewCount: number; capturedAt: Date }[];
+export async function loadReputationTrend(
+  restaurantId: string | null | undefined,
+  windowWeeks = 6,
+): Promise<ReputationTrend> {
+  let snaps: { rating: number | null; reviewCount: number; capturedAt: Date }[] = [];
   try {
-    snaps = await prisma.reputationSnapshot.findMany({
-      where: { source: "overall" },
-      orderBy: { capturedAt: "desc" },
-      take: 60,
-      select: { rating: true, reviewCount: true, capturedAt: true },
-    });
+    if (restaurantId) {
+      const isOwner = isEnvAuraOwner(restaurantId, await envAuraOwnerRestaurantId());
+      snaps = await prisma.reputationSnapshot.findMany({
+        where: { ...auraSnapshotTenantWhere(restaurantId, isOwner), source: "overall" },
+        orderBy: { capturedAt: "desc" },
+        take: 60,
+        select: { rating: true, reviewCount: true, capturedAt: true },
+      });
+    }
   } catch (error) {
     if (isMissingSnapshotTableError(error)) snaps = [];
     else throw error;

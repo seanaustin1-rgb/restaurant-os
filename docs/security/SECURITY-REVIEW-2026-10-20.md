@@ -44,7 +44,10 @@ Flag a violation as a blocking finding with file:line.
   explicit field allowlist and never touch ledger / Plaid / tax / allocation data.
 - **INV-6 Single-tenant secrets stay single-tenant.** Anything that prints or
   unlocks a single-tenant secret (Spirit Vault day code) checks the caller is
-  staff of THAT tenant (`mayIssueDayCode`), not of "any restaurant".
+  staff of THAT tenant (`mayIssueDayCode`), not of "any restaurant". This covers
+  every encoding of the secret, not just printed text: a QR whose `/v/<code>` URL
+  embeds the code leaks it to anyone who decodes the image
+  (`qrTargetUrl(…, { withDayCode })` must use the same check).
 - **INV-7 Credentials encrypted at rest.** OAuth/Plaid tokens go through
   `encrypt()` / `decrypt()` in `src/lib/crypto.ts`. Never log tokens, secrets, or
   request bodies carrying them.

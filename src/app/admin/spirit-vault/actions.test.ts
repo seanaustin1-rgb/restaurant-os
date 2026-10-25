@@ -5,6 +5,7 @@ const h = vi.hoisted(() => ({
   authMock: vi.fn(),
   roleFindFirst: vi.fn(),
   venueFindFirst: vi.fn(),
+  venueUpdateMany: vi.fn(),
   venueUpdate: vi.fn(),
   defUpdate: vi.fn(),
 }));
@@ -17,6 +18,7 @@ vi.mock("@/lib/spirit-vault/validate", () => ({ validatePublishableSpirit: () =>
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     userRestaurantRole: { findFirst: h.roleFindFirst },
+    venueSpirit: { updateMany: h.venueUpdateMany },
     $transaction: async (fn: (tx: unknown) => unknown) =>
       fn({
         venueSpirit: { findFirst: h.venueFindFirst, update: h.venueUpdate },
@@ -25,7 +27,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-import { updateSpirit, type SpiritEditInput } from "./actions";
+import { setSpiritIncluded, updateSpirit, type SpiritEditInput } from "./actions";
 
 const baseInput: SpiritEditInput = {
   id: "venue_1",
@@ -97,5 +99,25 @@ describe("updateSpirit — sensory edits are venue-local overrides", () => {
       updateSpirit({ ...baseInput, recordStatus: "DRAFT", publicationStatus: "PUBLISHED" }),
     ).rejects.toThrow(/publication/i);
     expect(h.venueUpdate).not.toHaveBeenCalled();
+  });
+});
+
+describe("setSpiritIncluded", () => {
+  it("scopes include changes to the operator restaurant", async () => {
+    await setSpiritIncluded("venue_1", true);
+
+    expect(h.venueUpdateMany).toHaveBeenCalledWith({
+      where: { id: "venue_1", restaurantId: "rest_1" },
+      data: { recordStatus: "REVIEWED" },
+    });
+  });
+
+  it("drops publication status when excluding a spirit", async () => {
+    await setSpiritIncluded("venue_1", false);
+
+    expect(h.venueUpdateMany).toHaveBeenCalledWith({
+      where: { id: "venue_1", restaurantId: "rest_1" },
+      data: { recordStatus: "DRAFT", publicationStatus: "DRAFT", reviewedAt: null },
+    });
   });
 });

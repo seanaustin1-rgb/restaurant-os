@@ -34,6 +34,11 @@ export interface SpiritEditInput {
   flavor: Record<string, number>;
   topNotes: string[];
   pairings: string[];
+  mashBill: string | null;
+  caskDetails: string | null;
+  productionMethod: string | null;
+  servingSuggestion: string | null;
+  suggestedCocktails: string[];
   recordStatus: SpiritLifecycleStatus;
   publicationStatus: SpiritLifecycleStatus;
 }
@@ -55,13 +60,21 @@ function bodyFinish(v: number | null | undefined, label: string): number | null 
   return Math.round(v);
 }
 
+export async function setSpiritIncluded(id: string, included: boolean): Promise<void> {
+  const restaurantId = await requireVaultOperator();
+  await prisma.venueSpirit.updateMany({
+    where: { id, restaurantId },
+    data: { recordStatus: included ? "REVIEWED" : "DRAFT" },
+  });
+  revalidatePath(ADMIN_PATH);
+}
+
 export async function updateSpirit(input: SpiritEditInput): Promise<void> {
   const restaurantId = await requireVaultOperator();
 
   const flavor: Record<string, number> = {};
   for (const a of FLAVOR_AXES) flavor[a] = axis(input.flavor?.[a], a);
   const topNotes = (input.topNotes ?? []).map((s) => s.trim()).filter(Boolean);
-  if (topNotes.length !== 3) throw new Error("Top notes must have exactly 3 entries");
   const pairings = (input.pairings ?? []).map((s) => s.trim()).filter(Boolean);
 
   const rec = input.recordStatus;
@@ -69,8 +82,9 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
   if (STATUS_RANK[pub] > STATUS_RANK[rec]) {
     throw new Error(`Cannot set publication "${pub}" higher than record status "${rec}"`);
   }
-  if (pub === "PUBLISHED" && pairings.length === 0) {
-    throw new Error("Published records need at least one pairing");
+  if (pub === "PUBLISHED") {
+    if (topNotes.length !== 3) throw new Error("Published records need exactly 3 top notes");
+    if (pairings.length === 0) throw new Error("Published records need at least one pairing");
   }
 
   await prisma.$transaction(async (tx) => {
@@ -95,6 +109,11 @@ export async function updateSpirit(input: SpiritEditInput): Promise<void> {
       flavor,
       topNotes,
       pairings,
+      mashBill: cleanText(input.mashBill),
+      caskDetails: cleanText(input.caskDetails),
+      productionMethod: cleanText(input.productionMethod),
+      servingSuggestion: cleanText(input.servingSuggestion),
+      suggestedCocktails: (input.suggestedCocktails ?? []).map((s) => s.trim()).filter(Boolean),
     };
     // Effective (merged) sensory values = venue override when set, else the
     // shared definition. This is what the guest sees, so it's what we validate.

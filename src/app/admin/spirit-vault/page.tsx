@@ -3,14 +3,10 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { OPERATOR_ROLES } from "@/lib/access/roles";
+import { SpiritListTable, type SpiritRow } from "@/components/spirit-vault/SpiritListTable";
+import { ImportButton } from "@/components/spirit-vault/ImportButton";
 
 export const dynamic = "force-dynamic";
-
-const STATUS_LABEL: Record<string, string> = {
-  PUBLISHED: "Published",
-  REVIEWED: "Reviewed",
-  DRAFT: "Draft",
-};
 
 function spiritName(item: {
   definition: { displayName: string | null; brand: string; expression: string | null };
@@ -60,25 +56,44 @@ export default async function SpiritVaultAdminPage() {
     },
   });
 
-  const total = items.length;
-  const published = items.filter((i) => i.publicationStatus === "PUBLISHED" && i.recordStatus === "PUBLISHED").length;
-  const needsVoice = items.filter((i) => !i.whyWeCarry && !i.seanShort && !i.notes).length;
+  const rows: SpiritRow[] = items.map((i) => ({
+    id: i.id,
+    recordStatus: i.recordStatus,
+    publicationStatus: i.publicationStatus,
+    hasVoice: !!(i.whyWeCarry || i.seanShort || i.notes),
+    name: spiritName(i),
+    category: i.definition.category,
+    proof: i.definition.proofN?.toString() ?? i.definition.proofDisplay ?? "-",
+  }));
+
+  const total = rows.length;
+  const published = rows.filter((r) => r.publicationStatus === "PUBLISHED" && r.recordStatus === "PUBLISHED").length;
+  const needsVoice = rows.filter((r) => !r.hasVoice).length;
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-6 py-10">
       <div>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <h1 className="font-display text-2xl text-copper-soft">Spirit Vault</h1>
-          <Link
-            href="/admin/spirit-vault/flights"
-            className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20"
-          >
-            Create a Flight
-          </Link>
+          <h1 className="font-display text-2xl text-copper-soft">Spirits</h1>
+          <div className="flex gap-2">
+            <ImportButton />
+            <a
+              href="/admin/spirit-vault/export"
+              className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-muted hover:text-ink-text"
+            >
+              Export JSON
+            </a>
+            <Link
+              href="/admin/spirit-vault/flights/new"
+              className="rounded-md border border-copper-dim bg-copper/10 px-3 py-1.5 text-sm text-copper-soft hover:bg-copper/20"
+            >
+              Create a Flight
+            </Link>
+          </div>
         </div>
         <p className="mt-1 text-sm text-muted">
-          {role.restaurant?.name ?? "Your bar"} - edit dossiers, add your voice, and publish. Published records go live
-          on the guest vault immediately.
+          {role.restaurant?.name ?? "Your bar"} — edit dossiers, add your voice, and publish. Published records go live
+          on the guest vault immediately. Use the checkboxes to include or exclude spirits from the vault.
         </p>
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
           <span className="rounded border border-line px-2 py-1">{total} bottles</span>
@@ -87,44 +102,7 @@ export default async function SpiritVaultAdminPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-line">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-line bg-surface text-left text-[11px] uppercase tracking-wider text-muted">
-              <th className="px-3 py-2 font-medium">Bottle</th>
-              <th className="px-3 py-2 font-medium">Category</th>
-              <th className="px-3 py-2 font-medium">Proof</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Voice</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((i) => {
-              const live = i.publicationStatus === "PUBLISHED" && i.recordStatus === "PUBLISHED";
-              const hasVoice = !!(i.whyWeCarry || i.seanShort || i.notes);
-              return (
-                <tr key={i.id} className="border-b border-line/60 last:border-0 hover:bg-surface/60">
-                  <td className="px-3 py-2">
-                    <Link href={`/admin/spirit-vault/${i.id}`} className="text-ink-text hover:text-copper-soft">
-                      {spiritName(i)}
-                    </Link>
-                  </td>
-                  <td className="px-3 py-2 text-muted">{i.definition.category}</td>
-                  <td className="tnum px-3 py-2 text-muted">
-                    {i.definition.proofN?.toString() ?? i.definition.proofDisplay ?? "-"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <span className={live ? "text-health-green" : "text-muted"}>
-                      {STATUS_LABEL[i.publicationStatus] ?? i.publicationStatus}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2 text-muted">{hasVoice ? "Yes" : "-"}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <SpiritListTable items={rows} />
     </main>
   );
 }

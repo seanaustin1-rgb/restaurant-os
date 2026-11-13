@@ -18,6 +18,11 @@ export interface SpiritEditInitial {
   flavor: Record<string, number>;
   topNotes: string[];
   pairings: string[];
+  mashBill: string;
+  caskDetails: string;
+  productionMethod: string;
+  servingSuggestion: string;
+  suggestedCocktails: string[];
   recordStatus: SpiritLifecycleStatus;
   publicationStatus: SpiritLifecycleStatus;
 }
@@ -78,6 +83,11 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
     initial.topNotes[2] ?? "",
   ]);
   const [pairings, setPairings] = useState(initial.pairings.join(", "));
+  const [mashBill, setMashBill] = useState(initial.mashBill);
+  const [caskDetails, setCaskDetails] = useState(initial.caskDetails);
+  const [productionMethod, setProductionMethod] = useState(initial.productionMethod);
+  const [servingSuggestion, setServingSuggestion] = useState(initial.servingSuggestion);
+  const [suggestedCocktails, setSuggestedCocktails] = useState(initial.suggestedCocktails.join(", "));
   const [recordStatus, setRecordStatus] = useState<SpiritLifecycleStatus>(initial.recordStatus);
   const [publicationStatus, setPublicationStatus] = useState<SpiritLifecycleStatus>(initial.publicationStatus);
 
@@ -104,6 +114,11 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
           flavor,
           topNotes: topNotes.map((t) => t.trim()).filter(Boolean),
           pairings: pairings.split(/[,\n]/).map((s) => s.trim()).filter(Boolean),
+          mashBill: nullIfBlank(mashBill),
+          caskDetails: nullIfBlank(caskDetails),
+          productionMethod: nullIfBlank(productionMethod),
+          servingSuggestion: nullIfBlank(servingSuggestion),
+          suggestedCocktails: suggestedCocktails.split(/[,\n]/).map((s) => s.trim()).filter(Boolean),
           recordStatus,
           publicationStatus,
         });
@@ -151,6 +166,16 @@ export function SpiritEditForm({ initial }: { initial: SpiritEditInitial }) {
           ))}
         </div>
         <Textarea label="Pairings" hint="Comma-separated." value={pairings} onChange={setPairings} rows={2} />
+      </div>
+
+      {/* Production & Serving */}
+      <div className="space-y-4 rounded-lg border border-line bg-surface p-4">
+        <h2 className="text-sm font-medium text-ink-text">Production &amp; Serving</h2>
+        <Textarea label="Mash bill" hint='e.g. "75% Corn · 21% Rye · 4% Malted Barley". Shows on the placemat.' value={mashBill} onChange={setMashBill} rows={1} />
+        <Textarea label="Cask details" hint="Barrel type, char level, finish cask. Shows on the placemat." value={caskDetails} onChange={setCaskDetails} rows={1} />
+        <Textarea label="Production method" hint="Distillation style, fermentation notes." value={productionMethod} onChange={setProductionMethod} rows={1} />
+        <Textarea label="Serving suggestion" hint='Recommended serve — "Neat", "On the rocks", "Old Fashioned base".' value={servingSuggestion} onChange={setServingSuggestion} rows={1} />
+        <Textarea label="Suggested cocktails" hint="Comma-separated." value={suggestedCocktails} onChange={setSuggestedCocktails} rows={2} />
       </div>
 
       {/* Status */}

@@ -11,19 +11,14 @@
  *   npx dotenv -e .env.local -o -- tsx scripts/compare-spines.ts "Stone Grille" 2026-06-01 2026-07-01
  *   npx dotenv -e .env.local -o -- tsx scripts/compare-spines.ts "Stone Grille"   # defaults to the latest month of data
  */
-import type { LedgerAccount, TapBucket } from "@prisma/client";
 import { prisma } from "../src/lib/prisma";
 import {
   CANONICAL_BUCKETS,
   computeSpineDeltas,
-  ledgerAccountToCanonical,
   spinesConverged,
-  tapBucketToCanonical,
-  type CanonicalBucket,
-  type SpineTotals,
 } from "../src/lib/financial-ledger/spine-compare";
+import { loadSpineTotals } from "../src/lib/financial-ledger/spine-totals";
 
-const n = (v: unknown): number => (v == null ? 0 : Number(v));
 const money = (v: number) => v.toLocaleString("en-US", { style: "currency", currency: "USD" });
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 
@@ -77,36 +72,8 @@ async function main() {
   }
   if (!to) to = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + 1, 1));
 
-  // ── Legacy spine: Transaction → Category.tapBucket ──────────
-  const [txns, cats] = await Promise.all([
-    prisma.transaction.findMany({
-      where: { restaurantId: tenant.id, date: { gte: from, lt: to } },
-      select: { amount: true, categoryId: true },
-    }),
-    prisma.category.findMany({ where: { restaurantId: tenant.id }, select: { id: true, tapBucket: true } }),
-  ]);
-  const tapByCat = new Map<string, TapBucket>(cats.map((c) => [c.id, c.tapBucket]));
-  const legacy: SpineTotals = {};
-  for (const t of txns) {
-    const amt = n(t.amount);
-    if (amt === 0) continue;
-    // Inflows are stored negative → REVENUE; outflows run the category's bucket.
-    const bucket: CanonicalBucket = amt < 0 ? "REVENUE" : tapBucketToCanonical(t.categoryId ? tapByCat.get(t.categoryId) ?? null : null);
-    legacy[bucket] = (legacy[bucket] ?? 0) + Math.abs(amt);
-  }
-
-  // ── Clean-ledger spine: LedgerEntry by account ─────────────
-  const lines = await prisma.ledgerEntry.findMany({
-    where: { restaurantId: tenant.id, ledgerDate: { gte: from, lt: to } },
-    select: { ledgerAccount: true, debit: true, credit: true },
-  });
-  const ledger: SpineTotals = {};
-  for (const line of lines) {
-    const bucket = ledgerAccountToCanonical(line.ledgerAccount as LedgerAccount);
-    if (bucket == null) continue; // OPERATING_CASH — the cash contra side
-    // Non-cash lines carry the value in exactly one of debit (expense) / credit (revenue).
-    ledger[bucket] = (ledger[bucket] ?? 0) + n(line.debit) + n(line.credit);
-  }
+  // Both spines via the shared loader (same queries the nightly clean-day check runs).
+  const { legacy, ledger } = await loadSpineTotals(prisma, tenant.id, from, to);
 
   const deltas = computeSpineDeltas(legacy, ledger);
   const converged = spinesConverged(deltas);

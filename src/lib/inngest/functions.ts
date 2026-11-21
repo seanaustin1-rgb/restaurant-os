@@ -21,6 +21,7 @@ import { buildDailyDigest } from "@/lib/modules/daily-digest";
 import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
 import { digestRecipientEmails } from "@/lib/email/digest-recipients";
 import { settleTeamMedia } from "@/lib/team/media/ready";
+import { evaluateCleanDayForTenant, recordCleanDay } from "@/lib/financial-ledger/clean-day-loader";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -122,6 +123,54 @@ export const syncToastMetrics = inngest.createFunction(
     // balances, sweep Profit/Owner's Pay if the 10th/25th has passed. Idempotent.
     const ledger = await step.run("run-allocation-ledger", () => runLedger(restaurantId));
     return { metrics, salesMix, salesTax, menuItems, ledger };
+  },
+);
+
+/**
+ * V1-gate clean-day check — 7:30am ET, after the 5:30 Toast and 6:00 Plaid runs
+ * (Plaid workers get retries, hence the buffer). Fans out one event per tenant with
+ * an active Plaid connection; each worker records that tenant's deterministic
+ * clean/dirty verdict for the local day. "7 consecutive clean days" is then a
+ * query over ReconciliationDay. Read-only apart from that one upsert; idempotent,
+ * so a retry or manual re-run just overwrites the day.
+ */
+export const dailyReconciliationCheckScheduler = inngest.createFunction(
+  { id: "daily-reconciliation-check-scheduler" },
+  { cron: "TZ=America/New_York 30 7 * * *" }, // 7:30am ET daily
+  async ({ step }) => {
+    const tenants = await step.run("load-tenants", async () => {
+      const rows = await prisma.plaidConnection.findMany({
+        where: { isActive: true },
+        distinct: ["restaurantId"],
+        select: { restaurantId: true },
+      });
+      return rows.map((r) => r.restaurantId);
+    });
+
+    if (tenants.length > 0) {
+      await step.sendEvent(
+        "dispatch-reconciliation-checks",
+        tenants.map((restaurantId) => ({
+          name: "reconciliation/day.check.requested",
+          data: { restaurantId },
+        })),
+      );
+    }
+
+    return { dispatched: tenants.length };
+  },
+);
+
+export const checkReconciliationDay = inngest.createFunction(
+  { id: "check-reconciliation-day", retries: 2 },
+  { event: "reconciliation/day.check.requested" },
+  async ({ event, step }) => {
+    const restaurantId = event.data.restaurantId as string;
+    return step.run("evaluate-and-record", async () => {
+      const result = await evaluateCleanDayForTenant(prisma, restaurantId);
+      await recordCleanDay(prisma, restaurantId, result);
+      return { date: result.date, clean: result.verdict.clean };
+    });
   },
 );
 
@@ -278,6 +327,8 @@ export const functions = [
   syncPlaidConnection,
   dailyToastSyncScheduler,
   syncToastMetrics,
+  dailyReconciliationCheckScheduler,
+  checkReconciliationDay,
   monthlyDemoReseed,
   weeklyReputationSnapshot,
   dailyAuraIntentSnapshot,

@@ -281,6 +281,7 @@ model Restaurant {
   normalizedFinancialEvents       NormalizedFinancialEvent[]
   ledgerEntries                   LedgerEntry[]
   syncExceptions                  SyncException[]
+  reconciliationDays              ReconciliationDay[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
   venueSpirits                    VenueSpirit[]
@@ -1198,6 +1199,27 @@ model SyncException {
   @@index([severity])
   @@index([issueType])
   @@index([resolvedAt])
+}
+
+// One row per tenant per tenant-local day: the deterministic "clean day" verdict
+// behind the V1 gate (7 consecutive clean days). Written by the 7:30am ET Inngest
+// check; rules live in src/lib/financial-ledger/clean-day.ts. Additive — no
+// existing table changes. `checks` records each rule's pass/fail + detail so a
+// dirty day explains itself.
+model ReconciliationDay {
+  id               String   @id @default(cuid())
+  restaurantId     String
+  date             DateTime @db.Date
+  clean            Boolean
+  checks           Json
+  openBacklogCount Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, date])
+  @@index([restaurantId, clean, date])
 }
 
 model ReviewCache {

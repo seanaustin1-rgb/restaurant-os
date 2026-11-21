@@ -128,8 +128,12 @@ of 2026-10-18 and summarized here:
    (`prisma migrate deploy`).** `ReconciliationDay` stores one verdict per tenant per local day,
    written by the 7:30am ET Inngest check (`src/lib/financial-ledger/clean-day.ts`). Clean =
    no new WARNING/BLOCKING exception today (resolved-by-hand still counts), no open BLOCKING,
-   every active Plaid connection synced today, Toast refreshed today (skipped if no Toast data),
-   and spines converged over a trailing 30 days. Streak: `scripts/clean-day-status.ts stone`
+   every active Plaid connection **completed a full scheduled sync** today, the Toast run **finished
+   every step** today (applicable if the tenant has ever had Toast data), and spines converged over
+   a trailing 30 days. "Completed" = a `SyncCompletion` marker the Inngest workers write only after
+   the whole run returns — not the per-page `lastSyncedAt` / per-day `DailySales.updatedAt`, which
+   move on partial progress. Markers start accumulating on the first scheduled run after deploy, so
+   the first valid verdict is the following morning. Streak: `scripts/clean-day-status.ts stone`
    (`--evaluate` shows what is blocking today; `--evaluate --commit` records it). A missing
    day breaks the streak.
 3. **compare-spines converged on a trailing month** (operator runs; code fixes any bucket that

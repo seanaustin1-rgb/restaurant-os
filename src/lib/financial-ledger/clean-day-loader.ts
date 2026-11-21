@@ -1,15 +1,15 @@
 // Gathers the inputs for evaluateCleanDay from the database and persists the
 // verdict. All judgment lives in clean-day.ts; this file only does I/O.
 //
-// Sync-success signals reuse what the syncs already record — no new sync-state
-// table is needed:
-//   Plaid  PlaidConnection.lastSyncedAt (advanced only in the same DB transaction
-//          as a committed page, so it moves only on success)
-//   Toast  DailySales.updatedAt (the nightly job upserts its lookback window every
-//          run, so a successful run touches rows)
+// Sync success comes from explicit SyncCompletion markers, written by the Inngest
+// workers only after a scheduled run FINISHES (every Plaid page; every Toast step).
+// The per-page / per-day timestamps (PlaidConnection.lastSyncedAt,
+// DailySales.updatedAt) are deliberately NOT used: they move on partial progress, so
+// a run that commits page 1 and then fails would read as a clean sync.
 import type { PrismaClient } from "@prisma/client";
 import { computeSpineDeltas } from "./spine-compare";
 import { loadSpineTotals } from "./spine-totals";
+import { TOAST_SYNC_KEY } from "./sync-completion";
 import {
   evaluateCleanDay,
   localDayBounds,
@@ -20,9 +20,6 @@ import {
 /** Spine parity is judged over a trailing window, not one day: single-day slices of
  * bank-lagged data flap at the 1% / $1 tolerance. Matches the gate's "trailing month". */
 export const SPINE_WINDOW_DAYS = 30;
-/** Toast counts as "in use" if it wrote any DailySales row this recently. */
-const TOAST_ACTIVE_LOOKBACK_DAYS = 14;
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface CleanDayResult {
@@ -46,15 +43,16 @@ export async function evaluateCleanDayForTenant(
   // compare-spines.ts treats Transaction.date / ledgerDate (both @db.Date).
   const today = new Date(`${date}T00:00:00.000Z`);
   const spineFrom = new Date(today.getTime() - SPINE_WINDOW_DAYS * DAY_MS);
-  const toastSince = new Date(today.getTime() - TOAST_ACTIVE_LOOKBACK_DAYS * DAY_MS);
 
   const [
     newExceptionCount,
     openBlockingCount,
     openBacklogCount,
     plaidConnections,
-    toastRecent,
-    toastTouchedToday,
+    plaidCompletions,
+    toastPosConnections,
+    toastEverWroteSales,
+    toastCompletions,
     spines,
   ] = await Promise.all([
     db.syncException.count({
@@ -64,12 +62,23 @@ export async function evaluateCleanDayForTenant(
     db.syncException.count({ where: { restaurantId, resolvedAt: null } }),
     db.plaidConnection.findMany({
       where: { restaurantId, isActive: true },
-      select: { lastSyncedAt: true },
+      select: { id: true },
     }),
-    db.dailySales.count({ where: { restaurantId, source: "toast", date: { gte: toastSince } } }),
-    db.dailySales.count({ where: { restaurantId, source: "toast", updatedAt: { gte: start } } }),
+    db.syncCompletion.findMany({
+      where: { restaurantId, source: "plaid", completedAt: { gte: start } },
+      select: { sourceKey: true },
+    }),
+    db.posConnection.count({ where: { restaurantId, provider: "TOAST", isActive: true } }),
+    // "Ever", not "recently": a prolonged Toast outage must keep gating, not quietly
+    // turn the check into not-applicable once the last row ages out.
+    db.dailySales.count({ where: { restaurantId, source: "toast" } }),
+    db.syncCompletion.count({
+      where: { restaurantId, source: "toast", sourceKey: TOAST_SYNC_KEY, completedAt: { gte: start } },
+    }),
     loadSpineTotals(db, restaurantId, spineFrom, today),
   ]);
+
+  const completedPlaid = new Set(plaidCompletions.map((c) => c.sourceKey));
 
   const verdict = evaluateCleanDay({
     newExceptionCount,
@@ -77,9 +86,9 @@ export async function evaluateCleanDayForTenant(
     openBacklogCount,
     plaid: {
       activeConnections: plaidConnections.length,
-      staleConnections: plaidConnections.filter((c) => !c.lastSyncedAt || c.lastSyncedAt < start).length,
+      staleConnections: plaidConnections.filter((c) => !completedPlaid.has(c.id)).length,
     },
-    toast: { applicable: toastRecent > 0, syncedToday: toastTouchedToday > 0 },
+    toast: { applicable: toastPosConnections > 0 || toastEverWroteSales > 0, syncedToday: toastCompletions > 0 },
     spineDeltas: computeSpineDeltas(spines.legacy, spines.ledger),
   });
 

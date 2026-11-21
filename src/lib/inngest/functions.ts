@@ -22,6 +22,7 @@ import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
 import { digestRecipientEmails } from "@/lib/email/digest-recipients";
 import { settleTeamMedia } from "@/lib/team/media/ready";
 import { evaluateCleanDayForTenant, recordCleanDay } from "@/lib/financial-ledger/clean-day-loader";
+import { recordSyncCompletion, TOAST_SYNC_KEY } from "@/lib/financial-ledger/sync-completion";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -64,7 +65,17 @@ export const syncPlaidConnection = inngest.createFunction(
   { event: "plaid/connection.sync.requested" },
   async ({ event, step }) => {
     const plaidConnectionId = event.data.plaidConnectionId as string;
-    return step.run("sync", () => runPlaidSync(plaidConnectionId));
+    const restaurantId = event.data.restaurantId as string;
+    const result = await step.run("sync", () => runPlaidSync(plaidConnectionId));
+    // Mark the run complete only after every page committed (no time budget here, so
+    // hasMore:false is the normal exit). The clean-day check reads this, not the
+    // per-page lastSyncedAt, so a mid-run failure can't read as a clean sync.
+    if (restaurantId && !result.hasMore) {
+      await step.run("record-completion", () =>
+        recordSyncCompletion(prisma, restaurantId, "plaid", plaidConnectionId),
+      );
+    }
+    return result;
   },
 );
 
@@ -122,6 +133,12 @@ export const syncToastMetrics = inngest.createFunction(
     // Persisted Profit First ledger: allocate the freshly-synced days, recompute
     // balances, sweep Profit/Owner's Pay if the 10th/25th has passed. Idempotent.
     const ledger = await step.run("run-allocation-ledger", () => runLedger(restaurantId));
+    // Every step above throws on failure, so reaching here means the whole Toast run
+    // finished. The clean-day check reads this marker (not DailySales.updatedAt, which
+    // moves per day and would pass a partial refresh).
+    await step.run("record-completion", () =>
+      recordSyncCompletion(prisma, restaurantId, "toast", TOAST_SYNC_KEY),
+    );
     return { metrics, salesMix, salesTax, menuItems, ledger };
   },
 );

@@ -282,6 +282,7 @@ model Restaurant {
   ledgerEntries                   LedgerEntry[]
   syncExceptions                  SyncException[]
   reconciliationDays              ReconciliationDay[]
+  syncCompletions                 SyncCompletion[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
   venueSpirits                    VenueSpirit[]
@@ -1220,6 +1221,28 @@ model ReconciliationDay {
 
   @@unique([restaurantId, date])
   @@index([restaurantId, clean, date])
+}
+
+// Explicit "this scheduled sync ran to completion" marker, written only after the
+// WHOLE run finishes (all Plaid pages; every Toast step). The clean-day check
+// reads this instead of inferring success from partial-progress timestamps
+// (PlaidConnection.lastSyncedAt moves per committed page; DailySales.updatedAt
+// moves per upserted day). source = "plaid" (sourceKey = PlaidConnection.id) or
+// "toast" (sourceKey = "toast"). Deliberately tiny; Spec G's IntegrationSyncState
+// can subsume it later.
+model SyncCompletion {
+  id           String   @id @default(cuid())
+  restaurantId String
+  source       String
+  sourceKey    String
+  completedAt  DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, source, sourceKey])
+  @@index([restaurantId, source, completedAt])
 }
 
 model ReviewCache {

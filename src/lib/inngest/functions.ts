@@ -21,6 +21,8 @@ import { buildDailyDigest } from "@/lib/modules/daily-digest";
 import { sendDailyDigestEmail } from "@/lib/email/daily-digest";
 import { digestRecipientEmails } from "@/lib/email/digest-recipients";
 import { settleTeamMedia } from "@/lib/team/media/ready";
+import { evaluateCleanDayForTenant, recordCleanDay } from "@/lib/financial-ledger/clean-day-loader";
+import { recordSyncCompletion, TOAST_SYNC_KEY } from "@/lib/financial-ledger/sync-completion";
 
 /**
  * Scheduler — runs once a day and fans out one sync event per active Plaid
@@ -63,7 +65,17 @@ export const syncPlaidConnection = inngest.createFunction(
   { event: "plaid/connection.sync.requested" },
   async ({ event, step }) => {
     const plaidConnectionId = event.data.plaidConnectionId as string;
-    return step.run("sync", () => runPlaidSync(plaidConnectionId));
+    const restaurantId = event.data.restaurantId as string;
+    const result = await step.run("sync", () => runPlaidSync(plaidConnectionId));
+    // Mark the run complete only after every page committed (no time budget here, so
+    // hasMore:false is the normal exit). The clean-day check reads this, not the
+    // per-page lastSyncedAt, so a mid-run failure can't read as a clean sync.
+    if (restaurantId && !result.hasMore) {
+      await step.run("record-completion", () =>
+        recordSyncCompletion(prisma, restaurantId, "plaid", plaidConnectionId),
+      );
+    }
+    return result;
   },
 );
 
@@ -121,7 +133,61 @@ export const syncToastMetrics = inngest.createFunction(
     // Persisted Profit First ledger: allocate the freshly-synced days, recompute
     // balances, sweep Profit/Owner's Pay if the 10th/25th has passed. Idempotent.
     const ledger = await step.run("run-allocation-ledger", () => runLedger(restaurantId));
+    // Every step above throws on failure, so reaching here means the whole Toast run
+    // finished. The clean-day check reads this marker (not DailySales.updatedAt, which
+    // moves per day and would pass a partial refresh).
+    await step.run("record-completion", () =>
+      recordSyncCompletion(prisma, restaurantId, "toast", TOAST_SYNC_KEY),
+    );
     return { metrics, salesMix, salesTax, menuItems, ledger };
+  },
+);
+
+/**
+ * V1-gate clean-day check — 7:30am ET, after the 5:30 Toast and 6:00 Plaid runs
+ * (Plaid workers get retries, hence the buffer). Fans out one event per tenant with
+ * an active Plaid connection; each worker records that tenant's deterministic
+ * clean/dirty verdict for the local day. "7 consecutive clean days" is then a
+ * query over ReconciliationDay. Read-only apart from that one upsert; idempotent,
+ * so a retry or manual re-run just overwrites the day.
+ */
+export const dailyReconciliationCheckScheduler = inngest.createFunction(
+  { id: "daily-reconciliation-check-scheduler" },
+  { cron: "TZ=America/New_York 30 7 * * *" }, // 7:30am ET daily
+  async ({ step }) => {
+    const tenants = await step.run("load-tenants", async () => {
+      const rows = await prisma.plaidConnection.findMany({
+        where: { isActive: true },
+        distinct: ["restaurantId"],
+        select: { restaurantId: true },
+      });
+      return rows.map((r) => r.restaurantId);
+    });
+
+    if (tenants.length > 0) {
+      await step.sendEvent(
+        "dispatch-reconciliation-checks",
+        tenants.map((restaurantId) => ({
+          name: "reconciliation/day.check.requested",
+          data: { restaurantId },
+        })),
+      );
+    }
+
+    return { dispatched: tenants.length };
+  },
+);
+
+export const checkReconciliationDay = inngest.createFunction(
+  { id: "check-reconciliation-day", retries: 2 },
+  { event: "reconciliation/day.check.requested" },
+  async ({ event, step }) => {
+    const restaurantId = event.data.restaurantId as string;
+    return step.run("evaluate-and-record", async () => {
+      const result = await evaluateCleanDayForTenant(prisma, restaurantId);
+      await recordCleanDay(prisma, restaurantId, result);
+      return { date: result.date, clean: result.verdict.clean };
+    });
   },
 );
 
@@ -278,6 +344,8 @@ export const functions = [
   syncPlaidConnection,
   dailyToastSyncScheduler,
   syncToastMetrics,
+  dailyReconciliationCheckScheduler,
+  checkReconciliationDay,
   monthlyDemoReseed,
   weeklyReputationSnapshot,
   dailyAuraIntentSnapshot,

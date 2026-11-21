@@ -281,6 +281,8 @@ model Restaurant {
   normalizedFinancialEvents       NormalizedFinancialEvent[]
   ledgerEntries                   LedgerEntry[]
   syncExceptions                  SyncException[]
+  reconciliationDays              ReconciliationDay[]
+  syncCompletions                 SyncCompletion[]
   aiActionLogs                    AiActionLog[]
   metricNotes                     MetricNote[]
   venueSpirits                    VenueSpirit[]
@@ -1198,6 +1200,49 @@ model SyncException {
   @@index([severity])
   @@index([issueType])
   @@index([resolvedAt])
+}
+
+// One row per tenant per tenant-local day: the deterministic "clean day" verdict
+// behind the V1 gate (7 consecutive clean days). Written by the 7:30am ET Inngest
+// check; rules live in src/lib/financial-ledger/clean-day.ts. Additive — no
+// existing table changes. `checks` records each rule's pass/fail + detail so a
+// dirty day explains itself.
+model ReconciliationDay {
+  id               String   @id @default(cuid())
+  restaurantId     String
+  date             DateTime @db.Date
+  clean            Boolean
+  checks           Json
+  openBacklogCount Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, date])
+  @@index([restaurantId, clean, date])
+}
+
+// Explicit "this scheduled sync ran to completion" marker, written only after the
+// WHOLE run finishes (all Plaid pages; every Toast step). The clean-day check
+// reads this instead of inferring success from partial-progress timestamps
+// (PlaidConnection.lastSyncedAt moves per committed page; DailySales.updatedAt
+// moves per upserted day). source = "plaid" (sourceKey = PlaidConnection.id) or
+// "toast" (sourceKey = "toast"). Deliberately tiny; Spec G's IntegrationSyncState
+// can subsume it later.
+model SyncCompletion {
+  id           String   @id @default(cuid())
+  restaurantId String
+  source       String
+  sourceKey    String
+  completedAt  DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, source, sourceKey])
+  @@index([restaurantId, source, completedAt])
 }
 
 model ReviewCache {

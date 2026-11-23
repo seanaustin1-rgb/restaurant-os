@@ -1,5 +1,20 @@
 # Spirit Vault — Handoff
 
+## Prepared demo-to-production copy — 2026-10-07
+
+- Sean requested a reviewed, one-time script and PR only. **Do not run the copy
+  or use production credentials under this authorization.**
+- Entry point: `scripts/one-off/copy-spirits-demo-to-prod.ts`; runbook:
+  `docs/spirit-vault/COPY-DEMO-TO-PROD.md`.
+- Explicit canonical-table allowlist, required source/target restaurant IDs,
+  default read-only dry-run, per-table counts, FK/schema/conflict checks and one
+  target transaction for apply. Optional custom templates are handled explicitly.
+- Guest/membership/code/redemption/test tables are excluded. No tenant creation,
+  migrations, draft publication or database execution was performed.
+- **UNVERIFIED:** Sean's reported live row counts, restaurant IDs, database
+  permissions/schema parity and real database execution. Offline validation is
+  documented in the PR; a future operator must review the dry-run before any apply.
+
 ## ▶ NEXT SESSION — START HERE (2026-07-30)
 
 Read the **⚖️ BINDING ARCHITECTURE DECISION** block below first (it's authoritative;

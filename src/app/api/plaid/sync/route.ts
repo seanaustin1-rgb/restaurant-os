@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { ADJUSTMENT_ROLES } from "@/lib/access/roles";
 import { runPlaidSync } from "@/lib/plaid/sync";
 
 // Manual "Sync now": pulls fresh transactions for the signed-in user's
@@ -15,9 +16,12 @@ export async function POST() {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // Sync writes transactions, so it's a write action: INVESTOR (read-only) is
+  // excluded, and a mixed-role user syncs a tenant they actually operate.
   const role = await prisma.userRestaurantRole.findFirst({
-    where: { clerkUserId: userId },
+    where: { clerkUserId: userId, role: { in: [...ADJUSTMENT_ROLES] } },
     select: { restaurantId: true },
+    orderBy: { createdAt: "asc" },
   });
   if (!role) {
     return NextResponse.json({ error: "no restaurant" }, { status: 400 });
